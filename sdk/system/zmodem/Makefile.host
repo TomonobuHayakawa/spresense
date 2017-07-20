@@ -60,7 +60,7 @@ ZMODEM   = $(APPDIR)/system/zmodem
 HOSTDIR  = $(ZMODEM)/host
 HOSTAPPS = $(ZMODEM)/host/apps
 
-HOSTCFLAGS  += -isystem $(HOSTDIR) -I $(ZMODEM)
+HOSTCFLAGS  += -isystem $(HOSTDIR) -isystem $(HOSTAPPS) -I $(ZMODEM)
 HOSTCFLAGS  += -Dsz_main=main -Drz_main=main
 ifeq ($(CONFIG_DEBUG_FEATURES),y)
 HOSTCFLAGS  += -DCONFIG_DEBUG_ZMODEM=1 -DCONFIG_SYSTEM_ZMODEM_DUMPBUFFER=1
@@ -90,13 +90,14 @@ all: $(RZBIN) $(SZBIN)
 $(OBJS): %$(OBJEXT): %.c
 	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) -o $@ $<
 
-$(HOSTAPPS)/zmodem.h: $(APPSINC)/zmodem.h
-	$(Q) cp $(APPSINC)/zmodem.h $(HOSTAPPS)/zmodem.h
+$(HOSTAPPS)/system/zmodem.h: $(APPSINC)/system/zmodem.h
+	$(Q) mkdir -p $(HOSTAPPS)/system
+	$(Q) cp $(APPSINC)/system/zmodem.h $(HOSTAPPS)/system/zmodem.h
 
-$(RZBIN): $(HOSTAPPS)/zmodem.h $(RZOBJS) $(CMNOBJS)
+$(RZBIN): $(HOSTAPPS)/system/zmodem.h $(RZOBJS) $(CMNOBJS)
 	$(Q) $(HOSTCC) $(HOSTCFLAGS) -o $@ $(RZOBJS) $(CMNOBJS) -lrt
 
-$(SZBIN): $(HOSTAPPS)/zmodem.h $(SZOBJS) $(CMNOBJS)
+$(SZBIN): $(HOSTAPPS)/system/zmodem.h $(SZOBJS) $(CMNOBJS)
 	$(Q) $(HOSTCC) $(HOSTCFLAGS) -o $@ $(SZOBJS) $(CMNOBJS) -lrt
 
 clean:
@@ -104,4 +105,5 @@ ifneq ($(OBJEXT),)
 	rm -f *$(OBJEXT)
 endif
 	rm -f $(RZBIN) $(SZBIN)
-	rm -f $(HOSTAPPS)/zmodem.h
+	rm -f $(HOSTAPPS)/system/zmodem.h
+	rm -rf $(HOSTAPPS)/system
