@@ -48,6 +48,7 @@
 #include <libgen.h>
 #include <time.h>
 #include <errno.h>
+#include <termios.h>
 
 #include "system/zmodem.h"
 
@@ -85,6 +86,61 @@ static void show_usage(FAR const char *progname, int errcode)
   exit(errcode);
 }
 
+static int disable_crlf_conversion(int fd, struct termios *old_tio)
+{
+#ifdef CONFIG_SERIAL_TERMIOS
+  int rc = 0;
+  int ret;
+  struct termios tio;
+
+  /* disable \n -> \r\n conversion during write */
+
+  ret = tcgetattr(fd, old_tio);
+  if (ret != 0)
+    {
+      fprintf(stderr, "disable_crlf_conversion: ERROR tcgetattr(): %d\n",
+              errno);
+      rc = -1;
+    }
+  else
+    {
+      memcpy(&tio, old_tio, sizeof(struct termios));
+      tio.c_oflag &= ~ONLCR;
+      ret = tcsetattr(fd, TCSANOW, &tio);
+      if (ret != 0)
+        {
+          fprintf(stderr, "disable_crlf_conversion: ERROR tcsetattr(): %d\n",
+                  errno);
+          rc = -1;
+        }
+    }
+
+  return rc;
+#else
+  return -1;
+#endif
+}
+
+static int reset_termio(int fd, struct termios *tio)
+{
+#ifdef CONFIG_SERIAL_TERMIOS
+  int rc = 0;
+  int ret;
+
+  ret = tcsetattr(fd, TCSANOW, tio);
+  if (ret)
+    {
+      fprintf(stderr, "reset_termio: ERROR tcsetattr(): %d\n",
+              errno);
+      rc = -1;
+    }
+
+  return rc;
+#else
+  return -1;
+#endif
+}
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -107,6 +163,7 @@ int sz_main(int argc, FAR char **argv)
   int option;
   int ret;
   int fd;
+  struct termios old_tio;
 
   /* Parse input parameters */
 
@@ -186,6 +243,8 @@ int sz_main(int argc, FAR char **argv)
       goto errout;
     }
 
+  disable_crlf_conversion(fd, &old_tio);
+
   /* Get the Zmodem handle */
 
   handle = zms_initialize(fd);
@@ -256,6 +315,7 @@ int sz_main(int argc, FAR char **argv)
 errout_with_zmodem:
   (void)zms_release(handle);
 errout_with_device:
+  (void)reset_termio(fd, &old_tio);
   (void)close(fd);
 errout:
   return exitcode;
