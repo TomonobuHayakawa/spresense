@@ -1,5 +1,21 @@
+############################################################################
+# TODO: write here
+#
+#
+############################################################################
+# XXX: Sorry, this make file only for Linux/Cygwin
 
-KERNEL_DIR ?= ../nuttx
+# Path to NuttX kernel source tree, it must be relative path.
+
+NUTTXDIR ?= ../nuttx
+
+SDKDIR := $(shell pwd | sed -e 's/ /\\ /g')
+KERNELDIR := $(shell pwd | sed -e 's/ /\\ /g')/$(NUTTXDIR)
+
+-include $(KERNELDIR)/.config
+-include $(SDKDIR)/.config
+include $(KERNELDIR)/tools/Config.mk
+include Make.defs
 
 ifeq ($(V),1)
 export Q :=
@@ -11,22 +27,46 @@ export Q := @
 endif
 endif
 
-NUTTX_DIR := $(shell pwd | sed -e 's/ /\\ /g')/$(KERNEL_DIR)
+ifeq ($(CONFIG_BUILD_PROTECTED),y)
+include $(KERNELDIR)/ProtectedLibs.mk
+else
+ifeq ($(CONFIG_BUILD_KERNEL),y)
+include $(KERNELDIR)/KernelLibs.mk
+else
+include $(KERNELDIR)/FlatLibs.mk
+endif
+endif
 
-# build_kernellibs
+PHONY :=
+
+all: buildsdk
+
+buildall: buildkernel buildsdk
+
+# buildkernel
 #
 #
 
-build_kernellibs:
-	$(MAKE) -C $(NUTTX_DIR) pass2deps
-	$(MAKE) -C $(NUTTX_DIR)/arch/arm/src export_startup TOPDIR=$(NUTTX_DIR)
+buildkernel:
+	$(MAKE) $(MAKEOPTS) -C $(KERNELDIR) pass2deps
+	$(MAKE) $(MAKEOPTS) -C $(KERNELDIR)/arch/arm/src export_startup TOPDIR=$(KERNELDIR)
+PHONY += buildkernel
 
-# clean_kernellibs
+buildsdk:
+	$(Q)
+PHONY += buildsdk
+
+# clean_kernel
 #
 #
 
-clean_kernellibs:
-	$(MAKE) -C $(NUTTX_DIR) clean
+cleankernel:
+	$(MAKE) -C $(KERNELDIR) clean
+PHONY += cleankernel
+
+cleansdk:
+	$(Q)
+PHONY += cleansdk
 
 # config targets
 #
@@ -34,24 +74,32 @@ clean_kernellibs:
 
 config:
 	$(Q) kconfig-conf Kconfig
+PHONY += config
 
 oldconfig:
 	$(Q) kconfig-conf --oldconfig Kconfig
+PHONY += oldconfig
 
 olddefconfig:
 	$(Q) kconfig-conf --olddefconfig Kconfig
+PHONY += olddefconfig
 
 menuconfig:
 	$(Q) kconfig-mconf Kconfig
+PHONY += menuconfig
 
 qconfig:
 	$(Q) kconfig-qconf Kconfig
+PHONY += qconfig
 
 gconfig:
 	$(Q) kconfig-gconf Kconfig
+PHONY += gconfig
 
 savedefconfig:
+PHONY += savedefconfig
 
-clean: clean_kernellibs
+clean: cleansdk
+PHONY += clean
 
-.PHONY: build clean clean_kernellibs
+.PHONY: $(PHONY)
