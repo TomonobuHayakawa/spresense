@@ -100,6 +100,7 @@ gconfig:
 PHONY += gconfig
 
 savedefconfig:
+	$(Q) kconfig-conf --savedefconfig defconfig Kconfig
 PHONY += savedefconfig
 
 clean: cleansdk cleantest
