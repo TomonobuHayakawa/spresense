@@ -1,0 +1,11 @@
+include $(SDKDIR)/.config
+
+ifeq ($(WINTOOL),y)
+# Windows-native toolchains
+CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/bsp/include)"
+CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/modules/include)"
+else
+# Linux/Cygwin-native toolchain
+CFLAGS += -isystem $(SDKDIR)/bsp/include
+CFLAGS += -isystem $(SDKDIR)/modules/include
+endif
