@@ -5,8 +5,13 @@ menuconfig ASMP
 		A hybrid multi processor framework
 
 if ASMP
+	config MM_TILE
+	bool
+	default y
+
 	config ASMP_MEMSIZE
-	hex 0x30000
+	hex "Memory size"
+	default 0x80000
 	help
 		Memory size for shared memory area in ASMP Framework.
 
