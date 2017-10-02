@@ -49,12 +49,29 @@ buildall: buildkernel buildsdk
 
 buildkernel:
 	$(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
-#	$(MAKE) $(MAKEOPTS) -C $(TOPDIR)/arch/arm/src export_startup TOPDIR=$(TOPDIR)
 PHONY += buildkernel
 
-buildsdk: bsp/include/sdk/config.h test
+# Include library build recipes
+
+include LibTargets.mk
+
+buildsdk: depend $(SDKLIBS)
 	$(Q)
 PHONY += buildsdk
+
+context: bsp/include/sdk/config.h
+PHONY += context
+
+clean_context:
+	$(call DELFILE, bsp/include/sdk/config.h)
+
+PHONY += clean_context
+
+depend: context
+	$(Q) for dir in $(SDKDEPDIRS) ; do \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" EXTRADEFINES=$(KDEFINE) depend; \
+	done
+PHONY += depend
 
 # clean_kernel
 #
@@ -103,15 +120,7 @@ savedefconfig:
 	$(Q) kconfig-conf --savedefconfig defconfig Kconfig
 PHONY += savedefconfig
 
-clean: cleansdk cleantest
+clean: cleansdk
 PHONY += clean
-
-test: bsp/include/sdk/config.h
-	$(Q) $(MAKE) -C modules/asmp TOPDIR=$(TOPDIR) SDKDIR=$(SDKDIR)
-PHONY += test
-
-cleantest:
-	$(Q) $(MAKE) -C modules/asmp TOPDIR=$(TOPDIR) SDKDIR=$(SDKDIR) clean
-PHONY += cleantest
 
 .PHONY: $(PHONY)
