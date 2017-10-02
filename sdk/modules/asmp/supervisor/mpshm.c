@@ -75,12 +75,12 @@
 #  define mperr(fmt, ...)
 #endif
 #ifdef CONFIG_DEBUG_LIB_ASMP_WARN
-#  define mpwarn(fmt, ...)  _err(fmt, ## __VA_ARGS__)
+#  define mpwarn(fmt, ...)  _warn(fmt, ## __VA_ARGS__)
 #else
 #  define mpwarn(fmt, ...)
 #endif
 #ifdef CONFIG_DEBUG_LIB_ASMP_INFO
-#  define mpinfo(fmt, ...)  _err(fmt, ## __VA_ARGS__)
+#  define mpinfo(fmt, ...)  _info(fmt, ## __VA_ARGS__)
 #else
 #  define mpinfo(fmt, ...)
 #endif
