@@ -1,7 +1,7 @@
 /****************************************************************************
- * mm/mm_tile/mm_tilereserve.c
+ * mm/mm_tile/mm_tile.h
  *
- *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,101 +33,94 @@
  *
  ****************************************************************************/
 
+#ifndef __MODULES_ASMP_MM_MM_TILE_H
+#define __MODULES_ASMP_MM_MM_TILE_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <sdk/config.h>
 
-#include <assert.h>
+#include <stdint.h>
+#include <semaphore.h>
 
-#include <nuttx/mm/tile.h>
-
-#include "mm_tile/mm_tile.h"
-
-#ifdef CONFIG_MM_TILE
+#include <arch/types.h>
 
 /****************************************************************************
- * Private Functions
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/* Sizes of things */
+
+#define SIZEOF_GAT(n) \
+  ((n + 31) >> 5)
+#define SIZEOF_TILE_S(n) \
+  (sizeof(struct tile_s) + sizeof(uint32_t) * (SIZEOF_GAT(n) - 1))
+
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
+
+/* This structure represents the state of one tile allocation */
+
+struct tile_s
+{
+  uint8_t    log2tile;  /* Log base 2 of the size of one tile */
+  uint16_t   ntiles;    /* The total number of (aligned) tiles in the heap */
+  sem_t      exclsem;   /* For exclusive access to the AT */
+  uintptr_t  heapstart; /* The aligned start of the tile heap */
+  uint32_t   memstat;   /* Tile power status */
+  uint32_t   at[1];     /* Start of the tile allocation table */
+};
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+/* State of the single TILE allocator */
+
+extern FAR struct tile_s *g_tileinfo;
+
+/****************************************************************************
+ * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
- * Name: tile_common_reserve
+ * Name: tile_enter_critical and tile_leave_critical
  *
  * Description:
- *   Reserve memory in the tile heap.  This will reserve the tiles
- *   that contain the start and end addresses plus all of the tiles
- *   in between.  This should be done early in the initialization sequence
- *   before any other allocations are made.
+ *   Critical section management for the tile allocator.
  *
- *   Reserved memory can never be allocated (it can be freed however which
- *   essentially unreserves the memory).
+ * Input Parameters:
+ *   priv - Pointer to the tile state
+ *
+ * Returned Value:
+ *   None
+ *
+ ****************************************************************************/
+
+void tile_enter_critical(FAR struct tile_s *priv);
+void tile_leave_critical(FAR struct tile_s *priv);
+
+/****************************************************************************
+ * Name: tile_mark_allocated
+ *
+ * Description:
+ *   Mark a range of tiles as allocated.
  *
  * Input Parameters:
  *   priv  - The tile heap state structure.
- *   start - The address of the beginning of the region to be reserved.
- *   size  - The size of the region to be reserved
+ *   alloc - The address of the allocation.
+ *   ntiles - The number of tiles allocated
  *
  * Returned Value:
  *   None
  *
  ****************************************************************************/
 
-static inline void tile_common_reserve(FAR struct tile_s *priv,
-                                       uintptr_t start, size_t size)
-{
-  if (size > 0)
-    {
-      uintptr_t mask = (1 << priv->log2tile) - 1;
-      uintptr_t end  = start + size - 1;
-      unsigned int ntiles;
+void tile_mark_allocated(FAR struct tile_s *priv, uintptr_t alloc,
+                         unsigned int ntiles);
 
-      /* Get the aligned (down) start address and the aligned (up) end
-       * address
-       */
-
-      start &= ~mask;
-      end = (end + mask) & ~mask;
-
-      /* Calculate the new size in tiles */
-
-      ntiles = ((end - start) >> priv->log2tile) + 1;
-
-      /* And reserve the tiles */
-
-      tile_mark_allocated(priv, start, ntiles);
-    }
-}
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Name: tile_reserve
- *
- * Description:
- *   Reserve memory in the tile heap.  This will reserve the tiles
- *   that contain the start and end addresses plus all of the tiles
- *   in between.  This should be done early in the initialization sequence
- *   before any other allocations are made.
- *
- *   Reserved memory can never be allocated (it can be freed however which
- *   essentially unreserves the memory).
- *
- * Input Parameters:
- *   handle - The handle previously returned by tile_initialize
- *   start  - The address of the beginning of the region to be reserved.
- *   size   - The size of the region to be reserved
- *
- * Returned Value:
- *   None
- *
- ****************************************************************************/
-
-void tile_reserve(uintptr_t start, size_t size)
-{
-  return tile_common_reserve(g_tileinfo, start, size);
-}
-
-#endif /* CONFIG_MM_TILE */
+#endif /* __MODULES_ASMP_MM_MM_TILE_H */

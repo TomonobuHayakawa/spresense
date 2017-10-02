@@ -1,7 +1,7 @@
 /****************************************************************************
- * mm/mm_tile/mm_tileinit.c
+ * mm/mm_tile/mm_tilecritical.c
  *
- *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2012, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,72 +39,58 @@
 
 #include <nuttx/config.h>
 
+#include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
 
-#include <nuttx/mm/tile.h>
-#include <nuttx/kmalloc.h>
+#include <nuttx/irq.h>
+#include <mm/tile.h>
 
 #include "mm_tile/mm_tile.h"
 
 #ifdef CONFIG_MM_TILE
 
 /****************************************************************************
- * Public Data
- ****************************************************************************/
-
-/* State of the single TILE allocator */
-
-FAR struct tile_s *g_tileinfo;
-
-/****************************************************************************
- * Private Functions
+ * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: tile_release_common
+ * Name: tile_enter_critical and tile_leave_critical
  *
  * Description:
- *   Perform common TILE initialization.
+ *   Critical section management for the tile allocator.
  *
  * Input Parameters:
- *   priv - Reference to the tile heap structure to be released.
+ *   priv - Pointer to the tile state
  *
  * Returned Value:
  *   None
  *
  ****************************************************************************/
 
-static inline void tile_release_common(FAR struct tile_s *priv)
+void tile_enter_critical(FAR struct tile_s *priv)
 {
-  DEBUGASSERT(priv);
-  sem_destroy(&priv->exclsem);
-  kmm_free(priv);
+  int ret;
+
+  /* Continue waiting if we are awakened by a signal */
+
+  do
+    {
+      ret = sem_wait(&priv->exclsem);
+      if (ret < 0)
+        {
+          DEBUGASSERT(errno == EINTR);
+        }
+    }
+  while (ret < 0);
 }
 
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Name: tile_release
- *
- * Description:
- *   Uninitialize a gram memory allocator and release resources held by the
- *   allocator.
- *
- * Input Parameters:
- *   handle - The handle previously returned by tile_initialize
- *
- * Returned Value:
- *   None.
- *
- ****************************************************************************/
-
-void tile_release(void)
+void tile_leave_critical(FAR struct tile_s *priv)
 {
-  tile_release_common(g_tileinfo);
-  g_tileinfo = NULL;
+  sem_post(&priv->exclsem);
 }
+
 
 #endif /* CONFIG_MM_TILE */
+
+

@@ -1,7 +1,7 @@
 /****************************************************************************
- * mm/mm_tile/mm_tilefree.c
+ * mm/mm_tile/mm_tilereserve.c
  *
- *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,101 +41,62 @@
 
 #include <assert.h>
 
-#include <nuttx/mm/tile.h>
-
-#include <arch/chip/pm.h>
+#include <mm/tile.h>
 
 #include "mm_tile/mm_tile.h"
 
 #ifdef CONFIG_MM_TILE
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: tile_common_free
+ * Name: tile_common_reserve
  *
  * Description:
- *   Return memory to the tile heap.
+ *   Reserve memory in the tile heap.  This will reserve the tiles
+ *   that contain the start and end addresses plus all of the tiles
+ *   in between.  This should be done early in the initialization sequence
+ *   before any other allocations are made.
+ *
+ *   Reserved memory can never be allocated (it can be freed however which
+ *   essentially unreserves the memory).
  *
  * Input Parameters:
- *   handle - The handle previously returned by tile_initialize
- *   memory - A pointer to memory previoiusly allocated by tile_alloc.
+ *   priv  - The tile heap state structure.
+ *   start - The address of the beginning of the region to be reserved.
+ *   size  - The size of the region to be reserved
  *
  * Returned Value:
  *   None
  *
  ****************************************************************************/
 
-static inline void tile_common_free(FAR struct tile_s *priv,
-                                    FAR void *memory, size_t size)
+static inline void tile_common_reserve(FAR struct tile_s *priv,
+                                       uintptr_t start, size_t size)
 {
-  unsigned int tileno;
-  unsigned int atidx;
-  unsigned int atbit;
-  unsigned int tilemask;
-  unsigned int ntiles;
-  unsigned int avail;
-  uint32_t     atmask;
-
-  DEBUGASSERT(priv && memory && size <= 32 * (1 << priv->log2tile));
-
-  /* Get exclusive access to the AT */
-
-  tile_enter_critical(priv);
-
-  /* Determine the tile number of the first tile in the allocation */
-
-  tileno = ((uintptr_t)memory - priv->heapstart) >> priv->log2tile;
-
-  /* Determine the AT table index and bit number associated with the
-   * allocation.
-   */
-
-  atidx = tileno >> 5;
-  atbit = tileno & 31;
-
-  /* Determine the number of tiles in the allocation */
-
-  tilemask =  (1 << priv->log2tile) - 1;
-  ntiles = (size + tilemask) >> priv->log2tile;
-
-  /* Clear bits in the AT entry or entries */
-
-  avail = 32 - atbit;
-  if (ntiles > avail)
+  if (size > 0)
     {
-      /* Clear bits in the first AT entry */
+      uintptr_t mask = (1 << priv->log2tile) - 1;
+      uintptr_t end  = start + size - 1;
+      unsigned int ntiles;
 
-      atmask = (0xffffffff << atbit);
-      DEBUGASSERT((priv->at[atidx] & atmask) == atmask);
+      /* Get the aligned (down) start address and the aligned (up) end
+       * address
+       */
 
-      priv->at[atidx] &= ~atmask;
-      ntiles -= avail;
+      start &= ~mask;
+      end = (end + mask) & ~mask;
 
-      /* Clear bits in the second AT entry */
+      /* Calculate the new size in tiles */
 
-      atmask = 0xffffffff >> (32 - ntiles);
-      DEBUGASSERT((priv->at[atidx+1] & atmask) == atmask);
+      ntiles = ((end - start) >> priv->log2tile) + 1;
 
-      priv->at[atidx+1] &= ~atmask;
+      /* And reserve the tiles */
+
+      tile_mark_allocated(priv, start, ntiles);
     }
-
-  /* Handle the case where where all of the tiles came from one entry */
-
-  else
-    {
-      /* Clear bits in a single AT entry */
-
-      atmask   = 0xffffffff >> (32 - ntiles);
-      atmask <<= atbit;
-      DEBUGASSERT((priv->at[atidx] & atmask) == atmask);
-
-      priv->at[atidx] &= ~atmask;
-    }
-
-  tile_leave_critical(priv);
 }
 
 /****************************************************************************
@@ -143,32 +104,30 @@ static inline void tile_common_free(FAR struct tile_s *priv,
  ****************************************************************************/
 
 /****************************************************************************
- * Name: tile_free
+ * Name: tile_reserve
  *
  * Description:
- *   Return memory to the tile heap.
+ *   Reserve memory in the tile heap.  This will reserve the tiles
+ *   that contain the start and end addresses plus all of the tiles
+ *   in between.  This should be done early in the initialization sequence
+ *   before any other allocations are made.
+ *
+ *   Reserved memory can never be allocated (it can be freed however which
+ *   essentially unreserves the memory).
  *
  * Input Parameters:
  *   handle - The handle previously returned by tile_initialize
- *   memory - A pointer to memory previoiusly allocated by tile_alloc.
+ *   start  - The address of the beginning of the region to be reserved.
+ *   size   - The size of the region to be reserved
  *
  * Returned Value:
  *   None
  *
  ****************************************************************************/
 
-void tile_free(FAR void *memory, size_t size)
+void tile_reserve(uintptr_t start, size_t size)
 {
-  size_t tsize;
-
-  tile_common_free(g_tileinfo, memory, size);
-
-  /* Tile power off. */
-
-  tsize = size + ((1 << g_tileinfo->log2tile) - 1);
-  tsize &= ~((1 << g_tileinfo->log2tile) - 1);
-
-  up_pmramctrl(PMCMD_RAM_OFF, (uintptr_t)memory, tsize);
+  return tile_common_reserve(g_tileinfo, start, size);
 }
 
 #endif /* CONFIG_MM_TILE */

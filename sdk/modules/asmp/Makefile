@@ -50,6 +50,7 @@ CSRCS += mpshm.c
 CSRCS += mpmutex.c
 
 include rawelf/Make.defs
+include mm_tile/Make.defs
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))

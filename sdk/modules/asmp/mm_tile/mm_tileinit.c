@@ -42,8 +42,9 @@
 #include <assert.h>
 #include <errno.h>
 
-#include <nuttx/mm/tile.h>
 #include <nuttx/kmalloc.h>
+
+#include <mm/tile.h>
 
 #include <arch/chip/pm.h>
 

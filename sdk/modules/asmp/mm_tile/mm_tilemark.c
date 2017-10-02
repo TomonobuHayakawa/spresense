@@ -41,7 +41,7 @@
 
 #include <assert.h>
 
-#include <nuttx/mm/tile.h>
+#include <mm/tile.h>
 
 #include "mm_tile/mm_tile.h"
 
