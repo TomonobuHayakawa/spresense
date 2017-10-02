@@ -10,12 +10,12 @@
 NUTTXDIR ?= ../nuttx
 
 SDKDIR := $(shell pwd | sed -e 's/ /\\ /g')
-KERNELDIR := $(shell pwd | sed -e 's/ /\\ /g')/$(NUTTXDIR)
+TOPDIR := $(shell pwd | sed -e 's/ /\\ /g')/$(NUTTXDIR)
 
--include $(KERNELDIR)/.config
+-include $(TOPDIR)/.config
 -include $(SDKDIR)/.config
-include $(KERNELDIR)/tools/Config.mk
-include Make.defs
+include $(TOPDIR)/tools/Config.mk
+include $(TOPDIR)/Make.defs
 
 ifeq ($(V),1)
 export Q :=
@@ -28,12 +28,12 @@ endif
 endif
 
 ifeq ($(CONFIG_BUILD_PROTECTED),y)
-include $(KERNELDIR)/ProtectedLibs.mk
+include $(TOPDIR)/ProtectedLibs.mk
 else
 ifeq ($(CONFIG_BUILD_KERNEL),y)
-include $(KERNELDIR)/KernelLibs.mk
+include $(TOPDIR)/KernelLibs.mk
 else
-include $(KERNELDIR)/FlatLibs.mk
+include $(TOPDIR)/FlatLibs.mk
 endif
 endif
 
@@ -48,11 +48,11 @@ buildall: buildkernel buildsdk
 #
 
 buildkernel:
-	$(MAKE) $(MAKEOPTS) -C $(KERNELDIR) pass2deps
-	$(MAKE) $(MAKEOPTS) -C $(KERNELDIR)/arch/arm/src export_startup TOPDIR=$(KERNELDIR)
+	$(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
+#	$(MAKE) $(MAKEOPTS) -C $(TOPDIR)/arch/arm/src export_startup TOPDIR=$(TOPDIR)
 PHONY += buildkernel
 
-buildsdk:
+buildsdk: bsp/include/sdk/config.h test
 	$(Q)
 PHONY += buildsdk
 
@@ -61,12 +61,15 @@ PHONY += buildsdk
 #
 
 cleankernel:
-	$(MAKE) -C $(KERNELDIR) clean
+	$(MAKE) -C $(TOPDIR) clean
 PHONY += cleankernel
 
 cleansdk:
-	$(Q)
+	$(call DELFILE, bsp/include/sdk/config.h)
 PHONY += cleansdk
+
+bsp/include/sdk/config.h: $(TOPDIR)/.config
+	$(Q) tools/mkconfig.py > $@
 
 # config targets
 #
@@ -99,7 +102,15 @@ PHONY += gconfig
 savedefconfig:
 PHONY += savedefconfig
 
-clean: cleansdk
+clean: cleansdk cleantest
 PHONY += clean
+
+test: bsp/include/sdk/config.h
+	$(Q) $(MAKE) -C modules/asmp TOPDIR=$(TOPDIR) SDKDIR=$(SDKDIR)
+PHONY += test
+
+cleantest:
+	$(Q) $(MAKE) -C modules/asmp TOPDIR=$(TOPDIR) SDKDIR=$(SDKDIR) clean
+PHONY += cleantest
 
 .PHONY: $(PHONY)
