@@ -1,0 +1,131 @@
+############################################################################
+# configs/corvo/src/Makefile
+#
+#   Copyright (C) 2016 Sony Corporation. All rights reserved.
+#   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name NuttX nor Sony nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+############################################################################
+
+-include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
+
+BOARDNAME := $(patsubst "%",%,$(strip $(CONFIG_BOARD_NAME)))
+
+VPATH   = common
+DEPPATH = --dep-path common
+
+ASRCS =
+CSRCS = cxd56_boot.c
+
+ifneq ($(BOARDNAME),)
+include $(BOARDNAME)/Make.defs
+endif
+
+ifeq ($(CONFIG_ARCH_FPU),y)
+CSRCS += cxd56_ostest.c
+endif
+
+ifeq ($(CONFIG_USBMSC),y)
+CSRCS += cxd56_usbmsc.c
+endif
+
+ifeq ($(CONFIG_USBMSC_COMPOSITE),y)
+CSRCS += cxd56_composite.c
+endif
+
+ifeq ($(CONFIG_BMP280),y)
+CSRCS += cxd56_bmp280.c
+endif
+
+ifeq ($(CONFIG_BMI160),y)
+CSRCS += cxd56_bmi160.c
+endif
+
+ifeq ($(CONFIG_AK09912),y)
+CSRCS += cxd56_ak09912.c
+endif
+
+ifeq ($(CONFIG_APDS9930),y)
+CSRCS += cxd56_apds9930.c
+endif
+
+ifeq ($(CONFIG_LT1PA01),y)
+CSRCS += cxd56_lt1pa01.c
+endif
+
+ifeq ($(CONFIG_BH1721FVC),y)
+CSRCS += cxd56_bh1721fvc.c
+endif
+
+ifeq ($(CONFIG_KX022),y)
+CSRCS += cxd56_kx022.c
+endif
+
+ifeq ($(CONFIG_BM1422GMV),y)
+CSRCS += cxd56_bm1422gmv.c
+endif
+
+ifeq ($(CONFIG_BM1383GLV),y)
+CSRCS += cxd56_bm1383glv.c
+endif
+
+ifeq ($(CONFIG_BH1745NUC),y)
+CSRCS += cxd56_bh1745nuc.c
+endif
+
+ifeq ($(CONFIG_RPR0521RS),y)
+CSRCS += cxd56_rpr0521rs.c
+endif
+
+ifeq ($(CONFIG_CXD56_GNSS), y)
+CSRCS += cxd56_gnssext.c
+endif
+
+ifeq ($(CONFIG_SPI),y)
+CSRCS += cxd56_spi.c
+endif
+
+ifeq ($(CONFIG_PWM),y)
+CSRCS += cxd56_pwm.c
+endif
+
+ifeq ($(CONFIG_LCD_LPM013M091A),y)
+CSRCS += cxd56_lpm013m091a.c
+endif
+
+ifeq ($(CONFIG_EINK_ET014TT1),y)
+CSRCS += cxd56_et014tt1.c
+endif
+
+ifeq ($(CONFIG_BOARDCTL_UNIQUEID),y)
+CSRCS += cxd56_uid.c
+endif
+
+include $(SDKDIR)/bsp/scripts/Board.mk

@@ -1,0 +1,25 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menu "Board Configuration"
+
+choice
+	prompt "Board Selection"
+	default BOARD_CORVO
+
+	config BOARD_CORVO
+		bool "Corvo"
+
+	config BOARD_COLLET
+		bool "Collet"
+
+endchoice
+
+config BOARD_NAME
+	string
+	default "corvo" if BOARD_CORVO
+	default "collet" if BOARD_COLLET
+
+endmenu
