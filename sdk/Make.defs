@@ -1,11 +1,23 @@
 include $(SDKDIR)/.config
 
 ifeq ($(WINTOOL),y)
+
 # Windows-native toolchains
+
 CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/bsp/include)"
 CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/modules/include)"
+
+# mkspk for create spk packaging file
+
+MKSPK = $(SDKDIR)$(DELIM)tools$(DELIM)windows$(DELIM)mkspk.exe
+
 else
+
 # Linux/Cygwin-native toolchain
+
 CFLAGS += -isystem $(SDKDIR)/bsp/include
 CFLAGS += -isystem $(SDKDIR)/modules/include
+
+MKSPK = $(SDKDIR)$(DELIM)tools$(DELIM)linux$(DELIM)mkspk
+
 endif
