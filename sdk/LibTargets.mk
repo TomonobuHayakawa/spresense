@@ -1,7 +1,6 @@
 
 SDKLIBS += lib$(DELIM)libasmp$(LIBEXT)
-SDKDEPDIRS += modules$(DELIM)asmp
-
+SDKMODDIRS += modules$(DELIM)asmp
 modules$(DELIM)asmp$(DELIM)libasmp$(LIBEXT): context
 	$(Q) $(MAKE) -C modules$(DELIM)asmp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libasmp$(LIBEXT)
 

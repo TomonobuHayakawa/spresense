@@ -34,6 +34,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <nuttx/arch.h>
 #include <nuttx/fs/fs.h>
@@ -76,7 +77,7 @@ static int sysctl_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
     {
       default:
         {
-          dbg("cmd %x(%x)\n", cmd, arg);
+          _err("cmd %x(%x)\n", cmd, arg);
           ret = cxd56_sysctlcmd(cmd & 0xff, arg);
           if (ret)
             {
@@ -131,7 +132,7 @@ int cxd56_sysctlcmd(uint8_t id, uint32_t data)
   ret = cxd56_iccsendproto(FIFO_PROTO_SYSCTL_ID, &msg, SYSCTL_TIMEOUT);
   if (ret < 0)
     {
-      dbg("Timeout.\n");
+      _err("Timeout.\n");
       return ret;
     }
 

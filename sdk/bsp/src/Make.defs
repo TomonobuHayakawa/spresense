@@ -36,89 +36,11 @@
 #
 ############################################################################
 
-HEAD_ASRC  =
-
-CMN_ASRCS  = up_saveusercontext.S up_fullcontextrestore.S up_switchcontext.S
-CMN_ASRCS += up_testset.S vfork.S
-ifeq ($(CONFIG_CXD56_HOT_SLEEP),y)
-CMN_ASRCS += up_cpu_context.S
-endif
-
-CMN_CSRCS  = up_assert.c up_blocktask.c up_copyfullstate.c
-CMN_CSRCS += up_createstack.c up_mdelay.c up_udelay.c up_exit.c
-CMN_CSRCS += up_initialize.c up_initialstate.c up_interruptcontext.c
-CMN_CSRCS += up_memfault.c up_modifyreg8.c up_modifyreg16.c up_modifyreg32.c
-CMN_CSRCS += up_releasepending.c up_releasestack.c up_reprioritizertr.c
-CMN_CSRCS += up_schedulesigaction.c up_sigdeliver.c up_stackframe.c
-CMN_CSRCS += up_unblocktask.c up_usestack.c up_doirq.c up_hardfault.c
-CMN_CSRCS += up_svcall.c up_vfork.c
-
-ifeq ($(CONFIG_ARMV7M_CMNVECTOR),y)
-ifeq ($(CONFIG_ARMV7M_LAZYFPU),y)
-CMN_ASRCS += up_lazyexception.S
-else
-CMN_ASRCS += up_exception.S
-endif
-CMN_CSRCS += up_vectors.c
-endif
-
-ifeq ($(CONFIG_ARCH_RAMVECTORS),y)
-CMN_CSRCS += up_ramvec_initialize.c up_ramvec_attach.c
-endif
-
-ifeq ($(CONFIG_ARCH_MEMCPY),y)
-CMN_ASRCS += up_memcpy.S
-endif
-
-ifeq ($(CONFIG_BUILD_PROTECTED),y)
-CMN_CSRCS += up_mpu.c up_task_start.c up_pthread_start.c
-ifneq ($(CONFIG_DISABLE_SIGNALS),y)
-CMN_CSRCS += up_signal_dispatch.c
-CMN_UASRCS += up_signal_handler.S
-endif
-endif
-
-ifeq ($(CONFIG_STACK_COLORATION),y)
-CMN_CSRCS += up_checkstack.c
-endif
-
-ifeq ($(CONFIG_ELF),y)
-CMN_CSRCS += up_elf.c
-else ifeq ($(CONFIG_MODULE),y)
-CMN_CSRCS += up_elf.c
-endif
-
-ifeq ($(CONFIG_ARCH_FPU),y)
-CMN_ASRCS += up_fpu.S
-ifneq ($(CONFIG_ARMV7M_CMNVECTOR),y)
-CMN_CSRCS += up_copyarmstate.c
-else ifeq ($(CONFIG_ARMV7M_LAZYFPU),y)
-CMN_CSRCS += up_copyarmstate.c
-endif
-endif
-
 CHIP_ASRCS  =
-CHIP_CSRCS = cxd56_allocateheap.c
-CHIP_CSRCS += cxd56_serial.c cxd56_uart.c cxd56_irq.c cxd56_clock.c
 CHIP_CSRCS += cxd56_uid.c
-CHIP_CSRCS += cxd56_start.c
 CHIP_CSRCS += cxd56_sysctl.c
-CHIP_CSRCS += cxd56_powermgr.c
-ifeq ($(CONFIG_CXD56_PM_PROCFS),y)
-CHIP_CSRCS += cxd56_powermgr_procfs.c
-endif
 ifeq ($(CONFIG_CXD56_HOT_SLEEP),y)
 CHIP_CSRCS += cxd56_cpu_context.c
-endif
-
-ifneq ($(CONFIG_SCHED_TICKLESS),y)
-CHIP_CSRCS += cxd56_timerisr.c
-else
-CHIP_CSRCS += cxd56_tickless_rit.c
-endif
-
-ifneq ($(CONFIG_ARCH_IDLE_CUSTOM),y)
-CHIP_CSRCS += cxd56_idle.c
 endif
 
 ifeq ($(CONFIG_DEBUG),y)
@@ -143,32 +65,6 @@ endif
 
 ifeq ($(CONFIG_CXD56_SDIO),y)
 CHIP_CSRCS += cxd56_sdhci.c
-endif
-
-ifeq ($(CONFIG_CXD56_I2C0),y)
-CHIP_CSRCS += cxd56_i2c.c
-else ifeq ($(CONFIG_CXD56_I2C1),y)
-CHIP_CSRCS += cxd56_i2c.c
-else ifeq ($(CONFIG_CXD56_I2C2),y)
-CHIP_CSRCS += cxd56_i2c.c
-endif
-
-ifeq ($(CONFIG_CXD56_SPI0),y)
-CHIP_CSRCS += cxd56_spi.c
-else ifeq ($(CONFIG_CXD56_SPI3),y)
-CHIP_CSRCS += cxd56_spi.c
-else ifeq ($(CONFIG_CXD56_SPI4),y)
-CHIP_CSRCS += cxd56_spi.c
-else ifeq ($(CONFIG_CXD56_SPI5),y)
-CHIP_CSRCS += cxd56_spi.c
-endif
-
-ifeq ($(CONFIG_CXD56_CPUFIFO),y)
-CHIP_CSRCS += cxd56_cpufifo.c
-endif
-
-ifeq ($(CONFIG_CXD56_ICC),y)
-CHIP_CSRCS += cxd56_icc.c
 endif
 
 ifeq ($(CONFIG_CXD56_SPH),y)
@@ -210,7 +106,6 @@ CHIP_CSRCS += cxd56_geofence.c
 endif
 
 CHIP_CSRCS += cxd56_gpio.c
-CHIP_CSRCS += cxd56_pinconfig.c
 
 ifeq ($(CONFIG_CXD56_GPIO_IRQ),y)
 CHIP_CSRCS += cxd56_gpioint.c

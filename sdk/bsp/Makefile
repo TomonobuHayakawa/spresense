@@ -33,7 +33,9 @@
 #
 ############################################################################
 
+-include $(TOPDIR)/Make.defs
 -include $(SDKDIR)/Make.defs
+-include src$(DELIM)Make.defs
 
 CPPFLAGS += $(EXTRADEFINES)
 CFLAGS += $(EXTRADEFINES)
@@ -41,25 +43,30 @@ CXXFLAGS += $(EXTRADEFINES)
 
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
   ARCH_SRCDIR = $(TOPDIR)\arch\$(CONFIG_ARCH)\src
-  NUTTX = "$(TOPDIR)\nuttx$(EXEEXT)"
+  BSPDIR = $(SDKDIR)\bsp
+  NUTTX = "$(SDKDIR)\nuttx$(EXEEXT)"
   CFLAGS += -I$(ARCH_SRCDIR)\chip
   CFLAGS += -I$(ARCH_SRCDIR)\common
   CFLAGS += -I$(ARCH_SRCDIR)\$(ARCH_SUBDIR)
+  CFLAGS += -I$(BSPDIR)\src
   CFLAGS += -I$(TOPDIR)\sched
 else
   ARCH_SRCDIR = $(TOPDIR)/arch/$(CONFIG_ARCH)/src
+  BSPDIR = $(SDKDIR)/bsp
 ifeq ($(WINTOOL),y)
-  NUTTX = "${shell cygpath -w $(TOPDIR)/nuttx$(EXEEXT)}"
+  NUTTX = "${shell cygpath -w $(SDKDIR)/nuttx$(EXEEXT)}"
   CFLAGS += -I "${shell cygpath -w $(ARCH_SRCDIR)/chip}"
   CFLAGS += -I "${shell cygpath -w $(ARCH_SRCDIR)/common}"
   CFLAGS += -I "${shell cygpath -w $(ARCH_SRCDIR)/$(ARCH_SUBDIR)}"
   CFLAGS += -I "${shell cygpath -w $(TOPDIR)/sched}"
+  CFLAGS += -I "${shell cygpath -w $(BSPDIR)/src}"
 else
-  NUTTX = "$(TOPDIR)/nuttx$(EXEEXT)"
+  NUTTX = "$(SDKDIR)/nuttx$(EXEEXT)"
   CFLAGS += -I$(ARCH_SRCDIR)/chip
   CFLAGS += -I$(ARCH_SRCDIR)/common
   CFLAGS += -I$(ARCH_SRCDIR)/$(ARCH_SUBDIR)
   CFLAGS += -I$(TOPDIR)/sched
+  CFLAGS += -I$(BSPDIR)/src
 endif
 endif
 
@@ -79,20 +86,7 @@ COBJS = $(CSRCS:.c=$(OBJEXT))
 SRCS = $(ASRCS) $(CSRCS)
 OBJS = $(AOBJS) $(COBJS)
 
-# User-mode objects
-
-UASRCS = $(CHIP_UASRCS) $(CMN_UASRCS)
-UAOBJS = $(UASRCS:.S=$(OBJEXT))
-
-UCSRCS = $(CHIP_UCSRCS) $(CMN_UCSRCS)
-UCOBJS = $(UCSRCS:.c=$(OBJEXT))
-
-USRCS = $(UASRCS) $(UCSRCS)
-UOBJS = $(UAOBJS) $(UCOBJS)
-
-KBIN = libkarch$(LIBEXT)
-UBIN = libuarch$(LIBEXT)
-BIN  = libarch$(LIBEXT)
+BIN  = libbsp$(LIBEXT)
 
 LDFLAGS += $(ARCHSCRIPT)
 
@@ -122,9 +116,9 @@ ifeq ($(BOARDMAKE),y)
 endif
 
 else
-  LIBPATHS += -L"$(TOPDIR)/lib"
+  LIBPATHS += -L"$(SDKDIR)/lib"
 ifeq ($(BOARDMAKE),y)
-  LIBPATHS += -L"$(TOPDIR)/arch/$(CONFIG_ARCH)/src/board"
+  LIBPATHS += -L"$(SDKDIR)/arch/$(CONFIG_ARCH)/src/board"
 endif
 endif
 endif
@@ -137,36 +131,23 @@ endif
 LIBGCC = "${shell "$(CC)" $(ARCHCPUFLAGS) -print-libgcc-file-name}"
 GCC_LIBDIR := ${shell dirname $(LIBGCC)}
 
-VPATH += chip
-VPATH += common
-VPATH += $(ARCH_SUBDIR)
-
-ifeq ($(CONFIG_ARCH_TOOLCHAIN_IAR),y)
-  VPATH += chip$(DELIM)iar
-  VPATH += $(ARCH_SUBDIR)$(DELIM)iar
-else # ifeq ($(CONFIG_ARCH_TOOLCHAIN_GNU),y)
-  VPATH += chip$(DELIM)gnu
-  VPATH += $(ARCH_SUBDIR)$(DELIM)gnu
-endif
+VPATH += src
 
 all: $(HEAD_OBJ) $(BIN)
 
 .PHONY: board$(DELIM)libboard$(LIBEXT)
 
-$(AOBJS) $(UAOBJS) $(HEAD_OBJ): %$(OBJEXT): %.S
+$(AOBJS) $(HEAD_OBJ): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
 
-$(COBJS) $(UCOBJS): %$(OBJEXT): %.c
+$(COBJS): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
-$(BIN) $(KBIN): $(OBJS)
+$(BIN): $(OBJS)
 	$(call ARCHIVE, $@, $(OBJS))
 
-$(UBIN): $(UOBJS)
-	$(call ARCHIVE, $@, $(UOBJS))
-
 board$(DELIM)libboard$(LIBEXT):
-	$(Q) $(MAKE) -C board TOPDIR="$(TOPDIR)" libboard$(LIBEXT) EXTRADEFINES=$(EXTRADEFINES)
+	$(Q) $(MAKE) -C board TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libboard$(LIBEXT) EXTRADEFINES=$(EXTRADEFINES)
 
 nuttx$(EXEEXT): $(HEAD_OBJ) board$(DELIM)libboard$(LIBEXT)
 	$(Q) echo "LD: nuttx"
@@ -195,9 +176,9 @@ endif
 
 # Dependencies
 
-.depend: Makefile chip$(DELIM)Make.defs $(SRCS)
+.depend: Makefile src$(DELIM)Make.defs $(SRCS)
 ifeq ($(BOARDMAKE),y)
-	$(Q) $(MAKE) -C board TOPDIR="$(TOPDIR)" depend
+	$(Q) $(MAKE) -C board TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" depend
 endif
 	$(Q) $(MKDEP) $(patsubst %,--dep-path %,$(subst :, ,$(VPATH))) \
 	 "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
@@ -209,8 +190,6 @@ clean:
 ifeq ($(BOARDMAKE),y)
 	$(Q) $(MAKE) -C board TOPDIR="$(TOPDIR)" clean
 endif
-	$(call DELFILE, $(KBIN))
-	$(call DELFILE, $(UBIN))
 	$(call DELFILE, $(BIN))
 	$(call CLEAN)
 

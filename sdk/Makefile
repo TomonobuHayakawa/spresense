@@ -39,9 +39,16 @@ endif
 
 PHONY :=
 
-all: buildsdk
+LDSTARTGROUP ?= --start-group
+LDENDGROUP ?= --end-group
 
-buildall: buildkernel buildsdk
+NUTTXNAME = nuttx
+BIN       = $(NUTTXNAME)$(EXEEXT)
+SPK       = $(NUTTXNAME).spk
+
+all: $(BIN)
+
+buildall: buildkernel $(BIN)
 
 # buildkernel
 #
@@ -49,15 +56,28 @@ buildall: buildkernel buildsdk
 
 buildkernel:
 	$(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
+	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(NUTTXLIBS))) lib
 PHONY += buildkernel
 
 # Include library build recipes
 
 include LibTargets.mk
 
-buildsdk: depend $(SDKLIBS)
-	$(Q)
-PHONY += buildsdk
+SDKDEPDIRS += $(SDKMODDIRS)
+SDKCLEANDIRS += $(SDKMODDIRS)
+
+# T.B.D
+ifeq ($(WINTOOL),y)
+  LIBPATHS += -L"${shell cygpath -w "$(SDKDIR)/lib"}"
+else
+  LIBPATHS += -L"$(SDKDIR)/lib"
+endif
+
+LINKLIBS = $(patsubst lib/%,%,$(NUTTXLIBS) $(SDKLIBS))
+LDLIBS = $(patsubst %.a,%,$(patsubst lib%,-l%,$(LINKLIBS)))
+
+$(BIN): depend $(SDKLIBS)
+	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" EXTRADEFINES=$(KDEFINE) $(BIN)
 
 context: bsp/include/sdk/config.h
 PHONY += context
@@ -68,7 +88,7 @@ clean_context:
 PHONY += clean_context
 
 depend: context
-	$(Q) for dir in $(SDKDEPDIRS) ; do \
+	$(Q) for dir in $(SDKDEPDIRS); do \
 		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" EXTRADEFINES=$(KDEFINE) depend; \
 	done
 PHONY += depend
@@ -83,10 +103,18 @@ PHONY += cleankernel
 
 cleansdk:
 	$(call DELFILE, bsp/include/sdk/config.h)
+	$(call DELFILE, bsp/include/sdk/version.h)
+	$(call DELFILE, $(SDKLIBS))
+	$(Q) for dir in $(SDKCLEANDIRS); do \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" clean; \
+	done
 PHONY += cleansdk
 
 bsp/include/sdk/config.h: $(TOPDIR)/.config
 	$(Q) tools/mkconfig.py > $@
+
+bsp/include/sdk/version.h: $(SDKDIR)/.version
+# TBD
 
 # config targets
 #
@@ -122,5 +150,16 @@ PHONY += savedefconfig
 
 clean: cleansdk
 PHONY += clean
+
+test:
+	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" depend
+	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" EXTRADEFINES=$(KDEFINE)
+
+PHONY += test
+
+testclean:
+	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" clean
+
+PHONY += testclean
 
 .PHONY: $(PHONY)
