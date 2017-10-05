@@ -60,6 +60,7 @@ ifeq ($(WINTOOL),y)
   CFLAGS += -I "${shell cygpath -w $(ARCH_SRCDIR)/$(ARCH_SUBDIR)}"
   CFLAGS += -I "${shell cygpath -w $(TOPDIR)/sched}"
   CFLAGS += -I "${shell cygpath -w $(BSPDIR)/src}"
+  ARCHSCRIPT = -T "${shell cygpath -w $(SDKDIR)/bsp/scripts/$(LDSCRIPT)}"
 else
   NUTTX = "$(SDKDIR)/nuttx$(EXEEXT)"
   CFLAGS += -I$(ARCH_SRCDIR)/chip
@@ -67,6 +68,7 @@ else
   CFLAGS += -I$(ARCH_SRCDIR)/$(ARCH_SUBDIR)
   CFLAGS += -I$(TOPDIR)/sched
   CFLAGS += -I$(BSPDIR)/src
+  ARCHSCRIPT = -T$(SDKDIR)/bsp/scripts/$(LDSCRIPT)
 endif
 endif
 
@@ -103,7 +105,7 @@ ifeq ($(CONFIG_WINDOWS_NATIVE),y)
   BOARDMAKE = $(if $(wildcard .\board\Makefile),y,)
   LIBPATHS += -L"$(TOPDIR)\lib"
 ifeq ($(BOARDMAKE),y)
-  LIBPATHS += -L"$(TOPDIR)\arch\$(CONFIG_ARCH)\src\board"
+  LIBPATHS += -L"$(TOPDIR)\bsp\board"
 endif
 
 else
@@ -112,13 +114,13 @@ else
 ifeq ($(WINTOOL),y)
   LIBPATHS += -L"${shell cygpath -w "$(TOPDIR)/lib"}"
 ifeq ($(BOARDMAKE),y)
-  LIBPATHS += -L"${shell cygpath -w "$(TOPDIR)/arch/$(CONFIG_ARCH)/src/board"}"
+  LIBPATHS += -L"${shell cygpath -w "$(TOPDIR)/bsp/board"}"
 endif
 
 else
   LIBPATHS += -L"$(SDKDIR)/lib"
 ifeq ($(BOARDMAKE),y)
-  LIBPATHS += -L"$(SDKDIR)/arch/$(CONFIG_ARCH)/src/board"
+  LIBPATHS += -L"$(SDKDIR)/bsp/board"
 endif
 endif
 endif
