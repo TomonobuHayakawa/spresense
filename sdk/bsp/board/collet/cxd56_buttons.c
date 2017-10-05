@@ -120,7 +120,7 @@ void board_button_initialize(void)
  *
  ****************************************************************************/
 
-uint8_t board_buttons(void)
+uint32_t board_buttons(void)
 {
   uint8_t ret = 0;
   int i;
@@ -166,9 +166,8 @@ uint8_t board_buttons(void)
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_IRQBUTTONS
-xcpt_t board_button_irq(int id, xcpt_t irqhandler)
+int board_button_irq(int id, xcpt_t irqhandler, FAR void *arg)
 {
-  xcpt_t oldhandler = NULL;
 #ifdef CONFIG_CXD56_GPIO_IRQ
   irqstate_t flags;
 
@@ -178,7 +177,6 @@ xcpt_t board_button_irq(int id, xcpt_t irqhandler)
     {
       /* Return the current button handler and set the new interrupt handler */
 
-      oldhandler      = g_buttonisr[id];
       g_buttonisr[id] = irqhandler;
 
       /* Disable interrupts until we are done */
@@ -209,9 +207,9 @@ xcpt_t board_button_irq(int id, xcpt_t irqhandler)
       leave_critical_section(flags);
     }
 #else
-  dbg("ERROR: Not found gpio interrupt driver.\n");
+  _err("ERROR: Not found gpio interrupt driver.\n");
 #endif
-  return oldhandler;
+  return OK;
 }
 #endif
 
