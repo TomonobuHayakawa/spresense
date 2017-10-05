@@ -71,12 +71,6 @@ ifeq ($(CONFIG_CXD56_SPH),y)
 CHIP_CSRCS += cxd56_sph.c
 endif
 
-ifeq ($(CONFIG_CXD56_REMOTEAPI),y)
-CHIP_CSRCS += cxd56_remoteapi.c
-EXTRAOBJS += chip$(DELIM)remoteapistub.po
-LDFLAGS += @chip$(DELIM)wrapsyms.cmd
-endif
-
 ifeq ($(CONFIG_CXD56_AUDIO),y)
 include cxd56xx/audio/Make.defs
 endif
