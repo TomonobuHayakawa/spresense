@@ -21,3 +21,5 @@ CFLAGS += -isystem $(SDKDIR)/modules/include
 MKSPK = $(SDKDIR)$(DELIM)tools$(DELIM)linux$(DELIM)mkspk
 
 endif
+
+LDFLAGS += @"$(TOPDIR)$(DELIM)arch$(DELIM)arm$(DELIM)src$(DELIM)chip$(DELIM)wrapsyms.cmd"
