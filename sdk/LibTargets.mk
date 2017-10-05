@@ -6,3 +6,13 @@ modules$(DELIM)asmp$(DELIM)libasmp$(LIBEXT): context
 
 lib$(DELIM)libasmp$(LIBEXT): modules$(DELIM)asmp$(DELIM)libasmp$(LIBEXT)
 	$(Q) install modules$(DELIM)asmp$(DELIM)libasmp$(LIBEXT) lib$(DELIM)libasmp$(LIBEXT)
+
+# BSP archive rule
+
+SDKLIBS += lib$(DELIM)libbsp$(LIBEXT)
+SDKMODDIRS += bsp
+bsp$(DELIM)libbsp$(LIBEXT): context
+	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libbsp$(LIBEXT)
+
+lib$(DELIM)libbsp$(LIBEXT): bsp$(DELIM)libbsp$(LIBEXT)
+	$(Q) install bsp$(DELIM)libbsp$(LIBEXT) lib$(DELIM)libbsp$(LIBEXT)
