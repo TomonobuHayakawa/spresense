@@ -16,6 +16,7 @@ TOPDIR := $(shell pwd | sed -e 's/ /\\ /g')/$(NUTTXDIR)
 -include $(SDKDIR)/.config
 include $(TOPDIR)/tools/Config.mk
 include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
 
 ifeq ($(V),1)
 export Q :=
@@ -26,6 +27,10 @@ else
 export Q := @
 endif
 endif
+
+# Dummy. It needs libapps.a to be a member of EXPORTLIBS.
+
+APPDIR := ../apps
 
 ifeq ($(CONFIG_BUILD_PROTECTED),y)
 include $(TOPDIR)/ProtectedLibs.mk
@@ -55,8 +60,8 @@ buildall: buildkernel $(BIN)
 #
 
 buildkernel:
-	$(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
-	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(NUTTXLIBS))) lib
+	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
+	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
 PHONY += buildkernel
 
 # Include library build recipes
@@ -77,7 +82,13 @@ LINKLIBS = $(patsubst lib/%,%,$(NUTTXLIBS) $(SDKLIBS))
 LDLIBS = $(patsubst %.a,%,$(patsubst lib%,-l%,$(LINKLIBS)))
 
 $(BIN): depend $(SDKLIBS)
-	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" EXTRADEFINES=$(KDEFINE) $(BIN)
+	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" LINKLIBS="$(LINKLIBS)" EXTRADEFINES=$(KDEFINE) $(BIN)
+	@echo "SPK: $(BIN).spk"
+	$(Q) if [ -x $(MKSPK) ]; then \
+		$(MKSPK) -c 2 $(BIN) nuttx $(BIN).spk >/dev/null ; \
+	else \
+		echo mkspk tool not found. ; \
+	fi
 
 context: bsp/include/sdk/config.h
 PHONY += context
@@ -106,15 +117,21 @@ cleansdk:
 	$(call DELFILE, bsp/include/sdk/version.h)
 	$(call DELFILE, $(SDKLIBS))
 	$(Q) for dir in $(SDKCLEANDIRS); do \
-		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" clean; \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" clean; \
 	done
 PHONY += cleansdk
 
-bsp/include/sdk/config.h: $(TOPDIR)/.config
+bsp/include/sdk/config.h: $(SDKDIR)/.config
 	$(Q) tools/mkconfig.py > $@
 
 bsp/include/sdk/version.h: $(SDKDIR)/.version
 # TBD
+
+# For NuttX configuration
+
+configkernel oldconfigkernel olddefconfigkernel menuconfigkernel qconfigkernel gconfigkernel:
+	$(Q) $(MAKE) -C $(TOPDIR) $(patsubst %kernel,%,$@)
+PHONY += configkernel oldconfigkernel olddefconfigkernel menuconfigkernel qconfigkernel gconfigkernel
 
 # config targets
 #
@@ -150,16 +167,5 @@ PHONY += savedefconfig
 
 clean: cleansdk
 PHONY += clean
-
-test:
-	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" depend
-	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" EXTRADEFINES=$(KDEFINE)
-
-PHONY += test
-
-testclean:
-	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" clean
-
-PHONY += testclean
 
 .PHONY: $(PHONY)
