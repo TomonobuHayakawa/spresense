@@ -35,7 +35,9 @@
 /*-----------------------------------------------------------------------------
  * include files
  *---------------------------------------------------------------------------*/
+
 #include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <semaphore.h>
@@ -101,18 +103,18 @@ static int       cxd56_emmc_geometry(FAR struct inode *inode,
 static int       emmc_interrupt(int irq, FAR void *context, FAR void *arg);
 
 static const struct block_operations g_bops =
-  {
-    cxd56_emmc_open,     /* open     */
-    cxd56_emmc_close,    /* close    */
-    cxd56_emmc_read,     /* read     */
+{
+  cxd56_emmc_open,     /* open     */
+  cxd56_emmc_close,    /* close    */
+  cxd56_emmc_read,     /* read     */
 #if defined(CONFIG_FS_WRITABLE)
-    cxd56_emmc_write,    /* write    */
+  cxd56_emmc_write,    /* write    */
 #else
-    NULL,           /* write    */
+  NULL,           /* write    */
 #endif
-    cxd56_emmc_geometry, /* geometry */
-    NULL            /* ioctl    */
-  };
+  cxd56_emmc_geometry, /* geometry */
+  NULL            /* ioctl    */
+};
 
 static sem_t g_waitsem;
 
@@ -228,8 +230,8 @@ static void emmc_initregister(void)
       rdThr = blksizePerHDataWidth / 2;
     }
 
-  putreg32((rdThr << EMMC_CARD_RD_THR_SHIFT | EMMC_BSYCLR_INT_EN | EMMC_CARD_RD_THE_EN),
-           EMMC_CARDTHRCTL);
+  putreg32((rdThr << EMMC_CARD_RD_THR_SHIFT |
+            EMMC_BSYCLR_INT_EN | EMMC_CARD_RD_THE_EN), EMMC_CARDTHRCTL);
 
   putreg32(0, EMMC_INTMASK);
 }
@@ -271,7 +273,8 @@ static struct emmc_dma_desc_s *emmc_setupdma(void *buf, unsigned int nbytes)
     }
 
   ndescs = (nbytes + 4095) / 4096;
-  descs = (struct emmc_dma_desc_s *)kmm_malloc(ndescs * sizeof(struct emmc_dma_desc_s));
+  descs = (struct emmc_dma_desc_s *)
+    kmm_malloc(ndescs * sizeof(struct emmc_dma_desc_s));
   if (!descs)
     {
       return NULL;
@@ -333,7 +336,8 @@ static int emmc_checkresponse(void)
   return OK;
 }
 
-static void emmc_send(int datatype, uint32_t opcode, uint32_t arg, int resptype)
+static void emmc_send(int datatype, uint32_t opcode, uint32_t arg,
+                      int resptype)
 {
   uint32_t prev, mask;
   uint32_t cmd;
@@ -418,13 +422,17 @@ static void emmc_send(int datatype, uint32_t opcode, uint32_t arg, int resptype)
 
 static int emmc_is_powerup(void)
 {
-  int retry = 4000; /* 5ms * 4000 times */
+  int retry;
 
+ /* 5ms * 4000 times */
+
+  retry = 4000;
   do
     {
       uint32_t response;
 
-      emmc_send(EMMC_NON_DATA, SEND_OP_COND, OCR_SECTOR_MODE | OCR_DUAL_VOLT, EMMC_RESP_R3);
+      emmc_send(EMMC_NON_DATA, SEND_OP_COND,
+                OCR_SECTOR_MODE | OCR_DUAL_VOLT, EMMC_RESP_R3);
 
       response = getreg32(EMMC_RESP0);
       if (response == (OCR_SECTOR_MODE | OCR_DUAL_VOLT | OCR_POWER_UP))
@@ -440,7 +448,9 @@ static int emmc_is_powerup(void)
 
 static int emmc_switchcmd(uint8_t index, uint8_t val)
 {
-  emmc_send(EMMC_NON_DATA, SWITCH, (uint32_t)((3u << 24) | (index << 16) | (val << 8)), EMMC_RESP_R1B);
+  emmc_send(EMMC_NON_DATA, SWITCH,
+            (uint32_t)((3u << 24) | (index << 16) | (val << 8)),
+            EMMC_RESP_R1B);
   if (emmc_checkresponse())
     {
       return -EIO;
@@ -554,8 +564,14 @@ static int emmc_interrupt(int irq, FAR void *context, FAR void *arg)
 
 static void emmc_pincontrol(bool on)
 {
-  if (on) CXD56_PIN_CONFIGS(PINCONFS_EMMC);
-  else    CXD56_PIN_CONFIGS(PINCONFS_EMMC_GPIO);
+  if (on)
+    {
+      CXD56_PIN_CONFIGS(PINCONFS_EMMC);
+    }
+  else
+    {
+      CXD56_PIN_CONFIGS(PINCONFS_EMMC_GPIO);
+    }
 }
 
 static int emmc_hwinitialize(void)
@@ -627,18 +643,6 @@ static int emmc_hwinitialize(void)
   return OK;
 }
 
-static int __attribute__((unused)) emmc_uninitialize(FAR struct cxd56_emmc_state_s *priv)
-{
-  emmc_switchcmd(EXTCSD_PON, EXTCSD_PON_POWERED_OFF_LONG);
-
-  /* Configure pin */
-
-  emmc_pincontrol(false);
-
-  cxd56_emmc_clock_disable();
-  return 0;
-}
-
 static int cxd56_emmc_readsectors(FAR struct cxd56_emmc_state_s *priv, void *buf,
                                   size_t start_sector, unsigned int nsectors)
 {
@@ -681,7 +685,8 @@ static int cxd56_emmc_readsectors(FAR struct cxd56_emmc_state_s *priv, void *buf
   /* Check DMA status */
 
   idsts = getreg32(EMMC_IDSTS);
-  if (idsts & (EMMC_IDSTS_FBE | EMMC_IDSTS_DU | EMMC_IDSTS_CES | EMMC_IDSTS_AIS))
+  if (idsts &
+      (EMMC_IDSTS_FBE | EMMC_IDSTS_DU | EMMC_IDSTS_CES | EMMC_IDSTS_AIS))
     {
       ferr("DMA status failed. %08x\n", idsts);
       ret = -EIO;
@@ -695,8 +700,9 @@ static int cxd56_emmc_readsectors(FAR struct cxd56_emmc_state_s *priv, void *buf
 }
 
 #if defined(CONFIG_FS_WRITABLE) && !defined(CONFIG_MMCSD_READONLY)
-static int cxd56_emmc_writesectors(FAR struct cxd56_emmc_state_s *priv, const void *buf,
-                                   size_t start_sector, unsigned int nsectors)
+static int cxd56_emmc_writesectors(FAR struct cxd56_emmc_state_s *priv,
+                                   const void *buf, size_t start_sector,
+                                   unsigned int nsectors)
 {
   struct emmc_dma_desc_s *descs;
   uint32_t idsts;
@@ -736,7 +742,8 @@ static int cxd56_emmc_writesectors(FAR struct cxd56_emmc_state_s *priv, const vo
   /* Check DMA status */
 
   idsts = getreg32(EMMC_IDSTS);
-  if (idsts & (EMMC_IDSTS_FBE | EMMC_IDSTS_DU | EMMC_IDSTS_CES | EMMC_IDSTS_AIS))
+  if (idsts &
+      (EMMC_IDSTS_FBE | EMMC_IDSTS_DU | EMMC_IDSTS_CES | EMMC_IDSTS_AIS))
     {
       ferr("DMA status error. %08x\n", idsts);
       ret = -EIO;
@@ -855,7 +862,7 @@ static int cxd56_emmc_geometry(FAR struct inode *inode,
   geometry->geo_writeenabled = false;
 #endif
   geometry->geo_nsectors = priv->total_sectors;
-  geometry->geo_sectorsize = SECTOR_SIZE; /* XXX */
+  geometry->geo_sectorsize = SECTOR_SIZE;
 
   return OK;
 }
@@ -867,7 +874,8 @@ int cxd56_emmcinitialize(void)
   FAR struct emmc_dma_desc_s *descs;
   int ret;
 
-  priv = (FAR struct cxd56_emmc_state_s *)kmm_malloc(sizeof(struct cxd56_emmc_state_s));
+  priv = (FAR struct cxd56_emmc_state_s *)
+    kmm_malloc(sizeof(struct cxd56_emmc_state_s));
   if (!priv)
     {
       return -ENOMEM;
@@ -907,4 +915,16 @@ int cxd56_emmcinitialize(void)
     }
 
   return OK;
+}
+
+int emmc_uninitialize(FAR struct cxd56_emmc_state_s *priv)
+{
+  emmc_switchcmd(EXTCSD_PON, EXTCSD_PON_POWERED_OFF_LONG);
+
+  /* Configure pin */
+
+  emmc_pincontrol(false);
+
+  cxd56_emmc_clock_disable();
+  return 0;
 }
