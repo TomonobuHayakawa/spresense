@@ -79,7 +79,7 @@ static struct flash_controller_s g_sfc;
 static int cxd56_erase(FAR struct mtd_dev_s *dev, off_t startblock,
                        size_t nblocks)
 {
-  fvdbg("erase: block %08x\n", startblock);
+  finfo("erase: block %08x\n", startblock);
 
   return FM_RawEraseSector(startblock);
 }
@@ -89,7 +89,7 @@ static ssize_t cxd56_bread(FAR struct mtd_dev_s *dev, off_t startblock,
 {
   int ret;
 
-  fvdbg("bread: %08lx (%u blocks)\n", startblock, nblocks);
+  finfo("bread: %08lx (%u blocks)\n", startblock, nblocks);
 
   ret = FM_RawRead(startblock << PAGE_SHIFT, buffer, nblocks << PAGE_SHIFT);
   if (ret)
@@ -106,7 +106,7 @@ static ssize_t cxd56_bwrite(FAR struct mtd_dev_s *dev, off_t startblock,
 {
   int ret;
 
-  fvdbg("bwrite: %08lx (%u blocks)\n", startblock, nblocks);
+  finfo("bwrite: %08lx (%u blocks)\n", startblock, nblocks);
 
   ret = FM_RawWrite(startblock << PAGE_SHIFT, buffer, nblocks << PAGE_SHIFT);
   if (ret)
@@ -123,7 +123,7 @@ static ssize_t cxd56_read(FAR struct mtd_dev_s *dev, off_t offset,
 {
   int ret;
 
-  fvdbg("read: %08lx (%u bytes)\n", offset, nbytes);
+  finfo("read: %08lx (%u bytes)\n", offset, nbytes);
 
   ret = FM_RawRead(offset, buffer, nbytes);
   if (ret)
@@ -146,7 +146,7 @@ static int cxd56_ioctl(FAR struct mtd_dev_s *dev, int cmd, unsigned long arg)
         {
           FAR struct mtd_geometry_s *geo =
             (FAR struct mtd_geometry_s *)((uintptr_t)arg);
-          fvdbg("cmd: GEOM\n");
+          finfo("cmd: GEOM\n");
           if (geo)
             {
               /* Populate the geometry structure with information need to know
@@ -163,7 +163,7 @@ static int cxd56_ioctl(FAR struct mtd_dev_s *dev, int cmd, unsigned long arg)
               geo->neraseblocks = priv->density >> SECTOR_SHIFT;
               ret               = OK;
 
-              fvdbg("blocksize: %d erasesize: %d neraseblocks: %d\n",
+              finfo("blocksize: %d erasesize: %d neraseblocks: %d\n",
                     geo->blocksize, geo->erasesize, geo->neraseblocks);
             }
         }
@@ -175,7 +175,7 @@ static int cxd56_ioctl(FAR struct mtd_dev_s *dev, int cmd, unsigned long arg)
           uint32_t sec  = 0;
           uint32_t last = priv->density >> SECTOR_SHIFT;
 
-          fvdbg("cmd: ERASE\n");
+          finfo("cmd: ERASE\n");
 
           while (sec < last)
             {
@@ -218,7 +218,7 @@ FAR struct mtd_dev_s *cxd56_sfc_initialize(void)
       /* Allocation failed! Discard all of that work we just did and return NULL
        */
 
-      fdbg("ERROR: Allocation failed\n");
+      ferr("ERROR: Allocation failed\n");
       return NULL;
     }
 #endif

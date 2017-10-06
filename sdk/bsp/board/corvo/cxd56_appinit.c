@@ -161,7 +161,7 @@ static int nsh_sfc_initialize(void)
   mtd = cxd56_sfc_initialize();
   if (!mtd)
     {
-      fdbg("ERROR: cxd56_spifi_initialize failed\n");
+      _err("ERROR: cxd56_spifi_initialize failed\n");
       return -ENODEV;
     }
 
@@ -170,7 +170,7 @@ static int nsh_sfc_initialize(void)
   ret = ftl_initialize(CONFIG_SFC_DEVNO, mtd);
   if (ret < 0)
     {
-      fdbg("ERROR: Initializing the FTL layer: %d\n", ret);
+      _err("ERROR: Initializing the FTL layer: %d\n", ret);
       return ret;
     }
 
@@ -180,14 +180,14 @@ static int nsh_sfc_initialize(void)
   ret = smart_initialize(CONFIG_SFC_DEVNO, mtd, NULL);
   if (ret < 0)
     {
-      fdbg("ERROR: SmartFS initialization failed: %d\n", ret);
+      _err("ERROR: SmartFS initialization failed: %d\n", ret);
       return ret;
     }
 
   ret = mount("/dev/smart0d1", "/mnt/spif", "smartfs", 0, NULL);
   if (ret < 0)
     {
-      fdbg("ERROR: Failed to mount the SmartFS volume: %d\n", errno);
+      _err("ERROR: Failed to mount the SmartFS volume: %d\n", errno);
       return ret;
     }
 #elif defined(CONFIG_FS_NXFFS)
@@ -196,14 +196,14 @@ static int nsh_sfc_initialize(void)
   ret = nxffs_initialize(mtd);
   if (ret < 0)
     {
-      fdbg("ERROR: NXFFS initialization failed: %d\n", ret);
+      _err("ERROR: NXFFS initialization failed: %d\n", ret);
       return ret;
     }
 
   ret = mount(NULL, "/mnt/spif", "nxffs", 0, NULL);
   if (ret < 0)
     {
-      fdbg("ERROR: Failed to mount the NXFFS volume: %d\n", errno);
+      _err("ERROR: Failed to mount the NXFFS volume: %d\n", errno);
       return ret;
     }
 #endif
@@ -267,7 +267,7 @@ static void cxd56_i2c_register(FAR struct i2c_master_s *i2c, int bus)
   ret = i2c_register(i2c, bus);
   if (ret < 0)
     {
-      dbg("ERROR: Failed to register I2C%d driver: %d\n", bus, ret);
+      _err("ERROR: Failed to register I2C%d driver: %d\n", bus, ret);
     }
 }
 #endif
@@ -289,7 +289,7 @@ static void cxd56_spi_register(FAR struct spi_dev_s *spi, int bus)
   ret = spi_register(spi, bus);
   if (ret < 0)
     {
-      dbg("ERROR: Failed to register SPI%d driver: %d\n", bus, ret);
+      _err("ERROR: Failed to register SPI%d driver: %d\n", bus, ret);
     }
 }
 #endif

@@ -87,15 +87,18 @@ struct cxd56_emmc_state_s
 
 static int       cxd56_emmc_open(FAR struct inode *inode);
 static int       cxd56_emmc_close(FAR struct inode *inode);
-static ssize_t   cxd56_emmc_read(FAR struct inode *inode, unsigned char *buffer,
-                                 size_t start_sector, unsigned int nsectors);
+static ssize_t   cxd56_emmc_read(FAR struct inode *inode,
+                                 unsigned char *buffer, size_t start_sector,
+                                 unsigned int nsectors);
 #if defined(CONFIG_FS_WRITABLE) && !defined(CONFIG_MMCSD_READONLY)
 static ssize_t   cxd56_emmc_write(FAR struct inode *inode,
-                                  const unsigned char *buffer, size_t start_sector,
+                                  const unsigned char *buffer,
+                                  size_t start_sector,
                                   unsigned int nsectors);
 #endif
 static int       cxd56_emmc_geometry(FAR struct inode *inode,
                                      struct geometry *geometry);
+static int       emmc_interrupt(int irq, FAR void *context, FAR void *arg);
 
 static const struct block_operations g_bops =
   {
@@ -165,6 +168,7 @@ static void emmc_reset(uint32_t reg, uint32_t bits)
   while (val & bits);
 }
 
+#if defined(CONFIG_FS_WRITABLE) && !defined(CONFIG_MMCSD_READONLY)
 static void emmc_flushwritefifo(void)
 {
   /* eMMC host controller has a problem that invalid data is still remained
@@ -185,6 +189,7 @@ static void emmc_flushwritefifo(void)
 
   emmc_reset(EMMC_CTRL, EMMC_CTRL_FIFO_RESET);
 }
+#endif
 
 static void emmc_initregister(void)
 {
@@ -299,8 +304,8 @@ static struct emmc_dma_desc_s *emmc_setupdma(void *buf, unsigned int nbytes)
 #ifdef CONFIG_DEBUG_VERBOSE
   for (i=0, d=descs; i<ndescs; i++, d++)
     {
-      fvdbg("desc %p = ctrl 0x%x, size 0x%x, addr 0x%x, next 0x%x\n", d,
-        d->ctrl, d->size, d->addr, d->next);
+      finfo("desc %p = ctrl 0x%x, size 0x%x, addr 0x%x, next 0x%x\n",
+            d, d->ctrl, d->size, d->addr, d->next);
     }
 #endif
 
@@ -316,13 +321,13 @@ static int emmc_checkresponse(void)
 
   if (intsts & EMMC_INTSTS_RTO)
     {
-      fdbg("Response timed out.\n");
+      ferr("Response timed out.\n");
       return -EIO;
     }
 
   if (resp & R1STATUS_ALL_ERR)
     {
-      fdbg("Response error %08x\n", resp);
+      ferr("Response error %08x\n", resp);
       return -EIO;
     }
   return OK;
@@ -458,7 +463,7 @@ static int emmc_switchcmd(uint8_t index, uint8_t val)
  *
  ****************************************************************************/
 
-static int emmc_interrupt(int irq, FAR void *context)
+static int emmc_interrupt(int irq, FAR void *context, FAR void *arg)
 {
   uint32_t intr;
 
@@ -469,7 +474,7 @@ static int emmc_interrupt(int irq, FAR void *context)
 
   if (intr & EMMC_INTSTS_RE)
     {
-      fdbg("Response error.\n");
+      ferr("Response error.\n");
     }
 
   if (intr & EMMC_INTSTS_CD)
@@ -484,47 +489,47 @@ static int emmc_interrupt(int irq, FAR void *context)
 
   if (intr & EMMC_INTSTS_TXDR)
     {
-      fdbg("Transmit FIFO data request.\n");
+      ferr("Transmit FIFO data request.\n");
     }
 
   if (intr & EMMC_INTSTS_RXDR)
     {
-      fdbg("Receive FIFO data request.\n");
+      ferr("Receive FIFO data request.\n");
     }
 
   if (intr & EMMC_INTSTS_RCRC)
     {
-      fdbg("Response CRC error.\n");
+      ferr("Response CRC error.\n");
     }
 
   if (intr & EMMC_INTSTS_DCRC)
     {
-      fdbg("Data CRC error.\n");
+      ferr("Data CRC error.\n");
     }
 
   if (intr & EMMC_INTSTS_RTO)
     {
-      fdbg("Response timeout/Boot Ack Received.\n");
+      ferr("Response timeout/Boot Ack Received.\n");
     }
 
   if (intr & EMMC_INTSTS_DRTO)
     {
-      fdbg("Data read timeout/Boot Data Start.\n");
+      ferr("Data read timeout/Boot Data Start.\n");
     }
 
   if (intr & EMMC_INTSTS_HTO)
     {
-      fdbg("Data stavation-by-host timeout/Volt_switch_int.\n");
+      ferr("Data stavation-by-host timeout/Volt_switch_int.\n");
     }
 
   if (intr & EMMC_INTSTS_FRUN)
     {
-      fdbg("FIFO underrun/overrun error.\n");
+      ferr("FIFO underrun/overrun error.\n");
     }
 
   if (intr & EMMC_INTSTS_HLE)
     {
-      fdbg("Hardware locked write error.\n");
+      ferr("Hardware locked write error.\n");
     }
 
   if (intr & EMMC_INTSTS_BCI)
@@ -539,7 +544,7 @@ static int emmc_interrupt(int irq, FAR void *context)
 
   if (intr & EMMC_INTSTS_EBE)
     {
-      fdbg("End-bit error/write no CRC.\n");
+      ferr("End-bit error/write no CRC.\n");
     }
 
   emmc_givesem(&g_waitsem);
@@ -569,7 +574,7 @@ static int emmc_hwinitialize(void)
 
   emmc_changeclock(EMMC_CLKDIV_UNDER_400KHZ);
 
-  irq_attach(CXD56_IRQ_EMMC, emmc_interrupt);
+  irq_attach(CXD56_IRQ_EMMC, emmc_interrupt, NULL);
 
   up_enable_irq(CXD56_IRQ_EMMC);
 
@@ -644,7 +649,7 @@ static int cxd56_emmc_readsectors(FAR struct cxd56_emmc_state_s *priv, void *buf
   descs = emmc_setupdma(buf, nsectors * SECTOR_SIZE);
   if (!descs)
     {
-      fdbg("Building descriptor failed.\n");
+      ferr("Building descriptor failed.\n");
       return -ENOMEM;
     }
 
@@ -657,7 +662,7 @@ static int cxd56_emmc_readsectors(FAR struct cxd56_emmc_state_s *priv, void *buf
 
   if (emmc_checkresponse())
     {
-      fdbg("SET_BLOCK_COUNT failed.\n");
+      ferr("SET_BLOCK_COUNT failed.\n");
       ret = -EIO;
       goto finish;
     }
@@ -668,7 +673,7 @@ static int cxd56_emmc_readsectors(FAR struct cxd56_emmc_state_s *priv, void *buf
 
   if (emmc_checkresponse())
     {
-      fdbg("READ_MULTIPLE_BLOCK failed.\n");
+      ferr("READ_MULTIPLE_BLOCK failed.\n");
       ret = -EIO;
       goto finish;
     }
@@ -678,7 +683,7 @@ static int cxd56_emmc_readsectors(FAR struct cxd56_emmc_state_s *priv, void *buf
   idsts = getreg32(EMMC_IDSTS);
   if (idsts & (EMMC_IDSTS_FBE | EMMC_IDSTS_DU | EMMC_IDSTS_CES | EMMC_IDSTS_AIS))
     {
-      fdbg("DMA status failed. %08x\n", idsts);
+      ferr("DMA status failed. %08x\n", idsts);
       ret = -EIO;
     }
 
@@ -689,6 +694,7 @@ static int cxd56_emmc_readsectors(FAR struct cxd56_emmc_state_s *priv, void *buf
   return ret;
 }
 
+#if defined(CONFIG_FS_WRITABLE) && !defined(CONFIG_MMCSD_READONLY)
 static int cxd56_emmc_writesectors(FAR struct cxd56_emmc_state_s *priv, const void *buf,
                                    size_t start_sector, unsigned int nsectors)
 {
@@ -711,7 +717,7 @@ static int cxd56_emmc_writesectors(FAR struct cxd56_emmc_state_s *priv, const vo
 
   if (emmc_checkresponse())
     {
-      fdbg("SET_BLOCK_COUNT failed.\n");
+      ferr("SET_BLOCK_COUNT failed.\n");
       ret = -EIO;
       goto finish;
     }
@@ -722,7 +728,7 @@ static int cxd56_emmc_writesectors(FAR struct cxd56_emmc_state_s *priv, const vo
 
   if (emmc_checkresponse())
     {
-      fdbg("WRITE_MULTIPLE_BLOCK failed.\n");
+      ferr("WRITE_MULTIPLE_BLOCK failed.\n");
       ret = -EIO;
       goto finish;
     }
@@ -732,7 +738,7 @@ static int cxd56_emmc_writesectors(FAR struct cxd56_emmc_state_s *priv, const vo
   idsts = getreg32(EMMC_IDSTS);
   if (idsts & (EMMC_IDSTS_FBE | EMMC_IDSTS_DU | EMMC_IDSTS_CES | EMMC_IDSTS_AIS))
     {
-      fdbg("DMA status error. %08x\n", idsts);
+      ferr("DMA status error. %08x\n", idsts);
       ret = -EIO;
     }
 
@@ -742,7 +748,7 @@ static int cxd56_emmc_writesectors(FAR struct cxd56_emmc_state_s *priv, const vo
 
   if (emmc_checkresponse())
     {
-      fdbg("SEND_STATUS failed.\n");
+      ferr("SEND_STATUS failed.\n");
       ret = -EIO;
       goto finish;
     }
@@ -755,6 +761,7 @@ static int cxd56_emmc_writesectors(FAR struct cxd56_emmc_state_s *priv, const vo
 
   return ret;
 }
+#endif
 
 static int cxd56_emmc_open(FAR struct inode *inode)
 {
@@ -796,12 +803,12 @@ static ssize_t cxd56_emmc_read(FAR struct inode *inode, unsigned char *buffer,
   DEBUGASSERT(inode && inode->i_private);
   priv = (FAR struct cxd56_emmc_state_s *)inode->i_private;
 
-  fvdbg("Read sector %d (%d sectors) to %p\n", start_sector, nsectors, buffer);
+  finfo("Read sector %d (%d sectors) to %p\n", start_sector, nsectors, buffer);
 
   ret = cxd56_emmc_readsectors(priv, buffer, start_sector, nsectors);
   if (ret)
     {
-      fdbg("Read sector failed. %d\n", ret);
+      ferr("Read sector failed. %d\n", ret);
       return 0;
     }
 
@@ -819,12 +826,12 @@ static ssize_t cxd56_emmc_write(FAR struct inode *inode,
   DEBUGASSERT(inode && inode->i_private);
   priv = (FAR struct cxd56_emmc_state_s *)inode->i_private;
 
-  fvdbg("Write %p to sector %d (%d sectors)\n", buffer, start_sector, nsectors);
+  finfo("Write %p to sector %d (%d sectors)\n", buffer, start_sector, nsectors);
 
   ret = cxd56_emmc_writesectors(priv, buffer, start_sector, nsectors);
   if (ret)
     {
-      fdbg("Write sector failed. %d\n", ret);
+      ferr("Write sector failed. %d\n", ret);
       return 0;
     }
 
@@ -895,7 +902,7 @@ int cxd56_emmcinitialize(void)
   ret = register_blockdriver("/dev/emmc0", &g_bops, 0, priv);
   if (ret)
     {
-      fdbg("register_blockdriver failed: %d\n", -ret);
+      ferr("register_blockdriver failed: %d\n", -ret);
       return ret;
     }
 
