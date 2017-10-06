@@ -23,3 +23,79 @@ config BOARD_NAME
 	default "collet" if BOARD_COLLET
 
 endmenu
+
+menu "CXD56xx Configuration Options"
+
+choice
+	prompt "CXD56xx package selection"
+	default CXD56_FCBGA if BOARD_CORVO || BOARD_SP_YOC || BOARD_SPARDUINO
+	default CXD56_WLCSP if BOARD_COLLET
+	default CXD56_WLCSP
+
+config CXD56_WLCSP
+	bool "WLCSP 100 pin package"
+
+config CXD56_FCBGA
+	bool "FCBGA 185 pin package"
+
+endchoice
+
+config CXD56_XOSC_CLOCK
+	int
+	default 26000000
+
+config CXD56_ICC
+	bool
+	default y
+	select CXD56_CPUFIFO
+
+config CXD56_SFC
+	bool "SPI Flash Controller"
+	default y
+
+if CXD56_SFC
+config CXD56_SFC_PAGE_SHIFT_SIZE
+	int "SPI Flash page shift size"
+	default 12
+	range 8 12
+	---help---
+		Specify page shift size to determine block size of SPI flash access.
+		Relationship between page shift size and block size is as follows.
+		  page shift size : block size
+		    8 : 256
+		    9 : 512
+		   10 : 1024
+		   11 : 2048
+		   12 : 4096
+		When file system is SMART file system, please set the value to SMART
+		Device sector size or less.
+		Following equation is satisfied.
+		  MTD_SMART_SECTOR_SIZE >= (1 << CXD56_SFC_PAGE_SHIFT_SIZE)
+
+endif # CXD56_SFC
+
+config CXD56_USBDEV
+	bool
+	default y if USBDEV && BOARD_CORVO
+
+config CXD56_EMMC
+	bool "eMMC"
+	default y if BOARD_CORVO
+
+config CXD56_SDIO
+	bool "SDIO"
+	default n
+	depends on CXD56_FCBGA
+
+if CXD56_SDIO
+
+config CXD56_SDIO_DISABLE_CD_WP
+	bool "Disable the CD and WP pin for SDIO"
+	default y
+	---help---
+		Disable the CD and WP pin for Embedded SDIO.If the CD pin is not disable,
+		the SDIO initialization will be failed.
+
+endif # CXD56_SDIO
+
+endmenu
