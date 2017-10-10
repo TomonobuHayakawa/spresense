@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -67,14 +67,14 @@ int cxd56_kx022initialize(FAR const char *devpath,
   int fifoid = 0;
   int ret;
 
-  sndbg("Initializing KX022...\n");
+  sninfo("Initializing KX022...\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = kx022_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize KX022.\n");
+      snerr("Error initialize KX022.\n");
       return ret;
     }
 
@@ -85,7 +85,7 @@ int cxd56_kx022initialize(FAR const char *devpath,
       ret = kx022_register(devpath, fifoid, i2c, 0);
       if (ret < 0)
         {
-          sndbg("Error registering KX022.\n");
+          snerr("Error registering KX022.\n");
           return ret;
         }
     }

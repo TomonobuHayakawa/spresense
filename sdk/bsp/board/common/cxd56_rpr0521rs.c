@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -57,14 +57,14 @@ int cxd56_rpr0521rsinitialize(FAR struct i2c_master_s* i2c)
 {
   int ret;
 
-  sndbg("Initializing RPR0521RS...\n");
+  sninfo("Initializing RPR0521RS...\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = rpr0521rs_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize RPR0521RS.\n");
+      snerr("Error initialize RPR0521RS.\n");
       return ret;
     }
 
@@ -73,14 +73,14 @@ int cxd56_rpr0521rsinitialize(FAR struct i2c_master_s* i2c)
   ret = rpr0521rsals_register("/dev/light", 0, i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error registering RPR0521RS[ALS].\n");
+      snerr("Error registering RPR0521RS[ALS].\n");
       return ret;
     }
 
   ret = rpr0521rsps_register("/dev/proximity", 0, i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error registering RPR0521RS[PS].\n");
+      snerr("Error registering RPR0521RS[PS].\n");
       return ret;
     }
 

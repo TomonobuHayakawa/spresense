@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -58,14 +58,14 @@ int cxd56_bh1745nucinitialize(FAR const char *devpath,
 {
   int ret;
 
-  sndbg("Initializing BH1745NUC...\n");
+  sninfo("Initializing BH1745NUC...\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = bh1745nuc_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize BH1745NUC.\n");
+      snerr("Error initialize BH1745NUC.\n");
       return ret;
     }
 
@@ -74,7 +74,7 @@ int cxd56_bh1745nucinitialize(FAR const char *devpath,
   ret = bh1745nuc_register(devpath, 0, i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error registering BH1745NUC.\n");
+      snerr("Error registering BH1745NUC.\n");
       return ret;
     }
 

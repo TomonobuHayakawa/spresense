@@ -37,7 +37,7 @@
  * Included Files
  ************************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -55,19 +55,6 @@
 /************************************************************************************
  * Pre-processor Definitions
  ************************************************************************************/
-
-#ifdef CONFIG_DEBUG_SPI
-#  define spidbg lldbg
-#  ifdef CONFIG_SPI_VERBOSE
-#    define spivdbg lldbg
-#  else
-#    define spivdbg(x...)
-#  endif
-#else
-#  undef CONFIG_SPI_VERBOSE
-#  define spidbg(x...)
-#  define spivdbg(x...)
-#endif
 
 /****************************************************************************
  * Name:  cxd56_spi1/2/3select and cxd56_spi1/2/3status
@@ -97,7 +84,7 @@
 #ifdef CONFIG_CXD56_SPI4
 void cxd56_spi4select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 {
-  spidbg("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
+  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
 }
 
 uint8_t cxd56_spi4status(FAR struct spi_dev_s *dev, uint32_t devid)
@@ -109,7 +96,7 @@ uint8_t cxd56_spi4status(FAR struct spi_dev_s *dev, uint32_t devid)
 #ifdef CONFIG_CXD56_SPI5
 void cxd56_spi5select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 {
-  spidbg("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
+  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
 }
 
 uint8_t cxd56_spi5status(FAR struct spi_dev_s *dev, uint32_t devid)
@@ -121,7 +108,7 @@ uint8_t cxd56_spi5status(FAR struct spi_dev_s *dev, uint32_t devid)
 #ifdef CONFIG_CXD56_SPI0
 void cxd56_spi0select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 {
-  spidbg("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
+  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
 }
 
 uint8_t cxd56_spi0status(FAR struct spi_dev_s *dev, uint32_t devid)
@@ -133,7 +120,7 @@ uint8_t cxd56_spi0status(FAR struct spi_dev_s *dev, uint32_t devid)
 #ifdef CONFIG_CXD56_SPI3
 void cxd56_spi3select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 {
-  spidbg("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
+  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
 
   /* Disable clock gating (clock enable) */
 

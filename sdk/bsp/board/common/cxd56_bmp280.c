@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -71,14 +71,14 @@ int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c)
   int i;
   int ret;
 
-  sndbg("Initializing BMP280..\n");
+  sninfo("Initializing BMP280..\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = bmp280_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize BMP280.\n");
+      snerr("Error initialize BMP280.\n");
       return ret;
     }
 
@@ -89,7 +89,7 @@ int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c)
       ret = bmp280press_register("/dev/press", i, i2c, 0);
       if (ret < 0)
         {
-          sndbg("Error registering pressure. %d\n", ret);
+          snerr("Error registering pressure. %d\n", ret);
           return ret;
         }
     }
@@ -101,7 +101,7 @@ int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c)
       ret = bmp280temp_register("/dev/temp", i, i2c, 0);
       if (ret < 0)
         {
-          sndbg("Error registering temperature. %d\n", ret);
+          snerr("Error registering temperature. %d\n", ret);
           return ret;
         }
     }
@@ -113,12 +113,12 @@ int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c)
 {
   int ret;
 
-  sndbg("Initializing BMP280..\n");
+  snerr("Initializing BMP280..\n");
 
   ret = bmp280_register("/dev/press0", i2c);
   if (ret < 0)
     {
-      sndbg("Error registering BMP280\n");
+      snerr("Error registering BMP280\n");
     }
 
   return ret;

@@ -40,7 +40,7 @@
  * Included Files
  ************************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include "chip.h"
 
 #ifndef __ASSEMBLY__

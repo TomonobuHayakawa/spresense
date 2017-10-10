@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -50,21 +50,21 @@
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_LT1PA01)
+#if defined(CONFIG_I2C) && defined(CONFIG_LT1PA01)
 
 #ifdef CONFIG_CXD56_SCU
 int cxd56_lt1pa01initialize(FAR struct i2c_master_s* i2c)
 {
   int ret;
 
-  sndbg("Initializing LT1PA01...\n");
+  sninfo("Initializing LT1PA01...\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = lt1pa01_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize LT1PA01.\n");
+      snerr("Error initialize LT1PA01.\n");
       return ret;
     }
 
@@ -73,14 +73,14 @@ int cxd56_lt1pa01initialize(FAR struct i2c_master_s* i2c)
   ret = lt1pa01als_register("/dev/light", 0, i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error registering LT1PA01[ALS].\n");
+      snerr("Error registering LT1PA01[ALS].\n");
       return ret;
     }
 
   ret = lt1pa01prox_register("/dev/proximity", 0, i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error registering LT1PA01[PS].\n");
+      snerr("Error registering LT1PA01[PS].\n");
       return ret;
     }
 

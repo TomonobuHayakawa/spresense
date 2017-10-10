@@ -40,7 +40,7 @@
  * include files
  *---------------------------------------------------------------------------*/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/kmalloc.h>
 
 #define FIFOMEM_INVALID 0xffff

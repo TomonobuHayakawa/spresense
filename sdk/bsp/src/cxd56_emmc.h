@@ -36,7 +36,7 @@
 #ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_EMMC_H
 #define __ARCH_ARM_SRC_CXD56XX_CXD56_EMMC_H
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #ifndef __ASSEMBLY__
 

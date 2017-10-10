@@ -40,7 +40,7 @@
  * include files
  *---------------------------------------------------------------------------*/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/mtd/mtd.h>
 
 #ifndef __ASSEMBLY__

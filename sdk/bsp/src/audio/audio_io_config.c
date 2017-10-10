@@ -38,7 +38,7 @@
     Include
 *******************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include "cxd56_pinconfig.h"
 #include "audio/common_assert.h"

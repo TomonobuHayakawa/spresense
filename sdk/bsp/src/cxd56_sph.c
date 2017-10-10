@@ -38,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <nuttx/kmalloc.h>
 #include <nuttx/fs/fs.h>

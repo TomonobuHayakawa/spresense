@@ -36,7 +36,7 @@
  * @file       cxd56_dmacinit.c
  */
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/compiler.h>
 
 #include "up_internal.h"

@@ -38,7 +38,7 @@
  ****************************************************************************/
 
 #include <arch/board/board.h>
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <errno.h>
 

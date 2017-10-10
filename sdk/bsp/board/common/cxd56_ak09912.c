@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -58,7 +58,7 @@
 #  endif
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_AK09912)
+#if defined(CONFIG_I2C) && defined(CONFIG_AK09912)
 
 #ifdef CONFIG_CXD56_SCU
 int cxd56_ak09912initialize(FAR const char *devpath,  FAR struct i2c_master_s* i2c)
@@ -66,14 +66,14 @@ int cxd56_ak09912initialize(FAR const char *devpath,  FAR struct i2c_master_s* i
   int i;
   int ret;
 
-  sndbg("Initializing AK09912...\n");
+  sninfo("Initializing AK09912...\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = ak09912_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize AK09912.\n");
+      snerr("Error initialize AK09912.\n");
       return ret;
     }
 
@@ -84,7 +84,7 @@ int cxd56_ak09912initialize(FAR const char *devpath,  FAR struct i2c_master_s* i
       ret = ak09912_register(devpath, i, i2c, 0);
       if (ret < 0)
         {
-          sndbg("Error registering AK09912.\n");
+          snerr("Error registering AK09912.\n");
           return ret;
         }
     }
@@ -96,12 +96,12 @@ int cxd56_ak09912initialize(FAR const char *devpath,  FAR struct i2c_master_s* i
 {
   int ret;
 
-  sndbg("Initializing AK09912...\n");
+  sninfo("Initializing AK09912...\n");
 
   ret = ak09912_register(devpath, i2c);
   if (ret < 0)
     {
-      sndbg("Error registering AK09912.\n");
+      snerr("Error registering AK09912.\n");
     }
 
   return ret;

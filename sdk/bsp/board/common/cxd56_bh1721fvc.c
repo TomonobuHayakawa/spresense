@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -50,21 +50,21 @@
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_BH1721FVC)
+#if defined(CONFIG_I2C) && defined(CONFIG_BH1721FVC)
 
 #ifdef CONFIG_CXD56_SCU
 int cxd56_bh1721fvcinitialize(FAR struct i2c_master_s* i2c)
 {
   int ret;
 
-  sndbg("Initializing BH1721FVC...\n");
+  sninfo("Initializing BH1721FVC...\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = bh1721fvc_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize BH1721FVC.\n");
+      snerr("Error initialize BH1721FVC.\n");
       return ret;
     }
 
@@ -73,7 +73,7 @@ int cxd56_bh1721fvcinitialize(FAR struct i2c_master_s* i2c)
   ret = bh1721fvc_register("/dev/light", 0, i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error registering BH1721FVC.\n");
+      snerr("Error registering BH1721FVC.\n");
       return ret;
     }
 

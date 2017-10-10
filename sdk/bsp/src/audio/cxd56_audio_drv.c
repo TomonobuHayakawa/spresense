@@ -34,7 +34,7 @@
  *
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/irq.h>
 #include <debug.h>
 

@@ -38,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -181,7 +181,7 @@ static inline struct dma_descriptor_s *cxd56_get_descriptor(
  *
  ****************************************************************************/
 
-static int cxd56_dmac_interrupt(int irq, void *context)
+static int cxd56_dmac_interrupt(int irq, void *context, FAR void *arg)
 {
   struct dma_channel_s *dmach;
   unsigned int chndx;
@@ -230,7 +230,7 @@ void cxd56_udmainitialize(void)
 {
   int i;
 
-  dmallvdbg("Initialize uDMAC\n");
+  dmainfo("Initialize uDMAC\n");
 
   /* Initialize the channel list  */
 
@@ -332,7 +332,7 @@ DMA_HANDLE cxd56_udmachannel(void)
 
   /* Attach DMA interrupt vector */
 
-  (void)irq_attach(CXD56_IRQ_DMA_A_0 + ch, cxd56_dmac_interrupt);
+  (void)irq_attach(CXD56_IRQ_DMA_A_0 + ch, cxd56_dmac_interrupt, NULL);
 
   /* Enable the IRQ at the AIC (still disabled at the DMA controller) */
 
@@ -371,7 +371,7 @@ void cxd56_udmafree(DMA_HANDLE handle)
   struct dma_channel_s *dmach = (struct dma_channel_s *)handle;
 
   DEBUGASSERT(dmach != NULL && dmach->inuse);
-  dmavdbg("DMA channel %d\n", dmach->chan);
+  dmainfo("DMA channel %d\n", dmach->chan);
 
   /* Disable the channel */
 
@@ -738,23 +738,23 @@ void cxd56_udmasample(DMA_HANDLE handle, struct cxd56_udmaregs_s *regs)
 void cxd56_udmadump(DMA_HANDLE handle, const struct cxd56_udmaregs_s *regs,
                     const char *msg)
 {
-  dmadbg("%s\n", msg);
-  dmadbg("  DMA Registers:\n");
-  dmadbg("        STATUS: %08x\n", regs->status);
-  dmadbg("      CTRLBASE: %08x\n", regs->ctrlbase);
-  dmadbg("   ALTCTRLBASE: %08x\n", regs->altctrlbase);
-  dmadbg("  CHWAITSTATUS: %08x\n", regs->chwaitstatus);
-  dmadbg("   CHUSEBURSTS: %08x\n", regs->chusebursts);
-  dmadbg("    CHREQMASKS: %08x\n", regs->chreqmasks);
-  dmadbg("         CHENS: %08x\n", regs->chens);
-  dmadbg("        CHALTS: %08x\n", regs->chalts);
-  dmadbg("        CHPRIS: %08x\n", regs->chpris);
-  dmadbg("        ERRORC: %08x\n", regs->errorc);
-  dmadbg("          DONE: %08x\n", regs->done);
-  dmadbg("           ERR: %08x\n", regs->err);
-  dmadbg("  Descriptors:\n");
-  dmadbg("        SRCEND: %08x\n", regs->srcend);
-  dmadbg("        DSTEND: %08x\n", regs->dstend);
-  dmadbg("          CTRL: %08x\n", regs->ctrl);
+  dmainfo("%s\n", msg);
+  dmainfo("  DMA Registers:\n");
+  dmainfo("        STATUS: %08x\n", regs->status);
+  dmainfo("      CTRLBASE: %08x\n", regs->ctrlbase);
+  dmainfo("   ALTCTRLBASE: %08x\n", regs->altctrlbase);
+  dmainfo("  CHWAITSTATUS: %08x\n", regs->chwaitstatus);
+  dmainfo("   CHUSEBURSTS: %08x\n", regs->chusebursts);
+  dmainfo("    CHREQMASKS: %08x\n", regs->chreqmasks);
+  dmainfo("         CHENS: %08x\n", regs->chens);
+  dmainfo("        CHALTS: %08x\n", regs->chalts);
+  dmainfo("        CHPRIS: %08x\n", regs->chpris);
+  dmainfo("        ERRORC: %08x\n", regs->errorc);
+  dmainfo("          DONE: %08x\n", regs->done);
+  dmainfo("           ERR: %08x\n", regs->err);
+  dmainfo("  Descriptors:\n");
+  dmainfo("        SRCEND: %08x\n", regs->srcend);
+  dmainfo("        DSTEND: %08x\n", regs->dstend);
+  dmainfo("          CTRL: %08x\n", regs->ctrl);
 }
 #endif

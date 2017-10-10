@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -145,7 +145,7 @@ FAR struct fb_vtable_s *cxd56_lpm013m091a_fb_initialize(FAR const char *devpath,
   ret = lpm013m091a_register(devpath, &g_lcd);
   if (ret < 0)
     {
-      dbg("Error registering lpm013m091a\n");
+      _err("Error registering lpm013m091a\n");
     }
 
   return dev;

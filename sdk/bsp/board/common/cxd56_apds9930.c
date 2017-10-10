@@ -38,6 +38,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -50,21 +51,21 @@
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_APDS9930)
+#if defined(CONFIG_I2C) && defined(CONFIG_APDS9930)
 
 #ifdef CONFIG_CXD56_SCU
 int cxd56_apds9930initialize(FAR struct i2c_master_s* i2c)
 {
   int ret;
 
-  sndbg("Initializing APDS9930...\n");
+  sninfo("Initializing APDS9930...\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = apds9930_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize APDS9930.\n");
+      snerr("Error initialize APDS9930.\n");
       return ret;
     }
 
@@ -73,14 +74,14 @@ int cxd56_apds9930initialize(FAR struct i2c_master_s* i2c)
   ret = apds9930als_register("/dev/light", 0, i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error registering APDS9930[ALS].\n");
+      snerr("Error registering APDS9930[ALS].\n");
       return ret;
     }
 
   ret = apds9930ps_register("/dev/proximity", 0, i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error registering APDS9930[PS].\n");
+      snerr("Error registering APDS9930[PS].\n");
       return ret;
     }
 

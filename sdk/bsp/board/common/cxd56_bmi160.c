@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -62,7 +62,7 @@
 #  define ACCEL_NR_SEQS 1
 #endif
 
-#if defined(CONFIG_SPI) && defined(CONFIG_CXD56_SPI3) && defined(CONFIG_BMI160)
+#if defined(CONFIG_SPI) && defined(CONFIG_BMI160)
 
 int cxd56_bmi160initialize(FAR struct spi_dev_s* spi)
 {
@@ -70,12 +70,12 @@ int cxd56_bmi160initialize(FAR struct spi_dev_s* spi)
 #ifdef CONFIG_CXD56_SCU
   int i;
 
-  sndbg("Initializing BMI160..\n");
+  sninfo("Initializing BMI160..\n");
 
   ret = bmi160_init(spi);
   if (ret < 0)
     {
-      sndbg("Error initialize BMI160\n");
+      snerr("Error initialize BMI160\n");
       return ret;
     }
 
@@ -86,7 +86,7 @@ int cxd56_bmi160initialize(FAR struct spi_dev_s* spi)
       ret = bmi160gyro_register("/dev/gyro", i, spi);
       if (ret < 0)
         {
-          sndbg("Error registering gyroscope. %d\n", ret);
+          snerr("Error registering gyroscope. %d\n", ret);
           return ret;
         }
     }
@@ -98,18 +98,18 @@ int cxd56_bmi160initialize(FAR struct spi_dev_s* spi)
       ret = bmi160accel_register("/dev/accel", i, spi);
       if (ret < 0)
         {
-          sndbg("Error registering accelerometer. %d\n", ret);
+          snerr("Error registering accelerometer. %d\n", ret);
           return ret;
         }
     }
 
 #else
-  sndbg("Initializing BMI160..\n");
+  sninfo("Initializing BMI160..\n");
 
   ret = bmi160_register("/dev/accel0", spi);
   if (ret < 0)
     {
-      sndbg("Error registering BMI160\n");
+      snerr("Error registering BMI160\n");
     }
 #endif
   return ret;

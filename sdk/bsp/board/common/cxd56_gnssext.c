@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -85,7 +85,7 @@ int cxd56_gnssext_control_lna(bool en)
   ret = board_power_control(POWER_LNA, en);
   if (ret)
     {
-      dbg("ERROR: Failed to power %s LNA. %d\n", en ? "on" : "off", ret);
+      _err("ERROR: Failed to power %s LNA. %d\n", en ? "on" : "off", ret);
       return -ENODEV;
     }
 

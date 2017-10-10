@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -50,7 +50,7 @@
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_BM1383GLV)
+#if defined(CONFIG_I2C) && defined(CONFIG_BM1383GLV)
 
 #ifdef CONFIG_CXD56_SCU
 int cxd56_bm1383glvinitialize(FAR const char *devpath,
@@ -58,14 +58,14 @@ int cxd56_bm1383glvinitialize(FAR const char *devpath,
 {
   int ret;
 
-  sndbg("Initializing BM1383GLV...\n");
+  sninfo("Initializing BM1383GLV...\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = bm1383glv_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize BM1383GLV.\n");
+      snerr("Error initialize BM1383GLV.\n");
       return ret;
     }
 
@@ -74,7 +74,7 @@ int cxd56_bm1383glvinitialize(FAR const char *devpath,
   ret = bm1383glv_register(devpath, 0, i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error registering BM1383GLV.\n");
+      snerr("Error registering BM1383GLV.\n");
       return ret;
     }
 

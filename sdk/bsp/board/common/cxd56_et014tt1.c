@@ -38,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -107,13 +107,13 @@ FAR struct fb_vtable_s *cxd56_et014tt1_initialize(FAR const char *devpath, FAR s
   ret = EPD_HAL_Init();
   if (ret < 0)
     {
-      dbg("Error EPD_HAL_Init\n");
+      _err("Error EPD_HAL_Init\n");
     }
 
   ret = et014tt1_register(devpath);
   if (ret < 0)
     {
-      dbg("Error et014tt1_register\n");
+      _err("Error et014tt1_register\n");
     }
 
   return dev;

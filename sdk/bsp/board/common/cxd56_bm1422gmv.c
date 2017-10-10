@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -67,14 +67,14 @@ int cxd56_bm1422gmvinitialize(FAR const char *devpath,
   int id = 0;
   int ret;
 
-  sndbg("Initializing BM1422GMV...\n");
+  sninfo("Initializing BM1422GMV...\n");
 
   /* Initialize deivce at I2C port 0 */
 
   ret = bm1422gmv_init(i2c, 0);
   if (ret < 0)
     {
-      sndbg("Error initialize BM1422GMV.\n");
+      snerr("Error initialize BM1422GMV.\n");
       return ret;
     }
 
@@ -85,7 +85,7 @@ int cxd56_bm1422gmvinitialize(FAR const char *devpath,
       ret = bm1422gmv_register(devpath, id, i2c, 0);
       if (ret < 0)
         {
-          sndbg("Error registering BM1422GMV.\n");
+          snerr("Error registering BM1422GMV.\n");
           return ret;
         }
     }

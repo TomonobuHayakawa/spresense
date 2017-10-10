@@ -36,7 +36,7 @@
  * include files
  *---------------------------------------------------------------------------*/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/kmalloc.h>
 #include <nuttx/irq.h>
 
@@ -297,11 +297,11 @@ static void mathf_setiirfilter(int mid, int n, FAR struct iir_filter_s *filter);
 
 /* Interrupt handlers *******************************************************/
 
-static int seq_scuirqhandler(int irq, FAR void *context);
-static void seq_handlefifointr(uint32_t intr);
-static void seq_handlemathfintr(uint32_t intr);
-static void seq_handleoneshot(uint32_t intr);
-static void seq_handleisopdoneintr(uint32_t intr);
+static int seq_scuirqhandler(int irq, FAR void *context, FAR void *arg);
+static void seq_handlefifointr(FAR struct cxd56_scudev_s *priv, uint32_t intr);
+static void seq_handlemathfintr(FAR struct cxd56_scudev_s *priv, uint32_t intr);
+static void seq_handleoneshot(FAR struct cxd56_scudev_s *priv, uint32_t intr);
+static void seq_handleisopdoneintr(FAR struct cxd56_scudev_s *priv, uint32_t intr);
 
 /****************************************************************************
  * Private Data
@@ -1447,12 +1447,11 @@ static void seq_sync(FAR struct seq_s *seq, int req)
  *
  ****************************************************************************/
 
-static void seq_handlefifointr(uint32_t intr)
+static void seq_handlefifointr(FAR struct cxd56_scudev_s *priv, uint32_t intr)
 {
   uint32_t bit;
   int i;
 #ifndef CONFIG_DISABLE_SIGNAL
-  struct cxd56_scudev_s *priv = &g_scudev;
   struct wm_notify_s *notify;
 #  ifdef CONFIG_CAN_PASS_STRUCTS
   union sigval value;
@@ -1503,14 +1502,13 @@ static void seq_handlefifointr(uint32_t intr)
  *
  ****************************************************************************/
 
-static void seq_handlemathfintr(uint32_t intr)
+static void seq_handlemathfintr(FAR struct cxd56_scudev_s *priv, uint32_t intr)
 {
   int i;
   uint32_t bit;
   uint32_t rise;
   uint32_t fall;
 #ifndef CONFIG_DISABLE_SIGNAL
-  struct cxd56_scudev_s *priv = &g_scudev;
   struct ev_notify_s *notify;
   int detected = 0;
 #endif
@@ -1596,9 +1594,8 @@ static void seq_handlemathfintr(uint32_t intr)
  *
  ****************************************************************************/
 
-static void seq_handleoneshot(uint32_t intr)
+static void seq_handleoneshot(FAR struct cxd56_scudev_s *priv, uint32_t intr)
 {
-  FAR struct cxd56_scudev_s *priv = &g_scudev;
   uint32_t bit;
   int i;
 
@@ -1626,10 +1623,8 @@ static void seq_handleoneshot(uint32_t intr)
  *
  ****************************************************************************/
 
-static void seq_handleisopdoneintr(uint32_t intr)
+static void seq_handleisopdoneintr(FAR struct cxd56_scudev_s *priv, uint32_t intr)
 {
-  FAR struct cxd56_scudev_s *priv = &g_scudev;
-
   /* Detect ISOP3 as done or stop. */
 
   if (intr & (1 << 27))
@@ -1653,8 +1648,9 @@ static void seq_handleisopdoneintr(uint32_t intr)
  *
  ****************************************************************************/
 
-static int seq_scuirqhandler(int irq, FAR void *context)
+static int seq_scuirqhandler(int irq, FAR void *context, FAR void *arg)
 {
+  FAR struct cxd56_scudev_s *priv = arg;
   uint32_t intr;
   uint32_t ierr0;
   uint32_t ierr1;
@@ -1666,13 +1662,13 @@ static int seq_scuirqhandler(int irq, FAR void *context)
   ierr1 = getreg32(SCU_INT_MASKED_STT_ERR_1);
   ierr2 = getreg32(SCU_INT_MASKED_STT_ERR_2);
 
-  seq_handlefifointr(intr);
+  seq_handlefifointr(priv, intr);
 
-  seq_handlemathfintr(intr);
+  seq_handlemathfintr(priv, intr);
 
-  seq_handleoneshot(intr);
+  seq_handleoneshot(priv, intr);
 
-  seq_handleisopdoneintr(intr);
+  seq_handleisopdoneintr(priv, intr);
 
   /* Detect all FIFO overrun errors */
 
@@ -3378,7 +3374,7 @@ void scu_initialize(void)
 
   /* Enable SCU IRQ */
 
-  irq_attach(CXD56_IRQ_SCU_3, seq_scuirqhandler);
+  irq_attach(CXD56_IRQ_SCU_3, seq_scuirqhandler, &g_scudev);
   up_enable_irq(CXD56_IRQ_SCU_3);
 }
 

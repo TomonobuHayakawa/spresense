@@ -33,7 +33,7 @@
  *
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <nuttx/arch.h>
 #include <nuttx/mtd/mtd.h>

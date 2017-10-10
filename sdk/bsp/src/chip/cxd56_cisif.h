@@ -40,16 +40,11 @@
  * Included Files
  ********************************************************************************************/
 
-#include <nuttx/config.h>
-
 #include "chip/cxd5602_memorymap.h"
 
 /********************************************************************************************
  * Pre-processor Definitions
  ********************************************************************************************/
-
-// TODO
-#define CXD56_CISIF_BASE     (0x0E100000) /* IMG_CISIF */
 
 /* Register offsets *************************************************************************/
 /* Common Register Offsets */
@@ -115,4 +110,3 @@
 #define MODE_INTLEV_TRS_EN   (0x0000010E)
 
 #endif /* __ARCH_ARM_SRC_CXD56XX_CHIP_CXD56_CISIF_H */
-

@@ -41,7 +41,6 @@
  * Included Files
  ****************************************************************************************/
 
-#include <nuttx/config.h>
 #include <arch/cxd56xx/chip.h>
 
 #include "chip/cxd5602_memorymap.h"

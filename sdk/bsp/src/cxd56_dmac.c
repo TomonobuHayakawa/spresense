@@ -37,7 +37,7 @@
  * include files
  *---------------------------------------------------------------------------*/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/kmalloc.h>
 
 #include <errno.h>
