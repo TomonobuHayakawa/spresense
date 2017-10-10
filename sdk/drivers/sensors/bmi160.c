@@ -38,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdlib.h>
 #include <fixedmath.h>
@@ -498,7 +498,7 @@ static ssize_t bmi160_read(FAR struct file *filep, FAR char *buffer, size_t len)
 
   if (len < sizeof(struct accel_gyro_st_s))
     {
-      sndbg("Expected buffer size is %d\n", sizeof(struct accel_gyro_st_s));
+      snerr("Expected buffer size is %d\n", sizeof(struct accel_gyro_st_s));
       return 0;
     }
 
@@ -526,7 +526,7 @@ static void bmi160_enable_stepcounter(FAR struct bmi160_dev_s *priv, int enable)
     }
   bmi160_putreg8(priv, BMI160_STEP_CONFIG_1, val);
 
-  sndbg("Step counter %sabled.\n", val & STEP_CNT_EN ? "en" : "dis");
+  sninfo("Step counter %sabled.\n", val & STEP_CNT_EN ? "en" : "dis");
 }
 
 /****************************************************************************
@@ -566,7 +566,7 @@ static int bmi160_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
         break;
 
       default:
-        sndbg("Unrecognized cmd: %d\n", cmd);
+        snerr("Unrecognized cmd: %d\n", cmd);
         ret = -ENOTTY;
         break;
     }
@@ -589,7 +589,7 @@ static int bmi160_checkid(FAR struct bmi160_dev_s *priv)
   /* Read device ID  */
 
   devid = bmi160_getreg8(priv, BMI160_CHIP_ID);
-  snvdbg("devid: %04x\n", devid);
+  snvinfo("devid: %04x\n", devid);
 
   if (devid != (uint16_t) DEVID)
     {
@@ -625,7 +625,7 @@ int bmi160_register(FAR const char *devpath, FAR struct spi_dev_s *dev)
   priv = (FAR struct bmi160_dev_s *)kmm_malloc(sizeof(struct bmi160_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -640,7 +640,7 @@ int bmi160_register(FAR const char *devpath, FAR struct spi_dev_s *dev)
   ret = bmi160_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Wrong Device ID!\n");
+      snerr("Wrong Device ID!\n");
       kmm_free(priv);
       return ret;
     }
@@ -652,11 +652,11 @@ int bmi160_register(FAR const char *devpath, FAR struct spi_dev_s *dev)
   ret = register_driver(devpath, &g_bmi160fops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("BMI160 driver loaded successfully!\n");
+  sninfo("BMI160 driver loaded successfully!\n");
   return OK;
 }
 

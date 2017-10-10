@@ -38,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -646,7 +646,7 @@ static int bmi160_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = -ENOTTY;
             }
         }
@@ -671,7 +671,7 @@ static int bmi160_checkid(void)
   /* Read device ID  */
 
   devid = bmi160_getreg8(BMI160_CHIP_ID);
-  snvdbg("devid: %04x\n", devid);
+  sninfo("devid: %04x\n", devid);
 
   if (devid != (uint16_t) DEVID)
     {
@@ -711,7 +711,7 @@ static int bmi160_devregister(FAR const char *devpath, FAR struct spi_dev_s *dev
   priv = (FAR struct bmi160_dev_s *)kmm_malloc(sizeof(struct bmi160_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -723,7 +723,7 @@ static int bmi160_devregister(FAR const char *devpath, FAR struct spi_dev_s *dev
   ret = register_driver(path, fops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
@@ -764,7 +764,7 @@ int bmi160_init(FAR struct spi_dev_s *dev)
   ret = bmi160_checkid();
   if (ret < 0)
     {
-      sndbg("Wrong Device ID!\n");
+      snerr("Wrong Device ID!\n");
       return ret;
     }
 
@@ -800,7 +800,7 @@ int bmi160gyro_register(FAR const char *devname, int minor,
   ret = bmi160_devregister(devname, dev, minor, &g_bmi160gyrofops);
   if (ret < 0)
     {
-      sndbg("Gyroscope register failed. %d\n", ret);
+      snerr("Gyroscope register failed. %d\n", ret);
       return ret;
     }
 
@@ -831,7 +831,7 @@ int bmi160accel_register(FAR const char *devname, int minor,
   ret = bmi160_devregister(devname, dev, minor, &g_bmi160accelfops);
   if (ret < 0)
     {
-      sndbg("Accelerometer register failed. %d\n", ret);
+      snerr("Accelerometer register failed. %d\n", ret);
       return ret;
     }
 

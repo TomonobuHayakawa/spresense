@@ -38,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdlib.h>
 #include <fixedmath.h>
@@ -229,7 +229,7 @@ static uint8_t bmp280_getreg8(FAR struct bmp280_dev_s *priv, uint8_t regaddr)
   ret = I2C_TRANSFER(priv->i2c, msg, 2);
   if (ret < 0)
     {
-      sndbg("I2C_TRANSFER failed: %d\n", ret);
+      snerr("I2C_TRANSFER failed: %d\n", ret);
       return 0;
     }
 
@@ -265,7 +265,7 @@ static int bmp280_getregs(FAR struct bmp280_dev_s *priv, uint8_t regaddr,
   ret = I2C_TRANSFER(priv->i2c, msg, 2);
   if (ret < 0)
     {
-      sndbg("I2C_TRANSFER failed: %d\n", ret);
+      snerr("I2C_TRANSFER failed: %d\n", ret);
       return -1;
     }
 
@@ -299,7 +299,7 @@ static void bmp280_putreg8(FAR struct bmp280_dev_s *priv, uint8_t regaddr,
   ret = I2C_TRANSFER(priv->i2c, msg, 1);
   if (ret < 0)
     {
-      sndbg("I2C_TRANSFER failed: %d\n", ret);
+      snerr("I2C_TRANSFER failed: %d\n", ret);
     }
 }
 
@@ -319,13 +319,13 @@ static int bmp280_checkid(FAR struct bmp280_dev_s *priv)
 
   devid = bmp280_getreg8(priv, BMP280_DEVID);
   up_mdelay(1);
-  snvdbg("devid: 0x%02x\n", devid);
+  sninfo("devid: 0x%02x\n", devid);
 
   if (devid != (uint16_t) DEVID)
     {
       /* ID is not Correct */
 
-      sndbg("Wrong Device ID! %02x\n", devid);
+      snerr("Wrong Device ID! %02x\n", devid);
       return -ENODEV;
     }
 
@@ -358,7 +358,7 @@ static int bmp280_set_standby(FAR struct bmp280_dev_s *priv, uint8_t value)
 
   if (v_sb_u8 != value)
     {
-      sndbg("Failed to set value for standby time.");
+      snerr("Failed to set value for standby time.");
       return ERROR;
     }
 
@@ -400,19 +400,19 @@ static int bmp280_initialize(FAR struct bmp280_dev_s *priv)
   priv->calib.p8 = (int16_t) buf[21] << 8 | buf[20];
   priv->calib.p9 = (int16_t) buf[23] << 8 | buf[22];
 
-  snvdbg("T1 = %u\n", priv->calib.t1);
-  snvdbg("T2 = %d\n", priv->calib.t2);
-  snvdbg("T3 = %d\n", priv->calib.t3);
+  sninfo("T1 = %u\n", priv->calib.t1);
+  sninfo("T2 = %d\n", priv->calib.t2);
+  sninfo("T3 = %d\n", priv->calib.t3);
 
-  snvdbg("P1 = %u\n", priv->calib.p1);
-  snvdbg("P2 = %d\n", priv->calib.p2);
-  snvdbg("P3 = %d\n", priv->calib.p3);
-  snvdbg("P4 = %d\n", priv->calib.p4);
-  snvdbg("P5 = %d\n", priv->calib.p5);
-  snvdbg("P6 = %d\n", priv->calib.p6);
-  snvdbg("P7 = %d\n", priv->calib.p7);
-  snvdbg("P8 = %d\n", priv->calib.p8);
-  snvdbg("P9 = %d\n", priv->calib.p9);
+  sninfo("P1 = %u\n", priv->calib.p1);
+  sninfo("P2 = %d\n", priv->calib.p2);
+  sninfo("P3 = %d\n", priv->calib.p3);
+  sninfo("P4 = %d\n", priv->calib.p4);
+  sninfo("P5 = %d\n", priv->calib.p5);
+  sninfo("P6 = %d\n", priv->calib.p6);
+  sninfo("P7 = %d\n", priv->calib.p7);
+  sninfo("P8 = %d\n", priv->calib.p8);
+  sninfo("P9 = %d\n", priv->calib.p9);
 
   /* Set power mode to sleep */
 
@@ -423,7 +423,7 @@ static int bmp280_initialize(FAR struct bmp280_dev_s *priv)
   ret = bmp280_set_standby(priv, BMP280_STANDBY_1_MS);
   if (ret != OK)
     {
-      sndbg("Failed to set value for standby time.\n");
+      snerr("Failed to set value for standby time.\n");
       return -1;
     }
 
@@ -540,7 +540,7 @@ static uint32_t bmp280_getpressure(FAR struct bmp280_dev_s *priv)
   press = (uint32_t)COMBINE(buf);
   temp = COMBINE(&buf[3]);
 
-  snvdbg("press = %d, temp = %d\n", press, temp);
+  sninfo("press = %d, temp = %d\n", press, temp);
 
   if (priv->compensated == ENABLE_COMPENSATED)
     {
@@ -604,13 +604,13 @@ static ssize_t bmp280_read(FAR struct file *filep, FAR char *buffer,
 
   if (!buffer)
     {
-      sndbg("Buffer is null\n");
+      snerr("Buffer is null\n");
       return -1;
     }
 
   if (buflen < 4)
     {
-      sndbg("You can't read something other than 32 bits (4 bytes)\n");
+      snerr("You can't read something other than 32 bits (4 bytes)\n");
       return -1;
     }
 
@@ -644,7 +644,7 @@ static int bmp280_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
         break;
 
       default:
-        sndbg("Unrecognized cmd: %d\n", cmd);
+        snerr("Unrecognized cmd: %d\n", cmd);
         ret = - ENOTTY;
         break;
     }
@@ -682,7 +682,7 @@ int bmp280_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   priv = (FAR struct bmp280_dev_s *)kmm_malloc(sizeof(struct bmp280_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -696,7 +696,7 @@ int bmp280_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   ret = bmp280_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
       return ret;
     }
@@ -704,7 +704,7 @@ int bmp280_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   ret = bmp280_initialize(priv);
   if (ret < 0)
     {
-      sndbg("Failed to initialize physical device bmp280:%d\n", ret);
+      snerr("Failed to initialize physical device bmp280:%d\n", ret);
       kmm_free(priv);
       return ret;
     }
@@ -714,11 +714,11 @@ int bmp280_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   ret = register_driver(devpath, &g_bmp280fops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("BMP280 driver loaded successfully!\n");
+  sninfo("BMP280 driver loaded successfully!\n");
   return ret;
 }
 

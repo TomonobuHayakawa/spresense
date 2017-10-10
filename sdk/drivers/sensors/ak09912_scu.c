@@ -38,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -293,13 +293,13 @@ static int ak09912_checkid(FAR struct ak09912_dev_s *priv)
 
   devid = ak09912_getreg8(priv, AK09912_WIA1);
   devid += ak09912_getreg8(priv, AK09912_WIA2) << 8;
-  snvdbg("devid: 0x%04x\n", devid);
+  sninfo("devid: 0x%04x\n", devid);
 
   if (devid != AK09912_DEVID)
     {
       /* ID is not Correct */
 
-      sndbg("Wrong Device ID! %02x\n", devid);
+      snerr("Wrong Device ID! %02x\n", devid);
       return -ENODEV;
     }
 
@@ -463,7 +463,7 @@ static int ak09912_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -495,7 +495,7 @@ int ak09912_init(FAR struct i2c_master_s *i2c, int port)
   ret = ak09912_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       return ret;
     }
 
@@ -545,7 +545,7 @@ int ak09912_register(FAR const char *devpath, int minor,
   priv = (FAR struct ak09912_dev_s *)kmm_malloc(sizeof(struct ak09912_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -561,11 +561,11 @@ int ak09912_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_ak09912fops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("AK09912 driver loaded successfully!\n");
+  sninfo("AK09912 driver loaded successfully!\n");
   return ret;
 }
 

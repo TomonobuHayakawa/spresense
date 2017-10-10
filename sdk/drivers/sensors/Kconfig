@@ -3,26 +3,30 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-config BMP180
-	bool "Bosch BMP180 Barometer Sensor"
+menuconfig SENSORS
+	bool "Sensor Drivers"
+
+if SENSORS
+
+config BMI160
+	bool "Bosch BMI160 Sensor support"
+	default n
+	---help---
+		Enable driver support for the Bosch BMI160 sensor.
+
+config BMP280
+	bool "Bosch BMP280 Barometic Pressure Sensor"
 	default n
 	select I2C
 	---help---
-		Enable driver for the Bosch BMP180 barometer sensor.
-
-config BMP280
-    bool "Bosch BMP280 Barometic Pressure Sensor"
-    default n
-    select I2C
-    ---help---
-        Enable driver for the Bosch BMP280 barometic pressure sensor.
+		Enable driver for the Bosch BMP280 barometic pressure sensor.
 
 config AK09912
-    bool "Asahi AK09912 Compass Sensor"
-    default n
-    select I2C
-    ---help---
-        Enable driver for AK09912 Compass sensor.
+	bool "Asahi AK09912 Compass Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for AK09912 Compass sensor.
 
 config APDS9930
 	bool "Avago APDS9930 Proximity and Ambient light Sensor"
@@ -68,11 +72,11 @@ config BH1721FVC
 		Enable driver for the Rohm BH1721FVC light sensor.
 
 config KX022
-    bool "Kionix KX022 Acceleration Sensor"
-    default n
-    select I2C
-    ---help---
-        Enable driver for the Kionix KX0222 acceleration sensor.
+	bool "Kionix KX022 Acceleration Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for the Kionix KX0222 acceleration sensor.
 
 config BM1422GMV
 	bool "Rohm BM1422GMV Magnetic Sensor"
@@ -112,3 +116,5 @@ config RPR0521RS_PROXIMITY_INTERRUPT
 		In this case, SCU sequencer is not used.
 
 endif
+
+endif # SENSORS

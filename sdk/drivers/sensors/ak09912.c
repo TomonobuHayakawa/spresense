@@ -40,7 +40,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -243,7 +243,7 @@ static uint8_t ak09912_getreg8(FAR struct ak09912_dev_s *priv, uint8_t regaddr)
   ret = I2C_TRANSFER(priv->i2c, msg, 2);
   if (ret < 0)
     {
-      sndbg("I2C_TRANSFER failed: %d\n", ret);
+      snerr("I2C_TRANSFER failed: %d\n", ret);
       return 0;
     }
 
@@ -276,7 +276,7 @@ static int ak09912_putreg8(FAR struct ak09912_dev_s *priv, uint8_t regaddr,   ui
   ret = I2C_TRANSFER(priv->i2c, msg, 1);
   if (ret < 0)
     {
-      sndbg("I2C_TRANSFER failed: %d\n", ret);
+      snerr("I2C_TRANSFER failed: %d\n", ret);
     }
     return ret;
 }
@@ -310,7 +310,7 @@ static int32_t ak09912_getreg(FAR struct ak09912_dev_s *priv, uint8_t regaddr, u
   ret = I2C_TRANSFER(priv->i2c, msg, 2);
   if (ret < 0)
     {
-      sndbg("I2C_TRANSFER failed: %d\n", ret);
+      snerr("I2C_TRANSFER failed: %d\n", ret);
       return ret;
     }
 
@@ -454,7 +454,7 @@ static int ak09912_read_mag_data(FAR struct ak09912_dev_s* priv, FAR struct mag_
   ret = ak09912_read_mag_uncomp_data(priv, mag_data);
   if (ret < 0)
     {
-      sndbg("Failed to read mag data from device.\n");
+      snerr("Failed to read mag data from device.\n");
       return ret;
      }
 
@@ -480,13 +480,13 @@ static int ak09912_checkid(FAR struct ak09912_dev_s *priv)
   /* Read device ID */
 
   devid = ak09912_getreg8(priv, AK09912_DEVADD);
-  snvdbg("devid: 0x%02x\n", devid);
+  sninfo("devid: 0x%02x\n", devid);
 
   if (devid != (uint16_t) AK09912_DEVID)
     {
       /* ID is not Correct */
 
-      sndbg("Wrong Device ID! %02x\n", devid);
+      snerr("Wrong Device ID! %02x\n", devid);
       return -ENODEV;
     }
 
@@ -529,7 +529,7 @@ static int ak09912_open(FAR struct file *filep)
   ret = ak09912_set_power_mode(priv, priv->mode);
   if (ret < 0)
     {
-      sndbg("Failed to set power mode to %d.\n", priv->mode);
+      snerr("Failed to set power mode to %d.\n", priv->mode);
       return ret;
     }
   return OK;
@@ -552,7 +552,7 @@ static int ak09912_close(FAR struct file *filep)
   ret = ak09912_set_power_mode(priv, AKM_POWER_DOWN_MODE);
   if (ret < 0)
     {
-      sndbg("Failed to set power mode to %d.\n", AKM_POWER_DOWN_MODE);
+      snerr("Failed to set power mode to %d.\n", AKM_POWER_DOWN_MODE);
       return ret;
     }
   return OK;
@@ -572,13 +572,13 @@ static ssize_t ak09912_read(FAR struct file *filep, FAR char *buffer,
 
   if (!buffer)
     {
-      sndbg("Buffer is null\n");
+      snerr("Buffer is null\n");
       return -1;
     }
 
   if (buflen != sizeof(struct mag_data_s))
     {
-      sndbg("You can't read something other than 32 bits (4 bytes)\n");
+      snerr("You can't read something other than 32 bits (4 bytes)\n");
       return -1;
     }
 
@@ -597,7 +597,7 @@ static ssize_t ak09912_read(FAR struct file *filep, FAR char *buffer,
 
   if (ret < 0)
     {
-      sndbg("Failed to read data from ak09912.\n");
+      snerr("Failed to read data from ak09912.\n");
       return ret;
     }
 
@@ -630,7 +630,7 @@ static int ak09912_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
         priv->compensated = (int)arg;
         break;
       default:
-        sndbg("Unrecognized cmd: %d\n", cmd);
+        snerr("Unrecognized cmd: %d\n", cmd);
         ret = - ENOTTY;
         break;
     }
@@ -669,7 +669,7 @@ int ak09912_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   priv = (FAR struct ak09912_dev_s *)kmm_malloc(sizeof(struct ak09912_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -691,7 +691,7 @@ int ak09912_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   ret = ak09912_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
       return ret;
     }
@@ -699,7 +699,7 @@ int ak09912_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   ret = ak09912_initialize(priv);
   if (ret < 0)
     {
-      sndbg("Failed to initialize physical device bmp280:%d\n", ret);
+      snerr("Failed to initialize physical device bmp280:%d\n", ret);
       kmm_free(priv);
       return ret;
     }
@@ -710,11 +710,11 @@ int ak09912_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   ret = register_driver(path, &g_ak09912fops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("AK09912 driver loaded successfully!\n");
+  sninfo("AK09912 driver loaded successfully!\n");
   return ret;
 }
 

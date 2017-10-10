@@ -38,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -295,13 +295,13 @@ static int bmp280_checkid(FAR struct bmp280_dev_s *priv)
   /* Read device ID */
 
   devid = bmp280_getreg8(priv, BMP280_DEVID);
-  snvdbg("devid: 0x%02x\n", devid);
+  sninfo("devid: 0x%02x\n", devid);
 
   if (devid != (uint16_t)DEVID)
     {
       /* ID is not Correct */
 
-      sndbg("Wrong Device ID! %02x\n", devid);
+      snerr("Wrong Device ID! %02x\n", devid);
       return -ENODEV;
     }
 
@@ -452,7 +452,7 @@ static int bmp280_set_standby(FAR struct bmp280_dev_s *priv, uint8_t value)
 
   if (v_sb_u8 != value)
     {
-      sndbg("Failed to set value for standby time.");
+      snerr("Failed to set value for standby time.");
       return ERROR;
     }
 
@@ -475,7 +475,7 @@ static int bmp280_initialize(FAR struct bmp280_dev_s *priv)
 
   if (ret != OK)
     {
-      sndbg("Failed to set value for standby time.");
+      snerr("Failed to set value for standby time.");
       return ERROR;
     }
 
@@ -786,7 +786,7 @@ static int bmp280_ioctl_press(FAR struct file *filep, int cmd, unsigned long arg
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -832,7 +832,7 @@ static int bmp280_ioctl_temp(FAR struct file *filep, int cmd, unsigned long arg)
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -879,7 +879,7 @@ int bmp280_init(FAR struct i2c_master_s *i2c, int port)
   ret = bmp280_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       return ERROR;
     }
 
@@ -912,7 +912,7 @@ int bmp280press_register(FAR const char *devpath, int minor,
   priv = (FAR struct bmp280_dev_s *)kmm_malloc(sizeof(struct bmp280_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -929,11 +929,11 @@ int bmp280press_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_bmp280pressfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("BMP280 pressure driver loaded successfully!\n");
+  sninfo("BMP280 pressure driver loaded successfully!\n");
   return ret;
 }
 
@@ -963,7 +963,7 @@ int bmp280temp_register(FAR const char *devpath, int minor,
   priv = (FAR struct bmp280_dev_s *)kmm_malloc(sizeof(struct bmp280_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -980,11 +980,11 @@ int bmp280temp_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_bmp280tempfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("BMP280 temperature driver loaded successfully!\n");
+  sninfo("BMP280 temperature driver loaded successfully!\n");
   return ret;
 }
 
