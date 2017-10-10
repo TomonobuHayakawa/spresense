@@ -124,18 +124,6 @@ ifeq ($(CONFIG_PWM),y)
 CHIP_CSRCS += cxd56_pwm.c
 endif
 
-ifeq ($(CONFIG_LCD_LPM013M091A),y)
-CHIP_CSRCS += cxd56_lpm013m091a_base.c
-ifeq ($(CONFIG_BOARDCTL_GRAPHICS),y)
-CHIP_CSRCS += cxd56_lpm013m091a_fb.c
-endif
-endif
-
-ifeq ($(CONFIG_EINK_ET014TT1),y)
-CHIP_CSRCS += cxd56_et014tt1.c
-CHIP_CSRCS += cxd56_et014tt1_waveformdata.c
-endif
-
 ifeq ($(CONFIG_ARCH_DMA),y)
 CHIP_CSRCS += cxd56_dmacinit.c
 endif
