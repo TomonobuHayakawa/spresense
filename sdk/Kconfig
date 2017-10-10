@@ -5,6 +5,10 @@
 
 mainmenu "Spookie (tentative) SDK Configuration"
 
-source bsp/Kconfig
-source drivers/Kconfig
-source modules/Kconfig
+config SDKDIR
+	string
+	option env="SDKDIR"
+
+source "$SDKDIR/bsp/Kconfig"
+source "$SDKDIR/drivers/Kconfig"
+source "$SDKDIR/modules/Kconfig"
