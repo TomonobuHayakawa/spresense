@@ -134,6 +134,44 @@
 #  define CONFIG_SFC_DEVNO 0
 #endif
 
+/* Sanity check */
+
+#if defined(CONFIG_BMP280) && defined(CONFIG_BM1383GLV)
+#  error "Duplicate pressure sensor device."
+#endif
+
+#if defined(CONFIG_AK09912) && defined(CONFIG_BM1422GMV)
+# error "Duplicate magnetic sensor device."
+#endif
+
+#ifdef CONFIG_APDS9930
+#  define _APDS9930  1
+#else
+#  define _APDS9930  0
+#endif
+
+#ifdef CONFIG_LT1PA01
+#  define _LT1PA01  1
+#else
+#  define _LT1PA01  0
+#endif
+
+#ifdef CONFIG_BH1721FVC
+#  define _BH1721FVC  1
+#else
+#  define _BH1721FVC  0
+#endif
+
+#ifdef CONFIG_RPR0521RS
+#  define _RPR0521RS  1
+#else
+#  define _RPR0521RS  0
+#endif
+
+#if (_APDS9930 + _LT1PA01 + _BH1721FVC + _RPR0521RS) > 1
+# error "Duplicate proximity and ambient light sensor device."
+#endif
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -494,10 +532,6 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#if defined(CONFIG_BMP280) && defined(CONFIG_BM1383GLV)
-# error "Duplicate pressure sensor device."
-#endif
-
 #ifdef CONFIG_BMP280
   ret = cxd56_bmp280initialize(i2c);
   if (ret < 0)
@@ -534,10 +568,6 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#if defined(CONFIG_AK09912) && defined(CONFIG_BM1422GMV)
-# error "Duplicate magnetic sensor device."
-#endif
-
 #ifdef CONFIG_AK09912
   ret = cxd56_ak09912initialize("/dev/mag", i2c);
   if (ret < 0)
@@ -563,51 +593,35 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_APDS9930
-#define ALS_SENSOR_APDS9930  1
   ret = cxd56_apds9930initialize(i2c);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize APDS9930.\n");
     }
-#else
-#define ALS_SENSOR_APDS9930  0
 #endif
 
 #ifdef CONFIG_LT1PA01
-#define ALS_SENSOR_LT1PA01  1
   ret = cxd56_lt1pa01initialize(i2c);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize LT1PA01.\n");
     }
-#else
-#define ALS_SENSOR_LT1PA01  0
 #endif
 
 #ifdef CONFIG_BH1721FVC
-#define ALS_SENSOR_BH1721FVC  1
   ret = cxd56_bh1721fvcinitialize(i2c);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BH1721FVC.\n");
     }
-#else
-#define ALS_SENSOR_BH1721FVC  0
 #endif
 
 #ifdef CONFIG_RPR0521RS
-#define ALS_SENSOR_RPR0521RS  1
   ret = cxd56_rpr0521rsinitialize(i2c);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize RPR0521RS.\n");
     }
-#else
-#define ALS_SENSOR_RPR0521RS  0
-#endif
-
-#if (ALS_SENSOR_APDS9930 + ALS_SENSOR_LT1PA01 + ALS_SENSOR_BH1721FVC + ALS_SENSOR_RPR0521RS) > 1
-# error "Duplicate proximity and ambient light sensor device."
 #endif
 
 #ifdef CONFIG_CXD56_ADC
