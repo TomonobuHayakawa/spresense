@@ -3,6 +3,13 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
+menuconfig LCD
+	bool "LCD Drivers"
+	---help---
+		LCD and EInk display device drivers.
+
+if LCD
+
 config LCD_LPM013M091A
 	bool "JDI LPM013M091A LCD Driver"
 	default n
@@ -12,3 +19,11 @@ config LCD_LPM013M091A
 		This driver doesn't support reading data.
 		Recommended to use DMA to transfer data or displayed image would be
 		broken.
+
+config LCD_ET014TT1
+	bool "EInk ET014TT1 ePaper"
+	default n
+	---help---
+		Supports the E Ink ET014TT1 1.43 inch monochrome display.
+
+endif

@@ -34,28 +34,32 @@
  *
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
+
+#include <nuttx/arch.h>
+#include <nuttx/fs/fs.h>
+#include <nuttx/fs/ioctl.h>
+#include <nuttx/kmalloc.h>
+#include <nuttx/video/fb.h>
+#include <nuttx/spi/spi.h>
+#include <nuttx/timers/rtc.h>
+#include <nuttx/time.h>
+#include <nuttx/lcd/et014tt1.h>
 
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <nuttx/fs/fs.h>
-#include <nuttx/fs/ioctl.h>
-#include <nuttx/kmalloc.h>
-#include <nuttx/video/fb.h>
-#include <nuttx/spi/spi.h>
-#include <clock/clock.h>
-#include <nuttx/timers/rtc.h>
-#include <nuttx/time.h>
-#include <nuttx/lcd/et014tt1.h>
-
 #include <stdbool.h>
 #include <errno.h>
-
 #include <semaphore.h>
-#include "gpio.h"
+
+/* XXX: Replace it because this is sched */
+
+#include "clock/clock.h"
+
+#include "cxd56_gpio.h"
 #include "et014tt1.h"
 
 #ifndef ERROR
@@ -77,9 +81,9 @@ extern const EPD_TCON_DRIVER_HAL g_TCON_HAL;
  ****************************************************************************/
 
 static int et014tt1_getvideoinfo(FAR struct fb_vtable_s *vtable,
-                    FAR struct fb_videoinfo_s *vinfo);
+                                 FAR struct fb_videoinfo_s *vinfo);
 static int et014tt1_getplaneinfo(FAR struct fb_vtable_s *vtable, int planeno,
-                    FAR struct fb_planeinfo_s *pinfo);
+                                 FAR struct fb_planeinfo_s *pinfo);
 
 /****************************************************************************
  * Character driver methods
@@ -88,9 +92,9 @@ static int et014tt1_getplaneinfo(FAR struct fb_vtable_s *vtable, int planeno,
 static int     et014tt1_open(FAR struct file *filep);
 static int     et014tt1_close(FAR struct file *filep);
 static ssize_t et014tt1_write(FAR struct file *filep,
-                    FAR const char *buffer, size_t buflen);
+                              FAR const char *buffer, size_t buflen);
 static int     et014tt1_ioctl(FAR struct file *filep,
-                    int cmd, unsigned long arg);
+                              int cmd, unsigned long arg);
 
 /****************************************************************************
  * EInk library call backs
@@ -119,7 +123,7 @@ static TIMER_STATE_TYPE _GetTimerState(void);
 
 static char *g_fb;
 static struct fb_vtable_s g_dev;
-struct timespec g_stop_time;
+static struct timespec g_stop_time;
 
 static FAR struct spi_dev_s *g_spi;
 static struct et014tt1_pin_s *g_pin;
@@ -188,7 +192,7 @@ const EPD_TCON_DRIVER_HAL g_TCON_HAL =
 #define GPIO_LEVEL_HI             (true)
 #define GPIO_LEVEL_LO             (false)
 
-#define SPIDEV_EINK  SPIDEV_DISPLAY
+#define SPIDEV_EINK  SPIDEV_DISPLAY(0)
 #define ONE_SEC 1000000000
 
 typedef enum
@@ -208,9 +212,9 @@ typedef enum
  ****************************************************************************/
 
 static int et014tt1_getvideoinfo(FAR struct fb_vtable_s *vtable,
-                    FAR struct fb_videoinfo_s *vinfo)
+                                 FAR struct fb_videoinfo_s *vinfo)
 {
-  dbg("%d\n", __LINE__);
+  lcdinfo("%d\n", __LINE__);
   vinfo->fmt = ET014TT1_COLORFMT; /* see FB_FMT_*  */
   vinfo->xres = ET014TT1_XRES;    /* Horizontal resolution in pixel columns */
   vinfo->yres = ET014TT1_YRES;    /* Vertical resolution in pixel rows */
@@ -225,7 +229,7 @@ static int et014tt1_getvideoinfo(FAR struct fb_vtable_s *vtable,
 static int et014tt1_getplaneinfo(FAR struct fb_vtable_s *vtable, int planeno,
                     FAR struct fb_planeinfo_s *pinfo)
 {
-  dbg("%d\n", __LINE__);
+  lcdinfo("%d\n", __LINE__);
   pinfo->fbmem = g_fb;            /* Start of frame buffer memory */
   pinfo->fblen = ET014TT1_FBSIZE; /* Length of frame buffer memory in bytes */
   pinfo->stride = ET014TT1_XSTRIDE;/* Length of a line in bytes */
@@ -234,19 +238,31 @@ static int et014tt1_getplaneinfo(FAR struct fb_vtable_s *vtable, int planeno,
   return 0;
 }
 
+#ifdef CONFIG_DEBUG_LCD_INFO
+static void et014tt1_debugpaneinfo(void)
+{
+  const EPD_TCON_PANEL_INFO *info;
+
+  info = EPD_TCON_GetPanelInfo();
+  lcdinfo("panel info - width: %d, height: %d, bpp: %d\n",
+          info->Width, info->Height, info->BPP);
+}
+#else
+#  define et014tt1_debugpaneinfo()
+#endif
+
 /****************************************************************************
  * Name: EPD_Initialize
  ****************************************************************************/
 
 int EPD_Initialize(void)
 {
-  dbg("%d %s\n", __LINE__, __TIME__);
   int ret = 0;
 
   ret = EPD_TCON_Init(&g_TCON_HAL);
   if (ret != 0)
     {
-      dbg ("Error in EPD_TCON_Init: %d\n", ret);
+      lcderr("Error in EPD_TCON_Init: %d\n", ret);
       return ret;
     }
 
@@ -255,13 +271,11 @@ int EPD_Initialize(void)
   ret = EPD_TCON_LoadWaveform(g_WaveformData);
   if (ret != 1)
     {
-      dbg("Error in EPD_TCON_LoadWaveform: %d\n", ret);
+      lcderr("Error in EPD_TCON_LoadWaveform: %d\n", ret);
       return ret;
     }
 
-  const EPD_TCON_PANEL_INFO* paneInfo = EPD_TCON_GetPanelInfo();
-  printf("panel info - width: %d, height: %d, bpp: %d\n",
-                      paneInfo->Width, paneInfo->Height, paneInfo->BPP);
+  et014tt1_debugpaneinfo();
 
   return 0;
 }
@@ -276,24 +290,23 @@ int EPD_Initialize(void)
 
 static int et014tt1_open(FAR struct file *filep)
 {
-  dbg("%d\n", __LINE__);
+  int ret;
+
   g_fb = kmm_malloc(ET014TT1_FBSIZE);
 
   if (!g_fb)
     {
-      dbg("Failed to malloc frame buffer.\n");
+      lcderr("Failed to malloc frame buffer.\n");
       return ERROR;
     }
-  dbg("%d\n", __LINE__);
-  int ret = EPD_Initialize();
-  if (0 != ret)
+
+  ret = EPD_Initialize();
+  if (ret != 0)
     {
       return  ret;
     }
 
-  ret = et014tt1_ioctl(filep, EINKIOC_POWERON, 0);
-
-  return  ret;
+  return et014tt1_ioctl(filep, EINKIOC_POWERON, 0);
 }
 
 /****************************************************************************
@@ -306,7 +319,6 @@ static int et014tt1_open(FAR struct file *filep)
 
 static int et014tt1_close(FAR struct file *filep)
 {
-  dbg("%d\n", __LINE__);
   int ret = et014tt1_ioctl(filep, EINKIOC_POWEROFF, 0);
 
   if (g_fb)
@@ -327,10 +339,9 @@ static int et014tt1_close(FAR struct file *filep)
  ****************************************************************************/
 
 static ssize_t et014tt1_write(FAR struct file *filep,
-                    FAR const char *buffer, size_t buflen)
+                              FAR const char *buffer, size_t buflen)
 {
-  dbg("%d\n", __LINE__);
-  uint8_t* updateBuffer;
+  FAR uint8_t *updateBuffer;
 
   /* for a local coordinate */
 
@@ -340,15 +351,16 @@ static ssize_t et014tt1_write(FAR struct file *filep,
 
   /* for a e-Ink coordinate */
 
+  int byteso;
+#ifdef CONFIG_EINK_ET014TT1_ROTATE
   int xo;
   int yo;
-  int byteso;
   int strideo =  ((ET014TT1_DEVICE_XRES * ET014TT1_BPP) >> 3);
-
+#endif
 
   if (buflen != ET014TT1_FBSIZE)
     {
-      dbg("Expected buffer size is %d\n", ET014TT1_FBSIZE);
+      lcderr("Expected buffer size is %d\n", ET014TT1_FBSIZE);
       return -1;
     }
 
@@ -356,34 +368,27 @@ static ssize_t et014tt1_write(FAR struct file *filep,
 
   /* copy from buffer to updateBuffer. */
 
-  for(yi = 0; yi < ET014TT1_YRES; yi++)
+  for (yi = 0; yi < ET014TT1_YRES; yi++)
     {
-      for(xi = 0; xi < ET014TT1_XRES; xi++)
+      for (xi = 0; xi < ET014TT1_XRES; xi++)
         {
 #ifdef CONFIG_EINK_ET014TT1_ROTATE
-
           /* Swap right side down. (rotate 90 degree right and mirroring) */
           xo = ET014TT1_YRES - yi;
           yo = xi;
 
           bytesi = yi * ET014TT1_XSTRIDE + xi;
           byteso = yo * strideo + xo;
-
 #else
-          xo = xi;
-          yo = yi;
-
           bytesi = yi * ET014TT1_XSTRIDE + xi;
           byteso = bytesi;
 #endif
-
           updateBuffer[byteso] &= 0xfc;
           updateBuffer[byteso] |= buffer[bytesi] & 0x03;
         }
     }
 
   EPD_TCON_Update(DisplayModeGC);
-  dbg("%d ok\n", __LINE__);
 
   return buflen;
 }
@@ -399,28 +404,27 @@ static ssize_t et014tt1_write(FAR struct file *filep,
 static int et014tt1_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 {
   switch(cmd)
-  {
-  case EINKIOC_POWEROFF:
-    dbg("EPD_TCON_PowerOff %d\n", __LINE__);
-    EPD_TCON_PowerOff();
-    break;
+    {
+      case EINKIOC_POWEROFF:
+        lcdinfo("EPD_TCON_PowerOff\n");
+        EPD_TCON_PowerOff();
+        break;
 
-  case EINKIOC_POWERON:
-    dbg("EPD_TCON_PowerOn %d\n", __LINE__);
-    EPD_TCON_PowerOn();
-    break;
+      case EINKIOC_POWERON:
+        lcdinfo("EPD_TCON_PowerOn\n");
+        EPD_TCON_PowerOn();
+        break;
 
-  case EINKIOC_PANELCLEAR:
-    dbg("EPD_TCON_PanelClear %d\n", __LINE__);
-    EPD_TCON_PanelClear();
-    break;
+      case EINKIOC_PANELCLEAR:
+        lcdinfo("EPD_TCON_PanelClear\n");
+        EPD_TCON_PanelClear();
+        break;
 
-  default:
-    dbg("Unknown command %d\n", __LINE__);
-    return ERROR;
-    break;
-
+      default:
+        lcdinfo("Unknown command %d\n", cmd);
+        return ERROR;
   }
+
   return OK;
 }
 
@@ -431,14 +435,14 @@ static int et014tt1_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
  ****************************************************************************/
 
 FAR struct fb_vtable_s *et014tt1_initialize(FAR struct spi_dev_s *spi,
-                    struct et014tt1_pin_s *pin)
+                                            struct et014tt1_pin_s *pin)
 {
-  dbg("%d\n", __LINE__);
   g_spi = spi;
   g_pin = pin;
 
   g_dev.getvideoinfo = et014tt1_getvideoinfo;
   g_dev.getplaneinfo = et014tt1_getplaneinfo;
+
   return &g_dev;
 }
 
@@ -460,17 +464,15 @@ FAR struct fb_vtable_s *et014tt1_initialize(FAR struct spi_dev_s *spi,
 
 int et014tt1_register(FAR const char *devpath)
 {
-  dbg("%d devpath %s\n", __LINE__, devpath);
   int ret;
 
   ret = register_driver(devpath, &g_et014tt1fops, 0666, NULL);
   if (ret < 0)
     {
-      dbg("Failed to register driver: register_driver %d %s\n", ret, devpath);
+      lcderr("Failed to register driver: register_driver %d %s\n", ret, devpath);
       return ret;
     }
 
-  dbg("%d ok\n", __LINE__);
   return OK;
 }
 
@@ -509,7 +511,7 @@ void _Spi_SetClock(SPI_SPEED_TYPE speed)
           SPI_SETFREQUENCY(g_spi, SPI_FREQUENCY40MHz);
         break;
       default:
-        dbg("error in _Spi_SetClock: %d\n", speed);
+        lcderr("error in _Spi_SetClock: %d\n", speed);
         assert(0);
         break;
     }
@@ -708,16 +710,14 @@ void _OnFrameStartEvent(void)
 
 void _StartTimer(uint32_t ns)
 {
+  struct timespec ts;
+
   up_rtc_gettime(&g_stop_time);
 
-  struct timespec ts =
-  {
-    .tv_sec = ns / ONE_SEC,
-    .tv_nsec = ns % ONE_SEC
-  };
+  ts.tv_sec = ns / ONE_SEC;
+  ts.tv_nsec = ns % ONE_SEC;
 
   clock_timespec_add(&g_stop_time, &ts, &g_stop_time);
-
 }
 
 /****************************************************************************
@@ -736,7 +736,7 @@ TIMER_STATE_TYPE _GetTimerState()
   up_rtc_gettime(&cur_time);
 
   clock_timespec_subtract(&g_stop_time, &cur_time, &rem_time);
-  if((0 == rem_time.tv_sec) && (0 == rem_time.tv_nsec))
+  if ((0 == rem_time.tv_sec) && (0 == rem_time.tv_nsec))
     {
       state = TIMER_STOP;
     }
@@ -753,7 +753,7 @@ TIMER_STATE_TYPE _GetTimerState()
 
 void * __aeabi_memset(void *block, int c, size_t size)
 {
-  return(memset(block, c, size));
+  return memset(block, c, size);
 }
 
 /****************************************************************************
@@ -765,7 +765,7 @@ void * __aeabi_memset(void *block, int c, size_t size)
 
 void * __aeabi_memclr(void *block, int c, size_t size)
 {
-  return(memset(block, c, size));
+  return memset(block, c, size);
 }
 
 /****************************************************************************
@@ -777,6 +777,6 @@ void * __aeabi_memclr(void *block, int c, size_t size)
 
 void * __aeabi_memmove4(void *to, const void *from, size_t size)
 {
-  return(memmove(to, from, size));
+  return memmove(to, from, size);
 }
 

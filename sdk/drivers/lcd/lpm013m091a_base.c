@@ -35,7 +35,7 @@
  *
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -45,7 +45,7 @@
 #include <debug.h>
 #include <nuttx/arch.h>
 
-#include "cxd56_lpm013m091a_base.h"
+#include "lpm013m091a_base.h"
 
 /****************************************************************************
  * Private Data
@@ -278,7 +278,7 @@ ResCode lpm013m091a_sendDataBurst(FAR struct lpm013m091a_lcd_s *lcd,
 
   /* Select the LPM013M091A */
 
-  SPI_SELECT(dev->spi, SPIDEV_DISPLAY, true);
+  SPI_SELECT(dev->spi, SPIDEV_DISPLAY(0), true);
 
   /* Send register to read and get the next byte */
 
@@ -286,7 +286,7 @@ ResCode lpm013m091a_sendDataBurst(FAR struct lpm013m091a_lcd_s *lcd,
 
   /* Deselect the LPM013M091A */
 
-  SPI_SELECT(dev->spi, SPIDEV_DISPLAY, false);
+  SPI_SELECT(dev->spi, SPIDEV_DISPLAY(0), false);
 
   /* Unlock bus */
 
@@ -310,7 +310,7 @@ ResCode lpm013m091a_sendData(FAR struct lpm013m091a_lcd_s *lcd, uint32_t data)
 
   /* Select the LPM013M091A */
 
-  SPI_SELECT(dev->spi, SPIDEV_DISPLAY, true);
+  SPI_SELECT(dev->spi, SPIDEV_DISPLAY(0), true);
 
   /* Send register to read and get the next byte */
 
@@ -318,7 +318,7 @@ ResCode lpm013m091a_sendData(FAR struct lpm013m091a_lcd_s *lcd, uint32_t data)
 
   /* Deselect the LPM013M091A */
 
-  SPI_SELECT(dev->spi, SPIDEV_DISPLAY, false);
+  SPI_SELECT(dev->spi, SPIDEV_DISPLAY(0), false);
 
   /* Unlock bus */
 

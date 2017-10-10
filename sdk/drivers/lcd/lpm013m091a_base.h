@@ -38,8 +38,6 @@
 #ifndef __DRIVERS_LCD_LPM013M091A_BASE_H
 #define __DRIVERS_LCD_LPM013M091A_BASE_H
 
-#include <nuttx/config.h>
-
 #include <sys/types.h>
 #include <stdint.h>
 #include <stdbool.h>

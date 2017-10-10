@@ -112,7 +112,6 @@ void     EPD_TCON_Set_Border(EPD_BORDER_TYPE border,
                     uint16_t frame, uint16_t delayms);
 int16_t  EPD_TCON_ReadTemperature(void);
 
-
 struct et014tt1_pin_s
 {
     int16_t rst;
@@ -123,7 +122,7 @@ struct et014tt1_pin_s
 };
 
 FAR struct fb_vtable_s *et014tt1_initialize(FAR struct spi_dev_s *spi,
-                    struct et014tt1_pin_s *pin);
+                                            struct et014tt1_pin_s *pin);
 int et014tt1_register(FAR const char *devpath);
 void et014tt1_configspi(FAR struct spi_dev_s *spi);
 
@@ -135,4 +134,3 @@ void et014tt1_configspi(FAR struct spi_dev_s *spi);
 #endif /* __ASSEMBLY__ */
 
 #endif
-

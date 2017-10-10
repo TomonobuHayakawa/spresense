@@ -39,7 +39,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -55,7 +55,7 @@
 #include <nuttx/lcd/lcd.h>
 #include <nuttx/lcd/lpm013m091a.h>
 
-#include "cxd56_lpm013m091a_base.h"
+#include "lpm013m091a_base.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -141,7 +141,7 @@ static int lpm013m091a_open(FAR struct file *filep)
 
   if (!g_fb)
     {
-      dbg("Failed to malloc frame buffer.\n");
+      lcderr("Failed to malloc frame buffer.\n");
       return ERROR;
     }
 
@@ -180,14 +180,14 @@ static ssize_t lpm013m091a_write(FAR struct file *filep, FAR const char *buffer,
 
   if (buflen != LPM013M091A_FBSIZE)
     {
-      dbg("Expected buffer size is %d\n", LPM013M091A_FBSIZE);
+      lcderr("Expected buffer size is %d\n", LPM013M091A_FBSIZE);
       return -1;
     }
 
   res = lpm013m091a_drawBitmap(g_lpm013m091a_base->lcd, (FAR const uint16_t *)buffer, 0, 0, LPM013M091A_XRES, LPM013M091A_YRES);
   if (res != ResCodeOk)
     {
-      dbg("Failed to write buffer. rescode: %d\n", res);
+      lcderr("Failed to write buffer. rescode: %d\n", res);
       return -1;
     }
 
@@ -215,7 +215,7 @@ int lpm013m091a_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
           ResCode res = lpm013m091a_turnBacklight(g_lpm013m091a_base->lcd, arg != 0);
           if (res != ResCodeOk)
             {
-              dbg("Failed to ioctl. rescode: %d\n", res);
+              lcderr("Failed to ioctl. rescode: %d\n", res);
               ret = -EIO;
             }
 
@@ -223,7 +223,7 @@ int lpm013m091a_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
         }
 
       default:
-        dbg("Unrecognized cmd: %d\n", cmd);
+        lcderr("Unrecognized cmd: %d\n", cmd);
         ret = -ENOTTY;
         break;
     }
@@ -271,14 +271,14 @@ int lpm013m091a_register(FAR const char *devpath, FAR struct lpm013m091a_lcd_s *
   ret = lpm013m091a_init(priv);
   if (ret < 0)
     {
-      dbg("Failed to initialize lpm013m091a.\n");
+      lcderr("Failed to initialize lpm013m091a.\n");
       return ret;
     }
 
   ret = register_driver(devpath, &g_lpm013m091afops, 0666, priv);
   if (ret < 0)
     {
-      dbg("Failed to register driver: %d\n", ret);
+      lcderr("Failed to register driver: %d\n", ret);
     }
 
   return OK;
