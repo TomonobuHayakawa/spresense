@@ -121,7 +121,7 @@ cleansdk:
 	done
 PHONY += cleansdk
 
-bsp/include/sdk/config.h: $(SDKDIR)/.config
+bsp/include/sdk/config.h: $(SDKDIR)/.config tools/mkconfig.py
 	$(Q) tools/mkconfig.py > $@
 
 bsp/include/sdk/version.h: $(SDKDIR)/.version
@@ -138,31 +138,31 @@ PHONY += configkernel oldconfigkernel olddefconfigkernel menuconfigkernel qconfi
 #
 
 config:
-	$(Q) kconfig-conf Kconfig
+	$(Q) SDKDIR=$(SDKDIR) kconfig-conf Kconfig
 PHONY += config
 
 oldconfig:
-	$(Q) kconfig-conf --oldconfig Kconfig
+	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --oldconfig Kconfig
 PHONY += oldconfig
 
 olddefconfig:
-	$(Q) kconfig-conf --olddefconfig Kconfig
+	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --olddefconfig Kconfig
 PHONY += olddefconfig
 
 menuconfig:
-	$(Q) kconfig-mconf Kconfig
+	$(Q) SDKDIR=$(SDKDIR) kconfig-mconf Kconfig
 PHONY += menuconfig
 
 qconfig:
-	$(Q) kconfig-qconf Kconfig
+	$(Q) SDKDIR=$(SDKDIR) kconfig-qconf Kconfig
 PHONY += qconfig
 
 gconfig:
-	$(Q) kconfig-gconf Kconfig
+	$(Q) SDKDIR=$(SDKDIR) kconfig-gconf Kconfig
 PHONY += gconfig
 
 savedefconfig:
-	$(Q) kconfig-conf --savedefconfig defconfig Kconfig
+	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --savedefconfig defconfig Kconfig
 PHONY += savedefconfig
 
 clean: cleansdk
