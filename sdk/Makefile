@@ -51,6 +51,8 @@ NUTTXNAME = nuttx
 BIN       = $(NUTTXNAME)$(EXEEXT)
 SPK       = $(NUTTXNAME).spk
 
+KDEFINE = ${shell $(TOPDIR)/tools/define.sh "$(CC)" __KERNEL__}
+
 all: $(BIN)
 
 buildall: buildkernel $(BIN)
