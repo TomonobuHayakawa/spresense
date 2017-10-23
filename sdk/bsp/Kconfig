@@ -26,20 +26,6 @@ endmenu
 
 menu "CXD56xx Configuration Options"
 
-choice
-	prompt "CXD56xx package selection"
-	default CXD56_FCBGA if BOARD_CORVO || BOARD_SP_YOC || BOARD_SPARDUINO
-	default CXD56_WLCSP if BOARD_COLLET
-	default CXD56_WLCSP
-
-config CXD56_WLCSP
-	bool "WLCSP 100 pin package"
-
-config CXD56_FCBGA
-	bool "FCBGA 185 pin package"
-
-endchoice
-
 config CXD56_XOSC_CLOCK
 	int
 	default 26000000
