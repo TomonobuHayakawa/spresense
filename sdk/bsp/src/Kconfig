@@ -440,45 +440,6 @@ config CXD56_GPIO_IRQ
 config GPIO_IRQ
 	bool
 
-config CXD56_RTC
-	bool "Real Time Clock (RTC)"
-	default n
-	---help---
-		Support RTC
-
-config CXD56_WDT
-	bool "Watchdog Timer (WDT)"
-	default n
-	select WATCHDOG
-
-if CXD56_WDT
-
-comment "Watchdog Configuration"
-
-config CXD56_WDT_DEVPATH
-	string "Watchdog device path"
-	default "/dev/watchdog0"
-	---help---
-		The path to the watchdog device. Default: /dev/watchdog0
-
-config CXD56_WDT_INTERRUPT
-	bool "Interrupt on timeout"
-	default y
-	---help---
-		This watchdog timer run 2 laps as long as the counter is not reloaded.
-		In the first lap, the watchdog interrupt occurs. Without interrupt
-		clear, The reset signal is asserted in the second timeout. This setting
-		enables the first interrupt.
-
-config CXD56_WDT_REGDEBUG
-	bool "Register level debug"
-	default n
-	depends on DEBUG
-	---help---
-		Enable low-level register debug output
-
-endif # CXD56_WDT
-
 config CXD56_GNSS
 	 bool "GNSS device"
 	default y
