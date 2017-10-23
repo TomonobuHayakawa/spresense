@@ -1,4 +1,4 @@
-include $(SDKDIR)/.config
+-include $(SDKDIR)/.config
 
 ifeq ($(WINTOOL),y)
 
