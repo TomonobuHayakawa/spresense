@@ -1,6 +1,11 @@
 
+# ASMP framework library
+
+ifeq ($(CONFIG_ASMP),y)
 SDKLIBS += lib$(DELIM)libasmp$(LIBEXT)
 SDKMODDIRS += modules$(DELIM)asmp
+endif
+
 modules$(DELIM)asmp$(DELIM)libasmp$(LIBEXT): context
 	$(Q) $(MAKE) -C modules$(DELIM)asmp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libasmp$(LIBEXT)
 
