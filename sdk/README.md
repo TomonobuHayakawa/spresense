@@ -1,20 +1,17 @@
-Welcome to SPRITZER SDK
-
-# Overview
 
 Spritzer is the code name of the product CXD5602 produced by Sony Semiconductor
 Solutions Corporation.  
-The CXD5602 is a ARM arhitecture SoC, including many peripherals for IoT and
+The CXD5602 is ARM powered SoC, including many peripherals for IoT and
 wearable solutions.
   
-SPRITZER SDK is based on NuttX.
-So please refer to original NuttX site to see basic kernel information.
+SPRITZER SDK is based on NuttX. So please refer to [original NuttX site](http://www.nuttx.org/) to see basic
+kernel information.
 
 This SDK constructed by series of libraies, drivers and architecture specific
 code, these helps to you getting started and create faster for your products.
 
 
-## Directory structure
+# Directory structure
 
 ```
 sdk
@@ -40,3 +37,7 @@ sdk
 |-- system         - System commands
 `-- tools          - Build utilities
 ```
+
+# Build instruction
+
+T.B.D
