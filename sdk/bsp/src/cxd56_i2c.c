@@ -263,13 +263,16 @@ static void cxd56_i2c_setfrequency(struct cxd56_i2cdev_s *priv,
   uint64_t speed;
   uint64_t tLow;
   uint64_t tHigh;
-  uint32_t base = priv->baseFreq;
+  uint32_t base = cxd56_get_i2c_baseclock(priv->port);
   uint32_t spklen;
 
-  if (priv->frequency == frequency)
+  if ((priv->frequency == frequency) && (priv->baseFreq == base))
     {
       return;
     }
+
+  priv->frequency = frequency;
+  priv->baseFreq = base;
 
   base /= 1000;
 
@@ -337,21 +340,13 @@ static void cxd56_i2c_setfrequency(struct cxd56_i2cdev_s *priv,
       hcnt += (adj + 999999999999ull) / 1000000000000ull;
     }
 
-  if (frequency > 100000)
-    {
-      i2c_reg_write(priv, CXD56_IC_FS_SCL_HCNT, hcnt);
-      i2c_reg_write(priv, CXD56_IC_FS_SCL_LCNT, lcnt);
-      i2c_reg_rmw(priv, CXD56_IC_CON, IC_SPEED_FS, IC_MAX_SPEED_MODE);
-    }
-  else
-    {
-      i2c_reg_write(priv, CXD56_IC_SS_SCL_HCNT, hcnt);
-      i2c_reg_write(priv, CXD56_IC_SS_SCL_LCNT, lcnt);
-      i2c_reg_rmw(priv, CXD56_IC_CON, IC_SPEED_SS, IC_MAX_SPEED_MODE);
-    }
-  i2c_reg_write(priv, CXD56_IC_FS_SPKLEN, spklen);
+  /* use FS register in SS and FS mode */
 
-  priv->frequency = frequency;
+  i2c_reg_write(priv, CXD56_IC_FS_SCL_HCNT, hcnt);
+  i2c_reg_write(priv, CXD56_IC_FS_SCL_LCNT, lcnt);
+  i2c_reg_rmw(priv, CXD56_IC_CON, IC_SPEED_FS, IC_MAX_SPEED_MODE);
+
+  i2c_reg_write(priv, CXD56_IC_FS_SPKLEN, spklen);
 }
 
 /****************************************************************************
