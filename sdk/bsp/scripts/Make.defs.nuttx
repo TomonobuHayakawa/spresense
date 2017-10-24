@@ -171,10 +171,3 @@ HOSTCC = gcc
 HOSTINCLUDES = -I.
 HOSTCFLAGS = -Wall -Wstrict-prototypes -Wshadow -Wundef -g -pipe
 HOSTLDFLAGS =
-
-ifeq ($(shell basename $(CONFIG_APPS_DIR)),sony_apps)
-SONY_APPS_DIR := $(TOPDIR)/$(shell echo $(CONFIG_APPS_DIR))
--include $(SONY_APPS_DIR)/libs/extlib.mk
-else
--include ${TOPDIR}/configs/$(CONFIG_ARCH_BOARD)/scripts/extlib.mk
-endif
