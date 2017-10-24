@@ -15,7 +15,7 @@ TOPDIR := $(shell pwd | sed -e 's/ /\\ /g')/$(NUTTXDIR)
 -include $(TOPDIR)/.config
 -include $(SDKDIR)/.config
 include $(TOPDIR)/tools/Config.mk
-include $(TOPDIR)/Make.defs
+-include $(TOPDIR)/Make.defs
 -include $(SDKDIR)/Make.defs
 
 ifeq ($(V),1)
@@ -62,6 +62,9 @@ buildall: buildkernel $(BIN)
 #
 
 buildkernel:
+ifneq ($(KERNCONF),)
+	$(Q) $(SDKDIR)/tools/config.py --kernel $(KERNCONF)
+endif
 	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
 	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
 PHONY += buildkernel
