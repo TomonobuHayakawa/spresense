@@ -1,4 +1,3 @@
-
 Spritzer is the code name of the product CXD5602 produced by Sony Semiconductor
 Solutions Corporation.  
 The CXD5602 is ARM powered SoC, including many peripherals for IoT and
@@ -40,4 +39,80 @@ sdk
 
 # Build instruction
 
-T.B.D
+Getting started
+
+```
+$ tools/config.py nsh
+$ make buildkernel KERNCONF=nsh
+$ make
+```
+
+SDK and NuttX kernel's configuration and build sequence are separated.
+
+# Configuration
+
+SDK provides `tools/config.py` as configuration frontend for SDK and NuttX
+kernel configuration. `tools/config.py` invokes kconfig tool, so user must
+be installed before use it.
+`tools/config.py` must be called from top of SDK source tree.
+
+`tools/config.py` can be switched with `-k` or `--kernel` option to affects
+kernel side.
+If no `-k` or `--kernel` option has been specified, then affects SDK side.
+
+e.g.
+```
+$ tools/config.py --kernel --list (list kernel predefined configs)
+$ tools/config.py --list  (list SDK predefined configs)
+```
+
+At the first time, of you want to change to predefined ones, specify
+predefined `<config name>` at the last of options.
+
+```
+$ tools/config.py <config name>
+```
+
+`tools/config.py` can be invoked menu style configuration UI by following
+options.
+
+```
+$ tools/config.py --menuconfig (like 'make menuconfig')
+$ tools/config.py --qconfig    (like 'make qconfig')
+$ tools/config.py --gconfig    (like 'make gconfig')
+```
+
+Additionally, you can use menu invokation with predefined configs like this:
+
+```
+$ tools/config.py --menuconfig nsh
+```
+
+This command replaces configration to "nsh" config and invoke menuconfig.
+
+# Build
+
+SDK build system has been separated from NuttX, it to be able to build NuttX
+kernel indipendently, and build SDK faster.
+User must be build kernel before SDK build by following command.
+
+```
+$ make buildkernel
+```
+
+If you don't interest about kernel sources, then never been built again.
+And you can specify kernel default config from `KERNCONF`, configure specified
+config and build at the same time.
+
+```
+$ make buildkernel KERNCONF=<config name>
+```
+
+Finally, build SDK drivers and libraries.
+
+```
+$ make
+```
+
+After built successfully, you can see `nuttx` and `nuttx.spk` files in top of
+SDK source tree.
