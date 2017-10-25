@@ -7,9 +7,9 @@ import logging
 import glob
 import shutil
 
-MODE_MENUCONFIG = "mconf"
-MODE_QCONFIG = "qconf"
-MODE_GCONFIG = "gconf"
+MODE_MENUCONFIG = "menuconf"
+MODE_QCONFIG = "qconfig"
+MODE_GCONFIG = "gconfig"
 
 def get_defconfigs(directory):
     return list(map(lambda x: os.path.basename(str(x)),
@@ -57,23 +57,10 @@ def apply_defconfig(configname, configlist, topdir, sdkdir, kernel):
         print('Post process failed. %d' % ret)
     return ret
 
-def do_kernel_kconfig_conf(mode, topdir):
-    if mode == 'mconf':
-        mode = 'menuconfig'
-    elif mode == 'qconf':
-        mode = 'qconfig'
-    elif mode == 'gconf':
-        mode = 'gconfig'
-
-    command = 'make -C %s %s' % (topdir, mode)
+def do_kconfig_conf(mode, sdkdir):
+    command = 'make %s' % mode
     if logging.getLogger().getEffectiveLevel() > logging.INFO:
         command += ' 2>&1 >/dev/null'
-    ret = os.system(command)
-    return ret
-
-def do_kconfig_conf(mode, sdkdir):
-    os.putenv('SDKDIR', sdkdir)
-    command = 'kconfig-%s Kconfig' % mode
     ret = os.system(command)
     return ret
 
@@ -141,6 +128,5 @@ if __name__ == "__main__":
 
     if menumode:
         if opts.kernel:
-            do_kernel_kconfig_conf(menumode, topdir)
-        else:
-            do_kconfig_conf(menumode, sdkdir)
+            menumode += 'kernel'
+        do_kconfig_conf(menumode, sdkdir)
