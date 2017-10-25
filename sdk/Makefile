@@ -95,6 +95,8 @@ $(BIN): depend $(SDKLIBS)
 		echo mkspk tool not found. ; \
 	fi
 
+libs: $(SDKLIBS)
+
 context: bsp/include/sdk/config.h
 PHONY += context
 
@@ -118,6 +120,7 @@ cleankernel:
 PHONY += cleankernel
 
 cleansdk:
+	$(call DELFILE, .kconfig.tmp)
 	$(call DELFILE, bsp/include/sdk/config.h)
 	$(call DELFILE, bsp/include/sdk/version.h)
 	$(call DELFILE, $(SDKLIBS))
@@ -142,33 +145,37 @@ PHONY += configkernel oldconfigkernel olddefconfigkernel menuconfigkernel qconfi
 #
 #
 
-config:
-	$(Q) SDKDIR=$(SDKDIR) kconfig-conf Kconfig
+config: .kconfig.tmp
+	$(Q) SDKDIR=$(SDKDIR) kconfig-conf $<
 PHONY += config
 
-oldconfig:
-	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --oldconfig Kconfig
+oldconfig: .kconfig.tmp
+	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --oldconfig $<
 PHONY += oldconfig
 
-olddefconfig:
-	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --olddefconfig Kconfig
+olddefconfig: .kconfig.tmp
+	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --olddefconfig $<
 PHONY += olddefconfig
 
-menuconfig:
-	$(Q) SDKDIR=$(SDKDIR) kconfig-mconf Kconfig
+menuconfig: .kconfig.tmp
+	$(Q) SDKDIR=$(SDKDIR) kconfig-mconf $<
 PHONY += menuconfig
 
-qconfig:
-	$(Q) SDKDIR=$(SDKDIR) kconfig-qconf Kconfig
+qconfig: .kconfig.tmp
+	$(Q) SDKDIR=$(SDKDIR) kconfig-qconf $<
 PHONY += qconfig
 
-gconfig:
-	$(Q) SDKDIR=$(SDKDIR) kconfig-gconf Kconfig
+gconfig: .kconfig.tmp
+	$(Q) SDKDIR=$(SDKDIR) kconfig-gconf $<
 PHONY += gconfig
 
-savedefconfig:
-	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --savedefconfig defconfig Kconfig
+savedefconfig: .kconfig.tmp
+	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --savedefconfig defconfig $<
 PHONY += savedefconfig
+
+.kconfig.tmp:
+	$(Q) tools/gentmpkconfig.py $@
+PHONY += .kconfig.tmp
 
 clean: cleansdk
 PHONY += clean
