@@ -42,8 +42,8 @@ sdk
 Getting started
 
 ```
-$ tools/config.py nsh
 $ make buildkernel KERNCONF=nsh
+$ tools/config.py nsh
 $ make
 ```
 
