@@ -23,3 +23,6 @@ $ (cd sdk; git checkout master)
 - nuttx/ - NuttX original kernel + port of SPRITZER architecture
 - apps/  - NuttX original apps
 
+# Build
+
+Build instructions are documented at [sdk repository](http://code.sonymobile.net/spritzer-sdk/sdk).
