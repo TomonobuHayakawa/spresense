@@ -3,13 +3,10 @@
 Clone this repository and update submodules.
 
 ```
-$ git submodule init
-$ git submodule update
+$ git clone --recursive git@code.sonymobile.net:spritzer-sdk/spritzer.git
 ```
 
-`git submodule update` may take a long time, please wait.
-
-After submodules updated, set main branch for each submodules.
+After repositories cloned, set main branch for each submodules.
 
 ```
 $ (cd nuttx; git checkout sdk2.2)
