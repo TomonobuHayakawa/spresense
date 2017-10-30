@@ -32,7 +32,7 @@ drivers$(DELIM)libextdrivers$(LIBEXT): context
 lib$(DELIM)libextdrivers$(LIBEXT): drivers$(DELIM)libextdrivers$(LIBEXT)
 	$(Q) install $< $@
 
-# Glob external sub directories which contains 'sdk.mk' file.
+# Glob external sub directories which contains 'LibTarget.mk' file.
 
 define ExtSubDirectory_template
 	include $(1)/LibTarget.mk
