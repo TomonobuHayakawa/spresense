@@ -41,8 +41,6 @@ TOPDIR ?= $(APPDIR)/import
 -include $(SDKDIR)/bsp/scripts/Make.defs.apps
 -include $(APPDIR)/Make.defs
 
-MENUDESC = "Examples"
-
 # Application Directories
 
 # BUILDIRS is the list of top-level directories containing Make.defs files
@@ -70,10 +68,6 @@ LIBPATH ?= $(TOPDIR)$(DELIM)libs
 # The install path
 
 BIN_DIR = $(APPDIR)$(DELIM)bin
-
-# The final build target
-
-BIN = libexamples$(LIBEXT)
 
 # Build targets
 
