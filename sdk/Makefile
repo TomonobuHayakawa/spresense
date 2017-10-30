@@ -69,12 +69,16 @@ endif
 	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
 PHONY += buildkernel
 
+SDKMODDIRS =
+EXTLIBS =
+EXTSUBDIRS =
+
 # Include library build recipes
 
 include LibTargets.mk
 
-SDKDEPDIRS += $(SDKMODDIRS)
-SDKCLEANDIRS += $(SDKMODDIRS)
+SDKDEPDIRS = $(SDKMODDIRS) $(EXTSUBDIRS)
+SDKCLEANDIRS = $(SDKMODDIRS) $(EXTSUBDIRS)
 
 # T.B.D
 ifeq ($(WINTOOL),y)
@@ -83,10 +87,10 @@ else
   LIBPATHS += -L"$(SDKDIR)/lib"
 endif
 
-LINKLIBS = $(patsubst lib/%,%,$(NUTTXLIBS) $(SDKLIBS))
+LINKLIBS = $(patsubst lib/%,%,$(NUTTXLIBS) $(SDKLIBS) $(EXTLIBS))
 LDLIBS = $(patsubst %.a,%,$(patsubst lib%,-l%,$(LINKLIBS)))
 
-$(BIN): depend $(SDKLIBS)
+$(BIN): depend libs
 	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" LINKLIBS="$(LINKLIBS)" EXTRADEFINES=$(KDEFINE) $(BIN)
 	@echo "SPK: $(BIN).spk"
 	$(Q) if [ -x $(MKSPK) ]; then \
@@ -95,7 +99,10 @@ $(BIN): depend $(SDKLIBS)
 		echo mkspk tool not found. ; \
 	fi
 
-libs: $(SDKLIBS)
+test:
+	@echo $(EXTLIBS)
+
+libs: $(SDKLIBS) $(EXTLIBS)
 
 context: bsp/include/sdk/config.h
 PHONY += context
@@ -173,11 +180,35 @@ savedefconfig: .kconfig.tmp
 	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --savedefconfig defconfig $<
 PHONY += savedefconfig
 
-.kconfig.tmp:
+.kconfig.tmp: ext_preconfig
 	$(Q) tools/gentmpkconfig.py $@
-PHONY += .kconfig.tmp
+
+ext_preconfig:
+ifneq ($(EXTSUBDIRS),)
+	$(Q) for dir in $(EXTSUBDIRS); do \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" preconfig; \
+	done
+endif
+
+ext_clean:
+ifneq ($(EXTSUBDIRS),)
+	$(Q) for dir in $(EXTSUBDIRS); do \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" clean; \
+	done
+endif
+
+ext_distclean:
+ifneq ($(EXTSUBDIRS),)
+	$(Q) for dir in $(EXTSUBDIRS); do \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" distclean; \
+	done
+endif
+PHONY += ext_preconfig ext_clean ext_distclean
 
 clean: cleansdk
 PHONY += clean
+
+FORCE:
+PHONY += FORCE
 
 .PHONY: $(PHONY)
