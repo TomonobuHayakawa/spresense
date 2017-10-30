@@ -113,7 +113,7 @@ ifneq ($(STACKSIZE),)
 $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME)_main.bdat: $(DEPCONFIG) Makefile
 	$(call REGISTER,$(APPNAME),$(PRIORITY),$(STACKSIZE),$(APPNAME)_main)
 
-context: # $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME)_main.bdat
+context: $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME)_main.bdat
 else
 context:
 endif
