@@ -1,6 +1,9 @@
 #!/bin/sh
 
-SUBDIRS='sdk'
+SUBDIRS='sdk examples proprietary'
+
+# Do submodule initialization process anyway
+# These commands will not be affected if do again and again.
 
 git submodule init
 git submodule update
