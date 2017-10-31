@@ -33,6 +33,7 @@
 ############################################################################
 
 MENUDESC = "Examples"
+
 BIN = libexamples$(LIBEXT)
 
 include $(SDKDIR)/Makefile.ext
