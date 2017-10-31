@@ -55,21 +55,29 @@ KDEFINE = ${shell $(TOPDIR)/tools/define.sh "$(CC)" __KERNEL__}
 
 all: $(BIN)
 
-buildall: buildkernel $(BIN)
-
 # buildkernel
 #
-#
+# Separated build target for NuttX kernel libraries. If KERNCONF specified by
+# option, then reconfigure and build them all.
+# After install them, we need to replace nsh builtin list to ours, so
+# remove builtin_list.o from libapps.a if exists.
+# If nsh disabled at NuttX configuration, then our builtin_list will be removed
+# automatically.
 
 buildkernel:
 ifneq ($(KERNCONF),)
 	$(Q) $(SDKDIR)/tools/config.py --kernel $(KERNCONF)
 endif
 	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
-	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
 PHONY += buildkernel
 
+installkernel:
+	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
+	$(Q) if [ -f lib/libapps.a ]; then $(ARCROSSDEV)ar d lib/libapps.a builtin_list.o; fi
+PHONY += installkernel
+
 SDKMODDIRS =
+CONTEXTDIRS =
 EXTLIBS =
 EXTSUBDIRS =
 
@@ -78,7 +86,8 @@ EXTSUBDIRS =
 include LibTargets.mk
 
 SDKDEPDIRS = $(SDKMODDIRS) $(EXTSUBDIRS)
-SDKCLEANDIRS = $(SDKMODDIRS) $(EXTSUBDIRS)
+SDKCLEANDIRS = $(SDKMODDIRS) $(EXTSUBDIRS) lib
+CONTEXTDIRS += $(EXTSUBDIRS)
 
 # T.B.D
 ifeq ($(WINTOOL),y)
@@ -99,13 +108,34 @@ $(BIN): depend libs
 		echo mkspk tool not found. ; \
 	fi
 
-test:
-	@echo $(EXTLIBS)
+libs: $(EXPORTLIBS) $(SDKLIBS) $(EXTLIBS)
 
-libs: $(SDKLIBS) $(EXTLIBS)
+$(EXPORTLIBS): installkernel
 
-context: bsp/include/sdk/config.h
+context: check_context bsp/include/sdk/config.h
+	$(Q) for dir in $(CONTEXTDIRS) ; do \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" context; \
+	done
 PHONY += context
+
+# check_context
+#
+# This target checks if NuttX has been configured.  NuttX is configured using
+# the script tools/configure.sh.  That script will install certain files in
+# the top-level NuttX build directory.  This target verifies that those
+# configuration files have been installed and that NuttX is ready to be built.
+
+check_context:
+	$(Q) if [ ! -e $(TOPDIR)/.config -o ! -e $(TOPDIR)/Make.defs ]; then \
+		echo "" ; echo "Nuttx has not been configured:" ; \
+		echo "  tools/config.py -k <target>" ; echo "" ; \
+		exit 1 ; \
+	fi
+	$(Q) if [ ! -e $(SDKDIR)/.config ]; then \
+		echo "" ; echo "SDK has not been configured:" ; \
+		echo "  tools/config.py <target>" ; echo "" ; \
+		exit 1 ; \
+	fi
 
 clean_context:
 	$(call DELFILE, bsp/include/sdk/config.h)
@@ -123,18 +153,35 @@ PHONY += depend
 #
 
 cleankernel:
-	$(MAKE) -C $(TOPDIR) clean
+	$(Q) $(MAKE) -C $(TOPDIR) clean
 PHONY += cleankernel
 
-cleansdk:
+distcleankernel:
+	$(Q) $(MAKE) -C $(TOPDIR) distclean
+PHONY += distcleankernel
+
+subdir_clean:
+	$(Q) for dir in $(SDKCLEANDIRS); do \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" clean; \
+	done
+PHONY += subdir_clean
+
+clean: subdir_clean
 	$(call DELFILE, .kconfig.tmp)
 	$(call DELFILE, bsp/include/sdk/config.h)
 	$(call DELFILE, bsp/include/sdk/version.h)
 	$(call DELFILE, $(SDKLIBS))
+PHONY += clean
+
+subdir_distclean:
 	$(Q) for dir in $(SDKCLEANDIRS); do \
-		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" clean; \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" distclean; \
 	done
-PHONY += cleansdk
+PHONY += subdir_distclean
+
+distclean: clean subdir_distclean
+	$(call DELFILE, .config)
+	$(call DELFILE, .config.old)
 
 bsp/include/sdk/config.h: $(SDKDIR)/.config tools/mkconfig.py
 	$(Q) tools/mkconfig.py > $@
@@ -204,11 +251,5 @@ ifneq ($(EXTSUBDIRS),)
 	done
 endif
 PHONY += ext_preconfig ext_clean ext_distclean
-
-clean: cleansdk
-PHONY += clean
-
-FORCE:
-PHONY += FORCE
 
 .PHONY: $(PHONY)
