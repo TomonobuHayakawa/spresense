@@ -12,10 +12,23 @@ modules$(DELIM)asmp$(DELIM)libasmp$(LIBEXT): context
 lib$(DELIM)libasmp$(LIBEXT): modules$(DELIM)asmp$(DELIM)libasmp$(LIBEXT)
 	$(Q) install $< $@
 
+# System utility library
+
+SDKLIBS += lib$(DELIM)libsystem$(LIBEXT)
+SDKMODDIRS += system
+CONTEXTDIRS += system
+
+system$(DELIM)libsystem$(LIBEXT): context
+	$(Q) $(MAKE) -C system TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libsystem$(LIBEXT)
+
+lib$(DELIM)libsystem$(LIBEXT): system$(DELIM)libsystem$(LIBEXT)
+	$(Q) install $< $@
+
 # BSP archive rule
 
 SDKLIBS += lib$(DELIM)libbsp$(LIBEXT)
 SDKMODDIRS += bsp
+
 bsp$(DELIM)libbsp$(LIBEXT): context
 	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libbsp$(LIBEXT)
 
@@ -26,6 +39,7 @@ lib$(DELIM)libbsp$(LIBEXT): bsp$(DELIM)libbsp$(LIBEXT)
 
 SDKLIBS += lib$(DELIM)libextdrivers$(LIBEXT)
 SDKMODDIRS += drivers
+
 drivers$(DELIM)libextdrivers$(LIBEXT): context
 	$(Q) $(MAKE) -C drivers TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libextdrivers$(LIBEXT)
 

@@ -1,7 +1,8 @@
 ############################################################################
-# system/Makefile
+# apps/builtin/registry/Makefile
 #
-#   Copyright (C) 2017 Sony Corporation. All rights reserved.
+#   Copyright (C) 2012 Gregory Nutt. All rights reserved.
+#   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,45 +32,33 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
+
 -include $(TOPDIR)/Make.defs
+include $(SDKDIR)/Make.defs
 
-BIN = libsystem$(LIBEXT)
+# NSH Library
 
-# Sub-directories
-
-SUBDIRS = $(dir $(wildcard */Make.defs))
-
-CONFIGURED_APPS =
-
-define Add_Application
-  include $(1)Make.defs
-endef
-
-$(foreach SDIR, $(SUBDIRS), $(eval $(call Add_Application,$(SDIR))))
-
-all: $(BIN)
-
+all:
 .PHONY: context depend clean distclean
+.PRECIOUS:
 
-define SDIR_template
-$(1)_$(2):
-	$(Q) $(MAKE) -C $(1) $(2) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" BIN="$(SDKDIR)$(DELIM)system$(DELIM)$(BIN)"
-endef
+.updated: $(DEPCONFIG)
+	$(call DELFILE, *.bdat)
+	$(call DELFILE, *.pdat)
+	$(Q) touch .updated
 
-$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),all)))
-$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),context)))
-$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),depend)))
-$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),clean)))
-$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
+# This must run before any other context target
 
-$(BIN): $(foreach SDIR, $(SUBDIRS), $(SDIR)_all)
+install:
 
-context: $(foreach SDIR, $(SUBDIRS), $(SDIR)_context)
+context: .updated
 
-depend: $(foreach SDIR, $(SUBDIRS), $(SDIR)_depend)
+depend:
 
-clean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_clean)
+clean:
 	$(call CLEAN)
 
-distclean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_distclean)
-	$(call CLEAN)
+distclean: clean
+	$(call DELFILE, *.bdat)
+	$(call DELFILE, *.pdat)
+	$(call DELFILE, .updated)
