@@ -1,5 +1,4 @@
 ############################################################################
-# apps/Application.mk
 #
 #   Copyright (C) 2015 Gregory Nutt. All rights reserved.
 #   Copyright (C) 2015 Omni Hoverboards Inc. All rights reserved.
@@ -52,9 +51,9 @@ endif
 SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
 OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
 
-#ifneq ($(CONFIG_BUILD_KERNEL),y)
+ifneq ($(CONFIG_BUILD_KERNEL),y)
   OBJS += $(MAINOBJ)
-#endif
+endif
 
 ifeq ($(WINTOOL),y)
   BIN = "${shell cygpath -w $(APPDIR)$(DELIM)libapps$(LIBEXT)}"
