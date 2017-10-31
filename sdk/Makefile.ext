@@ -86,10 +86,6 @@ $(1)_$(2):
 
 endef
 
-test:
-	@echo $(BUILDDIRS)
-	@echo $(CONFIGURED_APPS)
-
 $(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),all)))
 $(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),install)))
 $(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),context)))
@@ -98,6 +94,7 @@ $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),clean)))
 $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
 
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) $(AR) $(BIN)
 
 .install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
@@ -114,13 +111,7 @@ import:
 dirlinks:
 	$(Q) $(MAKE) -C platform dirlinks TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
-context_rest: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_context)
-
-context_serialize:
-#	$(Q) $(MAKE) -C builtin context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
-	$(Q) $(MAKE) context_rest
-
-context: context_serialize
+context: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_context)
 
 Kconfig:
 	$(foreach SDIR, $(BUILDIRS), $(call MAKE_template,$(SDIR),preconfig))
@@ -130,7 +121,7 @@ preconfig: Kconfig
 
 .depdirs: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_depend)
 
-.depend: context Makefile .depdirs
+.depend: Makefile .depdirs
 	$(Q) touch $@
 
 depend: .depend
