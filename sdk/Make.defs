@@ -7,6 +7,8 @@ ifeq ($(WINTOOL),y)
 CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/bsp/include)"
 CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/modules/include)"
 
+LDFLAGS += @"$(shell cygpath -w $(TOPDIR)/arch/arm/src/chip/wrapsyms.cmd)"
+
 # mkspk for create spk packaging file
 
 MKSPK = $(SDKDIR)$(DELIM)tools$(DELIM)windows$(DELIM)mkspk.exe
@@ -18,10 +20,10 @@ else
 CFLAGS += -isystem $(SDKDIR)/bsp/include
 CFLAGS += -isystem $(SDKDIR)/modules/include
 
+LDFLAGS += @"$(TOPDIR)/arch/arm/src/chip/wrapsyms.cmd"
+
 MKSPK = $(SDKDIR)$(DELIM)tools$(DELIM)linux$(DELIM)mkspk
 
 endif
-
-LDFLAGS += @"$(TOPDIR)$(DELIM)arch$(DELIM)arm$(DELIM)src$(DELIM)chip$(DELIM)wrapsyms.cmd"
 
 DEPCONFIG = $(SDKDIR)/.config
