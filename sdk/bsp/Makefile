@@ -37,6 +37,10 @@
 -include $(SDKDIR)/Make.defs
 -include src$(DELIM)Make.defs
 
+# T.B.D: spritzer is only ARMv7-M
+
+ARCH_SUBDIR = armv7-m
+
 CPPFLAGS += $(EXTRADEFINES)
 CFLAGS += $(EXTRADEFINES)
 CXXFLAGS += $(EXTRADEFINES)
@@ -103,18 +107,18 @@ LINKLIBS ?=
 
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
   BOARDMAKE = $(if $(wildcard .\board\Makefile),y,)
-  LIBPATHS += -L"$(TOPDIR)\lib"
+  LIBPATHS += -L"$(SDKDIR)\lib"
 ifeq ($(BOARDMAKE),y)
-  LIBPATHS += -L"$(TOPDIR)\bsp\board"
+  LIBPATHS += -L"$(SDKDIR)\bsp\board"
 endif
 
 else
   BOARDMAKE = $(if $(wildcard ./board/Makefile),y,)
 
 ifeq ($(WINTOOL),y)
-  LIBPATHS += -L"${shell cygpath -w "$(TOPDIR)/lib"}"
+  LIBPATHS += -L"${shell cygpath -w "$(SDKDIR)/lib"}"
 ifeq ($(BOARDMAKE),y)
-  LIBPATHS += -L"${shell cygpath -w "$(TOPDIR)/bsp/board"}"
+  LIBPATHS += -L"${shell cygpath -w "$(SDKDIR)/bsp/board"}"
 endif
 
 else
@@ -159,7 +163,7 @@ nuttx$(EXEEXT): $(HEAD_OBJ) board$(DELIM)libboard$(LIBEXT)
 ifneq ($(CONFIG_WINDOWS_NATIVE),y)
 	$(Q) $(NM) $(NUTTX) | \
 	grep -v '\(compiled\)\|\(\$(OBJEXT)$$\)\|\( [aUw] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)' | \
-	sort > $(TOPDIR)$(DELIM)System.map
+	sort > $(SDKDIR)$(DELIM)System.map
 endif
 
 # This is part of the top-level export target
@@ -182,8 +186,7 @@ endif
 ifeq ($(BOARDMAKE),y)
 	$(Q) $(MAKE) -C board TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" depend
 endif
-	$(Q) $(MKDEP) $(patsubst %,--dep-path %,$(subst :, ,$(VPATH))) \
-	 "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(patsubst %,--dep-path %,$(subst :, ,$(VPATH))) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
 	$(Q) touch $@
 
 depend: .depend
