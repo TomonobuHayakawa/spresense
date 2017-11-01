@@ -47,6 +47,16 @@ COBJS		= $(CSRCS:.c=$(OBJEXT))
 SRCS		= $(ASRCS) $(CSRCS)
 OBJS		= $(AOBJS) $(COBJS)
 
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+  BIN		= ..\libsystem$(LIBEXT)
+else
+ifeq ($(WINTOOL),y)
+  BIN		= ..\\libsystem$(LIBEXT)
+else
+  BIN		= ../libsystem$(LIBEXT)
+endif
+endif
+
 ROOTDEPPATH	= --dep-path .
 VPATH		=
 

@@ -32,6 +32,8 @@
 #
 ############################################################################
 -include $(TOPDIR)/Make.defs
+include $(SDKDIR)/Make.defs
+DELIM ?= $(strip /)
 
 BIN = libsystem$(LIBEXT)
 
@@ -53,7 +55,7 @@ all: $(BIN)
 
 define SDIR_template
 $(1)_$(2):
-	$(Q) $(MAKE) -C $(1) $(2) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" BIN="$(SDKDIR)$(DELIM)system$(DELIM)$(BIN)"
+	$(Q) $(MAKE) -C $(1) $(2) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)"
 endef
 
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),all)))
