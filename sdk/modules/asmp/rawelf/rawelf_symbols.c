@@ -314,7 +314,8 @@ int rawelf_symvalue(FAR struct rawelf_loadinfo_s *loadinfo, FAR Elf32_Sym *sym)
 }
 
 int rawelf_getsymbolbyname(struct rawelf_loadinfo_s *loadinfo,
-                           FAR const char *name, FAR Elf32_Sym *sym)
+                           FAR const char *name, size_t namelen,
+                           FAR Elf32_Sym *sym)
 {
   FAR Elf32_Shdr *symtab = &loadinfo->shdr[loadinfo->symtabidx];
   int nents = symtab->sh_size / symtab->sh_entsize;
@@ -336,7 +337,7 @@ int rawelf_getsymbolbyname(struct rawelf_loadinfo_s *loadinfo,
           continue;
         }
 
-      if (strcmp(name, (FAR char *)loadinfo->iobuffer) == 0)
+      if (strncmp(name, (FAR char *)loadinfo->iobuffer, namelen) == 0)
         {
           return OK;
         }

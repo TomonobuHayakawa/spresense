@@ -361,7 +361,7 @@ int rawelf_allocbuffer(FAR struct rawelf_loadinfo_s *loadinfo);
 int rawelf_reallocbuffer(FAR struct rawelf_loadinfo_s *loadinfo, size_t increment);
 
 /****************************************************************************
- * Name: rawelf_getsymentries
+ * Name: rawelf_getsymbolbyname
  *
  * Description:
  *   Get number of entries in symtab
@@ -373,6 +373,7 @@ int rawelf_reallocbuffer(FAR struct rawelf_loadinfo_s *loadinfo, size_t incremen
  ****************************************************************************/
 
 int rawelf_getsymbolbyname(FAR struct rawelf_loadinfo_s *loadinfo,
-                           FAR const char *name, FAR Elf32_Sym *sym);
+                           FAR const char *name, size_t namelen,
+                           FAR Elf32_Sym *sym);
 
 #endif /* __ASMP_SUPERVISOR_RAWELF_RAWELF_H */

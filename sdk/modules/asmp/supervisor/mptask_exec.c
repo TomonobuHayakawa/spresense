@@ -192,7 +192,9 @@ int mptask_exec(mptask_t *task)
           return ret;
         }
 
-      ret = rawelf_getsymbolbyname(&loadinfo, WORKER_BINDDATA_SYMNAME, &sym);
+      ret = rawelf_getsymbolbyname(&loadinfo, WORKER_BINDDATA_SYMNAME,
+                                   strlen(WORKER_BINDDATA_SYMNAME),
+                                   &sym);
       if (ret < 0)
         {
           mperr("Bind area not found.\n");
