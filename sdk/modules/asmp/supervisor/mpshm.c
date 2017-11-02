@@ -105,7 +105,7 @@ static inline void mpshm_semgive(sem_t *id)
 
 static inline uint32_t mpshm_getactable(void)
 {
-  int cpuid = getreg32(CPU_ID) - 2;
+  uint32_t cpuid = getreg32(CPU_ID) - 2;
 
   return CXD56_ADR_CONV_BASE + (cpuid * 0x20) + 4;
 }
