@@ -5,6 +5,7 @@ ifeq ($(CONFIG_ASMP),y)
 SDKLIBS += lib$(DELIM)libasmp$(LIBEXT)
 SDKMODDIRS += modules$(DELIM)asmp
 endif
+SDKCLEANDIRS += modules$(DELIM)asmp
 
 modules$(DELIM)asmp$(DELIM)libasmp$(LIBEXT): context
 	$(Q) $(MAKE) -C modules$(DELIM)asmp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libasmp$(LIBEXT)
@@ -16,6 +17,7 @@ lib$(DELIM)libasmp$(LIBEXT): modules$(DELIM)asmp$(DELIM)libasmp$(LIBEXT)
 
 SDKLIBS += lib$(DELIM)libsystem$(LIBEXT)
 SDKMODDIRS += system
+SDKCLEANDIRS += system
 CONTEXTDIRS += system
 
 system$(DELIM)libsystem$(LIBEXT): context
@@ -28,6 +30,7 @@ lib$(DELIM)libsystem$(LIBEXT): system$(DELIM)libsystem$(LIBEXT)
 
 SDKLIBS += lib$(DELIM)libbsp$(LIBEXT)
 SDKMODDIRS += bsp
+SDKCLEANDIRS += bsp
 
 bsp$(DELIM)libbsp$(LIBEXT): context
 	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libbsp$(LIBEXT)
@@ -39,6 +42,7 @@ lib$(DELIM)libbsp$(LIBEXT): bsp$(DELIM)libbsp$(LIBEXT)
 
 SDKLIBS += lib$(DELIM)libextdrivers$(LIBEXT)
 SDKMODDIRS += drivers
+SDKCLEANDIRS += drivers
 
 drivers$(DELIM)libextdrivers$(LIBEXT): context
 	$(Q) $(MAKE) -C drivers TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libextdrivers$(LIBEXT)
