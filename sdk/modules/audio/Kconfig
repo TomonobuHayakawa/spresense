@@ -1,2 +1,4 @@
-menu "Audio"
-endmenu
+menuconfig AUDIO
+	bool "Audio"
+	help
+		Audio

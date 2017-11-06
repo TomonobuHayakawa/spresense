@@ -1,2 +1,4 @@
-menu "Bluetooth"
-endmenu
+menuconfig BLUETOOTH
+	bool "Bluetooth"
+	help
+		Bluetooth
