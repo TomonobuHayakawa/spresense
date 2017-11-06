@@ -1,0 +1,4 @@
+menuconfig MEMUTILS
+	bool "Memory utility"
+	help
+		Memory utility
