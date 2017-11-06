@@ -6,29 +6,22 @@ Clone this repository and update submodules.
 $ git clone --recursive git@code.sonymobile.net:spritzer-sdk/spritzer.git
 ```
 
-After repositories cloned, set main branch for each submodules.
-```
-$ ./init.sh
-```
-
-or checkout each submodules by hands.
+After repositories cloned, each submodules are in 'Detached HEAD'.
+So you must checkout master before you getting started.
+If you want to all of repository into master, just type like this.
 
 ```
-$ (cd nuttx; git checkout sdk2.2)
-$ (cd apps; git checkout sdk2.2)
-$ (cd sdk; git checkout master)
-$ (cd examples; git checkout master)
-$ (cd proprietary; git checkout master)
+$ git submodule foreach git checkout master
 ```
 
-# Directory structure
+# Submodules
 
 ```
-- sdk/         - SPRITZER SDK sources and any PC tools
-- examples/    - SPRITZER SDK examples
-- proprietary/ - Sony proprietary binaries
-- nuttx/       - NuttX original kernel + port of SPRITZER architecture
-- apps/        - NuttX original apps
+- sdk         - SPRITZER SDK sources and any PC tools
+- examples    - SPRITZER SDK examples
+- proprietary - Sony proprietary binaries
+- nuttx       - NuttX original kernel + port of SPRITZER architecture
+- apps        - NuttX original apps
 ```
 
 # Build
