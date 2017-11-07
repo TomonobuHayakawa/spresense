@@ -89,7 +89,6 @@ SDKDEPDIRS = $(SDKMODDIRS) $(EXTSUBDIRS)
 SDKCLEANDIRS += $(EXTSUBDIRS) lib
 CONTEXTDIRS += $(EXTSUBDIRS)
 
-# T.B.D
 ifeq ($(WINTOOL),y)
   LIBPATHS += -L"${shell cygpath -w "$(SDKDIR)/lib"}"
 else
@@ -99,7 +98,7 @@ endif
 LINKLIBS = $(patsubst lib/%,%,$(NUTTXLIBS) $(SDKLIBS) $(EXTLIBS))
 LDLIBS = $(patsubst %.a,%,$(patsubst lib%,-l%,$(LINKLIBS)))
 
-$(BIN): depend libs
+$(BIN): depend sdklibs
 	$(Q) $(MAKE) -C bsp TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" LINKLIBS="$(LINKLIBS)" EXTRADEFINES=$(KDEFINE) $(BIN)
 	@echo "SPK: $(BIN).spk"
 	$(Q) if [ -x $(MKSPK) ]; then \
@@ -108,7 +107,7 @@ $(BIN): depend libs
 		echo mkspk tool not found. ; \
 	fi
 
-libs: $(EXPORTLIBS) $(SDKLIBS) $(EXTLIBS)
+sdklibs: $(EXPORTLIBS) $(SDKLIBS) $(EXTLIBS)
 
 $(EXPORTLIBS): installkernel
 
