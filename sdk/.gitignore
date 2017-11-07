@@ -30,3 +30,4 @@ core
 /tags
 /*.log
 .*.tmp
+.context
