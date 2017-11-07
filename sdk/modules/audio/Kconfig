@@ -1,4 +1,4 @@
-menuconfig AUDIO
-	bool "Audio"
+menuconfig MOD_AUDIO
+	bool "Audio module"
 	help
-		Audio
+		Audio module library
