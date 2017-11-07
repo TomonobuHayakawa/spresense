@@ -21,6 +21,7 @@ sdk
 |   `-- src        - Common source
 |-- configs        - Default configuration files
 |   `-- kernel
+|-- docs           - Documentation
 |-- drivers        - External device drivers
 |   |-- lcd
 |   `-- sensors
@@ -32,7 +33,15 @@ sdk
 |   |-- include    - Library headers
 |   |-- lte        - LTE library
 |   |-- nfc        - NFC library
-|   `-- sensing    - Smart sensing library
+|   |-- sensing    - Smart sensing library
+|   |   |-- arm_gesture   - Arm gesture detection
+|   |   |-- barometer     - Barometer
+|   |   |-- compass       - Compass
+|   |   |-- gnss          - GNSS
+|   |   |-- step_counter  - Step counter
+|   |   |-- tap           - Tap detection
+|   |   `-- tram          - TRAM
+|   `-- skeleton
 |-- system         - System commands
 `-- tools          - Build utilities
 ```
