@@ -99,6 +99,9 @@ $(BIN): $(LIB_OBJS)
 
 depend: .depend
 
+.context:
+	$(Q) touch $@
+
 context: .context
 
 clean:
