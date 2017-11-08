@@ -4,6 +4,7 @@
 import os
 import sys
 import logging
+import re
 
 def make_savedefconfig(d):
     ''' Run 'make savedefconfig' at specified directory
@@ -11,7 +12,7 @@ def make_savedefconfig(d):
     command = 'make -C ' + d + ' savedefconfig'
     if logging.getLogger().getEffectiveLevel() > logging.INFO:
         command += ' 2>&1 >/dev/null'
-        
+
     logging.debug('command: "%s"', command)
 
     return os.system(command)
@@ -43,14 +44,21 @@ def save_default_config(basedir, confpath, kernel):
             sys.exit(0)
 
     logging.debug("Output: %s\n" % (confpath))
-    os.replace(defconfig, confpath)
+    if kernel:
+        os.replace(defconfig, confpath)
+    else:
+        with open(confpath, 'w') as dest:
+            with open(defconfig, 'r') as src:
+                for line in src:
+                    if not re.match(r'CONFIG_BOARD_.*', line):
+                        dest.write(line)
 
 if __name__ == '__main__':
 
     import argparse
 
     parser = argparse.ArgumentParser(description='Make default config from current config')
-    parser.add_argument('configname', metavar='<config name>', nargs=1,
+    parser.add_argument('configname', metavar='<config name>', type=str, nargs='?',
                         help='configuration name')
     parser.add_argument('-k', dest='kernel', action='store_true',
                         help='save kernel configuration')
@@ -61,7 +69,7 @@ if __name__ == '__main__':
 
     opts = parser.parse_args()
 
-    configname = opts.configname[0]
+    configname = opts.configname
     savesdk = True
     savekernel = False
     if opts.kernel:
