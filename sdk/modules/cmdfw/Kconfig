@@ -5,7 +5,7 @@
 
 menu "Spritzer Command Fw"
 
-config SPRITZER_COMMANDFW 
+config CMDFW 
 	bool "Spritzer Command utilities framework"
 	default n
 	select MEMUTILS_SIMPLE_FIFO
@@ -13,7 +13,7 @@ config SPRITZER_COMMANDFW
 	select FWUPUTILS_CLIENTS
 	---help---
 
-if SPRITZER_COMMANDFW
+if CMDFW
 
 config SPCOMMAND_ENABLE_CRCCHECK
     bool "Command FW CRC check enable"
@@ -43,7 +43,6 @@ config SPCOMMAND_FWUPDATE_PACKAGE_DIR
 config DEBUG_COMMANDFW
 	bool "Command FW Debug"
 	default n
-	depends on SPRITZER_COMMANDFW
 	---help---
 
 endif
