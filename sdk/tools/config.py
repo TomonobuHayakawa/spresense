@@ -5,6 +5,7 @@ import os
 import sys
 import logging
 import glob
+import shutil
 
 MODE_MENUCONFIG = "menuconf"
 MODE_QCONFIG = "qconfig"
@@ -14,22 +15,16 @@ def get_defconfigs(directory):
     return list(map(lambda x: os.path.basename(str(x)),
                     glob.glob(os.path.join(directory, '*-defconfig'))))
 
-def install(srcfile, destfile, mode=0o644, append=None):
-    logging.debug(srcfile)
-    logging.debug(destfile)
+def install(src, dest, mode=0o644):
+    logging.debug(src)
+    logging.debug(dest)
     logging.debug(mode)
 
-    with open(srcfile, 'r') as src:
-        buf = src.read()
-    if append:
-        buf += append
-    with open(destfile, 'w') as dest:
-        dest.write(buf)
-
-    os.chmod(destfile, mode)
+    shutil.copy(src, dest)
+    os.chmod(dest, mode)
     return
 
-def apply_defconfig(configname, configlist, topdir, sdkdir, kernel, boardconfig):
+def apply_defconfig(configname, configlist, topdir, sdkdir, kernel):
     defconfig = configname + '-defconfig'
     logging.debug('Using config file: %s', defconfig)
 
@@ -52,7 +47,7 @@ def apply_defconfig(configname, configlist, topdir, sdkdir, kernel, boardconfig)
     else:
         src = os.path.join(configdir, defconfig)
         dest = os.path.join(sdkdir, '.config')
-        install(src, dest, append=boardconfig)
+        install(src, dest)
         postproc = 'make olddefconfig'
 
     if logging.getLogger().getEffectiveLevel() > logging.INFO:
@@ -78,7 +73,6 @@ if __name__ == "__main__":
                         help='configuration name')
     parser.add_argument('-k', '--kernel', action='store_true',
                         help='kernel config')
-    parser.add_argument('-b', '--board', type=str, help='Board name')
     parser.add_argument('-l', '--list', action='store_true',
                         help='list default configurations.\nshow kernel defconfigs with --kernel.')
     parser.add_argument('-m', '--menuconfig', action='store_true',
@@ -127,23 +121,8 @@ if __name__ == "__main__":
 
         sys.exit(0)
 
-    boardconfig = None
-    if opts.board:
-        if opts.kernel:
-            print('--board and --kernel option cannot be used in the same time.',
-                  file=sys.stderr)
-            sys.exit(3)
-        boardname = opts.board.lower()
-        boarddir = os.path.join(sdkdir, 'bsp', 'board', boardname)
-        if not os.path.isdir(boarddir) or \
-           not os.path.exists(os.path.join(boarddir, 'Make.defs')):
-            print('Board %s not found.' % opts.board, file=sys.stderr)
-            sys.exit(4)
-        boardconfig = 'CONFIG_BOARD_' + boardname.upper() + '=y'
-
     if opts.configname:
-        ret = apply_defconfig(opts.configname, configs, topdir, sdkdir,
-                              opts.kernel, boardconfig)
+        ret = apply_defconfig(opts.configname, configs, topdir, sdkdir, opts.kernel)
         if ret != 0:
             sys.exit(ret)
 
@@ -151,9 +130,3 @@ if __name__ == "__main__":
         if opts.kernel:
             menumode += 'kernel'
         do_kconfig_conf(menumode, sdkdir)
-
-    # This tool needs mode option or config name
-
-    if menumode == None and opts.configname == None:
-        parser.print_usage()
-        sys.exit(9)
