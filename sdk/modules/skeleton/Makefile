@@ -58,10 +58,8 @@ AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
 CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
 
-LIB_OBJS = $(AOBJS) $(COBJS)
-
-SRCS = $(ASRCS) $(CSRCS)
-OBJS = $(AOBJS) $(COBJS)
+SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS)
+LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
 
 # Here is a example of adding include paths.
 # Note that include path addtion will be affected to build time.
