@@ -24,30 +24,54 @@ def install(src, dest, mode=0o644):
     os.chmod(dest, mode)
     return
 
-def apply_defconfig(configname, configlist, topdir, sdkdir, kernel):
-    defconfig = configname + '-defconfig'
-    logging.debug('Using config file: %s', defconfig)
+def append(srcfile, destfile):
+    # Read contents of destfile first
 
-    if defconfig not in configs:
-        print('Error: config "%s" not found' % configname, file=sys.stderr)
-        sys.exit(3)
+    with open(destfile, 'r') as dest:
+        buf = dest.read()
+
+    with open(srcfile, 'r') as src:
+        with open(destfile, 'a') as dest:
+            for line in src:
+                # Append option if not exists
+
+                if line not in buf:
+                    logging.debug('write option: %s', line)
+                    dest.write(line)
+
+def apply_defconfig(configname, configlist, topdir, sdkdir, kernel):
+    # Convert config names to "*-defconfig" and check it already exists
+
+    defconfigs = list(map(lambda x: x + "-defconfig", configname))
+    for c in defconfigs:
+        if c not in configlist:
+            print('Error: config "%s" not found' % c, file=sys.stderr)
+            sys.exit(3)
 
     # Copy Make.defs file first, because SDK Makefile depends on Make.defs in
     # kernel, but there is nothing if kernel not configured.
 
     srcmakedefs = os.path.join(sdkdir, 'bsp', 'scripts', 'Make.defs.nuttx')
     destmakedefs = os.path.join(topdir, 'Make.defs')
-    install(srcmakedefs, destmakedefs)
+    if not os.path.exists(destmakedefs):
+        install(srcmakedefs, destmakedefs)
 
     if kernel:
-        src = os.path.join(kconfigdir, defconfig)
+        src = os.path.join(kconfigdir, defconfigs[0])
         dest = os.path.join(topdir, '.config')
         install(src, dest)
         postproc = 'make -C %s olddefconfig' % topdir
     else:
-        src = os.path.join(configdir, defconfig)
         dest = os.path.join(sdkdir, '.config')
-        install(src, dest)
+
+        # Create new empty .config file, existed file content will be discarded
+
+        f = open(dest, 'w')
+        f.close()
+
+        for c in defconfigs:
+            src = os.path.join(configdir, c)
+            append(src, dest)
         postproc = 'make olddefconfig'
 
     if logging.getLogger().getEffectiveLevel() > logging.INFO:
@@ -69,7 +93,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description='Configration tool')
-    parser.add_argument('configname', metavar='<config name>', type=str, nargs='?',
+    parser.add_argument('configname', metavar='<config name>', type=str, nargs='*',
                         help='configuration name')
     parser.add_argument('-k', '--kernel', action='store_true',
                         help='kernel config')
@@ -121,7 +145,7 @@ if __name__ == "__main__":
 
         sys.exit(0)
 
-    if opts.configname:
+    if len(opts.configname) > 0:
         ret = apply_defconfig(opts.configname, configs, topdir, sdkdir, opts.kernel)
         if ret != 0:
             sys.exit(ret)
@@ -133,6 +157,6 @@ if __name__ == "__main__":
 
     # This tool needs mode option or config name
 
-    if menumode == None and opts.configname == None:
+    if menumode == None and len(opts.configname) == 0:
         parser.print_usage()
         sys.exit(9)
