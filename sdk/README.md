@@ -75,20 +75,27 @@ $ tools/config.py --kernel --list (list kernel predefined configs)
 $ tools/config.py --list  (list SDK predefined configs)
 ```
 
-At the first time, of you want to change to predefined ones, specify
-predefined `<config name>` at the last of options.
+At the first time, or you want to change to predefined ones, specify
+predefined `<config name>`s at the last of options.
 
 ```
-$ tools/config.py <config name>
+$ tools/config.py <config name> [<config name>...]
+```
+
+You can specify multiple predefines, it allows combination of predefines.
+
+e.g.
+```
+$ tools/config.py audio lte
 ```
 
 `tools/config.py` can be invoked menu style configuration UI by following
 options.
 
 ```
-$ tools/config.py --menuconfig (like 'make menuconfig')
-$ tools/config.py --qconfig    (like 'make qconfig')
-$ tools/config.py --gconfig    (like 'make gconfig')
+$ tools/config.py --menuconfig (same as 'make menuconfig')
+$ tools/config.py --qconfig    (same as 'make qconfig')
+$ tools/config.py --gconfig    (same as 'make gconfig')
 ```
 
 Additionally, you can use menu invokation with predefined configs like this:
