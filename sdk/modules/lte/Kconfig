@@ -1,4 +1,14 @@
-menuconfig LTE
-	bool "LTE"
-	help
-		LTE (Long Term Evolution) module
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menu "LTE"
+
+config LTE_CLI_LIB
+	bool "LTE Client Library Support"
+	default n
+	---help---
+		Enables support for the LTE client library.
+
+endmenu # LTE Library

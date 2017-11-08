@@ -10,3 +10,4 @@ source modules/asmp/Kconfig
 source modules/bluetooth/Kconfig
 source modules/lte/Kconfig
 source modules/nfc/Kconfig
+source modules/cmdfw/Kconfig

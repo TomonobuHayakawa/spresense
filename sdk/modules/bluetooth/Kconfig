@@ -1,4 +1,47 @@
-menuconfig BLUETOOTH
-	bool "Bluetooth"
-	help
-		Bluetooth
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menu "Bluetooth Support"
+
+config BLUETOOTH
+	bool "Bluetooth Support"
+	default n
+	---help---
+		Enable Bluetooth
+
+if BLUETOOTH
+
+choice
+	prompt "Supported Devices"
+	default BCM20707
+
+config BCM20707
+	bool "BCM20707"
+	select SERIAL_TERMIOS
+	select CXD56_UART2
+	select UART2_IFLOWCONTROL
+	select UART2_OFLOWCONTROL
+	---help---
+		Cypress BCM20707 provides BT/BLE interfaces for application
+
+config NRF51822
+	bool "nRF51"
+	select CXD56_UART2
+	---help---
+		Nordic nRF51 provides BLE interfaces for application
+
+endchoice
+
+config DEBUG_BLUETOOTH
+	bool "Bluetooth Debug Output"
+	default n
+	---help---
+		Enable bluetooth debug SYSLOG output (disabled by default).
+		Support for this debug option is architecture-specific and may not
+		be available for some MCUs.
+
+endif
+
+endmenu

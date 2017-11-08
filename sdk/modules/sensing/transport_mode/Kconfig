@@ -3,9 +3,9 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-config SENSORUTILS_STEPCOUNTER
-	bool "Step counter"
+config SENSORUTILS_TRAM
+	bool "transport mode"
 	default n
+	select SENSORUTILS_MANAGER_POWERCTRL
 	---help---
-		Enable support for stepcounter.
-
+		Enable support for transport mode.
