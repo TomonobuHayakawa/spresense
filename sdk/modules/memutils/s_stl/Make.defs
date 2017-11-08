@@ -1,0 +1,6 @@
+
+CXXSRCS +=
+
+VPATH   += s_stl
+SUBDIRS +=
+DEPPATH += --dep-path s_stl

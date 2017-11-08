@@ -1,0 +1,6 @@
+
+CXXSRCS +=
+
+VPATH   += message
+SUBDIRS +=
+DEPPATH += --dep-path message

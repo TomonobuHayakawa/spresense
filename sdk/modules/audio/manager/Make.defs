@@ -1,0 +1,6 @@
+
+CXXSRCS +=
+
+VPATH   += manager
+SUBDIRS +=
+DEPPATH += --dep-path manager

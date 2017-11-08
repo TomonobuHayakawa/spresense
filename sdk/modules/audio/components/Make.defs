@@ -1,0 +1,6 @@
+
+CXXSRCS +=
+
+VPATH   += components
+SUBDIRS +=
+DEPPATH += --dep-path components

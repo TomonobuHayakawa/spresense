@@ -1,0 +1,6 @@
+
+CXXSRCS +=
+
+VPATH   += memory_manager
+SUBDIRS +=
+DEPPATH += --dep-path memory_manager

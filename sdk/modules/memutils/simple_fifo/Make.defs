@@ -1,0 +1,6 @@
+
+CXXSRCS +=
+
+VPATH   += simple_fifo
+SUBDIRS +=
+DEPPATH += --dep-path simple_fifo
