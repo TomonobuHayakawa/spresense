@@ -130,3 +130,9 @@ if __name__ == "__main__":
         if opts.kernel:
             menumode += 'kernel'
         do_kconfig_conf(menumode, sdkdir)
+
+    # This tool needs mode option or config name
+
+    if menumode == None and opts.configname == None:
+        parser.print_usage()
+        sys.exit(9)
