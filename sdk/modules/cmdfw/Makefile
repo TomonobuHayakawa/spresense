@@ -39,18 +39,8 @@
 DELIM ?= $(strip /)
 CXXEXT ?= .cpp
 
-# Add sub directory if exists
-
-VPATH   = subdir
-SUBDIRS =
-DEPPATH = --dep-path subdir
-
-CSRCS  = skeleton_main.c
+CSRCS   =
 CXXSRCS =
-
-# Include sub directory source files
-
-include subdir/Make.defs
 
 BIN = libskeleton$(LIBEXT)
 
@@ -64,14 +54,13 @@ LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
 # Here is a example of adding include paths.
 # Note that include path addtion will be affected to build time.
 # Don't add unnecessary include paths for module.
-
-SKELETONSRCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)skeleton
-
-ifeq ($(WINTOOL),y)
-  CFLAGS += -I "${shell cygpath -w $(SKELETONSRCDIR)}"
-else
-  CFLAGS += -I$(SKELETONSRCDIR)
-endif
+#
+#SKELETONSRCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)skeleton
+#ifeq ($(WINTOOL),y)
+#  CFLAGS += -I "${shell cygpath -w $(SKELETONSRCDIR)}"
+#else
+#  CFLAGS += -I$(SKELETONSRCDIR)
+#endif
 
 all: $(BIN)
 .PHONY: context depend clean distclean
