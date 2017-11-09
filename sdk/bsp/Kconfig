@@ -15,12 +15,20 @@ choice
 	config BOARD_COLLET
 		bool "Collet"
 
+	config BOARD_SPARDUINO
+		bool "Sparduino"
+
 endchoice
 
 config BOARD_NAME
 	string
 	default "corvo" if BOARD_CORVO
 	default "collet" if BOARD_COLLET
+	default "sparduino" if BOARD_SPARDUINO
+
+source "$SDKDIR/bsp/board/corvo/Kconfig"
+source "$SDKDIR/bsp/board/collet/Kconfig"
+source "$SDKDIR/bsp/board/sparduino/Kconfig"
 
 endmenu
 

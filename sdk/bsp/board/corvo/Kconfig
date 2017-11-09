@@ -1,0 +1,33 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+if BOARD_CORVO
+
+config LCD_LPM013M091A
+	bool "JDI LPM013M091A LCD Driver with frame buffer"
+	default n
+	---help---
+		JDI LPM013M091A LCD Driver.
+		This driver doesn't support reading data.
+		Recommended to use DMA to transfer data or displayed image would be
+		broken.
+
+config EINK_ET014TT1
+	bool "EInk ET014TT1 ePaper"
+	default n
+	---help---
+		Supports the E Ink ET014TT1 1.43" monochrome display.
+
+if EINK_ET014TT1
+
+config EINK_ET014TT1_ROTATE
+	bool "rotate device"
+	default y
+	---help---
+		Rotate ePaper device.
+
+endif
+
+endif
