@@ -1,5 +1,5 @@
 ############################################################################
-# configs/corvo/src/Makefile
+# bsp/board/collet/Make.defs
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #
@@ -32,8 +32,8 @@
 #
 ############################################################################
 
-VPATH   += collet
-DEPPATH += --dep-path collet
+VPATH   += collet/src
+DEPPATH += --dep-path collet/src
 
 ifeq ($(CONFIG_LIB_BOARDCTL),y)
 CSRCS += cxd56_appinit.c
