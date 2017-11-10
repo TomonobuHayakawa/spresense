@@ -33,7 +33,7 @@
 #
 ############################################################################
 
-include ${SDKDIR}/.config
+-include ${SDKDIR}/.config
 include ${TOPDIR}/tools/Config.mk
 include ${TOPDIR}/arch/arm/src/armv7-m/Toolchain.defs
 
