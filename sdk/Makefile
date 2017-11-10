@@ -28,6 +28,8 @@ export Q := @
 endif
 endif
 
+BOARD_DIR = $(SDKDIR)$(DELIM)bsp$(DELIM)board$(DELIM)$(CONFIG_BOARD_NAME)
+
 # Dummy. It needs libapps.a to be a member of EXPORTLIBS.
 
 APPDIR := ../apps
@@ -40,6 +42,13 @@ include $(TOPDIR)/KernelLibs.mk
 else
 include $(TOPDIR)/FlatLibs.mk
 endif
+endif
+
+# Default tools
+
+ifeq ($(DIRLINK),)
+DIRLINK = $(TOPDIR)/tools/link.sh
+DIRUNLINK = $(TOPDIR)/tools/unlink.sh
 endif
 
 PHONY :=
@@ -111,7 +120,14 @@ sdklibs: $(EXPORTLIBS) $(SDKLIBS) $(EXTLIBS)
 
 $(EXPORTLIBS): installkernel
 
-context: check_context bsp/include/sdk/config.h
+bsp/include/arch/board: .config
+	@echo "LN: bsp/include/arch/board to $(BOARD_DIR)/include"
+	$(Q) $(DIRLINK) $(BOARD_DIR)/include $@
+
+dirlinks: bsp/include/arch/board
+PHONY += dirlinks
+
+context: check_context bsp/include/sdk/config.h dirlinks
 	$(Q) for dir in $(CONTEXTDIRS) ; do \
 		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" context; \
 	done
@@ -138,6 +154,7 @@ check_context:
 
 clean_context:
 	$(call DELFILE, bsp/include/sdk/config.h)
+	$(Q) $(DIRUNLINK) bsp/include/arch/board
 
 PHONY += clean_context
 
@@ -178,7 +195,7 @@ subdir_distclean:
 	done
 PHONY += subdir_distclean
 
-distclean: clean subdir_distclean
+distclean: clean subdir_distclean clean_context
 	$(call DELFILE, .config)
 	$(call DELFILE, .config.old)
 
@@ -198,31 +215,31 @@ PHONY += configkernel oldconfigkernel olddefconfigkernel menuconfigkernel qconfi
 #
 #
 
-config: .kconfig.tmp
+config: .kconfig.tmp clean_context
 	$(Q) SDKDIR=$(SDKDIR) kconfig-conf $<
 PHONY += config
 
-oldconfig: .kconfig.tmp
+oldconfig: .kconfig.tmp clean_context
 	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --oldconfig $<
 PHONY += oldconfig
 
-olddefconfig: .kconfig.tmp
+olddefconfig: .kconfig.tmp clean_context
 	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --olddefconfig $<
 PHONY += olddefconfig
 
-menuconfig: .kconfig.tmp
+menuconfig: .kconfig.tmp clean_context
 	$(Q) SDKDIR=$(SDKDIR) kconfig-mconf $<
 PHONY += menuconfig
 
-qconfig: .kconfig.tmp
+qconfig: .kconfig.tmp clean_context
 	$(Q) SDKDIR=$(SDKDIR) kconfig-qconf $<
 PHONY += qconfig
 
-gconfig: .kconfig.tmp
+gconfig: .kconfig.tmp clean_context
 	$(Q) SDKDIR=$(SDKDIR) kconfig-gconf $<
 PHONY += gconfig
 
-savedefconfig: .kconfig.tmp
+savedefconfig: .kconfig.tmp clean_context
 	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --savedefconfig defconfig $<
 PHONY += savedefconfig
 
