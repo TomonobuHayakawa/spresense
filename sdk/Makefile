@@ -80,9 +80,15 @@ endif
 	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
 PHONY += buildkernel
 
+# installkernel
+#
+# installkernel target copies NuttX kernel libraries. And remove specific object files from
+# copied archives. It is replacement for use SDK specific code.
+
 installkernel:
 	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
 	$(Q) if [ -f lib/libapps.a ]; then $(ARCROSSDEV)ar d lib/libapps.a builtin_list.o; fi
+	$(Q) if [ -f lib/libarch.a ]; then $(ARCROSSDEV)ar d lib/libarch.a cxd56_allocateheap.o; fi
 PHONY += installkernel
 
 SDKMODDIRS =

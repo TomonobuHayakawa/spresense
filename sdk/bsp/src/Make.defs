@@ -39,6 +39,7 @@
 CHIP_ASRCS  =
 CHIP_CSRCS += cxd56_uid.c
 CHIP_CSRCS += cxd56_sysctl.c
+CHIP_CSRCS += cxd56_allocateheap.c
 ifeq ($(CONFIG_CXD56_HOT_SLEEP),y)
 CHIP_CSRCS += cxd56_cpu_context.c
 endif
