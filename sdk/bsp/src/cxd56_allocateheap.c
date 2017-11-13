@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -48,7 +48,7 @@
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
 #ifdef CONFIG_MM_TILE
-#  include <nuttx/mm/tile.h>
+#  include <mm/tile.h>
 #endif
 
 #include <arch/board/board.h>
@@ -85,28 +85,31 @@ const uint32_t g_idle_topstack = (uint32_t)&_ebss + CONFIG_IDLETHREAD_STACKSIZE;
 #  error Invalid memory configuration
 #endif
 
+#ifdef CONFIG_ASMP_MEMSIZE
+#  if ((CONFIG_ASMP_MEMSIZE & 0xffff) != 0)
+#    error ASMP_MEM_SIZE must be aligned 0x10000 (64KB)
+#  endif
+#  if (CONFIG_ASMP_MEMSIZE >= CONFIG_RAM_SIZE)
+#    error ASMP_MEM_SIZE too large
+#  endif
+#else
+#  define CONFIG_ASMP_MEMSIZE 0
+#endif
+
 /*
  * ASMP support needs 2 RAM regions
  *
  * Default:
- * RAM1 - 512KB  (0x80000)  -- for NuttX
+ * RAM1 - 512KB  (0x80000)  -- for NuttX heap
  * RAM2 - 1024KB (0x100000) -- for ASMP framework
  */
 
-#if CONFIG_MM_REGIONS > 1
-#  ifndef CONFIG_MM_TILE
-#    error RAM region 2 in CXD56xx system needs Tile Allocator.
-#  endif
-#  define MM_RAM_END (CONFIG_RAM_START + CONFIG_CXD56_RAM1_SIZE)
-#  define MM_RAM2_BASE (CONFIG_RAM_START + CONFIG_CXD56_RAM1_SIZE)
-#  define MM_RAM2_SIZE CONFIG_CXD56_RAM2_SIZE
-#  define MM_RAM2_END (MM_RAM2_BASE + MM_RAM2_SIZE)
-#  if (MM_RAM2_END > CXD56_RAM_BASE + CXD56_RAM_SIZE)
-#    error Configured RAM size exceeded (RAM1 + RAM2)
-#  endif
-#else
-#  define MM_RAM_END CONFIG_RAM_END
-#endif /* CONFIG_MM_REGIONS > 1 */
+#define MM_RAM1_SIZE (CONFIG_RAM_SIZE - CONFIG_ASMP_MEMSIZE)
+#define MM_RAM2_SIZE CONFIG_ASMP_MEMSIZE
+
+#define MM_RAM1_END  (CONFIG_RAM_START + MM_RAM1_SIZE)
+#define MM_RAM2_BASE (CONFIG_RAM_START + MM_RAM1_SIZE)
+#define MM_RAM2_END  (MM_RAM2_BASE + MM_RAM2_SIZE)
 
 /****************************************************************************
  * Private Functions
@@ -154,27 +157,13 @@ void up_allocate_heap(FAR void **heap_start, size_t *heap_size)
 
   board_autoled_on(LED_HEAPALLOCATE);
   *heap_start = (FAR void *)g_idle_topstack;
-  *heap_size = MM_RAM_END - g_idle_topstack;
+  *heap_size = MM_RAM1_END - g_idle_topstack;
 
   /* Colorize the heap for debug */
 
   up_heap_color(*heap_start, *heap_size);
-}
 
-/****************************************************************************
- * Name: up_addregion
- *
- * Description:
- *   Memory may be added in non-contiguous chunks.  Additional chunks are
- *   added by calling this function.
- *
- ****************************************************************************/
-
-#if CONFIG_MM_REGIONS > 1
-void up_addregion(void)
-{
-  /* Add the next SRAM region to tile allocator */
-
+#ifdef CONFIG_MM_TILE
   (void)tile_initialize((void *)MM_RAM2_BASE, MM_RAM2_SIZE, 17, 17);
+#endif
 }
-#endif /* CONFIG_MM_REGIONS > 1 */
