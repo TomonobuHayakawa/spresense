@@ -128,19 +128,6 @@ else
   LDELFFLAGS += -T $(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/scripts/gnu-elf.ld
 endif
 
-ifeq ($(WINTOOL),y)
-  LDRAWELFFLAGS += -T "${shell cygpath -w $(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/scripts/asmp-elf.ld}"
-else
-  LDRAWELFFLAGS += -T $(TOPDIR)/configs/$(CONFIG_ARCH_BOARD)/scripts/asmp-elf.ld
-endif
-LDRAWELFFLAGS += -u __vectors
-LDRAWELFFLAGS += -zmax-page-size=256
-LDRAWELFFLAGS += -defsym STACK_SIZE=$(WORKERSTACKSIZE)
-
-ifeq ($(WORKERSTACKSIZE),)
-WORKERSTACKSIZE = 1024
-endif
-
 ASMEXT = .S
 OBJEXT = .o
 LIBEXT = .a
