@@ -71,11 +71,9 @@
 #define sph_state_busy(sts)     (STS_STATE(sts) == STATE_LOCKEDANDRESERVED)
 
 #ifdef CONFIG_CXD56_SPH_DEBUG
-#  define hsdbg(fmt, ...)  dbg(fmt, ## __VA_ARGS__)
-#  define hsvdbg(fmt, ...) vdbg(fmt, ## __VA_ARGS__)
+#  define hsinfo(fmt, ...)  _info(fmt, ## __VA_ARGS__)
 #else
-#  define hsdbg(fmt, ...)
-#  define hsvdbg(fmt, ...)
+#  define hsinfo(fmt, ...)
 #endif
 
 /****************************************************************************
@@ -99,7 +97,7 @@ static void sph_semgive(sem_t *id);
 static int sph_lock(FAR struct sph_dev_s *priv);
 static int sph_trylock(FAR struct sph_dev_s *priv);
 static inline int sph_unlock(FAR struct sph_dev_s *priv);
-static int cxd56_sphirqhandler(int irq, FAR void *context);
+static int cxd56_sphirqhandler(int irq, FAR void *context, FAR void *arg);
 
 /****************************************************************************
  * Private Data
@@ -140,7 +138,7 @@ static int sph_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
     (FAR struct sph_dev_s *)filep->f_inode->i_private;
   int ret = -ENOTTY;
 
-  hsvdbg("cmd = %x\n", cmd);
+  hsinfo("cmd = %x\n", cmd);
 
   if (!_HSIOCVALID(cmd))
     {
@@ -196,7 +194,7 @@ static int sph_lock(FAR struct sph_dev_s *priv)
   for (;;)
     {
       putreg32(REQ_RESERVE, CXD56_SPH_REQ(priv->id));
-      hsdbg("hsem%d is locked.\n", priv->id);
+      hsinfo("hsem%d is locked.\n", priv->id);
 
       sts = getreg32(CXD56_SPH_STS(priv->id));
       if (sph_state_busy(sts) && RESV_OWNER(sts) == g_cpuid)
@@ -223,7 +221,7 @@ static int sph_trylock(FAR struct sph_dev_s *priv)
   if (sph_state_unlocked(sts))
     {
       putreg32(REQ_LOCK, CXD56_SPH_REQ(priv->id));
-      hsdbg("hsem%d is locked.\n", priv->id);
+      hsinfo("hsem%d is locked.\n", priv->id);
 
       sts = getreg32(CXD56_SPH_STS(priv->id));
       if (sph_state_locked(sts) && LOCK_OWNER(sts) == g_cpuid)
@@ -238,7 +236,7 @@ static int sph_trylock(FAR struct sph_dev_s *priv)
 static inline int sph_unlock(FAR struct sph_dev_s *priv)
 {
   putreg32(REQ_UNLOCK, CXD56_SPH_REQ(priv->id));
-  hsdbg("hsem%d is unlocked.\n", priv->id);
+  hsinfo("hsem%d is unlocked.\n", priv->id);
   return OK;
 }
 
@@ -259,13 +257,13 @@ static inline int cxd56_sphdevinit(FAR const char *devname, int num)
   sem_init(&priv->wait, 0, 0);
   priv->id = num;
 
-  irq_attach(CXD56_IRQ_SPH0 + num, cxd56_sphirqhandler);
+  irq_attach(CXD56_IRQ_SPH0 + num, cxd56_sphirqhandler, NULL);
   up_enable_irq(CXD56_IRQ_SPH0 + num);
 
   return OK;
 }
 
-static int cxd56_sphirqhandler(int irq, FAR void *context)
+static int cxd56_sphirqhandler(int irq, FAR void *context, FAR void *arg)
 {
   int id;
 
