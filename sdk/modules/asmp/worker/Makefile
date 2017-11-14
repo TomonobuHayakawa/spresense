@@ -1,8 +1,7 @@
 ############################################################################
-# modules/asmp/Makefile
+# modules/asmp/worker/Makefile
 #
-#   Copyright (C) 2016 Sony Corporation. All rights reserved.
-#   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
+#   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -35,22 +34,15 @@
 
 -include $(TOPDIR)/Make.defs
 -include $(SDKDIR)/Make.defs
-DELIM ?= $(strip /)
 
-VPATH   = supervisor
+VPATH   = arch
 SUBDIRS =
-DEPPATH = --dep-path supervisor
+DEPPATH = --dep-path arch --dep-path .
 
-CSRCS  = asmp_init.c
-CSRCS += mptask.c mptask_sighandler.c mptask_exec.c mptask_destroy.c
-CSRCS += mptask_map.c
-CSRCS += mptask_secure.c
-CSRCS += mpmq.c
-CSRCS += mpshm.c
-CSRCS += mpmutex.c
+ASRCS  = exception.S
 
-include rawelf/Make.defs
-include mm_tile/Make.defs
+CSRCS  = common.c mpmq.c mpmutex.c mpshm.c
+CSRCS += cpufifo.c cpuid.c doirq.c startup.c sysctl.c
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -60,7 +52,7 @@ LIB_OBJS = $(AOBJS) $(COBJS)
 SRCS = $(ASRCS) $(CSRCS)
 OBJS = $(AOBJS) $(COBJS)
 
-BIN = libasmp$(LIBEXT)
+BIN = libasmpw$(LIBEXT)
 
 ARCHSRCDIR = $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src
 BSPSRCDIR = $(SDKDIR)$(DELIM)bsp$(DELIM)src
@@ -82,7 +74,7 @@ endif
 endif
 
 all: $(BIN)
-.PHONY: context depend clean distclean clean_worker
+.PHONY: context depend clean distclean
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
@@ -104,17 +96,11 @@ depend: .depend
 
 context: .context
 
-clean_worker:
-	$(Q) $(MAKE) -C worker TOPDIR="$(TOPDIR)" clean
-
-distclean_worker:
-	$(Q) $(MAKE) -C worker TOPDIR="$(TOPDIR)" distclean
-
-clean: clean_worker
+clean:
 	$(call DELFILE, $(BIN))
 	$(call CLEAN)
 
-distclean: clean distclean_worker
+distclean: clean
 	$(call DELFILE, .context)
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
