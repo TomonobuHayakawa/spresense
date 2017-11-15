@@ -163,6 +163,12 @@ config CXD56_SFC_PAGE_SHIFT_SIZE
 		Following equation is satisfied.
 		  MTD_SMART_SECTOR_SIZE >= (1 << CXD56_SFC_PAGE_SHIFT_SIZE)
 
+config CXD56_SFC_VERIFY_WRITE
+	bool "Enable write with verify"
+	default n
+	---help---
+		Enalbe SPI flash write function with verify.
+
 endif # CXD56_SFC
 
 menuconfig CXD56_SDIO

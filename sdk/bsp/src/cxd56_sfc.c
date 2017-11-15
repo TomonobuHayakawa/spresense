@@ -44,6 +44,7 @@
 /* Prototypes for Remote API */
 
 int FM_RawWrite(uint32_t offset, const void *buf, uint32_t size);
+int FM_RawVerifyWrite(uint32_t offset, const void *buf, uint32_t size);
 int FM_RawRead(uint32_t offset, void *buf, uint32_t size);
 int FM_RawEraseSector(uint32_t sector);
 
@@ -107,7 +108,11 @@ static ssize_t cxd56_bwrite(FAR struct mtd_dev_s *dev, off_t startblock,
 
   finfo("bwrite: %08lx (%u blocks)\n", startblock, nblocks);
 
+#ifdef CONFIG_CXD56_SFC_VERIFY_WRITE
+  ret = FM_RawVerifyWrite(startblock << PAGE_SHIFT, buffer, nblocks << PAGE_SHIFT);
+#else
   ret = FM_RawWrite(startblock << PAGE_SHIFT, buffer, nblocks << PAGE_SHIFT);
+#endif
   if (ret)
     {
       set_errno(ret);
