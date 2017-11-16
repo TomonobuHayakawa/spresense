@@ -47,9 +47,6 @@
 
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
-#ifdef CONFIG_MM_TILE
-#  include <mm/tile.h>
-#endif
 
 #include <arch/board/board.h>
 
@@ -105,11 +102,7 @@ const uint32_t g_idle_topstack = (uint32_t)&_ebss + CONFIG_IDLETHREAD_STACKSIZE;
  */
 
 #define MM_RAM1_SIZE (CONFIG_RAM_SIZE - CONFIG_ASMP_MEMSIZE)
-#define MM_RAM2_SIZE CONFIG_ASMP_MEMSIZE
-
 #define MM_RAM1_END  (CONFIG_RAM_START + MM_RAM1_SIZE)
-#define MM_RAM2_BASE (CONFIG_RAM_START + MM_RAM1_SIZE)
-#define MM_RAM2_END  (MM_RAM2_BASE + MM_RAM2_SIZE)
 
 /****************************************************************************
  * Private Functions
@@ -162,8 +155,4 @@ void up_allocate_heap(FAR void **heap_start, size_t *heap_size)
   /* Colorize the heap for debug */
 
   up_heap_color(*heap_start, *heap_size);
-
-#ifdef CONFIG_MM_TILE
-  (void)tile_initialize((void *)MM_RAM2_BASE, MM_RAM2_SIZE, 17, 17);
-#endif
 }

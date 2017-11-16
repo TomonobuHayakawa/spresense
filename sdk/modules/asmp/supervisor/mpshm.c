@@ -50,6 +50,7 @@
 #include <semaphore.h>
 
 #include <arch/chip/pm.h>
+#include <mm/tile.h>
 
 #include "cxd56_sysctl.h"
 #include "up_arch.h"
@@ -65,6 +66,9 @@
 #define MPSHM_BLOCK_SIZE       (1 << MPSHM_BLOCK_SIZE_SHIFT)
 #define ALIGNUP(v, a)          (((v) + ((a)-1)) & ~((a)-1))
 #define BLOCKSIZEALIGNUP2(v)   ALIGNUP(v, MPSHM_BLOCK_SIZE * 2)
+
+#define MM_TILE_BASE (CONFIG_RAM_START + (CONFIG_RAM_SIZE - CONFIG_ASMP_MEMSIZE))
+#define MM_TILE_SIZE CONFIG_ASMP_MEMSIZE
 
 /* Address converter can be handled up to 1MB */
 #define ADR_CONV_VSIZE         0x100000
@@ -501,6 +505,14 @@ void *mpshm_phys2virt(mpshm_t *shm, uintptr_t paddr)
 
 void mpshm_initialize(void)
 {
+  int ret;
+
+  ret = tile_initialize((void *)MM_TILE_BASE, MM_TILE_SIZE, 17, 17);
+  if (ret < 0)
+    {
+      mperr("Tile memory initialization failure.\n");
+    }
+
   /* Clear virtual address mapping except first 64KB block.
    * Because first virtual address is necessary for wake up from hot sleep.
    */
