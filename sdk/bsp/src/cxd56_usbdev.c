@@ -458,10 +458,10 @@ static struct cxd56_ep_s *cxd56_epfindbyaddr(struct cxd56_usbdev_s *priv,
                                              uint16_t eplog);
 static void cxd56_dispatchrequest(struct cxd56_usbdev_s *priv);
 static inline void cxd56_ep0setup(struct cxd56_usbdev_s *priv);
-static int cxd56_usbinterrupt(int irq, FAR void *context);
-static int cxd56_sysinterrupt(int irq, FAR void *context);
-static int cxd56_vbus_interrupt(int irq, FAR void *context);
-static int cxd56_vbusn_interrupt(int irq, FAR void *context);
+static int cxd56_usbinterrupt(int irq, FAR void *context, FAR void *arg);
+static int cxd56_sysinterrupt(int irq, FAR void *context, FAR void *arg);
+static int cxd56_vbusinterrupt(int irq, FAR void *context, FAR void *arg);
+static int cxd56_vbusninterrupt(int irq, FAR void *context, FAR void *arg);
 
 /* Initialization operations */
 
@@ -507,7 +507,7 @@ static int cxd56_pullup(struct usbdev_s *dev, bool enable);
 
 static void cxd56_notify_signal(uint16_t state, uint16_t power);
 
-#ifdef CONFIG_CXD56_USBDEV_PROCFS
+#ifdef CONFIG_FS_PROCFS
 
 /* procfs methods */
 
@@ -617,7 +617,7 @@ static uint8_t g_ep0outbuffer[64];
 
 static uint16_t g_usbcable_sts = USB_CABLE_DETACH;
 
-#ifdef CONFIG_CXD56_USBDEV_PROCFS
+#ifdef CONFIG_FS_PROCFS
 
 /* See include/nutts/fs/procfs.h
  * We use the old-fashioned kind of initializers so that this will compile
@@ -964,19 +964,19 @@ static void cxd56_rxdmacomplete(FAR struct cxd56_ep_s *privep)
   uint32_t status = desc->status;
   uint16_t nrxbytes;
 
-  ullvdbg("EP%d status %08x\n", privep->epphy, desc->status);
+  uinfo("EP%d status %08x\n", privep->epphy, desc->status);
 
   nrxbytes = status & DESC_SIZE_MASK;
 
   if ((status & DESC_STS_MASK) >> DESC_STS_SHIFT)
     {
-      ullvdbg("ctrl=%08x status=%08x desc=%08x\n",
-              getreg32(CXD56_USB_OUT_EP_CONTROL(privep->epphy)),
-              getreg32(CXD56_USB_OUT_EP_STATUS(privep->epphy)),
-              getreg32(CXD56_USB_OUT_EP_DATADESC(privep->epphy)));
-      desc = (FAR struct cxd56_data_desc_s *)getreg32(
-        CXD56_USB_OUT_EP_DATADESC(privep->epphy));
-      ullvdbg("status=%08x buffer=%08x\n", desc->status, desc->buf);
+      uinfo("ctrl=%08x status=%08x desc=%08x\n",
+            getreg32(CXD56_USB_OUT_EP_CONTROL(privep->epphy)),
+            getreg32(CXD56_USB_OUT_EP_STATUS(privep->epphy)),
+            getreg32(CXD56_USB_OUT_EP_DATADESC(privep->epphy)));
+      desc = (FAR struct cxd56_data_desc_s *)
+        getreg32(CXD56_USB_OUT_EP_DATADESC(privep->epphy));
+      uinfo("status=%08x buffer=%08x\n", desc->status, desc->buf);
       return;
     }
 
@@ -1196,8 +1196,8 @@ static inline void cxd56_ep0setup(struct cxd56_usbdev_s *priv)
   value = GETUINT16(priv->ctrl.value);
   len   = GETUINT16(priv->ctrl.len);
 
-  ullvdbg("type=%02x req=%02x value=%04x index=%04x len=%04x\n",
-          priv->ctrl.type, priv->ctrl.req, value, index, len);
+  uinfo("type=%02x req=%02x value=%04x index=%04x len=%04x\n",
+        priv->ctrl.type, priv->ctrl.req, value, index, len);
 
   ep0->in = (priv->ctrl.type & USB_DIR_IN) != 0;
 
@@ -1652,7 +1652,7 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
  *
  ****************************************************************************/
 
-static int cxd56_usbinterrupt(int irq, FAR void *context)
+static int cxd56_usbinterrupt(int irq, FAR void *context, FAR void *arg)
 {
   struct usb_ctrlreq_s ctrl;
   uint32_t intr;
@@ -1784,9 +1784,9 @@ static int cxd56_usbinterrupt(int irq, FAR void *context)
  *
  ****************************************************************************/
 
-static int cxd56_sysinterrupt(int irq, FAR void *context)
+static int cxd56_sysinterrupt(int irq, FAR void *context, FAR void *arg)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_usbdev_s *priv = (FAR struct cxd56_usbdev_s *)arg;
   uint32_t status;
 
   UNUSED(priv);
@@ -1918,7 +1918,7 @@ static void cxd56_usbreset(struct cxd56_usbdev_s *priv)
       timeout++;
       if (timeout > CXD56_USBDEV_TIMEOUT)
         {
-          ullvdbg("usb reset timeout.\n");
+          uinfo("usb reset timeout.\n");
           break;
         }
       up_mdelay(1);
@@ -1934,7 +1934,7 @@ static void cxd56_usbreset(struct cxd56_usbdev_s *priv)
       timeout++;
       if (timeout > CXD56_USBDEV_TIMEOUT)
         {
-          ullvdbg("intr mask register timeout.\n");
+          uinfo("intr mask register timeout.\n");
           break;
         }
       up_mdelay(1);
@@ -2031,8 +2031,8 @@ static int cxd56_epconfigure(FAR struct usbdev_ep_s *ep,
 
   status = getreg32(CXD56_USB_DEV_STATUS);
 
-  ullvdbg("config: EP%d %s %d maxpacket=%d (status: %08x)\n", n,
-          privep->in ? "IN" : "OUT", eptype, maxpacket, status);
+  uinfo("config: EP%d %s %d maxpacket=%d (status: %08x)\n", n,
+        privep->in ? "IN" : "OUT", eptype, maxpacket, status);
 
   udc = n;
   udc |= privep->in ? (1 << 4) : 0;
@@ -2041,7 +2041,7 @@ static int cxd56_epconfigure(FAR struct usbdev_ep_s *ep,
   udc |= USB_STATUS_INTF(status) << 11;
   udc |= USB_STATUS_ALT(status) << 15;
   udc |= maxpacket << 19;
-  ullvdbg("UDC: %08x\n", udc);
+  uinfo("UDC: %08x\n", udc);
 
   /* This register is write-only (why?) */
 
@@ -2084,7 +2084,7 @@ static int cxd56_epdisable(FAR struct usbdev_ep_s *ep)
     }
 #endif
   usbtrace(TRACE_EPDISABLE, privep->epphy);
-  ullvdbg("EP%d\n", ((FAR struct cxd56_ep_s *)ep)->epphy);
+  uinfo("EP%d\n", ((FAR struct cxd56_ep_s *)ep)->epphy);
 
   /* Cancel any ongoing activity and reset the endpoint */
 
@@ -2219,7 +2219,7 @@ static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
   usbtrace(TRACE_EPSUBMIT, privep->epphy);
   priv = privep->dev;
 
-  ullvdbg("EP%d\n", privep->epphy);
+  uinfo("EP%d\n", privep->epphy);
 
   if (!priv->driver || priv->usbdev.speed == USB_SPEED_UNKNOWN)
     {
@@ -2733,15 +2733,15 @@ static void cxd56_usbhwuninit(void)
 }
 
 /****************************************************************************
- * Name: cxd56_vbus_interrupt
+ * Name: cxd56_vbusinterrupt
  ****************************************************************************/
 
-static int cxd56_vbus_interrupt(int irq, FAR void *context)
+static int cxd56_vbusinterrupt(int irq, FAR void *context, FAR void *arg)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_usbdev_s *priv = (FAR struct cxd56_usbdev_s *)arg;
 
   usbtrace(TRACE_INTENTRY(CXD56_TRACEINTID_VBUS), 0);
-  ullvdbg("irq=%d context=%08x attach=%d\n", irq, context, g_usbcable_sts);
+  uinfo("irq=%d context=%08x attach=%d\n", irq, context, g_usbcable_sts);
 
   /* Toggle vbus interrupts */
 
@@ -2777,19 +2777,19 @@ static int cxd56_vbus_interrupt(int irq, FAR void *context)
 }
 
 /****************************************************************************
- * Name: cxd56_vbusn_interrupt
+ * Name: cxd56_vbusninterrupt
  ****************************************************************************/
 
-static int cxd56_vbusn_interrupt(int irq, FAR void *context)
+static int cxd56_vbusninterrupt(int irq, FAR void *context, FAR void *arg)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_usbdev_s *priv = (FAR struct cxd56_usbdev_s *)arg;
   FAR struct cxd56_ep_s *privep;
   uint32_t v;
   int i;
 
   usbtrace(TRACE_INTENTRY(CXD56_TRACEINTID_VBUSN), 0);
 
-  ullvdbg("irq=%d context=%08x attach=%d\n", irq, context, g_usbcable_sts);
+  uinfo("irq=%d context=%08x attach=%d\n", irq, context, g_usbcable_sts);
 
   /* Toggle vbus interrupts */
 
@@ -2866,25 +2866,25 @@ void up_usbinitialize(void)
 
   putreg32(getreg32(CXD56_TOPREG_USB_VBUS) | 1, CXD56_TOPREG_USB_VBUS);
 
-  if (irq_attach(CXD56_IRQ_USB_SYS, cxd56_sysinterrupt) != 0)
+  if (irq_attach(CXD56_IRQ_USB_SYS, cxd56_sysinterrupt, &g_usbdev) != 0)
     {
       usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_ATTACHIRQREG), 0);
       goto errout;
     }
 
-  if (irq_attach(CXD56_IRQ_USB_INT, cxd56_usbinterrupt) != 0)
+  if (irq_attach(CXD56_IRQ_USB_INT, cxd56_usbinterrupt, &g_usbdev) != 0)
     {
       usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_COREIRQREG), 0);
       goto errout;
     }
 
-  if (irq_attach(CXD56_IRQ_USB_VBUS, cxd56_vbus_interrupt) != 0)
+  if (irq_attach(CXD56_IRQ_USB_VBUS, cxd56_vbusinterrupt, &g_usbdev) != 0)
     {
       usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_VBUSIRQREG), 0);
       goto errout;
     }
 
-  if (irq_attach(CXD56_IRQ_USB_VBUSN, cxd56_vbusn_interrupt) != 0)
+  if (irq_attach(CXD56_IRQ_USB_VBUSN, cxd56_vbusninterrupt, &g_usbdev) != 0)
     {
       usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_VBUSNIRQREG), 0);
       goto errout;
@@ -3143,7 +3143,7 @@ int cxd56_usbdev_setsigno(int signo)
 {
   struct cxd56_usbdev_s *priv = &g_usbdev;
 
-  ullvdbg("signo = %d\n", signo);
+  uinfo("signo = %d\n", signo);
 
   priv->signo = signo;
   priv->pid   = getpid();
@@ -3175,7 +3175,7 @@ static void cxd56_notify_signal(uint16_t state, uint16_t power)
     }
 }
 
-#ifdef CONFIG_CXD56_USBDEV_PROCFS
+#ifdef CONFIG_FS_PROCFS
 
 /****************************************************************************
  * Name: cxd56_usbdev_open
@@ -3186,7 +3186,7 @@ static int cxd56_usbdev_open(FAR struct file *filep, FAR const char *relpath,
 {
   FAR struct cxd56_usbdev_file_s *priv;
 
-  ullvdbg("Open '%s'\n", relpath);
+  uinfo("Open '%s'\n", relpath);
 
   /* PROCFS is read-only.  Any attempt to open with any kind of write
    * access is not permitted.
@@ -3196,7 +3196,7 @@ static int cxd56_usbdev_open(FAR struct file *filep, FAR const char *relpath,
 
   if (((oflags & O_WRONLY) != 0 || (oflags & O_RDONLY) == 0))
     {
-      ullvdbg("ERROR: Only O_RDONLY supported\n");
+      uerr("ERROR: Only O_RDONLY supported\n");
       return -EACCES;
     }
 
@@ -3206,7 +3206,7 @@ static int cxd56_usbdev_open(FAR struct file *filep, FAR const char *relpath,
     sizeof(struct cxd56_usbdev_file_s));
   if (!priv)
     {
-      ullvdbg("ERROR: Failed to allocate file attributes\n");
+      uerr("ERROR: Failed to allocate file attributes\n");
       return -ENOMEM;
     }
 
@@ -3250,7 +3250,7 @@ static ssize_t cxd56_usbdev_read(FAR struct file *filep, FAR char *buffer,
   off_t offset;
   int ret;
 
-  ullvdbg("buffer=%p buflen=%lu\n", buffer, (unsigned long)buflen);
+  uinfo("buffer=%p buflen=%lu\n", buffer, (unsigned long)buflen);
 
   /* Recover our private data from the struct file instance */
 
@@ -3286,7 +3286,7 @@ static int cxd56_usbdev_dup(FAR const struct file *oldp, FAR struct file *newp)
   FAR struct cxd56_usbdev_file_s *oldattr;
   FAR struct cxd56_usbdev_file_s *newattr;
 
-  fvdbg("Dup %p->%p\n", oldp, newp);
+  uinfo("Dup %p->%p\n", oldp, newp);
 
   /* Recover our private data from the old struct file instance */
 
@@ -3299,7 +3299,7 @@ static int cxd56_usbdev_dup(FAR const struct file *oldp, FAR struct file *newp)
     sizeof(struct cxd56_usbdev_file_s));
   if (!newattr)
     {
-      fdbg("ERROR: Failed to allocate file attributes\n");
+      uerr("ERROR: Failed to allocate file attributes\n");
       return -ENOMEM;
     }
 
@@ -3334,9 +3334,11 @@ static int cxd56_usbdev_stat(FAR const char *relpath, FAR struct stat *buf)
  *
  ****************************************************************************/
 
+#ifdef CONFIG_FS_PROCFS_REGISTER
 int cxd56_usbdev_procfs_register(void)
 {
   return procfs_register(&g_procfs_usbdev);
 }
+#endif
 
 #endif

@@ -279,6 +279,8 @@ int cxd56_usbdev_setsigno(int signo);
  *
  ****************************************************************************/
 
+#ifdef CONFIG_FS_PROCFS_REGISTER
 int cxd56_usbdev_procfs_register(void);
+#endif
 
 #endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_USBDEV_H */
