@@ -113,7 +113,7 @@ int rawelf_verifyheader(FAR const Elf32_Ehdr *ehdr)
 
   /* Verify that this file works with the currently configured architecture */
 
-  if (up_checkarch(ehdr))
+  if (!up_checkarch(ehdr))
     {
       berr("Not a supported architecture\n");
       return -ENOEXEC;
