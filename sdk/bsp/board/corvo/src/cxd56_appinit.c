@@ -101,7 +101,7 @@
 #  include "cxd56_remoteapi.h"
 #endif
 
-#ifdef CONFIG_LIB_ASMP
+#ifdef CONFIG_ASMP
 #  include <asmp/asmp.h>
 #endif
 
@@ -117,7 +117,7 @@
 #  include <nuttx/power/battery_gauge.h>
 #endif
 
-#ifdef CONFIG_CXD56_USBDEV
+#ifdef CONFIG_USBDEV
 #  include "cxd56_usbdev.h"
 #endif
 
@@ -416,7 +416,7 @@ int board_app_initialize(uintptr_t arg)
 
 #ifdef CONFIG_FS_PROCFS
 
-#ifdef CONFIG_CXD56_USBDEV_PROCFS
+#ifdef CONFIG_FS_PROCFS_REGISTER
   /* register usbdev procfs */
 
   (void)cxd56_usbdev_procfs_register();
@@ -664,7 +664,7 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#ifdef CONFIG_LIB_ASMP
+#ifdef CONFIG_ASMP
   asmp_initialize();
 #endif
 

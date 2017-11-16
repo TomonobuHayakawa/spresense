@@ -67,10 +67,6 @@ config CXD56_SFC_PAGE_SHIFT_SIZE
 
 endif # CXD56_SFC
 
-config CXD56_USBDEV
-	bool
-	default y if USBDEV && BOARD_CORVO
-
 config CXD56_EMMC
 	bool "eMMC"
 	default y if BOARD_CORVO

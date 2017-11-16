@@ -56,7 +56,7 @@ ifeq ($(CONFIG_CXD56_SFC),y)
 CHIP_CSRCS += cxd56_sfc.c
 endif
 
-ifeq ($(CONFIG_CXD56_USBDEV),y)
+ifeq ($(CONFIG_USBDEV),y)
 CHIP_CSRCS += cxd56_usbdev.c
 endif
 

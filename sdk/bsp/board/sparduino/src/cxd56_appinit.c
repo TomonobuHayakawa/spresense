@@ -109,7 +109,7 @@
 #  include <asmp/asmp.h>
 #endif
 
-#ifdef CONFIG_CXD56_USBDEV
+#ifdef CONFIG_USBDEV
 #  include "cxd56_usbdev.h"
 #endif
 
@@ -308,7 +308,7 @@ int board_app_initialize(uintptr_t arg)
 
 #ifdef CONFIG_FS_PROCFS
 
-#ifdef CONFIG_CXD56_USBDEV_PROCFS
+#ifdef CONFIG_FS_PROCFS_REGISTER
   /* register usbdev procfs */
 
   (void)cxd56_usbdev_procfs_register();

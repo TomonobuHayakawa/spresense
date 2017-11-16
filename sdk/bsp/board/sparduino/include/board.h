@@ -48,7 +48,7 @@
 #  include <nuttx/irq.h>
 #endif
 
-#if defined(CONFIG_BOARDCTL_IOCTL) && defined(CONFIG_CXD56_USBDEV)
+#if defined(CONFIG_BOARDCTL_IOCTL) && defined(CONFIG_USBDEV)
 #  include <arch/chip/usbdev.h>
 #endif
 
