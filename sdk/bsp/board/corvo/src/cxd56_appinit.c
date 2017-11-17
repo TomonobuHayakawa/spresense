@@ -97,8 +97,8 @@
 #  include "cxd56_icc.h"
 #endif
 
-#ifdef CONFIG_CXD56_REMOTEAPI
-#  include "cxd56_remoteapi.h"
+#ifdef CONFIG_CXD56_FARAPI
+#  include "cxd56_farapi.h"
 #endif
 
 #ifdef CONFIG_ASMP
@@ -259,8 +259,8 @@ static int nsh_cpucom_initialize(void)
 
   cxd56_cfinitialize();
 
-#ifdef CONFIG_CXD56_REMOTEAPI
-  cxd56_remoteapiinitialize();
+#ifdef CONFIG_CXD56_FARAPI
+  cxd56_farapiinitialize();
 #endif
 #ifdef CONFIG_CXD56_ICC
   cxd56_iccinitialize();
