@@ -259,11 +259,11 @@ static int nsh_cpucom_initialize(void)
 
   cxd56_cfinitialize();
 
-#ifdef CONFIG_CXD56_FARAPI
-  cxd56_farapiinitialize();
-#endif
 #ifdef CONFIG_CXD56_ICC
   cxd56_iccinitialize();
+#endif
+#ifdef CONFIG_CXD56_FARAPI
+  cxd56_farapiinitialize();
 #endif
 
   cxd56_sysctlinitialize();
@@ -372,6 +372,8 @@ int board_app_initialize(uintptr_t arg)
 #endif
   int ret;
 
+  ret = nsh_cpucom_initialize();
+
   ret = cxd56_pm_initialize();
   if (ret < 0)
     {
@@ -381,8 +383,6 @@ int board_app_initialize(uintptr_t arg)
   wlock.info = PM_CPUWAKELOCK_TAG('C', 'A', 0);
   wlock.count = 0;
   up_pm_acquire_wakelock(&wlock);
-
-  ret = nsh_cpucom_initialize();
 
 #ifdef CONFIG_RTC_DRIVER
   rtc_initialize(0, cxd56_rtc_lowerhalf());
