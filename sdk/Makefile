@@ -157,6 +157,11 @@ check_context:
 		echo "  tools/config.py <target>" ; echo "" ; \
 		exit 1 ; \
 	fi
+	$(Q) if [ ! -e $(TOPDIR)/include/nuttx/config.h ]; then \
+		echo ""; echo "NuttX has not been built:" ; \
+		echo "  make buildkernel" ; echo "" ; \
+		exit 1; \
+	fi
 
 clean_context:
 	$(call DELFILE, bsp/include/sdk/config.h)
