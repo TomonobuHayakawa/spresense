@@ -52,7 +52,7 @@ Getting started
 
 ```
 $ make buildkernel KERNCONF=nsh
-$ tools/config.py nsh
+$ tools/config.py default
 $ make
 ```
 
@@ -101,7 +101,7 @@ $ tools/config.py --gconfig    (same as 'make gconfig')
 Additionally, you can use menu invokation with predefined configs like this:
 
 ```
-$ tools/config.py --menuconfig nsh
+$ tools/config.py --menuconfig default
 ```
 
 This command replaces configration to "nsh" config and invoke menuconfig.
