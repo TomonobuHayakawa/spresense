@@ -36,6 +36,10 @@
 -include $(TOPDIR)/Make.defs
 include $(SDKDIR)/Make.defs
 
+APPSREGISTRY = $(TOPDIR)/../apps/builtin/registry
+APPSBUILTIN_ENTRY = $(wildcard $(APPSREGISTRY)/*.bdat)
+APPSBUILTIN_PROTO = $(wildcard $(APPSREGISTRY)/*.pdat)
+
 # NSH Library
 
 all:
@@ -52,6 +56,9 @@ all:
 install:
 
 context: .updated
+ifneq ($(APPSBUILTIN_ENTRY),)
+	$(Q) cp $(APPSBUILTIN_ENTRY) $(APPSBUILTIN_PROTO) .
+endif
 
 depend:
 

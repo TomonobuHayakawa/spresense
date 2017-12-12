@@ -22,7 +22,7 @@ MKSPK = $(SDKDIR)$(DELIM)tools$(DELIM)linux$(DELIM)mkspk
 
 endif
 
-DEPCONFIG = $(SDKDIR)/.config
+DEPCONFIG = $(SDKDIR)/.config $(TOPDIR)/.config
 
 ifeq ($(WINTOOL),y)
   LDRAWELFFLAGS += -T "${shell cygpath -w $(SDKDIR)/bsp/scripts/asmp-elf.ld}"
