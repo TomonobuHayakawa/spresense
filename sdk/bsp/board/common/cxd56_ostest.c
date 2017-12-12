@@ -58,9 +58,9 @@
 /* Configuration ********************************************************************/
 
 #undef HAVE_FPU
-#if defined(CONFIG_ARCH_FPU) && defined(CONFIG_EXAMPLES_OSTEST_FPUSIZE) && \
-    defined(CONFIG_SCHED_WAITPID) && !defined(CONFIG_DISABLE_SIGNALS) && \
-   !defined(CONFIG_ARMV7M_CMNVECTOR)
+#if defined(CONFIG_ARCH_FPU) && !defined(CONFIG_EXAMPLES_OSTEST_FPUTESTDISABLE) && \
+    defined(CONFIG_EXAMPLES_OSTEST_FPUSIZE) && defined(CONFIG_SCHED_WAITPID) && \
+    !defined(CONFIG_DISABLE_SIGNALS)
 #    define HAVE_FPU 1
 #endif
 
