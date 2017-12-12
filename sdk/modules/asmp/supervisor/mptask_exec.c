@@ -151,7 +151,7 @@ int mptask_exec(mptask_t *task)
 
   /* Allocated CPU ID is APP local ID, so I convert it to global CPU ID */
 
-  ret = cxd56_iccinit(cpuid);
+  ret = cxd56_iccinitmsg(cpuid);
   if (ret < 0)
     {
       return ret;

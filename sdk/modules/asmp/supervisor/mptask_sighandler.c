@@ -52,7 +52,8 @@
  * Public Functions
  ****************************************************************************/
 
-void mptask_sighandler(int8_t signo, uint16_t sigdata, uint32_t data, void *userdata)
+int mptask_sighandler(int8_t signo, uint16_t sigdata, uint32_t data,
+                      FAR void *userdata)
 {
   FAR mptask_t *task = (FAR mptask_t *)userdata;
 
@@ -134,4 +135,6 @@ void mptask_sighandler(int8_t signo, uint16_t sigdata, uint32_t data, void *user
           break;
         }
     }
+
+  return OK;
 }

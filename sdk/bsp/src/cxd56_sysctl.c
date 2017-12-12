@@ -46,10 +46,6 @@
 
 #include "cxd56_icc.h"
 #include "cxd56_sysctl.h"
-#include "cxd56_cpufifo.h"
-
-#define FIFO_PROTO_SYSCTL_ID (12)
-#define PROTOCOL(x)      (((x)[0] >> 24) & 0xf)
 
 #ifdef CONFIG_CXD56_SYSCTL_TIMEOUT
 #  define SYSCTL_TIMEOUT CONFIG_CXD56_SYSCTL_TIMEOUT
@@ -101,12 +97,14 @@ static void sysctl_semgive(sem_t *semid)
   sem_post(semid);
 }
 
-static int sysctl_rxhandler(int cpuid, uint32_t word[2])
+static int sysctl_rxhandler(int cpuid, int protoid,
+                            uint32_t pdata, uint32_t data,
+                            FAR void *userdata)
 {
   DEBUGASSERT(cpuid == 0);
-  DEBUGASSERT(PROTOCOL(word) == FIFO_PROTO_SYSCTL_ID);
+  DEBUGASSERT(protoid == CXD56_PROTO_SYSCTL);
 
-  g_errcode = (int)word[1];
+  g_errcode = (int)data;
 
   sysctl_semgive(&g_sync);
 
@@ -128,7 +126,7 @@ int cxd56_sysctlcmd(uint8_t id, uint32_t data)
 
   /* Send any message to system CPU */
 
-  ret = cxd56_iccsendproto(FIFO_PROTO_SYSCTL_ID, &msg, SYSCTL_TIMEOUT);
+  ret = cxd56_iccsend(CXD56_PROTO_SYSCTL, &msg, SYSCTL_TIMEOUT);
   if (ret < 0)
     {
       _err("Timeout.\n");
@@ -150,14 +148,12 @@ int cxd56_sysctlcmd(uint8_t id, uint32_t data)
 
 void cxd56_sysctlinitialize(void)
 {
-  /* Initialize communication interface to system CPU */
-
-  cxd56_iccinit(0);
+  cxd56_iccinit(CXD56_PROTO_SYSCTL);
 
   sem_init(&g_exc, 0, 1);
   sem_init(&g_sync, 0, 0);
 
-  cxd56_cfregprotohandler(FIFO_PROTO_SYSCTL_ID, sysctl_rxhandler);
+  cxd56_iccregisterhandler(CXD56_PROTO_SYSCTL, sysctl_rxhandler, NULL);
 
   (void)register_driver("/dev/sysctl", &g_sysctlfops, 0666, NULL);
 }

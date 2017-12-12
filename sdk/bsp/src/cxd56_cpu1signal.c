@@ -60,7 +60,6 @@
 #endif
 
 #define CXD56CPU1_CPUID          1
-#define CXD56CPU1_PROTO_GNSS     13
 
 /****************************************************************************
  * Private Type
@@ -98,7 +97,7 @@ static FAR void *cxd56cpu1_worker(FAR void *arg)
 
   while (1)
     {
-      ret = cxd56_iccrecv(&msg, -1);
+      ret = cxd56_iccrecvmsg(&msg, -1);
       if (ret < 0)
         {
           continue;
@@ -131,7 +130,7 @@ int cxd56_cpu1sigsend(uint8_t sigtype, uint32_t data)
   msg.msgid = sigtype;
   msg.data  = data;
 
-  return cxd56_iccsendproto(CXD56CPU1_PROTO_GNSS, &msg, 0);
+  return cxd56_iccsend(CXD56_PROTO_GNSS, &msg, 0);
 }
 
 void cxd56_cpu1sigregisterhandler(uint8_t sigtype, cxd56_cpu1sighandler_t handler)
@@ -192,7 +191,9 @@ int cxd56_cpu1siginit(uint8_t sigtype, FAR void *data)
   
   sched_unlock();
 
-  ret = cxd56_iccinit(CXD56CPU1_CPUID);
+  cxd56_iccinit(CXD56_PROTO_GNSS);
+
+  ret = cxd56_iccinitmsg(CXD56CPU1_CPUID);
   if (ret < 0)
     {
       sndbg("Failed to initialize ICC for GPS CPU: %d\n", ret);
@@ -208,7 +209,7 @@ int cxd56_cpu1siginit(uint8_t sigtype, FAR void *data)
                        (pthread_addr_t)priv);
   if (ret != 0)
     {
-      cxd56_iccuninit(CXD56CPU1_CPUID);
+      cxd56_iccuninitmsg(CXD56CPU1_CPUID);
       ret = -ret; /* pthread_create does not modify errno. */
       goto _err0;
     }

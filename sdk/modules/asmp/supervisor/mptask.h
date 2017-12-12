@@ -106,7 +106,8 @@ extern struct pm_cpu_wakelock_s g_mptask_wlock;
  ****************************************************************************/
 
 void mptask_initialize(void);
-void mptask_sighandler(int8_t signo, uint16_t sigdata, uint32_t data, void *userdata);
+int mptask_sighandler(int8_t signo, uint16_t sigdata, uint32_t data,
+                      FAR void *userdata);
 cpuid_t mptask_getcpuid(mptask_t *task);
 void mptask_cpu_free(mptask_t *task);
 int mptask_map(mptask_t *task);

@@ -71,7 +71,7 @@ static int mpmq_do_send(mpmq_t *mq, int8_t msgid, uint32_t data, int32_t ms)
   msg.msgid = msgid;
   msg.data  = data;
 
-  return cxd56_iccsend(&msg, ms);
+  return cxd56_iccsendmsg(&msg, ms);
 }
 
 static int mpmq_do_recv(mpmq_t *mq, uint32_t *data, int32_t ms)
@@ -81,7 +81,7 @@ static int mpmq_do_recv(mpmq_t *mq, uint32_t *data, int32_t ms)
 
   msg.cpuid = mq->cpuid;
 
-  ret = cxd56_iccrecv(&msg, ms);
+  ret = cxd56_iccrecvmsg(&msg, ms);
   if (ret < 0)
     {
       return ret;
@@ -119,7 +119,7 @@ int mpmq_init(mpmq_t *mq, key_t key, cpuid_t cpu)
 
   mq->cpuid = cpu;
 
-  return cxd56_iccinit(cpu);
+  return cxd56_iccinitmsg(mq->cpuid);
 }
 
 /**
@@ -133,7 +133,7 @@ int mpmq_destroy(mpmq_t *mq)
       return -EINVAL;
     }
 
-  cxd56_iccuninit(mq->cpuid);
+  cxd56_iccuninitmsg(mq->cpuid);
 
   memset(mq, 0, sizeof(mpmq_t));
   mq->cpuid = -1;
