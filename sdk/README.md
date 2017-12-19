@@ -21,7 +21,6 @@ sdk
 |   `-- src        - Common source
 |-- configs        - Default configuration files
 |   `-- kernel
-|-- docs           - Documentation
 |-- drivers        - External device drivers
 |   |-- lcd
 |   `-- sensors
