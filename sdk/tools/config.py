@@ -7,7 +7,7 @@ import logging
 import glob
 import shutil
 
-MODE_MENUCONFIG = "menuconf"
+MODE_MENUCONFIG = "menuconfig"
 MODE_QCONFIG = "qconfig"
 MODE_GCONFIG = "gconfig"
 
@@ -82,10 +82,7 @@ def apply_defconfig(configname, configlist, topdir, sdkdir, kernel):
     return ret
 
 def do_kconfig_conf(mode, sdkdir):
-    command = 'make %s' % mode
-    if logging.getLogger().getEffectiveLevel() > logging.INFO:
-        command += ' 2>&1 >/dev/null'
-    ret = os.system(command)
+    ret = os.system('make %s' % mode)
     return ret
 
 if __name__ == "__main__":
