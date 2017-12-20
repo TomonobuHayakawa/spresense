@@ -647,4 +647,10 @@ endif # CXD56_ADC
 
 endif # CXD56_SCU
 
+config CXD56_GPIO_IRQ
+	bool "GPIO interrupt support"
+	default n
+	---help---
+		Enable support for GPIO interrupts
+
 endmenu

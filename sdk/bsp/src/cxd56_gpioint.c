@@ -313,7 +313,7 @@ static void invert_irq(int irq)
   leave_critical_section(flags);
 }
 
-static int gpioint_handler(int irq, FAR void *context)
+static int gpioint_handler(int irq, FAR void *context, FAR void *arg)
 {
   bool signal;
   uint32_t val;
@@ -355,7 +355,7 @@ static int gpioint_handler(int irq, FAR void *context)
           putreg32(1 << (slot + 16), CXD56_TOPREG_PMU_WAKE_TRIG0_CLR);
         }
 
-      g_isr[slot](irq, context);
+      g_isr[slot](irq, context, NULL);
     }
 
   if (GPIOINT_EDGE_BOTH == val)
@@ -363,7 +363,7 @@ static int gpioint_handler(int irq, FAR void *context)
       if (0 == (both_toggle_flag & (1 << slot)))
         {
           both_toggle_flag ^= (1 << slot);
-          g_isr[slot](irq, context); /* call user handler */
+          g_isr[slot](irq, context, NULL); /* call user handler */
         }
     }
   return 0;
@@ -415,12 +415,12 @@ int cxd56_gpioint_config(uint32_t pin, uint32_t gpiocfg, xcpt_t isr)
 
   if (gpiocfg & GPIOINT_TOGGLE_MODE_MASK)
     {
-      irq_attach(irq, gpioint_handler); /* call intermediate handler */
+      irq_attach(irq, gpioint_handler, NULL); /* call intermediate handler */
       g_isr[slot] = isr;
     }
   else
     {
-      irq_attach(irq, isr); /* call user handler directly */
+      irq_attach(irq, isr, NULL); /* call user handler directly */
     }
 
   return irq;
