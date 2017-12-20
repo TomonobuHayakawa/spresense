@@ -1,9 +1,7 @@
 /****************************************************************************
  * drivers/sensors/bh1721fvc_scu.c
- * Character driver for BH1721FVC
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Makoto Kabe <Makoto.Kabe@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -302,7 +300,7 @@ static int bh1721fvc_ioctl(FAR struct file *filep, int cmd,
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -368,7 +366,7 @@ int bh1721fvc_register(FAR const char *devpath, int minor,
     kmm_malloc(sizeof(struct bh1721fvc_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -384,7 +382,7 @@ int bh1721fvc_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_bh1721fvcfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
