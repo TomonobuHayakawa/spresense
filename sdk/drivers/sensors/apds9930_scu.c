@@ -1,9 +1,7 @@
 /****************************************************************************
  * drivers/sensors/apds9930_scu.c
- * Character driver for APDS9930
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Makoto Kabe <Makoto.Kabe@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -391,7 +389,7 @@ static int apds9930_checkid(FAR struct apds9930_dev_s *priv)
     {
       /* Device ID is not Correct */
 
-      sndbg("Wrong Device ID! %02x (Exp:%02x)\n", id, APDS9930_DEVICEID);
+      snerr("Wrong Device ID! %02x (Exp:%02x)\n", id, APDS9930_DEVICEID);
       return -ENODEV;
     }
 
@@ -758,7 +756,7 @@ static int apds9930_ioctl_als(FAR struct file *filep, int cmd,
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -819,7 +817,7 @@ static int apds9930_ioctl_ps(FAR struct file *filep, int cmd,
         {
           FAR uint8_t intstatus = apds9930_getreg8(priv, APDS9930_STATUS);
           *(FAR uint8_t *)(uintptr_t)arg = intstatus;
-          snvdbg("Get proximity IntStatus 0x%02x\n", intstatus);
+          sninfo("Get proximity IntStatus 0x%02x\n", intstatus);
         }
         break;
 
@@ -839,13 +837,13 @@ static int apds9930_ioctl_ps(FAR struct file *filep, int cmd,
 
               ret = seq_ioctl(priv->seq, priv->minor, cmd, arg);
 #else
-              sndbg("Unregisted SCU sequencer cmd: %d\n", cmd);
+              snerr("Unregisted SCU sequencer cmd: %d\n", cmd);
               ret = - ENOTTY;
 #endif
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -893,7 +891,7 @@ int apds9930_init(FAR struct i2c_master_s *i2c, int port)
   ret = apds9930_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       return ret;
     }
 
@@ -961,7 +959,7 @@ int apds9930als_register(FAR const char *devpath, int minor,
     kmm_malloc(sizeof(struct apds9930_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -977,7 +975,7 @@ int apds9930als_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_apds9930alsfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
@@ -1015,7 +1013,7 @@ int apds9930ps_register(FAR const char *devpath, int minor,
     kmm_malloc(sizeof(struct apds9930_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -1031,11 +1029,11 @@ int apds9930ps_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_apds9930psfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("APDS9930 proximity sensor driver loaded successfully!\n");
+  sninfo("APDS9930 proximity sensor driver loaded successfully!\n");
 
   return ret;
 }
