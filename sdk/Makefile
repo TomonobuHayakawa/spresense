@@ -62,6 +62,12 @@ SPK       = $(NUTTXNAME).spk
 
 KDEFINE = ${shell $(TOPDIR)/tools/define.sh "$(CC)" __KERNEL__}
 
+# Process architecture and board-specific directories
+
+ARCH_DIR = arch/$(CONFIG_ARCH)
+ARCH_SRC = $(ARCH_DIR)/src
+ARCH_INC = $(ARCH_DIR)/include
+
 all: $(BIN)
 
 # buildkernel
@@ -84,11 +90,15 @@ PHONY += buildkernel
 #
 # installkernel target copies NuttX kernel libraries. And remove specific object files from
 # copied archives. It is replacement for use SDK specific code.
+# Additionally, remove links to board directory for avoid conflict the same name header
+# inclusion.
 
 installkernel:
 	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
 	$(Q) if [ -f lib/libapps.a ]; then $(ARCROSSDEV)ar d lib/libapps.a builtin_list.o; fi
 	$(Q) if [ -f lib/libarch.a ]; then $(ARCROSSDEV)ar d lib/libarch.a cxd56_allocateheap.o; fi
+	$(Q) $(DIRUNLINK) $(TOPDIR)/include/arch/board
+	$(Q) $(DIRUNLINK) $(TOPDIR)/$(ARCH_SRC)/board
 PHONY += installkernel
 
 SDKMODDIRS =
