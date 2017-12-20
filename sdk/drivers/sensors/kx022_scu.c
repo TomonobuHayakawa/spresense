@@ -1,9 +1,7 @@
 /****************************************************************************
  * drivers/sensors/kx022_scu.c
- * Character driver for KX022
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Makoto Kabe <Makoto.Kabe@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -233,7 +231,7 @@ static int kx022_checkid(FAR struct kx022_dev_s *priv)
     {
       /* ID is not Correct */
 
-      sndbg("Wrong Device ID! %02x\n", devid);
+      snerr("Wrong Device ID! %02x\n", devid);
       return -ENODEV;
     }
 
@@ -415,7 +413,7 @@ static int kx022_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -462,7 +460,7 @@ int kx022_init(FAR struct i2c_master_s *i2c, int port)
   ret = kx022_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       return ret;
     }
 
@@ -504,7 +502,7 @@ int kx022_register(FAR const char *devpath, int minor,
   priv = (FAR struct kx022_dev_s *)kmm_malloc(sizeof(struct kx022_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -520,11 +518,11 @@ int kx022_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_kx022fops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("KX022 driver loaded successfully!\n");
+  sninfo("KX022 driver loaded successfully!\n");
 
   return ret;
 }
