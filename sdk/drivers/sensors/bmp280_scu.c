@@ -1,9 +1,7 @@
 /****************************************************************************
  * drivers/sensors/bmp280.c
- * Character driver for the Bosch BMP280 Barometer Sensor
  *
- *   Copyright (C) 2016 Sony Corpration. All rights reserved.
- *   Author: Daisuke Sonoda <Daisuke.xA.Sonoda@Sony.com>
+ *   Copyright (C) 2016 Sony Corpration
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

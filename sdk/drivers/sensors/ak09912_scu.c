@@ -1,9 +1,7 @@
 /****************************************************************************
  * drivers/sensors/ak09912.c
- * Character driver for AK09912
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
