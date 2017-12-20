@@ -7,6 +7,9 @@ ifeq ($(WINTOOL),y)
 CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/bsp/include)"
 CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/modules/include)"
 
+CXXFLAGS += -I"$(shell cygpath -w $(SDKDIR)/bsp/include)"
+CXXFLAGS += -I"$(shell cygpath -w $(SDKDIR)/modules/include)"
+
 # mkspk for create spk packaging file
 
 MKSPK = $(SDKDIR)$(DELIM)tools$(DELIM)windows$(DELIM)mkspk.exe
@@ -17,6 +20,9 @@ else
 
 CFLAGS += -isystem $(SDKDIR)/bsp/include
 CFLAGS += -isystem $(SDKDIR)/modules/include
+
+CXXFLAGS += -I$(SDKDIR)/bsp/include
+CXXFLAGS += -I$(SDKDIR)/modules/include
 
 MKSPK = $(SDKDIR)$(DELIM)tools$(DELIM)linux$(DELIM)mkspk
 

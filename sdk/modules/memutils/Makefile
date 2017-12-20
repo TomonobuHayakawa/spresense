@@ -48,7 +48,7 @@ CXXSRCS =
 
 include memory_manager/Make.defs
 include message/Make.defs
-include s_stl/Make.defs
+#include s_stl/Make.defs # no nessesity to compile
 include simple_fifo/Make.defs
 
 BIN = libmemutils$(LIBEXT)
@@ -64,11 +64,16 @@ LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
 # Note that include path addtion will be affected to build time.
 # Don't add unnecessary include paths for module.
 #
-#SKELETONSRCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)skeleton
+CXXFLAGS += -D_POSIX
+
+#MODINCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)include
+#BSPINCDIR = $(SDKDIR)$(DELIM)bsp$(DELIM)include
 #ifeq ($(WINTOOL),y)
-#  CFLAGS += -I "${shell cygpath -w $(SKELETONSRCDIR)}"
+#  CXXFLAGS += -I "${shell cygpath -w $(MODINCDIR)}"
+#  CXXFLAGS += -I "${shell cygpath -w $(BSPINCDIR)}"
 #else
-#  CFLAGS += -I$(SKELETONSRCDIR)
+#  CXXFLAGS += -I$(MODINCDIR)
+#  CXXFLAGS += -I$(BSPINCDIR)
 #endif
 
 all: $(BIN)
@@ -81,7 +86,7 @@ $(COBJS): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
 $(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
-	$(call COMPILE, $<, $@)
+	$(call COMPILEXX, $<, $@)
 
 $(BIN): $(LIB_OBJS)
 	$(call ARCHIVE, $@, $(LIB_OBJS))

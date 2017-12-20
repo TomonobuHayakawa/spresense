@@ -1,0 +1,1042 @@
+=======================================================================
+
+       File Name: MemMgrLite.txt
+
+       Description: Memory Manager Lite 説明書
+
+       Notes: (C) Copyright 2014, 2017 Sony Corporation
+
+       Author: Tomonobu Hayakawa
+       AUthor: Suzunosuke HIda
+
+=======================================================================
+
+------------------------------------------------------------------------
+1. 概要
+------------------------------------------------------------------------
+
+　MemMgrLiteは、既存のMemoryManager v2.xを抜本的に見直して、メモリ使用量が
+　最小限となるように再設計したC++用のメモリ管理ライブラリである。
+
+　MemMgrLiteの特徴を以下に示す。
+
+　・ライブラリの使用する管理領域のサイズが小さい。
+　　メモリセグメント毎の管理領域が最小2byte、メモリプール毎の管理領域が最小16byte
+
+　・参照カウンタ方式によるメモリセグメントの自動解放
+
+　・メモリの断片化（フラグメンテーション）がない
+
+　・ライブラリのデータ領域、メモリプールを管理するための領域およびメモリプールの
+　　領域をそれぞれユーザーが指定できる。
+　　そのため、アクセス速度とサイズの異なるRAMが分散している環境でも、メモリを
+　　有効に活用できる。
+
+　・メモリレイアウト定義ファイルに、アライメントを指定した領域定義やプール
+　　レイアウト切り替えのための定義ができる。定義ファイルから生成されるヘッダ
+　　ファイルには、各領域のアドレスやサイズがマクロ出力されるので、ソースや
+　　リンカスクリプトで参照することで、メモリの一元管理を行うことができる。
+
+　・OSなし環境、uITRON環境をともにサポート
+
+
+------------------------------------------------------------------------
+2. 機能
+------------------------------------------------------------------------
+
+2.1 主な機能
+
+　・uITRONの固定長メモリプール(MPF)に類似したメモリセグメントの取得/解放
+
+　・参照カウンタ方式によるメモリセグメントの自動解放
+
+　・メモリセグメント解放漏れの検出
+
+　・プールレイアウトの切り替え
+
+　・オプションのフェンス機能により、領域の前後への上書きを検出可能
+
+　・オプションの動的プール生成機能により、外部から与えられたメモリ領域に
+　　メモリプールを生成可能
+
+　・オプションでマルチコアをサポート(検討中)
+
+
+------------------------------------------------------------------------
+3. メモリレイアウトの生成
+------------------------------------------------------------------------
+
+　本ライブラリを使用するには、メモリレイアウト定義ファイル(Rubyスクリプト)を
+　記述して、ヘッダファイル郡を生成する必要がある
+
+---------------------------------------------------
+3.1 各種ヘッダファイルの生成
+---------------------------------------------------
+
+　メモリレイアウト定義ファイルは、通常mem_layout.confという名称で作成される。
+　コマンドラインで、下記のコマンドを実行することで各種ヘッダファイルを生成する。
+
+  Usage: ruby -Itool_path mem_layout.conf layout_header fence_header pool_header
+     Ex) ruby -I/lib/tool mem_layout.conf mem_layout.h fixed_fence.h pool_layout.h
+
+　各引数を以下に説明する
+
+　　-Itool_path    : mem_layout.rbのパス(Common/lib/MemMgrLite/VERSION/tool)を指定する
+
+　　layout_header  : 各種定数値が、C言語のマクロとして出力されるヘッダファイル
+                     各種ソースファイルやSystem.cfg、リンカスクリプト等で利用できる。
+                     境界調整による領域のギャップや残サイズ等もコメント出力されるので
+                     生成後に目視で内容を確認しておくことを推奨する。
+
+　　fence_header   : FixedAreaのメモリフェンスアドレスが出力されるヘッダファイル
+                     本ライブラリで使用するファイルなので、ユーザーは使用しないこと
+
+　　pool_header    : PoolAreaの各種定義が出力されるヘッダファイル
+                     本ライブラリで使用するファイルなので、ユーザーは使用しないこと
+
+---------------------------------------------------
+3.2 メモリレイアウト定義ファイル
+---------------------------------------------------
+
+　メモリレイアウト定義ファイルは、メモリのレイアウト定義および本ライブラリの
+　コンフィグレーション指定を行う。
+
+---------------------------------------------------
+3.2.1 ライブラリのコンフィグレーション
+---------------------------------------------------
+
+　ライブラリの各種機能の使用有無を指定する。
+
+  UseFence            = false # フェンスの使用有無
+
+　　有効にするとUSE_MEMMGR_FENCEマクロが定義され、指定された領域の前後に4byteの
+　　上書き検出用フェンスを配置する。またフェンスチェック用APIが定義される。
+
+  UseDynamicPool      = false # 動的生成プールの使用有無
+
+　　有効にするとUSE_MEMMGR_DYNAMIC_POOLマクロが定義され、動的生成プール用APIが
+　　定義される。
+
+  UseOver255Segments  = false # 255を超えるセグメント(最大65535)の使用有無
+
+　　有効にするとUSE_MEMMGR_OVER255_SEGMENTSマクロが定義され、1プールの最大
+　　セグメント数が65535に拡張される。ただしライブラリの使用するデータ領域
+　　およびプール管理用作業領域のサイズが増大する。
+
+  UseCopiedPoolAttr   = false # 静的プール属性を作業領域にコピーして使用するか否か
+
+　　有効にするとUSE_MEMMGR_COPIED_POOL_ATTRマクロが定義され、静的プールの属性が
+　　プール管理用作業領域にコピーされる。1プールあたり最大16byte作業領域のサイズが
+　　増大する。この機能は、静的プール属性がアクセス速度の遅いメモリやマルチコア
+　　サポート時に他のCPUからアクセスできないメモリに配置されてしまう場合に使用する。
+
+  UseMultiCore        = false # マルチコアサポートの使用有無 ★未実装。詳細検討中★
+
+　　有効にするとUSE_MEMMGR_MULTI_COREマクロが定義され、CPU間でメモリハンドルの
+　　受け渡しが可能となる。 
+
+  UseRingBufPool      = false # RingBufプールの使用有無 ★未実装。詳細検討中★
+
+　　有効にするとUSE_MEMMGR_RINGBUF_POOLマクロが定義され、プール領域をリングバッファ
+　　と見なして、可変長のメモリセグメントを扱うプールがサポートされる。
+
+---------------------------------------------------
+3.2.2 ユーザー定義定数
+---------------------------------------------------
+
+　メモリレイアウト定義ファイル内で使用する定数に、ユーザー独自の名称ををつける
+　ことができる。定義には、Rubyの任意の式を記述できる。
+
+  # スクリプト内定義と重ならないように、"U_"で開始して英大文字、数字と"_"のみとする
+  # "U_MEM_"で始まる名称で定義すると、ヘッダファイルに同名のマクロが出力される
+
+  U_STD_ALIGN   = 8     # standard alignment
+  U_MSGQ_ALIGN  = 64    # message queue area alignment
+
+---------------------------------------------------
+3.2.3 動的生成プールの予約数(最大数)
+---------------------------------------------------
+
+　同時に使用できる動的生成プールの上限数を指定する。
+　UseDynamicPoolをtrueにした時のみ有効。
+　ヘッダファイルにNUM_DYN_POOLSマクロが出力される。
+
+  NumDynamicPools      = 1  # 動的生成プールの予約数(1以上、255 - NUM_MEM_POOLS以下)
+
+---------------------------------------------------
+3.2.4 メモリデバイス
+---------------------------------------------------
+
+　各種メモリデバイスを定義する。これらの定義は、次節の固定領域の定義に使用される。
+　下記は、Keil MCB4357評価ボードの定義例である。
+
+  # ヘッダファイルに、name_ADDRマクロとname_SIZEマクロが出力される
+  # name: デバイス名(3文字以上。英大文字で始まり、英大文字, 数字, "_"が使用可能)
+  # ram : デバイスがRAMならば、true。それ以外ならばfalse
+  # addr: アドレス(4の倍数の値)
+  # size: バイト単位のサイズ(0を除く4の倍数の値)
+
+  MemoryDevices.init(
+   # name       ram    addr        size
+   ["SRAM0",    true,  0x10000000, 0x00008000], #    32KB on chip SRAM
+   ["SRAM1",    true,  0x10080000, 0x0000a000], #    40KB on chip SRAM
+   ["ROM",      false, 0x10400000, 0x00010000], #    64KB on chip ROM
+   ["FLASHA",   false, 0x1a000000, 0x00080000], #   512KB on chip FlashA
+   ["FLASHB",   false, 0x1b000000, 0x00080000], #   512KB on chip FlashB
+   ["EXTFLASH", false, 0x1c000000, 0x01000000], # 16384KB external NOR Flash
+   ["AHBSRAM",  true,  0x20000000, 0x00010000], #    64KB on chip AHB SRAM
+   ["EEPROM",   false, 0x20040000, 0x00004000], #    16KB on chip EEPROM
+   ["EXTSDRAM", true,  0x28000000, 0x01000000], # 16384KB external SDRAM
+    nil # end of definition
+  )
+
+---------------------------------------------------
+3.2.5 固定領域
+---------------------------------------------------
+
+　各メモリデバイスに領域を定義する。
+　各領域の開始アドレスは、デバイス毎の累積サイズ、align、fenceにより決定される。
+
+  # ヘッダファイルに、name_ALIGN, name_ADDR, name_SIZEマクロが出力される
+  # フェンスが有効な場合は、name_L_FENCE, name_U_FENCEマクロも出力される
+  #
+  # name  : 領域名(英大文字で始まり、"_AREA"で終わる名称。英大文字, 数字, _が使用可能)
+  # device: 領域を確保するMemoryDevicesのデバイス名
+  # align : 領域の開始アライメント。0を除くMinAlign(=4)の倍数を指定する
+  # size  : 領域のサイズ。(0を除く4の倍数の値)
+  #         各デバイスの最終領域には、残りサイズを示すRemainderSizeを指定可能
+  # fence : フェンスの有効・無効を指定する(この項目は、UseFenceがfalseの場合は無視される)
+  #         deviceがRAMの場合のみ、フェンスを有効化することができる
+
+  FixedAreas.init(
+    # name,                  device,    align,        size,               fence
+    ["APU_TEXT_AREA",       "FLASHA",   U_STD_ALIGN,  RemainderSize,      false], # Apu Text, RO-Data
+    ["SPU_TEXT_AREA",       "FLASHB",   U_STD_ALIGN,  RemainderSize,      false], # Spu Text, RO-Data
+
+    ["APU_STACK_AREA",      "SRAM0",    U_STD_ALIGN,  0x00001800,         false], # Apu Stack (deviceの先頭を推奨)
+    ["APU_DATA_AREA",       "SRAM0",    U_STD_ALIGN,  0x00000400,         true],  # Apu Data, BSS
+    ["APU_HEAP_AREA",       "SRAM0",    U_STD_ALIGN,  0x00000080,         false], # Apu Heap
+    ["MEMMGR_DATA_AREA",    "SRAM0",    U_STD_ALIGN,  0x00000080,         true],  # MemMgrLite data
+    ["MEMMGR_WORK_AREA",    "SRAM0",    U_STD_ALIGN,  0x00000800,         true],  # MemMgrLite work
+    ["SRAM_POOL_AREA",      "SRAM0",    U_STD_ALIGN,  RemainderSize,      false], # MemMgrLiteのプール領域(SRAM)
+
+    ["SPU_STACK_AREA",      "SRAM1",    U_STD_ALIGN,  0x00000400,         false], # Spu Stack (deviceの先頭を推奨)
+    ["SPU_DATA_AREA",       "SRAM1",    U_STD_ALIGN,  0x00008000,         true],  # Spu Data, BSS
+    ["MSG_QUE_AREA",        "SRAM1",    U_MSGQ_ALIGN, 0x00001000,         true],  # for MsgLib
+    ["SPL_MGR_AREA",        "SRAM1",    U_SPL_ALIGN,  0x00000100,         true],  # for SpinlockMgr
+
+    ["SPU_HEAP_AREA",       "EXTSDRAM", U_STD_ALIGN,  0x00010000,         true],  # Spu Heap
+    ["SPU_KHEAP_AREA",      "EXTSDRAM", U_STD_ALIGN,  0x00020000,         true],  # Spu Kernel heap
+    ["LCD_FRAME_BUF_AREA",  "EXTSDRAM", 0x28f00000,   0x00100000,         false], # LCD Frame Buffer
+    nil # end of definition
+  )
+
+---------------------------------------------------
+3.2.6 プールレイアウト
+---------------------------------------------------
+
+　メモリプールのレイアウトを定義する。
+　各プール領域の開始アドレスは、固定領域毎の累積サイズ、align、fenceにより決定される。
+
+  # output_headerに、プールIDとNUM_MEM_POOLS, NUM_MEM_LAYOUTSおよび
+  # Lx_name_ALIGN, Lx_name_ADDR, Lx_name_SIZE, Lx_name_NUM_SEG, Lx_name_SEG_SIZE
+  # マクロが出力される(xはレイアウト番号)
+  # フェンスが有効な場合は、Lx_name_L_FENCE, Lx_name_U_FENCEマクロも出力される
+  #
+  # name : プール名(英大文字で始まり、"_POOL"で終わる名称。英大文字, 数字, _が使用可能)
+  # area : プール領域として使用するFixedAreaの領域名。領域はRAMに配置されていること
+  # type : プール種別。Basic, RingBuf(UseRingBufがtrueの場合に指定可能)のいずれか
+  # align: プールの開始アライメント。0を除くMinAlign(=4)の倍数を指定する
+  # size : プールのサイズ。0を除く4の倍数の値。Basicプールでは、セグメントサイズ * セグメント数
+  #        各areaの最終領域には、残りサイズを示すRemainderSizeを指定することができる
+  # seg  : セグメント数(1以上、255または65535以下)を指定する。UseOver255Segmentsを参照のこと
+  #        Basicプールの場合、size/seg が各セグメントのサイズとなる(剰余は無視される)
+  # fence    : フェンスの有効・無効を指定する。この項目は、UseFenceがfalseの場合は無視される
+  # spinlock : CPUコア間で共有する場合はスピンロック名を、非共有時は、""を指定する。
+  #            この項目は、UseMultiCoreがfalseの場合は無視される
+
+  PoolAreas.init(
+    [ # layout 0
+     #[ name,              area,            type,  align,       pool-size,   seg,  fence, spinlock]
+      ["APU_CMD_POOL",    "SRAM_POOL_AREA", Basic, U_STD_ALIGN, 32 * 8,      8,    true,  ""],
+      nil # end of each layout
+    ], # end of layout 0
+
+    nil # end of definition
+  )
+
+
+------------------------------------------------------------------------
+4. ビルド方法
+------------------------------------------------------------------------
+
+---------------------------------------------------
+4.1 コンパイル・オプション
+---------------------------------------------------
+
+　Versionを指定する必要があるため、下記のMake変数を設定する必要がある。
+
+	MEMMGR_LITE_LIB_VERSION = 1.00
+
+　インクルードパス指定（-Iオプション）には下記のMake変数を使用すること。
+
+	$(INC_MEMMGR_LITE_LIB_DIR)
+
+　本ライブラリのデバッグ情報表示を使用する場合は、以下のオプションを指定する。
+
+	-DUSE_MEMMGR_DEBUG_OUTPUT
+
+
+------------------------------------------------------------------------
+5. API仕様
+------------------------------------------------------------------------
+
+---------------------------------------------------
+5.1 ヘッダファイルと名前空間
+---------------------------------------------------
+
+　本ライブラリを使用するには、CPU毎に用意される以下のヘッダをインクルードする。
+
+	#include "MemHandle.h"
+
+　本ライブラリで使用する型、定数、関数は全て
+	MemMgrLite 名前空間に所属する。
+　ただしマクロ定義は、C++の言語仕様上、グローバル名前空間の所属となる。
+
+
+---------------------------------------------------
+5.2 型定義
+---------------------------------------------------
+
+  typedef uint8_t       PoolType;  /* メモリプール種別 */
+  enum {
+        BasicType,      /* 固定長プール */
+        RingBufType,    /* 可変長リングバッファプール(未実装) */
+        NumPoolTypes    /* number of pool types */
+  };
+
+  typedef uint8_t       NumLayout; /* メモリレイアウト数 */
+  typedef uint8_t       PoolId;    /* プールID (1 origin) */
+  typedef uint32_t      PoolAddr;  /* プールアドレス */
+  typedef uint32_t      PoolSize;  /* プールサイズ (byte単位) */
+  typedef uint8_t       NumSeg;    /* セグメント数 (UseOver255Segments有効時は、uint16_t) */
+  typedef uint8_t       SegRefCnt; /* セグメント参照数 */
+  typedef uint8_t       LockId;    /* スピンロックID(1 origin. 最大255) */
+
+  struct PoolAttr {     /* プールの属性 */
+        PoolId          id;             /* pool ID */
+        PoolType        type;           /* pool type */
+        NumSeg          num_segs;       /* number of memory segments */
+  #ifdef USE_MEMMGR_FENCE
+        bool            fence;          /* memory fence */
+  #endif
+  #ifdef USE_MEMMGR_MULTI_CORE
+        LockId          spl_id;         /* spinlock ID */
+  #endif
+        PoolAddr	addr;           /* pool address */
+        PoolSize	size;		/* pool size */
+  };
+
+
+---------------------------------------------------
+5.3 定数
+---------------------------------------------------
+
+  const NumLayout       BadLayoutNo = 0xff;       /* レイアウト番号255は予約 */
+  const PoolId          NullPoolId  = 0;          /* プールIDの0は予約 */
+  const PoolAddr        BadPoolAddr = 0xffffffff; /* 予約アドレス */
+  const NumSeg          NullSegNo   = 0;          /* セグメント番号の0は予約 */
+  const LockId          NullLockId = 0;           /* スピンロックIDの0は未使用 */
+
+
+---------------------------------------------------
+5.4 自動生成のマクロ
+---------------------------------------------------
+
+  /* メモリレイアウト定義ファイルで定義したレイアウト数 (1～255) */
+  #define NUM_MEM_LAYOUTS    1
+
+  /* メモリレイアウト定義ファイルで定義したプールID数+1 (1～255) */
+  #define NUM_MEM_POOLS      6
+
+  /* 静的プール生成時に必要な作業領域のサイズ (byte単位) */
+  #define MEMMGR_MAX_WORK_SIZE  0x000002c8   /* 全レイアウト中の最大サイズ */
+  #define MEMMGR_L0_WORK_SIZE   0x000002c8   /* レイアウト0に必要な作業領域のサイズ */
+  #define MEMMGR_L1_WORK_SIZE   0x000001a0   /* レイアウト1に必要な作業領域のサイズ */
+                  ...
+  /* MEMMGR_Ln_WORK_SIZEまで定義される。nは、NUM_MEM_LAYOUTS - 1 */
+
+
+---------------------------------------------------
+5.5 関数仕様
+---------------------------------------------------
+
+  以降の関数の説明で、D_ASSERTすると記述されている箇所は、標準ライブラリのassert同様
+  ビルド時にNDEBUGマクロを定義するとチェックが無効になるので注意すること。
+  F_ASSERTは、NDEBUGマクロに影響されずに、常にチェックが有効である。
+
+  S_ASSERTは、定数式しか記述できないが、ビルド時に評価されるため便利である。
+
+
+---------------------------------------------------
+5.5.1 アドレス変換関数
+---------------------------------------------------
+
+5.5.1.1 アドレス変換
+
+  -----------------------------------------------------------------------------
+  [関数] void*    translatePoolAddrToVa(PoolAddr addr)
+         PoolAddr translateVaToPoolAddr(void* va)
+  -----------------------------------------------------------------------------
+
+  [引数]   PoolAddr  addr    /* プールアドレス */
+           void*     va      /* 仮想アドレス */
+
+  [戻り値] 仮想アドレス  (translatePoolAddrToVa)
+           プールアドレス(translateVaToPoolAddr)
+
+  [説明]   CPU毎に定義されるアドレス変換関数。
+	実装により挙動が変わるが、プールアドレスと仮想アドレスが同一のCPUの場合は
+	単なる型変換(cast)のみとなる。
+
+
+---------------------------------------------------
+5.5.2 Managerクラスの関数
+---------------------------------------------------
+
+5.5.2.1 MemMgrLiteライブラリの初期化
+
+  -----------------------------------------------------------------------------
+  [関数] static err_t Manager::initFirst(void* lib_area, uint32_t area_size)
+  -----------------------------------------------------------------------------
+
+  [引数]   void*     lib_area    /* ライブラリが使用するデータ領域 */
+           uint32_t  area_size   /* 領域のサイズ(byte単位) */
+
+  [戻り値] ERR_OK        : 初期化成功
+           ERR_STS       : 2回以上、本関数を実行している
+           ERR_DATA_SIZE : area_sizeが、sizeof(MemMgrLite::Manager)未満
+           ERR_ADR_ALIGN : lib_areaが、4の倍数ではない
+
+  [説明]   ライブラリ全体の初期化を行う。
+	フェンス機能が有効な場合は、FixedAreaのフェンスの初期化を行う。
+	本ライブラリの他のAPIを使用する前に、事前に取り決めた単一のCPUで一回
+	のみ本関数を実行すること。
+
+	引数lib_areaは、ライブラリ用のデータ領域のアドレスを指定する。
+	アドレスが、4の倍数でなければ、ERR_ADR_ALIGNを返す。
+	指定する領域は、永続寿命を持つ領域であること。また性能上、SRAMなどの
+	高速なメモリが望ましい。
+
+	引数area_sizeは、lib_areaのサイズをbyte単位で指定する。
+	サイズが、sizeof(MemMgrLite::Manager)未満の場合は、ERR_DATA_SIZEを返す。
+	現在の実装で必要なサイズは、(4 + 4 * NUM_MEM_POOLS) なので、最小で12bytes
+	最大で1028bytesとなる。
+	オプションの動的生成プールを使用する場合は追加で、(8 + 5 * NUM_DYN_POOLS)を
+	4の倍数に切り上げたサイズが必要となる。
+
+	本ライブラリをマルチコア(共有プール)サポートで使用する場合は、この領域は
+	全てのCPUからアクセスできる必要がある。
+	ARMのTCMやMIPSのScratchPadなどは、CPUローカルなメモリなので、マルチコア
+	サポート時のlib_areaには指定できない。
+
+  [使用例1]
+	メモリレイアウト定義ファイルで、MemMgrLite用データ領域を定義して使用する例
+	マルチコアサポート時やSRAM配置時は、この方法が使いやすい
+
+	S_ASSERT(MEMMGR_DATA_AREA_SIZE >= sizeof(MemMgrLite::Manager));
+	void* lib_data_va = MemMgrLite::translatePoolAddrToVa(MEMMGR_DATA_AREA_ADDR);
+	if (MemMgrLite::Manager::initFirst(lib_data_va, MEMMGR_DATA_AREA_SIZE)) != ERR_OK) { /* エラー処理 */; }
+
+  [使用例2]
+	静的変数で定義したMemMgrLiteのデータ領域を使用する例
+	sizeofで領域を確保できるため、サイズ不足の心配がない
+	なお領域は、4byteアラインを保障するため、uint32_tの配列として定義している
+
+	static uint32_t s_lib_data[sizeof(MemMgrLite::Manager) / sizeof(uint32_t)];
+	if (MemMgrLite::Manager::initFirst(s_lib_data, sizeof(s_lib_data)) != ERR_OK) { /* エラー処理 */; }
+
+
+5.5.2.2 CPU毎の初期化
+
+  -----------------------------------------------------------------------------
+  [関数] static err_t Manager::initPerCpu(void* lib_area)
+  -----------------------------------------------------------------------------
+
+  [引数]   void*     lib_area  /* ライブラリが使用するデータ領域 */
+
+  [戻り値] ERR_OK        : 初期化成功
+           ERR_STS       : 2回以上、本関数を実行している、あるいはinitFirst()の未実行
+
+  [説明]   ライブラリのCPU毎の初期化を行う。
+	引数lib_areaは、Manager::initFirst()に指定したものと同じアドレスを指定する。
+
+	Manager::initFirst()が未実行か、
+	既に本APIを実行済みのCPUで、再度本APIを実行した場合は、ERR_STSを返す。
+
+	本ライブラリをマルチコア(共有プール)サポートで使用する場合は、全てのCPUは
+	Manager::initFirst()の実行完了を(プラットフォーム固有の方法で)待ってから、
+	本関数を実行する必要がある。
+
+  [使用例1]
+	メモリレイアウト定義ファイルで定義したMemMgrLiteのデータ領域を使用する例
+
+	void* lib_data_va = MemMgrLite::translatePoolAddrToVa(MEMMGR_DATA_AREA_ADDR);
+	if (MemMgrLite::Manager::initPerCpu(lib_data_va)) != ERR_OK) { /* エラー処理 */; }
+
+  [使用例2]
+	静的変数で定義したMemMgrLiteのデータ領域を使用する例
+
+	if (MemMgrLite::Manager::initPerCpu(s_lib_data)) != ERR_OK) { /* エラー処理 */; }
+
+
+5.5.2.3 静的メモリプールの生成
+
+  -----------------------------------------------------------------------------
+  [関数] static err_t Manager::createStaticPools(NumLayout layout_no, void* work_area,
+                                                 uint32_t area_size, const PoolAttr *pool_attr)
+  -----------------------------------------------------------------------------
+
+  [引数]   NumLayout       layout_no        /* メモリレイアウト番号 (0 origin) */
+           void*           work_area        /* 静的メモリプール操作用の作業領域 */
+           uint32_t        area_size        /* 作業領域のサイズ(byte単位) */
+           const PoolAttr *pool_attr        /* メモリレイアウトのアドレス */
+
+  [戻り値] ERR_OK        : 初期化成功
+           ERR_STS       : initPerCpu()が未実行、あるいは本関数が実行済み
+           ERR_ADR_ALIGN : work_areaが、4の倍数ではない
+           ERR_DATA_SIZE : area_sizeが、最大作業領域サイズ未満
+
+  [説明]   指定されたレイアウト番号のメモリプール郡を生成する。
+	メモリレイアウトを変更する場合には、いったんManager::destroyStaticPools()で
+	メモリプール郡を破棄してから、再度本関数を実行すること。
+
+	Manager::initPerCpu()が未実行の場合、
+	既に本関数が実行済みの場合は、ERR_STSを返す。
+
+	引数layout_noは、使用するメモリレイアウトの番号を指定する。
+
+	引数work_areaは、静的メモリプール操作用の作業領域のアドレスを指定する。
+	アドレスが、4の倍数でなければ、ERR_ADR_ALIGNを返す。
+	指定する領域は、Manager::destroyStaticPools()が呼び出されるまで存在する
+	領域であること。また性能上、SRAMなどの高速なメモリが望ましい。
+
+	引数area_sizeは、静的メモリプール操作用の作業領域のサイズを指定する。
+	レイアウト番号毎に定義されたマクロMEMMGR_Lx_WORK_SIZE(xはレイアウト番号)
+	以上の値を指定する。
+	全レイアウト中の最大作業領域サイズは、マクロMEMMGR_MAX_WORK_SIZEで定義される。
+	作業領域のサイズが不足した場合は、ERR_DATA_SIZEを返す。
+
+	本ライブラリをマルチコア(共有プール)サポートで使用する場合は、この領域は
+	全てのCPUからアクセスできる必要がある。
+	ARMのTCMやMIPSのScratchPadなどは、CPUローカルなメモリなので、マルチコア
+	サポート時には指定できない。
+
+  [使用例1]
+	メモリレイアウト定義ファイルで、MemMgrLite用作業領域を定義して使用する例
+	マルチコアサポート時やSRAM配置時は、この方法が使いやすい
+
+	S_ASSERT(MEMMGR_WORK_AREA_SIZE >= MEMMGR_MAX_WORK_SIZE);
+	const NumLayout layout_no = 0;
+	void* work_va = MemMgrLite::translatePoolAddrToVa(MEMMGR_WORK_AREA_ADDR);
+	if (MemMgrLite::Manager::createStaticPools(layout_no, work_va, MEMMGR_WORK_AREA_SIZE) != ERR_OK)
+	{ /* エラー処理 */; }
+ 
+  [使用例2]
+	静的変数で定義したMemMgrLiteの作業領域を使用する例
+	領域は、4byteアラインを保障するため、uint32_tの配列として定義している
+
+	static uint32_t s_work_area[MEMMGR_MAX_WORK_SIZE / sizeof(uint32_t)];
+	const NumLayout layout_no = 0;
+	if(MemMgrLite::Manager::createStaticPools(layout_no, s_work_area, sizeof(s_work_area) != ERR_OK)
+	{ /* エラー処理 */; }
+
+5.5.2.4 静的メモリプールの破棄（消去）
+
+  -----------------------------------------------------------------------------
+  [関数] static void Manager::destroyStaticPools()
+  -----------------------------------------------------------------------------
+
+  [引数]   なし
+
+  [戻り値] なし
+
+  [説明]   Manager::createStaticPools()で生成した静的メモリプールを破棄する。
+	静的メモリプール未生成時は、何もしない。
+	Manager::initPerCpu()が未実行の場合は、D_ASSERTする。
+
+	メモリプールの破棄時には、セグメント解放漏れのチェックを行う。
+	解放漏れが検出された場合は、F_ASSERTする。
+
+	フェンス機能が有効な場合は、静的メモリプールのフェンスチェックを行い
+	フェンス破壊が検出された場合は、F_ASSERTする。
+
+  [使用例]
+	/* 静的メモリプールを破棄する */
+	MemMgrLite::Manager::destroyStaticPools();
+
+
+5.5.2.5 現在のメモリレイアウト番号を取得
+
+  -----------------------------------------------------------------------------
+  [関数] static NumLayout Manager::getCurrentLayoutNo()
+  -----------------------------------------------------------------------------
+
+  [引数]   なし
+
+  [戻り値] 現在設定されているメモリレイアウト番号
+           未設定の場合は、BadLayoutNo
+
+  [説明]   現在のメモリレイアウト番号を取得する。
+	メモリレイアウト番号の初期値は、BadLayoutNo。
+	Manager::createStaticPools()を呼ぶと引数で指定した値が設定される。
+	Manager::destroyStaticPools()を呼ぶと初期値にリセットされる。
+
+  [使用例]
+	/* 現在のメモリレイアウト番号を取得する */
+	MemMgrLite::NumLayout layout_no = MemMgrLite::Manager::getCurrentLayoutNo();
+	if (layout_no != MemMgrLite::BadLayoutNo) {
+		printf("現在のメモリレイアウト番号: %d\n", layout_no);
+	} else {
+		printf("メモリレイアウト番号は未設定\n");
+	}
+
+
+5.5.2.6 動的メモリプールの生成
+
+  -----------------------------------------------------------------------------
+  [関数] static PoolId Manager::createDynamicPool(const PoolAttr& attr,
+						  void* work_area, uint32_t area_size)
+  -----------------------------------------------------------------------------
+
+  [引数]   const PoolAttr& attr    /* プールの属性 */
+           void*     work_area     /* 動的メモリプール用の作業領域 */
+           uint32_t  area_size     /* 作業領域のサイズ(byte単位) */
+
+  [戻り値] 成功時は、プールID。失敗時は、MemMgrLite::NullPoolIdが返される
+
+  [説明] 動的にメモリプールを生成する。
+	本関数は、動的生成プール有効時(UseDynamicPool = true)のみ定義される。
+	Manager::initPerCpu()が未実行の場合は、D_ASSERTする。
+
+	引数attrは、生成するプールの属性を指定する。
+	不正な項目を検出するとD_ASSERTする。
+
+	引数attr.num_segsには、1以上255(or 65535)以下の値を指定する。
+
+	引数attr.addrには、必要なアライメントの取れているアドレスを指定する。
+	フェンス機能が有効で、引数attr.fenceにtrueを指定した場合は、このアドレスは
+	フェンスを指し、実際のプールアドレスは+4した値となるので注意すること。
+
+	引数attr.sizeには、プールサイズ(attr.num_segs * セグメントサイズ)を指定する。
+	フェンス機能が有効で、引数attr.fenceにtrueを指定した場合は、プール前後の
+	フェンスのため、実際のプールサイズは-8した値となるので注意すること。
+
+	引数work_areaは、動的メモリプール用の作業領域のアドレスを指定する。
+	アドレスが、4の倍数でなければ、D_ASSERTする。
+	指定する領域は、Manager::destroyDynamicPool()でプールが破棄されるまで
+	存在する領域であること。また性能上、SRAMなどの高速なメモリが望ましい。
+
+	引数area_sizeは、動的メモリプール用の作業領域のサイズを指定する。
+	作業領域に必要なサイズは、Manager::getDynamicPoolWorkSize()で取得できる。
+	作業領域のサイズが不足した場合は、F_ASSERTする。
+
+	本ライブラリをマルチコア(共有プール)サポートで使用する場合は、プール領域
+	および作業領域は全てのCPUからアクセスできる必要がある。
+	ARMのTCMやMIPSのScratchPadなどは、CPUローカルなメモリなので、マルチコア
+	サポート時には指定できない。
+
+  [使用例]
+	/* 動的プールの属性を設定 */
+	MemMgrLite::PoolAttr attr = {
+		MemMgrLite::NullPoolId,	/* プールID。上書きされるので値は何でもよい */
+		MemMgrLite::BasicType,	/* プール種別 */
+		12,			/* セグメント数 */
+	#ifdef USE_MEMMGR_FENCE
+		true,			/* メモリフェンス */
+	#endif
+	#ifdef USE_MEMMGR_MULTI_CORE
+		MemMgrLite::NullLockId,	/* スピンロックID */
+	#endif
+		DYN_POOL_AREA_ADDR,	/* プールアドレス */
+		DYN_POOL_AREA_SIZE	/* プールサイズ */
+	};
+
+	static uint32_t dyn_work[32];
+
+	/* 作業領域のサイズをチェック */
+	D_ASSERT(MemMgrLite::Manager::getDynamicPoolWorkSize(attr) <= sizeof(dyn_work));
+
+	MemMgrLite::PoolId pool_id = MemMgrLite::Manager::createDynamicPool(attr, dyn_work, sizeof(dyn_work));
+	if (pool_id == MemMgrLite::NullPoolId) { /* エラー処理 */; }
+
+
+5.5.2.7 動的メモリプールの破棄
+
+  -----------------------------------------------------------------------------
+  [関数] static void Manager::destroyDynamicPool(PoolId id)
+  -----------------------------------------------------------------------------
+
+  [引数]   PoolId    id    /* 動的メモリプールのID */
+
+  [戻り値] なし
+
+  [説明]   動的メモリプールを破棄する。
+	本関数は、動的生成プール有効時(UseDynamicPool = true)のみ定義される。
+	プールIDが不正な場合は、D_ASSERTする。
+
+	メモリプールの破棄時には、セグメント解放漏れのチェックを行う。
+	解放漏れが検出された場合は、F_ASSERTする。
+
+	フェンス機能が有効な場合は、メモリプールのフェンスチェックを行い
+	フェンス破壊が検出された場合は、F_ASSERTする。
+
+  [使用例] なし
+
+
+5.5.2.8 動的メモリプール用作業領域サイズ
+
+  -----------------------------------------------------------------------------
+  [関数] static uint32_t Manager::getDynamicPoolWorkSize(const PoolAttr& attr)
+  -----------------------------------------------------------------------------
+
+  [引数]   const PoolAttr& attr    /* プールの属性 */
+
+  [戻り値] 必要な作業領域のサイズ(byte単位)
+
+  [説明]   指定されたプール属性で必要となる動的メモリプール用作業領域のサイズを取得する
+	本関数は、動的生成プール有効時(UseDynamicPool = true)のみ定義される。
+
+  [使用例] Manager::createDynamicPoolの例を参照
+
+
+5.5.2.9 使用中のメモリセグメントの取得
+
+  -----------------------------------------------------------------------------
+  [関数] static uint32_t Manager::getStaticPoolsUsedSegs(MemHandle* mhs, uint32_t num_mhs)
+         static uint32_t Manager::getUsedSegs(PoolId id, MemHandle* mhs, uint32_t num_mhs)
+  -----------------------------------------------------------------------------
+
+  [引数]   PoolId       id        /* プールID */
+           MemHandle*   mhs       /* 使用中のメモリセグメントを格納するメモリハンドル配列 */
+           uint32_t     num_mhs   /* 配列の要素数 */
+
+  [戻り値] メモリハンドル配列に格納したセグメント数
+
+  [説明]   メモリプール内で使用中のセグメントをメモリハンドル配列に格納する。
+	格納されたセグメントの参照カウントは、1増加する。
+	使用中のセグメント数が、引数num_mhsで指定した値よりも多い時は、num_mhs個の
+	セグメントを格納した時点で、処理を打ち切る。
+
+	getStaticPoolsUsedSegs()は、現在のメモリレイアウトの静的プール全体を対象とする。
+	getUsedSegs()は、指定されたIDの静的または動的メモリプールが対象となる。
+
+	引数mhsは、メモリセグメントを保持していない空のメモリハンドル配列を指定すること。
+	引数idが有効なプールIDでなければ、D_ASSERTする。
+	引数mhsまたはnum_mhsが0の場合は、D_ASSERTする。
+
+	これらのAPIは、メモリプールを破棄する前に、解放されていないセグメントの詳細な
+	情報を取得する用途を想定している。
+
+	なお、使用中のセグメント数を知るだけであれば、下記の方が効率が良い。
+		Manager::getPoolNumSegs(id) - Manager::getPoolNumAvailSegs(id)
+
+  [使用例]
+	const uint32_t MaxSegInfo = 8;
+	MemHandle  mhs[MaxSegInfo];
+
+	uint32_t num_used = Manager::getStaticPoolsUsedSegs(mhs, MaxSegInfo);
+	for (uint32_t i = 0; i < num_used; ++i) {
+		printf("ID=%u SegNo=%u VA=%08x Size=%u RefCnt=%u\n",
+			mhs[i].getPoolId(), mhs[i].getSegNo(), mhs[i].getVa(),
+			mhs[i].getSize(), mhs[i].getRefCnt());
+	}
+
+
+5.5.2.10 メモリプールの各種情報を取得
+
+  -----------------------------------------------------------------------------
+  [関数] static bool     Manager::isPoolAvailable(PoolId id)
+         static PoolType Manager::getPoolType(PoolId id)
+         static PoolAddr Manager::getPoolAddr(PoolId id)
+         static PoolSize Manager::getPoolSize(PoolId id)
+         static NumSeg   Manager::getPoolNumSegs(PoolId id)
+         static NumSeg   Manager::getPoolNumAvailSegs(PoolId id)
+         static bool     Manager::isPoolFenceEnable(PoolId id)
+         static LockId   Manager::getPoolLockId(PoolId id)
+  -----------------------------------------------------------------------------
+
+  [引数]   PoolId   id    /* メモリプールID (1 origin) */
+
+  [戻り値] 下記参照
+
+  [説明]
+	isPoolAvailable()は、現在のメモリレイアウトで、指定されたプールIDが
+	有効か否かを返す。
+
+	getPoolType(), getPoolAddr(), getPoolSize(), getPoolNumSegs()は、プール
+	生成時に指定された、プール種別、アドレス、サイズ、セグメント数を返す。
+
+	getPoolNumAvailSegs()は、現在の空きセグメント数を返す。
+
+	isPoolFenceEnable()は、プール生成時に指定されたフェンス指定を返す。
+	本関数は、フェンス機能有効時(UseFence = true)のみ定義される。
+
+	getPoolSpinLockId()は、プール生成時に指定されたスピンロックIDを返す。
+	本関数は、マルチコアサポート有効時(UseMultiCore = true)のみ定義される。
+
+	無効なプールIDを指定するとNULLポインタアクセスを引き起こすので、プールIDの
+	有効性を確認して使用すること。
+
+  [使用例]
+	if (MemMgrLite::Manager::isPoolAvailable(my_pool_id)) {
+		printf("type=%d addr=%08x size=%08x num_seg=%u avail_seg=%u",
+			MemMgrLite::Manager::getPoolType(my_pool_id),
+			MemMgrLite::Manager::getPoolAddr(my_pool_id),
+			MemMgrLite::Manager::getPoolSize(my_pool_id),
+			MemMgrLite::Manager::getPoolNumSegs(my_pool_id),
+			MemMgrLite::Manager::getPoolNumAvailSegs(my_pool_id));
+	#ifdef USE_MEMMGR_FENCE
+		printf(" fence=%u", MemMgrLite::Manager::isPoolFenceEnable(my_pool_id));
+	#endif
+	#ifdef USE_MEMMGR_MULTI_CORE
+		printf(" spl_id=%u", MemMgrLite::Manager::getPoolSpinLockId(my_pool_id));
+	#endif
+		printf("\n");
+	}
+
+
+5.5.2.11 フェンスチェック
+
+  -----------------------------------------------------------------------------
+  [関数] static uint32_t Manager::verifyFixedAreaFences()
+         static uint32_t Manager::verifyStaticPoolsFence()
+         static uint32_t Manager::verifyPoolFence(PoolId id)
+  -----------------------------------------------------------------------------
+
+  [引数]   PoolId    id    /* プールID */
+
+  [戻り値] エラー検出回数。0ならばフェンス破壊なし
+
+  [説明]   これらの関数は、フェンス機能有効時(UseFence = true)のみ定義される。
+	verifyFixedAreaFences()は、固定領域のフェンスをチェックする。
+	verifyStaticPoolsFence()は、静的プールのフェンスをチェックする。
+	verifyPoolFence()は、指定されたプールIDのフェンスをチェックする。
+
+  [使用例] なし
+
+
+---------------------------------------------------
+5.5.3 MemHandleクラスの関数
+---------------------------------------------------
+
+5.5.3.1 コンストラクタ/デストラクタ
+
+  -----------------------------------------------------------------------------
+  [関数] MemHandle::MemHandle()                       // default constructor
+         MemHandle::MemHandle(PoolId id, size_t size) // segment allocate constructor
+         MemHandle::MemHandle(const MemHandle& mh)    // copy constructor
+         MemHandle::~MemHandle()                      // destructor
+  -----------------------------------------------------------------------------
+
+  [引数]   PoolId           id    /* プールID */
+           size_t           size  /* 要求サイズ(byte単位) */
+           const MemHandle& mh    /* コピー元メモリハンドル */
+
+  [戻り値] なし
+
+  [説明]   MemHandleクラスのインスタンスを生成または破棄する。
+
+	引数idは、メモリセグメントを取得するプールIDを指定する。
+	取得結果は、isAvail() or isNull()で判定する。
+
+	引数sizeは、要求サイズを指定する。
+	現状この引数は、セグメントサイズとの比較にのみ使用され、セグメントサイズを
+	超える値が指定された場合は、D_ASSERTする。
+
+	引数mhは、コピー元のメモリハンドルを指定する。
+	コピー元のメモリハンドルが、メモリセグメントを保持している場合は
+	メモリセグメントの参照カウントが、1増加する。
+
+	メモリセグメントを保持しているインスタンスのデストラクタは、メモリセグメントの
+	参照カウントを、1減少させる。
+
+  [使用例]
+	MemMgrLite::MemHandle mh(MY_POOL_ID, sizeof(MyData));
+	if (mh.isNull()) { /* エラー処理 */; }
+
+
+5.5.3.2 代入演算子
+
+  -----------------------------------------------------------------------------
+  [関数] MemHandle::MemHandle& operator=(const MemHandle& mh)
+  -----------------------------------------------------------------------------
+
+  [引数]   const MemHandle& mh    /* コピー元メモリハンドル */
+
+  [戻り値] 自身への参照
+
+  [説明]   自身とコピー元の値が異なる場合にインスタンスの代入を行う。
+	同じ場合は何もしない。
+
+	メモリセグメントを保持している場合は、代入前にメモリセグメントの
+	参照カウントを、1減少させる。
+
+	コピー元のメモリハンドルが、メモリセグメントを保持している場合は
+	代入後にメモリセグメントの参照カウントを、1増加させる。
+
+  [使用例]
+	MemMgrLite::MemHandle mh;	/* default constructor */
+	mh = src_mh;			/* call operator=() */
+
+
+5.5.3.3 メモリセグメント取得
+
+  -----------------------------------------------------------------------------
+  [関数] err_t MemHandle::allocSeg(PoolId id, size_t size, MemHandleProxy &proxy)
+  -----------------------------------------------------------------------------
+
+  [引数]   PoolId           id     /* プールID */
+           size_t           size   /* 要求サイズ(byte単位) */
+           MemHandleProxy   &proxy /* メモリセグメントの参照 */
+
+  [戻り値] ERR_OK        : 取得成功
+           ERR_DATA_SIZE : sizeがセグメントサイズを超えている
+           ERR_MEM_EMPTY : 取得できるセグメントが無い
+
+  [説明]   指定されたメモリプールからメモリセグメントを取得する。
+	引数idは、メモリセグメントを取得するプールIDを指定する。
+
+	引数sizeは、要求サイズを指定する。
+	現状この引数は、セグメントサイズとの比較にのみ使用され、セグメントサイズを
+	超える値が指定された場合は、ERR_DATA_SIZEを返す。
+
+	取得できるセグメントが無い場合は、ERR_MEM_EMPTYを返す。
+
+  [使用例]
+	MemMgrLite::MemHandle mh;
+	if (mh.allocSeg(MY_POOL_ID, sizeof(MyData)) != ERR_OK) { /* エラー処理 */; }
+
+
+5.5.3.4 メモリセグメント解放
+
+  -----------------------------------------------------------------------------
+  [関数] void MemHandle::freeSeg()
+  -----------------------------------------------------------------------------
+
+  [引数]   なし
+
+  [戻り値] なし
+
+  [説明]   デストラクタに頼らずに明示的にメモリセグメントを解放する。
+	メモリセグメントを保持していない場合は、何もしない。
+	メモリセグメントを保持している場合は、メモリセグメントの参照カウントを
+	1減少させてから、インスタンスを再初期化する。
+
+  [使用例] なし
+
+
+5.5.3.5 メモリセグメントの仮想アドレス取得
+
+  -----------------------------------------------------------------------------
+  [関数] void* MemHandle::getVa()
+  -----------------------------------------------------------------------------
+
+  [引数]   なし
+
+  [戻り値] 仮想アドレス
+
+  [説明]   インスタンスがメモリセグメントを保持していれば、セグメントの仮想アドレスを返す。
+	セグメントを保持していなければ、D_ASSERTする。
+
+	本関数は、translatePoolAddrToVa(getAddr()) と等価である。
+
+  [使用例]
+	void* va = mh.getVa();
+
+
+5.5.3.6 メモリセグメントの各種情報を取得
+
+  -----------------------------------------------------------------------------
+  [関数] bool        MemHandle::isAvail()
+         bool        MemHandle::isNull()
+         bool        MemHandle::isSame(const MemHandle& mh)
+         PoolId      MemHandle::getPoolId()
+         NumSeg      MemHandle::getSegNo()
+         PoolAddr    MemHandle::getAddr()
+         PoolSize    MemHandle::getSize()
+         SegRefCnt   MemHandle::getRefCnt()
+  -----------------------------------------------------------------------------
+
+  [引数]   const MemHandle& mh    /* 比較先メモリハンドル */
+
+  [戻り値] 下記参照
+
+  [説明]
+	isAvail()は、インスタンスがメモリセグメントを保持しているか否かを返す。
+
+	isNull()は、インスタンスがメモリセグメントを未保持か否かを返す。
+
+	isSame()は、インスタンスと引数mhが同じ値か否かを返す。
+
+	getPoolId()は、インスタンスがメモリセグメントを保持していれば
+	セグメントが所属しているプールのIDを返す。
+	セグメントを保持していなければ、NullPoolIdを返す。
+
+	getSegNo()は、インスタンスがメモリセグメントを保持していれば
+	セグメントが所属しているプール内でのセグメント番号(1 origin)を返す。
+	セグメントを保持していなければ、NullSegNoを返す。
+
+	getSegAddr()は、インスタンスがメモリセグメントを保持していれば
+	セグメントのアドレスを返す。
+	セグメントを保持していなければ、D_ASSERTする。
+
+	getSegSize()は、インスタンスがメモリセグメントを保持していれば
+	セグメントのサイズを返す。
+	セグメントを保持していなければ、D_ASSERTする。
+
+	getRefCnt()は、インスタンスがメモリセグメントを保持していれば
+	セグメントの参照カウントを返す。
+	セグメントを保持していなければ、D_ASSERTする。
+
+  [使用例] 
+
+
+------------------------------------------------------------------------
+6. 使用例
+------------------------------------------------------------------------
+
+ (1) ライブラリ全体の初期化
+
+	/* 単一のCPUで、一度だけ実行すること */
+	// SpinLockManager::initFirst();	/* マルチコアサポート時に必要 */
+	void* mml_data_area = MemMgrLite::translatePoolAddrToVa(MEMMGR_DATA_AREA_ADDR);
+	MemMgrLite::Manager::initFirst(mml_data_area, MEMMGR_DATA_AREA_SIZE);
+
+ (2) CPU毎のライブラリの初期化
+
+	/* 各CPUで、一度だけ実行すること */
+	// SpinLockManager::initPerCpu();	/* マルチコアサポート時に必要 */
+	MemMgrLite::Manager::initPerCpu(mml_data_area);
+
+ (3) 指定メモリレイアウトのメモリプール群を生成
+
+	/* 固定領域に定義したMEMMGR_WORK_AREAを作業領域に使用する */
+	S_ASSERT(MEMMGR_WORK_AREA_SIZE >= MEMMGR_MAX_WORK_SIZE);
+	void* mml_work_area = MemMgrLite::translatePoolAddrToVa(MEMMGR_WORK_AREA_ADDR);
+
+	const NumLayout layout_no = 0;
+	MemMgrLite::Manager::createStaticPools(layout_no, mml_work_area, MEMMGR_WORK_AREA_SIZE);
+
+ (4) メモリの取得・解放
+
+	MemHandle mh(AUDIO_AU_POOL, 64);
+	if (mh.isNull()) {
+		F_ASSERT(! "メモリセグメント取得失敗\n");
+	} 
+	void* va = mh.getVa();
+
+ (5) 指定メモリレイアウトのメモリプール群を削除
+
+	MemMgrLite::Manager::destroyStaticPools();
+
