@@ -84,6 +84,8 @@ ifneq ($(KERNCONF),)
 	$(Q) $(SDKDIR)/tools/config.py --kernel $(KERNCONF)
 endif
 	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
+	$(Q) $(DIRUNLINK) $(TOPDIR)/include/arch/board
+	$(Q) $(DIRUNLINK) $(TOPDIR)/$(ARCH_SRC)/board
 PHONY += buildkernel
 
 # installkernel
@@ -97,8 +99,6 @@ installkernel:
 	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
 	$(Q) if [ -f lib/libapps.a ]; then $(ARCROSSDEV)ar d lib/libapps.a builtin_list.o; fi
 	$(Q) if [ -f lib/libarch.a ]; then $(ARCROSSDEV)ar d lib/libarch.a cxd56_allocateheap.o; fi
-	$(Q) $(DIRUNLINK) $(TOPDIR)/include/arch/board
-	$(Q) $(DIRUNLINK) $(TOPDIR)/$(ARCH_SRC)/board
 PHONY += installkernel
 
 SDKMODDIRS =
