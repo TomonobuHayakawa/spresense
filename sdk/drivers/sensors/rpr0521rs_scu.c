@@ -1,9 +1,7 @@
 /****************************************************************************
  * drivers/sensors/rpr0521rs_scu.c
- * Character driver for RPR0521RS
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Makoto Kabe <Makoto.Kabe@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -349,7 +347,7 @@ static int rpr0521rs_checkid(FAR struct rpr0521rs_dev_s *priv)
     {
       /* Manufact ID is not Correct */
 
-      sndbg("Wrong Manufact ID! %02x\n", id);
+      snerr("Wrong Manufact ID! %02x\n", id);
       return -ENODEV;
     }
 
@@ -361,7 +359,7 @@ static int rpr0521rs_checkid(FAR struct rpr0521rs_dev_s *priv)
     {
       /* Part ID is not Correct */
 
-      sndbg("Wrong Part ID! %02x\n", id);
+      snerr("Wrong Part ID! %02x\n", id);
       return -ENODEV;
     }
 
@@ -710,7 +708,7 @@ static int rpr0521rs_ioctl_als(FAR struct file *filep, int cmd,
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -786,7 +784,7 @@ static int rpr0521rs_ioctl_ps(FAR struct file *filep, int cmd,
         {
           FAR uint8_t intstatus = rpr0521rs_getreg8(priv, RPR0521RS_INTERRUPT);
           *(FAR uint8_t *)(uintptr_t)arg = intstatus;
-          snvdbg("Get proximity IntStatus 0x%02x\n", intstatus);
+          sninfo("Get proximity IntStatus 0x%02x\n", intstatus);
         }
         break;
 
@@ -799,13 +797,13 @@ static int rpr0521rs_ioctl_ps(FAR struct file *filep, int cmd,
 
               ret = seq_ioctl(priv->seq, priv->minor, cmd, arg);
 #else
-              sndbg("Unregisted SCU sequencer cmd: %d\n", cmd);
+              snerr("Unregisted SCU sequencer cmd: %d\n", cmd);
               ret = - ENOTTY;
 #endif
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -853,7 +851,7 @@ int rpr0521rs_init(FAR struct i2c_master_s *i2c, int port)
   ret = rpr0521rs_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       return ret;
     }
 
@@ -906,7 +904,7 @@ int rpr0521rsals_register(FAR const char *devpath, int minor,
     kmm_malloc(sizeof(struct rpr0521rs_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -922,7 +920,7 @@ int rpr0521rsals_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_rpr0521rsalsfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
@@ -960,7 +958,7 @@ int rpr0521rsps_register(FAR const char *devpath, int minor,
     kmm_malloc(sizeof(struct rpr0521rs_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -976,11 +974,11 @@ int rpr0521rsps_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_rpr0521rspsfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("RPR0521RS proximity sensor driver loaded successfully!\n");
+  sninfo("RPR0521RS proximity sensor driver loaded successfully!\n");
 
   return ret;
 }
