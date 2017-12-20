@@ -1,9 +1,7 @@
 /****************************************************************************
  * drivers/sensors/lt1pa01_scu.c
- * Character driver for LT1PA01
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Makoto Kabe <Makoto.Kabe@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -315,13 +313,13 @@ static int lt1pa01_checkid(FAR struct lt1pa01_dev_s *priv)
   /* Read Device ID */
 
   id = lt1pa01_getreg8(priv, LT1PA01_ID);
-  snvdbg("LT1PA01 ID:%02X\n", id);
+  sninfo("LT1PA01 ID:%02X\n", id);
 
   if ((id & LT1PA01_ID_MASK) != LT1PA01_DEVICEID)
     {
       /* Device ID is not Correct */
 
-      sndbg("Wrong Device ID! %02x (Exp:%02x)\n", id, LT1PA01_DEVICEID);
+      snerr("Wrong Device ID! %02x (Exp:%02x)\n", id, LT1PA01_DEVICEID);
       return -ENODEV;
     }
 
@@ -627,7 +625,7 @@ static int lt1pa01_ioctl_als(FAR struct file *filep, int cmd,
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -696,7 +694,7 @@ static int lt1pa01_ioctl_prox(FAR struct file *filep, int cmd,
         {
           FAR uint8_t intstatus = lt1pa01_getreg8(priv, LT1PA01_INTCONFIG);
           *(FAR uint8_t *)(uintptr_t)arg = intstatus;
-          snvdbg("Get proximity IntStatus 0x%02x\n", intstatus);
+          sninfo("Get proximity IntStatus 0x%02x\n", intstatus);
         }
         break;
 #endif
@@ -710,13 +708,13 @@ static int lt1pa01_ioctl_prox(FAR struct file *filep, int cmd,
 
               ret = seq_ioctl(priv->seq, priv->minor, cmd, arg);
 #else
-              sndbg("Unregisted SCU sequencer cmd: %d\n", cmd);
+              snerr("Unregisted SCU sequencer cmd: %d\n", cmd);
               ret = - ENOTTY;
 #endif
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -763,7 +761,7 @@ int lt1pa01_init(FAR struct i2c_master_s *i2c, int port)
   ret = lt1pa01_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       return ret;
     }
 
@@ -809,7 +807,7 @@ int lt1pa01als_register(FAR const char *devpath, int minor,
     kmm_malloc(sizeof(struct lt1pa01_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -825,7 +823,7 @@ int lt1pa01als_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_lt1pa01alsfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
@@ -863,7 +861,7 @@ int lt1pa01prox_register(FAR const char *devpath, int minor,
     kmm_malloc(sizeof(struct lt1pa01_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -879,11 +877,11 @@ int lt1pa01prox_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_lt1pa01proxfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("LT1PA01 proximity sensor driver loaded successfully!\n");
+  sninfo("LT1PA01 proximity sensor driver loaded successfully!\n");
 
   return ret;
 }
