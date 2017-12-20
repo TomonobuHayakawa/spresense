@@ -66,7 +66,6 @@
 #  endif
 #endif
 
-
 #if defined(CONFIG_MODEM_ALT_1160) && defined(CONFIG_CXD56_GPIO_IRQ)
 
 #define ALT1160_SHUTDOWN (PIN_PWM1)
@@ -156,12 +155,12 @@ int cxd56_alt1160initialize(FAR const char *devpath, FAR struct spi_dev_s* spi)
 {
   int ret;
 
-  dbg("Initializing ALT1160..\n");
+  m_info("Initializing ALT1160..\n");
 
   ret = alt1160_register(devpath, spi);
   if (ret < 0)
   {
-    dbg("Error registering ALT1160\n");
+    m_err("Error registering ALT1160\n");
   }
 
   /* disable the SPI pin */

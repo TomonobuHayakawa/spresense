@@ -1,0 +1,47 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menuconfig MODEM
+	bool "MODEM drivers"
+	---help---
+		MODEM device drivers.
+
+if MODEM
+
+config MODEM_ALT_1160
+	bool "Altair ALT1160 modem support"
+	default n
+	---help---
+		Enable driver for the Altiar ALT1160 modem.
+
+config MODEM_ALT_1160_PROTCOL_V2_1
+	bool "Enable SPI protocol version 2.1"
+	default y
+	depends on MODEM_ALT_1160
+	---help---
+		Support only this version.
+
+config MODEM_ALT_1160_DEBUG
+	bool "Enable debug mode for ALT1160 modem driver"
+	default n
+	depends on MODEM_ALT_1160
+	---help---
+		Allow the alt1160 modem driver print debug information.
+
+config MODEM_ALT_1160_BOOT_DELAY
+	int "Delay time during ALT1160 startup in sec"
+	default 10
+	depends on MODEM_ALT_1160
+	---help---
+		none
+
+config MODEM_ALT_1160_KEEP_WAKE_STATE
+	bool "Configuration to keep wake state of ALT1160"
+	default n
+	depends on MODEM_ALT_1160
+	---help---
+		none
+
+endif

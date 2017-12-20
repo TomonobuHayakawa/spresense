@@ -1,8 +1,8 @@
 ############################################################################
-# modules/asmp/Makefile
+# drivers/modem/Make.defs
 #
-#   Copyright (C) 2016 Sony Corporation. All rights reserved.
-#   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
+#   Copyright (C) 2017 Sony Corporation. All rights reserved.
+#   Author: Yutaka Miyajima <Yutaka.Miyajima@sony.com>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,59 +31,20 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-###########################################################################
+############################################################################
 
--include $(TOPDIR)/Make.defs
--include $(SDKDIR)/Make.defs
-DELIM ?= $(strip /)
+ifeq ($(CONFIG_MODEM),y)
 
-VPATH   =
-DEPPATH =
+ifeq ($(CONFIG_MODEM_ALT_1160),y)
+CSRCS += alt1160.c
+CSRCS += alt1160_spi.c
+CSRCS += alt1160_pm.c
+CSRCS += alt1160_pm_state.c
+CSRCS += alt1160_sys.c
+endif
 
-include sensors$(DELIM)Make.defs
-include lcd$(DELIM)Make.defs
-include modem$(DELIM)Make.defs
+DEPPATH += --dep-path modem
+VPATH += :modem
+CFLAGS += $(shell $(INCDIR) $(INCDIROPT) "$(CC)" $(SDKDIR)$(DELIM)drivers$(DELIM)modem)
 
-AOBJS = $(ASRCS:.S=$(OBJEXT))
-COBJS = $(CSRCS:.c=$(OBJEXT))
-
-LIB_OBJS = $(AOBJS) $(COBJS)
-
-SRCS = $(ASRCS) $(CSRCS)
-OBJS = $(AOBJS) $(COBJS)
-
-BIN = libextdrivers$(LIBEXT)
-
-all: $(BIN)
-.PHONY: context depend clean distclean
-
-$(AOBJS): %$(OBJEXT): %.S
-	$(call ASSEMBLE, $<, $@)
-
-$(COBJS): %$(OBJEXT): %.c
-	$(call COMPILE, $<, $@)
-
-$(BIN): $(LIB_OBJS)
-	$(call ARCHIVE, $@, $(LIB_OBJS))
-
-.depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
-	$(Q) touch $@
-
-depend: .depend
-
-.context:
-	$(Q) touch $@
-
-context: .context
-
-clean:
-	$(call DELFILE, $(BIN))
-	$(call CLEAN)
-
-distclean: clean
-	$(call DELFILE, .context)
-	$(call DELFILE, Make.dep)
-	$(call DELFILE, .depend)
-
--include Make.dep
+endif
