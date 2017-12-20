@@ -1,9 +1,7 @@
 /****************************************************************************
  * drivers/sensors/bh1745nuc_scu.c
- * Character driver for BH1745NUC
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Makoto Kabe <Makoto.Kabe@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -231,7 +229,7 @@ static int bh1745nuc_checkid(FAR struct bh1745nuc_dev_s *priv)
     {
       /* Manufact ID is not Correct */
 
-      sndbg("Wrong Manufact ID! %02x\n", id);
+      snerr("Wrong Manufact ID! %02x\n", id);
       return -ENODEV;
     }
 
@@ -243,7 +241,7 @@ static int bh1745nuc_checkid(FAR struct bh1745nuc_dev_s *priv)
     {
       /* Part ID is not Correct */
 
-      sndbg("Wrong Part ID! %02x\n", id);
+      snerr("Wrong Part ID! %02x\n", id);
       return -ENODEV;
     }
 
@@ -417,7 +415,7 @@ static int bh1745nuc_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
             }
           else
             {
-              sndbg("Unrecognized cmd: %d\n", cmd);
+              snerr("Unrecognized cmd: %d\n", cmd);
               ret = - ENOTTY;
             }
         }
@@ -464,7 +462,7 @@ int bh1745nuc_init(FAR struct i2c_master_s *i2c, int port)
   ret = bh1745nuc_checkid(priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       return ret;
     }
 
@@ -502,7 +500,7 @@ int bh1745nuc_register(FAR const char *devpath, int minor,
     kmm_malloc(sizeof(struct bh1745nuc_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
 
@@ -518,11 +516,11 @@ int bh1745nuc_register(FAR const char *devpath, int minor,
   ret = register_driver(path, &g_bh1745nucfops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      snerr("Failed to register driver: %d\n", ret);
       kmm_free(priv);
     }
 
-  snvdbg("BH1745NUC driver loaded successfully!\n");
+  sninfo("BH1745NUC driver loaded successfully!\n");
 
   return ret;
 }
