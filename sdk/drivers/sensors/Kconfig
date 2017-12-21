@@ -46,6 +46,13 @@ config APDS9930_PROXIMITY_INTERRUPT
 
 endif
 
+config APDS9960
+	bool "Avago APDS9960 Proximity, Ambient light, RGB and Gesture Sensor support"
+	default n
+	select I2C
+	---help---
+		Enable driver support for APDS9960 proximity, ambient light, RGB and gesture sensor.
+
 config LT1PA01
 	bool "Murata LT1PA01 Proximity and Ambient light Sensor"
 	default n

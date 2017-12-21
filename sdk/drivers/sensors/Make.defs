@@ -59,6 +59,10 @@ ifeq ($(CONFIG_APDS9930),y)
   CSRCS += apds9930_scu.c
 endif
 
+ifeq ($(CONFIG_APDS9960),y)
+  CSRCS += apds9960.c
+endif
+
 ifeq ($(CONFIG_LT1PA01),y)
   CSRCS += lt1pa01_scu.c
 endif
