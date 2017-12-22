@@ -40,7 +40,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <arch/chip/audio.h>
+#include <arch/chip/cxd56_audio.h>
 
 #include "audio/common_attention.h"
 #include "audio/common_assert.h"

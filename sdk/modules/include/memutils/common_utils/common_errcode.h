@@ -1,5 +1,5 @@
 /****************************************************************************
- * sony_apps/include/memutils/common/common_errcode.h
+ * modules/include/memutils/common_utils/common_errcode.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *   Author: Suzunosuke Hida <Suzunosuke.Hida@sony.com>

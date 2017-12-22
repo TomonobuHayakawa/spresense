@@ -1,5 +1,5 @@
 ############################################################################
-# modules/audio/Makefile
+# modules/audio/dma_controller/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #
@@ -39,55 +39,50 @@
 DELIM ?= $(strip /)
 CXXEXT ?= .cpp
 
+DEPPATH += --dep-path . 
+
 # Add sub directory if exists
 
-CSRCS   = 
-CXXSRCS =
+CXXSRCS = audio_bb_drv.cpp audio_dma_buffer.cpp
+CXXSRCS += audio_dma_drv.cpp audio_dma_drv_api.cpp
+CXXSRCS += level_ctrl.cpp
 
 # Include sub directory source files
 
-include components/Make.defs
-include manager/Make.defs
-include playlist/Make.defs
 
-BIN = libaudiolib$(LIBEXT)
+BIN = libdmacontroller$(LIBEXT)
 
-AOBJS = $(ASRCS:.S=$(OBJEXT))
-COBJS = $(CSRCS:.c=$(OBJEXT))
 CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
 
-SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS)
-LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
+SRCS = $(CXXSRCS)
+LIB_OBJS = $(CXXOBJS)
 
 # Here is a example of adding include paths.
 # Note that include path addtion will be affected to build time.
 # Don't add unnecessary include paths for module.
 #
-# PATH_TO_INCLUDE = $(SDKDIR)$(DELIM)modules$(DELIM)path_to_include
-# ifeq ($(WINTOOL),y)
-#   CFLAGS += -I "${shell cygpath -w $(PATH_TO_INCLUDE)}"
-# else
-#   CFLAGS += -I$(PATH_TO_INCLUDE)
-# endif
+AUDIODIR = $(SDKDIR)$(DELIM)modules$(DELIM)audio
+ifeq ($(WINTOOL),y)
+  CXXFLAGS += -I "${shell cygpath -w $(AUDIODIR)}"
+  CXXFLAGS += -I "${shell cygpath -w $(AUDIODIR)/include}"
+else
+  CXXFLAGS += -I$(AUDIODIR)
+  CXXFLAGS += -I$(AUDIODIR)/include
+endif
+
+CXXFLAGS += -D_POSIX
 
 all: $(BIN)
 .PHONY: context depend clean distclean
 
-$(AOBJS): %$(OBJEXT): %.S
-	$(call ASSEMBLE, $<, $@)
-
-$(COBJS): %$(OBJEXT): %.c
-	$(call COMPILE, $<, $@)
-
 $(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
-	$(call COMPILE, $<, $@)
+	$(call COMPILEXX, $<, $@)
 
 $(BIN): $(LIB_OBJS)
 	$(call ARCHIVE, $@, $(LIB_OBJS))
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(ASRCS) $(CSRCS) >Make.dep
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CXXFLAGS) -- $(CXXSRCS) >>Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CXXFLAGS) -- $(CXXSRCS) >Make.dep
 	$(Q) touch $@
 
 depend: .depend

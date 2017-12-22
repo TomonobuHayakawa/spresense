@@ -39,7 +39,7 @@
  * Number of detected registers: 317
  */
 
-#include <arch/chip/audio.h>
+#include <arch/chip/cxd56_audio.h>
 #include "audio/ac_reg_map.h"
 
 const acReg acRegMap[RI_REG_MAX_ENTRY] = {

@@ -102,7 +102,7 @@ E_AS AS_SetAudioDataPath( asPathSelParam* pPathSelParam,
 			F_ASSERT(ret == 0);
 			uint64_t time = (unsigned long long)end.tv_sec*1000 + (unsigned long long)end.tv_nsec/1000000 - m_mic_boot_start_time;
 			if(time < bb_config_tblp->mic_boot_wait){
-				auddbg("AnalogMic active wait:%dmsec\n", (int)(bb_config_tblp->mic_boot_wait - time));
+				_info("AnalogMic active wait:%dmsec\n", (int)(bb_config_tblp->mic_boot_wait - time));
 				audioDelayTask(bb_config_tblp->mic_boot_wait - time);
 			}
 #ifndef CONFIG_CXD56_AUDIO_ANALOG_NONE

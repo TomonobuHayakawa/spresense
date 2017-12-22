@@ -33,7 +33,7 @@
  *
  ****************************************************************************/
 
-#include <arch/chip/audio.h>
+#include <arch/chip/cxd56_audio.h>
 #include "audio/common_assert.h"
 
 E_AS getDmacCmdStatus( asDmacSelId dmacId, uint32_t *pResult )

@@ -1,6 +1,0 @@
-
-CXXSRCS +=
-
-VPATH   += playlist
-SUBDIRS +=
-DEPPATH += --dep-path playlist

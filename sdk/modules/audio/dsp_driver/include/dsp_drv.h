@@ -1,0 +1,118 @@
+/****************************************************************************
+ * modules/audio/dsp_driver/include/dsp_drv.h
+ *
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Author: Suzunosuke Hida <Suzunosuke.Hida@sony.com>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name NuttX nor Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ ****************************************************************************/
+
+#ifndef __MODULES_AUDIO_DSP_DRIVER_INCLUDE_DSP_DRV_H
+#define __MODULES_AUDIO_DSP_DRIVER_INCLUDE_DSP_DRV_H
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+
+#include <asmp/asmp.h>
+#include <asmp/mptask.h>
+#include <asmp/mpmq.h>
+#include <pthread.h>
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#define DSP_COM_DATA_TYPE_STRUCT_ADDRESS  0
+#define DSP_COM_DATA_TYPE_32BIT_VALUE     1
+
+struct DspDrvComPrm_s
+{
+  uint32_t process_mode:4;  /* Mode of process. A use case is a case where
+                             * DSP has 2 or more processes. */
+  uint32_t event_type:3;    /* Type of event. Set event type such as INIT,
+                             * EXEC or Flash. */
+  uint32_t type:1;          /* Type of data. Set a whether data is a
+                             * pointer(0) or a value(1). */
+  union
+  {
+    FAR void *pParam;     /* Set address of parameter. */
+    uint32_t value;       /* Set value of parameter. */
+  } data;
+};
+typedef struct DspDrvComPrm_s DspDrvComPrm_t;
+
+/* Type of callback function. */
+
+typedef void (*DspDoneCallback)(FAR void *, FAR void *);
+
+#ifdef __cplusplus
+class DspDrv
+{
+public:
+  int init(FAR const char *pfilename,
+           DspDoneCallback p_cbfunc,
+           FAR void        *p_parent_instance,
+           bool            is_secure);
+  int destroy();
+  int send(FAR const DspDrvComPrm_t *p_param);
+  int receive();
+
+  DspDrv() {}
+  ~DspDrv() {}
+
+private:
+  mptask_t  m_mptask;
+  mpmq_t    m_mq;
+
+  DspDoneCallback m_p_cb_func;
+  pthread_t m_thread_id;
+
+  FAR void *m_p_parent_instance;
+};
+#endif
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+extern CODE void *DD_Load(FAR const char  *filename,
+                          DspDoneCallback p_cbfunc,
+                          FAR void        *p_parent_instance);
+
+extern CODE void *DD_Load_Secure(FAR const char  *filename,
+                                 DspDoneCallback p_cbfunc,
+                                 FAR void        *p_parent_instance);
+
+extern int DD_SendCommand(FAR const void           *p_instance,
+                          FAR const DspDrvComPrm_t *p_param);
+
+extern int DD_Unload(FAR const void *p_instance);
+
+#endif /* __MODULES_AUDIO_DSP_DRIVER_INCLUDE_DSP_DRV_H */

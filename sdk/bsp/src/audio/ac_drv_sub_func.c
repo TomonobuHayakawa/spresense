@@ -806,9 +806,9 @@ E_AS setAcDesOut( asSerDesParam *pSdesParam )
 void  checkErrCode( E_AS rtCode, E_AS okCode )
 {
 	if (rtCode == okCode) {
-		auddbg("\t[OK]\n");
+		_info("\t[OK]\n");
 	} else {
-		auddbg("\t[ERR] (code:%2d)\n", rtCode);
+		_err("\t[ERR] (code:%2d)\n", rtCode);
 	}
 }
 

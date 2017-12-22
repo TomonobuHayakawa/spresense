@@ -1,5 +1,5 @@
 /********************************************************************************
- * sony_apps/memutils/memory_manager/include/Manager.h
+ * modules/include/memutils/memory_manager/Manager.h
  *
  * Description: Memory Manager Lite Manager class
  *

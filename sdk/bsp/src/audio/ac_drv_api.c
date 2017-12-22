@@ -768,48 +768,53 @@ E_AS PowerOnAudioCodec( uint32_t rate[AS_I2S_NUM], asBypassModeId bypass_mode_en
 	}
 
 	rtCode = asAc_CheckID();
-	auddbg("asAc_CheckID(%d)\n", rtCode);
+	_info("asAc_CheckID(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = asAc_InitDsp();
-	auddbg("asAc_InitDsp(%d)\n", rtCode);
+	_info("asAc_InitDsp(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = asAc_PowerOnSerDes( &sSdesParam );
-	auddbg("asAc_PowerOnSerDes(%d)\n", rtCode);
+	_info("asAc_PowerOnSerDes(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = asAc_PowerOnCodec();
-	auddbg("asAc_PowerOnCodec(%d)\n", rtCode);
+	_info("asAc_PowerOnCodec(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = asAc_PowerOnSrc( gSrcId, &sI2sParam );
-	auddbg("asAc_PowerOnSrc(%d)\n", rtCode);
+	_info("asAc_PowerOnSrc(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = asAc_ResetDsp();
-	auddbg("asAc_ResetDsp(%d)\n", rtCode);
+	_info("asAc_ResetDsp(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = asAc_EnableSrc( gSrcId );
-	auddbg("asAc_EnableSrc(%d)\n", rtCode);
+	_info("asAc_EnableSrc(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = asAc_EnableSer();
-	auddbg("asAc_EnableSer(%d)\n", rtCode);
+	_info("asAc_EnableSrc(%d)\n", rtCode);
+	if (E_AS_OK != rtCode) {
+		return rtCode;
+	}
+	rtCode = asAc_EnableSer();
+	_info("asAc_EnableSer(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	if(bb_config_tblp->alc_spc_sel != AS_ALC_SPC_SEL_OFF) {
 		rtCode = asAc_SetAlcSpcParam();
-		auddbg("asAc_SetAlcSpcParam(%d)\n", rtCode);
+		_info("asAc_SetAlcSpcParam(%d)\n", rtCode);
 	}
 
 	return rtCode;
@@ -834,7 +839,7 @@ E_AS EnableAudioCodecInput( int32_t micgain[AS_MIC_CHANNEL_MAX] )
 		case AS_CIC_SEL_CIC2:
 		case AS_CIC_SEL_CIC12:
 			rtCode = asAc_PowerOnCic( cicId, &cicParam);
-			auddbg("asAc_PowerOnCic(%d)\n", rtCode);
+			_info("asAc_PowerOnCic(%d)\n", rtCode);
 			if (E_AS_OK != rtCode) {
 				return rtCode;
 			}
@@ -845,7 +850,7 @@ E_AS EnableAudioCodecInput( int32_t micgain[AS_MIC_CHANNEL_MAX] )
 		case AS_CIC_SEL_CIC_ALL:
 			if( cicParam.gainMode == AS_CIC_GAIN_MODE_CIC ) {
 				rtCode = asAc_PowerOnCic( cicId, &cicParam );
-				auddbg("asAc_PowerOnCic(%d)\n", rtCode);
+				_info("asAc_PowerOnCic(%d)\n", rtCode);
 				if (E_AS_OK != rtCode) {
 					return rtCode;
 				}
@@ -857,7 +862,7 @@ E_AS EnableAudioCodecInput( int32_t micgain[AS_MIC_CHANNEL_MAX] )
 		}
 	}
 	rtCode = asAc_PowerOnDecim();
-	auddbg("asAc_PowerOnDecim(%d)\n", rtCode);
+	_info("asAc_PowerOnDecim(%d)\n", rtCode);
 
 	return rtCode;
 }
@@ -867,12 +872,12 @@ E_AS EnableAudioCodecOutput( void )
 	E_AS rtCode = E_AS_OK;
 
 	rtCode = asAc_PowerOnSmstr();
-	auddbg("asAc_PowerOnSmstr(%d)\n", rtCode);
+	_info("asAc_PowerOnSmstr(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = asAc_EnableSmstr();
-	auddbg("asAc_EnableSmstr(%d)\n", rtCode);
+	_info("asAc_EnableSmstr(%d)\n", rtCode);
 
 	return rtCode;
 }

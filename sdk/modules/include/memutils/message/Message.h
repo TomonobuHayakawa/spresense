@@ -1,5 +1,5 @@
 /********************************************************************************
- * sony_apps/memutils/message/include/Message.h
+ * modules/include/memutils/message/Message.h
  *
  *   Copyright (C) 2011-17 Sony Corporation. All rights reserved.
  *   Author: Suzunosuke Hida <Suzunosuke.Hida@sony.com>

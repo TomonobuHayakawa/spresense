@@ -39,7 +39,7 @@
 #include <debug.h>
 
 #include <arch/board/board.h>
-#include <arch/chip/audio.h>
+#include <arch/chip/cxd56_audio.h>
 
 #include "cxd56_clock.h"
 #include "audio/audio_io_config.h"
@@ -297,10 +297,10 @@ E_AS AS_PowerOnBaseBand( uint32_t rate[AS_I2S_NUM], asBypassModeId bypass_mode_e
 		return rtCode;
 	}
 
- 	irq_attach(CXD56_IRQ_AUDIO_0, (xcpt_t)AS_AudioIntHandler);
-	irq_attach(CXD56_IRQ_AUDIO_1, (xcpt_t)AS_AudioIntHandler);
-	irq_attach(CXD56_IRQ_AUDIO_2, (xcpt_t)AS_AudioIntHandler);
-	irq_attach(CXD56_IRQ_AUDIO_3, (xcpt_t)AS_AudioIntHandler);
+ 	irq_attach(CXD56_IRQ_AUDIO_0, (xcpt_t)AS_AudioIntHandler, NULL);
+	irq_attach(CXD56_IRQ_AUDIO_1, (xcpt_t)AS_AudioIntHandler, NULL);
+	irq_attach(CXD56_IRQ_AUDIO_2, (xcpt_t)AS_AudioIntHandler, NULL);
+	irq_attach(CXD56_IRQ_AUDIO_3, (xcpt_t)AS_AudioIntHandler, NULL);
 
 	poweron_common = true;
 	return rtCode;
@@ -519,11 +519,11 @@ E_AS AS_InitClearStereo( asCsEn csEn, asCsSignId csSign, int32_t csVol )
 
 	if(csEn == AS_CS_ENABLE) {
 		rtCode = asAc_SetClearStereo( csSign, csVol );
-		auddbg("asAc_SetClearStereo(%d)\n", rtCode);
+		_info("asAc_SetClearStereo(%d)\n", rtCode);
 	}
 	else if(csEn == AS_CS_DISABLE){
 		rtCode = asAc_SetClearStereo( csSign, AS_CS_VOL_INF_ZERO );
-		auddbg("asAc_SetClearStereo(%d)\n", rtCode);
+		_info("asAc_SetClearStereo(%d)\n", rtCode);
 	}
 	else {
 		return E_AS_CS_EN_PARAM;

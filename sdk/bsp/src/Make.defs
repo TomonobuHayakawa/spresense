@@ -73,7 +73,7 @@ CHIP_CSRCS += cxd56_sph.c
 endif
 
 ifeq ($(CONFIG_CXD56_AUDIO),y)
-include cxd56xx/audio/Make.defs
+include src/audio/Make.defs
 endif
 
 ifeq ($(CONFIG_CXD56_GNSS),y)

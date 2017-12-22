@@ -95,8 +95,6 @@ uint32_t write_ac_reg( AC_REG_ID regId, uint32_t data )
 		D_ASSERT(0);
 	}
 
-	//auddbg("\n%s() addr:0x%08x pos:%2d len:%2d val:0x%2x [0x%08x]", __func__, addr, acRegMap[regId].pos, acRegMap[regId].len, data, *(AC_SWREG+addr));
-
 	return 0;
 }
 
@@ -117,7 +115,6 @@ uint32_t read_ac_reg( AC_REG_ID regId )
 	} else {
 		D_ASSERT(0);
 	}
-	//auddbg("\n%s()  addr:0x%08x pos:%2d len:%2d val:0x%2x [0x%08x]", __func__, addr, acRegMap[regId].pos, acRegMap[regId].len, data, *(AC_SWREG+addr));
 
 	return data;
 }

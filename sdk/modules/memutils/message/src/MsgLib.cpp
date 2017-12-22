@@ -1,5 +1,5 @@
 /********************************************************************************
- * sony_apps/memutils/message/include/MsgPacket.h
+ * modules/memutils/message/src/MsgLib.cpp
  *
  * Description: MessageLib API implementation.
  *

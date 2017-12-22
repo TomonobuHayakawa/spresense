@@ -1,5 +1,5 @@
 /********************************************************************************
- * sony_apps/memutils/memory_manager/src/initFirst.cpp
+ * modules/memutils/memory_manager/src/initFirst.cpp
  *
  * Description: Memory Manager Lite's Manager::initFirst API implement.
  *

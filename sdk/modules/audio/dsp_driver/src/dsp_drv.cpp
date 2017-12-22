@@ -1,0 +1,433 @@
+/****************************************************************************
+ * audioutils/dsp_driver/src/dsp_drv.cpp
+ *
+ *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
+ *   Author: Suzunosuke Hida <Suzunosuke.Hida@sony.com>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name NuttX nor Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ ****************************************************************************/
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+
+#include <sdk/config.h>
+#include <nuttx/compiler.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <debug.h>
+#include <errno.h>
+#include <assert.h>
+
+#include "dsp_drv.h"
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#ifndef CONFIG_AUDIOUTILS_DSP_MOUNTPT
+#  define CONFIG_AUDIOUTILS_DSP_MOUNTPT "/mnt/vfat/BIN"
+#endif
+
+#define FULLPATH  64
+
+/* MP object keys. Must be synchronized with worker. */
+
+#define KEY_MQ 2
+
+/* Check configuration.  This is not all of the configuration settings that
+ * are required -- only the more obvious.
+ */
+
+#if CONFIG_NFILE_DESCRIPTORS < 1
+#  error "You need to set the configuration file CONFIG_NFILE_DESCRIPTORS"
+#endif
+
+#ifndef CONFIG_ASMP
+#  error "ASMP support library is not enabled!"
+#endif
+
+/* If CONFIG_DEBUG is enabled, use dbg instead of printf so that the
+ * output will be synchronous with the debug output.
+ */
+
+#ifdef CONFIG_CPP_HAVE_VARARGS
+#  ifdef CONFIG_DEBUG
+#    define message(format, ...)    dbg(format, ##__VA_ARGS__)
+#    define err(format, ...)        dbg(format, ##__VA_ARGS__)
+#  else
+#    define message(format, ...)    printf(format, ##__VA_ARGS__)
+#    define err(format, ...)        fprintf(stderr, format, ##__VA_ARGS__)
+#  endif
+#else
+#  ifdef CONFIG_DEBUG
+#    define message                 dbg
+#    define err                     dbg
+#  else
+#    define message                 printf
+#    define err                     printf
+#  endif
+#endif
+
+#define CXD56_DSP_DRV_SCHED_PRIORITY 200
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Symbols from Auto-Generated Code
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+extern "C" CODE void *dd_receiver_thread(FAR void *p_instance)
+{
+  do
+    {
+      ((DspDrv*)p_instance)->receive();
+    }
+  while(1);
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+int DspDrv::init(FAR const char  *pfilename,
+                 DspDoneCallback p_cbfunc,
+                 FAR void        *p_parent_instance,
+                 bool            is_secure)
+{
+  int   ret;
+  int   errout_ret;
+  char  filepath[FULLPATH];
+  pthread_attr_t attr;
+  struct sched_param sch_param;
+
+  m_p_cb_func = p_cbfunc;
+  m_p_parent_instance = p_parent_instance;
+
+  if (is_secure)
+    {
+      snprintf(filepath, FULLPATH, "%s", pfilename);
+
+      /* Initialize MP task. */
+
+      ret = mptask_init_secure(&m_mptask, filepath);
+      if (ret < 0)
+        {
+          err("mptask_init_secure() failure. %d\n", ret);
+          return ret;
+        }
+    }
+  else
+    {
+      snprintf(filepath,
+               FULLPATH,
+               "%s/%s",
+               CONFIG_AUDIOUTILS_DSP_MOUNTPT,
+               pfilename);
+
+      /* Initialize MP task. */
+
+      ret = mptask_init(&m_mptask, filepath);
+      if (ret < 0)
+        {
+          err("mptask_init() failure. %d\n", ret);
+          return ret;
+        }
+    }
+
+  ret = mptask_assign(&m_mptask);
+  if (ret < 0)
+    {
+      err("mptask_asign() failure. %d\n", ret);
+      return ret;
+    }
+
+  /* Initialize MP message queue with asigned CPU ID,
+   * and bind it to MP task.
+   */
+
+  ret = mpmq_init(&m_mq, KEY_MQ, mptask_getcpuid(&m_mptask));
+  if (ret < 0)
+    {
+      err("mpmq_init() failure. %d\n", ret);
+      goto dsp_drv_errout_with_mptask_destroy;
+    }
+
+  /* Create receive thread. */
+
+  (void)pthread_attr_init(&attr);
+  sch_param.sched_priority = CXD56_DSP_DRV_SCHED_PRIORITY;
+  ret = pthread_attr_setschedparam(&attr, &sch_param);
+  if (ret != 0)
+    {
+      err("pthread_attr_setschedparam() failure. %d\n", ret);
+      goto dsp_drv_errout_with_mpmq_destory;
+    }
+
+  ret = pthread_create(&m_thread_id,
+                       &attr,
+                       dd_receiver_thread,
+                       (pthread_addr_t)this);
+  if (ret != 0)
+    {
+      err("pthread_create() failure. %d\n", ret);
+      (void)pthread_attr_destroy(&attr);
+      goto dsp_drv_errout_with_mpmq_destory;
+    }
+
+  (void)pthread_attr_destroy(&attr);
+
+  /* Run worker. */
+
+  ret = mptask_exec(&m_mptask);
+  if (ret < 0)
+    {
+      errout_ret = ret;
+      err("mptask_exec() failure. %d\n", ret);
+      ret = pthread_cancel(m_thread_id);
+      DEBUGASSERT(ret == 0);
+
+      ret = pthread_join(m_thread_id, NULL);
+      DEBUGASSERT(ret == 0);
+
+      return errout_ret;
+    }
+
+  return 0;
+
+dsp_drv_errout_with_mpmq_destory:
+  errout_ret = mpmq_destroy(&m_mq);
+  DEBUGASSERT(errout_ret == 0);
+
+dsp_drv_errout_with_mptask_destroy:
+  errout_ret = mptask_destroy(&m_mptask, false, NULL);
+  DEBUGASSERT(errout_ret == 0);
+
+  return ret;
+}
+
+/*--------------------------------------------------------------------------*/
+int DspDrv::destroy()
+{
+
+  int ret;
+
+  /* Cancel thread. */
+
+  ret = pthread_cancel(m_thread_id);
+  if (ret != 0)
+    {
+      err("pthread_cancel() failure. %d\n", ret);
+      return ret;
+    }
+
+  ret = pthread_join(m_thread_id, NULL);
+  if (ret != 0)
+    {
+      err("pthread_join() failure. %d\n", ret);
+      return ret;
+    }
+
+  /* Destroy worker. */
+
+  ret = mptask_destroy(&m_mptask, false, NULL);
+  if (ret < 0)
+    {
+      err("mptask_destroy() failure. %d\n", ret);
+      return ret;
+    }
+
+  /* Finalize all of MP objects. */
+
+  ret = mpmq_destroy(&m_mq);
+  if (ret < 0)
+    {
+      err("mpmq_destroy() failure. %d\n", ret);
+      return ret;
+    }
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+int DspDrv::send(FAR const DspDrvComPrm_t *p_param)
+{
+  int     ret;
+  uint8_t command;
+
+  command =
+    (p_param->process_mode << 4) + (p_param->event_type << 1) + p_param->type;
+
+  /* Send command to worker. */
+
+  ret = mpmq_timedsend(&m_mq, command, p_param->data.value, 1000);
+  if (ret < 0)
+    {
+      err("mpmq_send() failure. %d\n", ret);
+      return ret;
+    }
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+int DspDrv::receive()
+{
+  int      command;
+  uint32_t msgdata;
+  bool active = true;
+
+  /* Wait for worker message. */
+
+  while (active)
+    {
+      command = mpmq_receive(&m_mq, &msgdata);
+      if (command < 0)
+        {
+          err("mpmq_recieve() failure. command(%d) < 0\n", command);
+          return command;
+        }
+
+      DspDrvComPrm_t param;
+      param.process_mode = (command >> 4) & 0xf;
+      param.event_type   = (command >> 1) & 0x7;
+      param.type         = (command >> 0) & 0x1;
+      param.data.value   = msgdata;
+      m_p_cb_func((FAR void *)&param, m_p_parent_instance);
+
+      if (param.event_type == 7)
+        {
+          active = false;
+        }
+    }
+
+  return 0;
+}
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+CODE void *DD_Load(FAR const char  *filename,
+                   DspDoneCallback p_cbfunc,
+                   FAR void        *p_parent_instance)
+{
+  if (filename == NULL || p_cbfunc == NULL)
+    {
+      return NULL;
+    }
+
+  FAR DspDrv *p_instance = new DspDrv;
+  if (p_instance != NULL)
+    {
+      /* Initialize DspDriver. */
+
+      int ret = p_instance->init(filename,
+                                 p_cbfunc,
+                                 p_parent_instance,
+                                 false);
+      if (ret < 0)
+        {
+          delete ((FAR DspDrv*)p_instance);
+          return NULL;
+        }
+    }
+  return (FAR void*)p_instance;
+}
+
+/*--------------------------------------------------------------------------*/
+CODE void *DD_Load_Secure(FAR const char  *filename,
+                          DspDoneCallback p_cbfunc,
+                          FAR void        *p_parent_instance)
+{
+  if (filename == NULL || p_cbfunc == NULL)
+    {
+      return NULL;
+    }
+
+  FAR DspDrv *p_instance = new DspDrv;
+  if (p_instance != NULL)
+    {
+      /* Initialize DspDriver. */
+
+      int ret = p_instance->init(filename,
+                                 p_cbfunc,
+                                 p_parent_instance,
+                                 true);
+      if (ret < 0)
+        {
+          delete ((FAR DspDrv*)p_instance);
+          return NULL;
+        }
+    }
+  return (FAR void*)p_instance;
+}
+
+/*--------------------------------------------------------------------------*/
+int DD_SendCommand(FAR const void           *p_instance,
+                   FAR const DspDrvComPrm_t *p_param)
+{
+  if (p_instance == NULL || p_param == NULL)
+    {
+      return -1;
+    }
+
+  int ret = ((FAR DspDrv*)p_instance)->send(p_param);
+
+  return ret;
+}
+
+/*--------------------------------------------------------------------------*/
+int DD_Unload(FAR const void *p_instance)
+{
+  if (p_instance == NULL)
+    {
+      return -1;
+    }
+
+  int ret = ((FAR DspDrv*)p_instance)->destroy();
+  if (ret == 0)
+    {
+      delete ((FAR DspDrv*)p_instance);
+    }
+
+  return ret;
+}

@@ -47,7 +47,7 @@
 #include <nuttx/kmalloc.h>
 
 #include <arch/chip/cxd56_audio.h>
-#include "drivers/baseband/include/audio_io_config.h"
+#include "audio/audio_io_config.h"
 #include "cxd56_clock.h"
 #include "arch/board/board.h"
 
@@ -105,7 +105,7 @@ int cxd56_audio_bb_power(int type, unsigned long arg)
       {
         if (mode & AUDIO_CXD5247)
           {
-            auddbg("Power ON audio\n");
+            _info("Power ON audio\n");
             if (mode & AUDIO_CXD5247_AVDD)
               {
                 target |= CXD5247_AVDD;
@@ -134,7 +134,7 @@ int cxd56_audio_bb_power(int type, unsigned long arg)
           }
         if (mode & AUDIO_CXD5247)
           {
-            auddbg("Power OFF audio\n");
+            _info("Power OFF audio\n");
             if (mode & AUDIO_CXD5247_AVDD)
               {
                 target |= CXD5247_AVDD;
@@ -588,7 +588,7 @@ int cxd56_audio_bb_register(FAR const char *devpath)
       goto _err0;
     }
 
-  auddbg("'%s' loaded\n", (FAR const char *)devpath);
+  _info("'%s' loaded\n", (FAR const char *)devpath);
 
   return ret;
 
@@ -629,7 +629,7 @@ int cxd56_audio_bb_unregister(FAR const char *devpath)
       unregister_driver(priv->devpath);
       sem_destroy(&priv->devsem);
 
-      auddbg("'%s' unloaded\n", (FAR const char *)devpath);
+      _info("'%s' unloaded\n", (FAR const char *)devpath);
 
       return ret;
     }

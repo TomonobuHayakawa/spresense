@@ -3,6 +3,14 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
+config SDK_AUDIO
+    bool "SDK audio"
+    default n
+    --- help ---
+       Enable support for sdk audio 
+
+if SDK_AUDIO
+
 menu "Audio Utilities"
 
 source "$SDKDIR/modules/audio/manager/Kconfig"
@@ -22,6 +30,34 @@ config AUDIOUTILS_PLAYER
 
 if AUDIOUTILS_PLAYER
 source "$SDKDIR/modules/audio/playlist/Kconfig"
+
+menu "Audio Player Supported Formats"
+config AUDIOUTILS_PLAYER_CODEC_PCM
+	bool "PCM Audio"
+	default y
+	---help---
+		Supported only headerless PCM data
+
+config AUDIOUTILS_PLAYER_CODEC_MP3
+	bool "MP3"
+	default y
+	---help---
+		Supported MPEG1 Audio Layer-3, MPEG2 Audio Layer-3
+
+config AUDIOUTILS_PLAYER_CODEC_AAC
+	bool "AAC"
+	default y
+	---help---
+		Supported MPEG2 Advanced Audio Coding
+
+config AUDIOUTILS_PLAYER_CODEC_OPUS
+	bool "Opus"
+	default y
+	---help---
+		Supported VoIP codec in Opus format
+
+endmenu # Audio Player Codec Type
+
 endif
 
 config AUDIOUTILS_RECORDER
@@ -148,6 +184,12 @@ config AUDIOUTILS_DETAILLOG
 	---help---
 		Print logs of audioutils. Detail log will be printed.
 
+config AUDIOUTILS_ATTENTIONLOG_DISABLE
+	bool "Disable print attention log to console"
+	default n
+	---help---
+		Disable attention log to print in console. default is [n].
+
 menu "Audio component menu"
 source "$SDKDIR/modules/audio/components/Kconfig"
 endmenu
@@ -160,3 +202,5 @@ config AUDIOUTILS_UNUSE_ORIGINAL_OPUS_FORMAT
         Enable Unuse Original Opus Format
 
 endmenu # Audio Utilities
+
+endif

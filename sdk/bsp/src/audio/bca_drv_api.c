@@ -33,7 +33,7 @@
  *
  ****************************************************************************/
 
-#include <arch/chip/audio.h>
+#include <arch/chip/cxd56_audio.h>
 
 #include "audio/as_drv_common.h"
 

@@ -126,19 +126,19 @@ E_AS asAca_CheckID( void )
 	uint8_t chipid = read_aca_reg( AU_CHIPID );
 	switch (chipid) {
 	case ACA_CHIPID_ES1:
-		auddbg("AcaPulco ES1(%02Xh)\n", chipid);
+		_info("AcaPulco ES1(%02Xh)\n", chipid);
 		break;
 	case ACA_CHIPID_ES2:
-		auddbg("AcaPulco ES2(%02Xh)\n", chipid);
+		_info("AcaPulco ES2(%02Xh)\n", chipid);
 		break;
 	case ACA_CHIPID_ES3:
-		auddbg("AcaPulco ES3(%02Xh)\n", chipid);
+		_info("AcaPulco ES3(%02Xh)\n", chipid);
 		break;
 	case ACA_CHIPID_ES4:
-		auddbg("AcaPulco ES4(%02Xh)\n", chipid);
+		_info("AcaPulco ES4(%02Xh)\n", chipid);
 		break;
 	default:
-		auddbg("%s()[ERR] (code:%2d, ChipID:%02Xh)\n", __func__, E_AS_ACAPULCO_ID_NG, chipid);
+		_info("%s()[ERR] (code:%2d, ChipID:%02Xh)\n", __func__, E_AS_ACAPULCO_ID_NG, chipid);
 		return E_AS_ACAPULCO_ID_NG;
 	}
 
@@ -488,12 +488,12 @@ E_AS PowerOnAcaPulco( void )
 		return rtCode;
 	}
 	rtCode = AS_AcaControl( AS_ACA_POWER_ON_COMMON, (uint32_t)&sAcaPulcoParam );
-	auddbg("asAca_PowerOnAcaPulco(%d)\n", rtCode);
+	_info("asAca_PowerOnAcaPulco(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = AS_AcaControl( AS_ACA_SET_SERDES, (uint32_t)&sAcaPulcoSdesParam );
-	auddbg("asAca_SetSerDes(%d)\n", rtCode);
+	_info("asAca_SetSerDes(%d)\n", rtCode);
 
 	return rtCode;
 }
@@ -520,7 +520,7 @@ E_AS EnableAcaPulcoInput( int32_t micgain[8] )
 	}
 
 	rtCode = AS_AcaControl( AS_ACA_POWER_ON_INPUT, (uint32_t)&sAcaPulcoInParam );
-	auddbg("asAca_PowerOnAcaPulcoInput(%d)\n", rtCode);
+	_info("asAca_PowerOnAcaPulcoInput(%d)\n", rtCode);
 
 	return rtCode;
 }
@@ -541,12 +541,12 @@ E_AS EnableAcaPulcoOutput( void )
 	}
 
 	rtCode = AS_AcaControl( AS_ACA_SET_SMASTER, (uint32_t)&acaPulcoSmstrParam );
-	auddbg("asAca_SetSmstr(%d)\n", rtCode);
+	_info("asAca_SetSmstr(%d)\n", rtCode);
 	if (E_AS_OK != rtCode) {
 		return rtCode;
 	}
 	rtCode = AS_AcaControl( AS_ACA_POWER_ON_OUTPUT, (uint32_t)&sAcaPulcoOutParam );
-	auddbg("asAca_PowerOnAcaPulcoOutput(%d)\n", rtCode);
+	_info("asAca_PowerOnAcaPulcoOutput(%d)\n", rtCode);
 
 	return rtCode;
 }

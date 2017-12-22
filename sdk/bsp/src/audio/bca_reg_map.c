@@ -40,7 +40,7 @@
  * Number of detected registers: 95
  */
 
-#include <arch/chip/audio.h>
+#include <arch/chip/cxd56_audio.h>
 
 const acReg bcaRegMap[BCA_REG_MAX_ENTRY] = {
 	{0x1000,  2, 30, 0x00000000},	// Mic_In_start_adr (0x00000000)
