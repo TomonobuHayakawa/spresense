@@ -1,8 +1,7 @@
 ############################################################################
 # configs/corvo/src/Makefile
 #
-#   Copyright (C) 2016 Sony Corporation. All rights reserved.
-#   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
+#   Copyright (C) 2017 Sony Corporation.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -74,6 +73,10 @@ endif
 
 ifeq ($(CONFIG_APDS9930),y)
 CSRCS += cxd56_apds9930.c
+endif
+
+ifeq ($(CONFIG_APDS9960),y)
+CSRCS += cxd56_apds9960.c
 endif
 
 ifeq ($(CONFIG_LT1PA01),y)

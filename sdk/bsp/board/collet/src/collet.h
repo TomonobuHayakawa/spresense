@@ -1,8 +1,7 @@
 /****************************************************************************
  * configs/collet/src/collet.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Yutaka Miyajima <Yutaka.Miyajima@sony.com>
+ *   Copyright (C) 2017 Sony Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -118,6 +117,18 @@ int cxd56_ak09912initialize(FAR const char *devpath, FAR struct i2c_master_s* i2
 
 #ifdef CONFIG_APDS9930
 int cxd56_apds9930initialize(FAR struct i2c_master_s* i2c);
+#endif
+
+/****************************************************************************
+ * Name: cxd56_apds9960initialize
+ *
+ * Description:
+ *   Called to configure an I2C and to register APDS9960 for collet board
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_APDS9960
+int cxd56_apds9960initialize(FAR struct i2c_master_s* i2c);
 #endif
 
 /****************************************************************************

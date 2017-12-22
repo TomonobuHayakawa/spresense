@@ -1,8 +1,7 @@
 /****************************************************************************
  * config/collet/src/cxd56_appinit.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
+ *   Copyright (C) 2017 Sony Corporation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -567,6 +566,14 @@ int board_app_initialize(uintptr_t arg)
     }
 #else
 #define ALS_SENSOR_APDS9930  0
+#endif
+
+#ifdef CONFIG_APDS9960
+  ret = cxd56_apds9960initialize(i2c);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialize APDS9960.\n");
+    }
 #endif
 
 #ifdef CONFIG_LT1PA01
