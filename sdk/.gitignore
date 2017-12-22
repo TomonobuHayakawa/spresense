@@ -7,7 +7,6 @@ Make.dep
 *~
 .swp
 .*.swp
-core
 /.gdbinit
 /cscope.*
 /.config
