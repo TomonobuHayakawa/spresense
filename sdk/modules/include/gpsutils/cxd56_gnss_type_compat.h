@@ -1,5 +1,5 @@
 /*****************************************************************************
- * arch/arm/include/cxd56xx/cxd56_gnss_type.h
+ * sdk/modules/include/gpsutils/cxd56_gnss_type_compat.h
  *
  *   Copyright (C) 2016,2017 Sony Corporation. All rights reserved.
  *   Author: Tomoyuki Takahashi <Tomoyuki.A.Takahashi@sony.com>
@@ -33,10 +33,11 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_INCLUDE_CXD56XX_CXD56_GNSS_TYPE_H
-#define __ARCH_ARM_INCLUDE_CXD56XX_CXD56_GNSS_TYPE_H
-/**
- * @file cxd56_gnss_type.h
+/*
+ * NOTICE:
+ * This file is an old definition file to maintain compatibility with the old
+ * API specification of CXD56_GNSS. Since it will be abolished in the future, 
+ * PLEASE REWRITE THE APPLICATION USING THE NEW DEFINITION.
  */
 
 /*
@@ -48,7 +49,12 @@
  * in this file, please synchronize and change the other.
  */
 
-#include <stdint.h>
+#ifndef __SDK_MODULES_INCLUDE_GPSUTILS_CXD56_GNSS_TYPE_COMPAT_H
+#define __SDK_MODULES_INCLUDE_GPSUTILS_CXD56_GNSS_TYPE_COMPAT_H
+
+/**
+ * @file cxd56_gnss_type_compat.h
+ */
 
 #ifdef __cplusplus
 #define EXTERN extern "C"
@@ -527,6 +533,8 @@ typedef struct {
  */
 typedef struct
 {
+  uint64_t timesnow;   /**< [out] system now times */
+  uint8_t  ppsStatus;  /**< [out] 1PPS synchronization status */
   double af0;          /**< [out] SV Clock Correction */
   double af1;          /**< [out] SV Clock Correction */
   double af2;          /**< [out] SV Clock Correction */
@@ -574,7 +582,9 @@ typedef struct
  * Ephemeris data (GLONASS)
  */
 typedef struct {
+  uint64_t timesnow;/**< [out] system now times */
   uint32_t valid;   /**< [out] valid */
+  uint8_t  ppsStatus;/**< [out] 1PPS synchronization status */
   uint8_t  slot;    /**< [out] slot 1...24 (It generates from svid.
                          Usually same as me->n) */
   int8_t   ch;      /**< [out] ch -7...6 */
@@ -755,4 +765,4 @@ typedef struct
 }
 #endif /* __cplusplus */
 
-#endif /* __ARCH_ARM_INCLUDE_CXD56XX_CXD56_GNSS_TYPE_H */
+#endif /* __SDK_MODULES_INCLUDE_GPSUTILS_CXD56_GNSS_TYPE_COMPAT_H */

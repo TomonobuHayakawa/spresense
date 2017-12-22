@@ -105,7 +105,7 @@ static FAR void *cxd56cpu1_worker(FAR void *arg)
       sigtype = (uint8_t)CXD56_CPU1_GET_DEV(msg.data);
       if (sigtype >= CXD56_CPU1_DATA_TYPE_MAX)
         {
-          dbg("Caught invalid sigtype %d.\n", sigtype);
+          _info("Caught invalid sigtype %d.\n", sigtype);
           continue;
         }
 
@@ -196,7 +196,7 @@ int cxd56_cpu1siginit(uint8_t sigtype, FAR void *data)
   ret = cxd56_iccinitmsg(CXD56CPU1_CPUID);
   if (ret < 0)
     {
-      sndbg("Failed to initialize ICC for GPS CPU: %d\n", ret);
+      _err("Failed to initialize ICC for GPS CPU: %d\n", ret);
       goto _err0;
     }
 

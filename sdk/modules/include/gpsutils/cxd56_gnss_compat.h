@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/cxd56_gnss.h
+ * sdk/modules/include/gpsutils/cxd56_gnss_compat.h
  *
  *   Copyright (C) 2016,2017 Sony Corporation. All rights reserved.
  *   Author: Tomoyuki Takahashi <Tomoyuki.A.Takahashi@sony.com>
@@ -32,12 +32,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-/**
- * @file       cxd56_gnss.h
+
+/*
+ * NOTICE:
+ * This file is an old definition file to maintain compatibility with the old
+ * API specification of CXD56_GNSS. Since it will be abolished in the future, 
+ * PLEASE REWRITE THE APPLICATION USING THE NEW DEFINITION.
  */
 
-#ifndef __ARCH_ARM_INCLUDE_CXD56XX_CXD56_GNSS_H
-#define __ARCH_ARM_INCLUDE_CXD56XX_CXD56_GNSS_H
+ /**
+ * @file       cxd56_gnss_compat.h
+ */
+
+#ifndef __SDK_MODULES_INCLUDE_GPSUTILS_CXD56_GNSS_COMPAT_H
+#define __SDK_MODULES_INCLUDE_GPSUTILS_CXD56_GNSS_COMPAT_H
 
 #ifdef __cplusplus
 #define EXTERN extern "C"
@@ -50,8 +58,7 @@ extern "C" {
  * include files
  *---------------------------------------------------------------------------*/
 
-#include <nuttx/config.h>
-#include <arch/chip/cxd56_gnss_type.h>
+#include "gpsutils/cxd56_gnss_type_compat.h"
 
 /**
  * @defgroup gnss GNSS driver
@@ -853,4 +860,4 @@ struct cxd56_gnss_rtk_setting
 }
 #endif
 
-#endif /* __ARCH_ARM_INCLUDE_CXD56XX_CXD56_GNSS_H */
+#endif /* __SDK_MODULES_INCLUDE_GPSUTILS_CXD56_GNSS_COMPAT_H */

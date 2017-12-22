@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_geofence.c
+ * sdk/bsp/src/cxd56_geofence.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *   Author: Takefumi Hayashi <Takefumi.Hayashi@sony.com>
@@ -52,7 +52,7 @@
 #include <nuttx/board.h>
 #include <nuttx/spi/spi.h>
 
-#include <arch/chip/cxd56_geofence.h>
+#include <arch/chip/geofence.h>
 #include "cxd56_gnss_api.h"
 #include "cxd56_cpu1signal.h"
 
@@ -70,24 +70,41 @@
  * Private Types
  ****************************************************************************/
 
-struct geofence_dev_s
+struct cxd56_geofence_dev_s
 {
-  sem_t          devsem;
-  struct pollfd *fds[CONFIG_GEOFENCE_NPOLLWAITERS];
+  sem_t              devsem;
+  FAR struct pollfd *fds[CONFIG_GEOFENCE_NPOLLWAITERS];
 };
 
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
 
-static int geofence_open(FAR struct file *filep);
-static int geofence_close(FAR struct file *filep);
-static ssize_t geofence_read(FAR struct file *filep, FAR char *buffer,
-                              size_t len);
-static int geofence_ioctl(FAR struct file *filep, int cmd,
-                           unsigned long arg);
-static int geofence_poll(FAR struct file *filep, FAR struct pollfd *fds,
-                          bool setup);
+/* file operation functions */
+
+static int cxd56_geofence_open(FAR struct file *filep);
+static int cxd56_geofence_close(FAR struct file *filep);
+static ssize_t cxd56_geofence_read(FAR struct file *filep, FAR char *buffer,
+                                   size_t len);
+static int cxd56_geofence_ioctl(FAR struct file *filep, int cmd,
+                                unsigned long arg);
+#ifndef CONFIG_DISABLE_POLL
+static int cxd56_geofence_poll(FAR struct file *filep, FAR struct pollfd *fds,
+                               bool setup);
+#endif
+
+/* ioctl command functions */
+
+static int cxd56_geofence_start(unsigned long arg);
+static int cxd56_geofence_stop(unsigned long arg);
+static int cxd56_geofence_add_region(unsigned long arg);
+static int cxd56_geofence_modify_region(unsigned long arg);
+static int cxd56_geofence_delete_region(unsigned long arg);
+static int cxd56_geofence_delete_all_region(unsigned long arg);
+static int cxd56_geofence_get_region_data(unsigned long arg);
+static int cxd56_geofence_get_used_id(unsigned long arg);
+static int cxd56_geofence_get_all_status(unsigned long arg);
+static int cxd56_geofence_set_mode(unsigned long arg);
 
 /****************************************************************************
  * Private Data
@@ -96,218 +113,348 @@ static int geofence_poll(FAR struct file *filep, FAR struct pollfd *fds,
 /* This the vtable that supports the character driver interface */
 
 static const struct file_operations g_geofencefops = {
-  geofence_open,  /* open */
-  geofence_close, /* close */
-  geofence_read,  /* read */
-  0,              /* write */
-  0,              /* seek */
-  geofence_ioctl, /* ioctl */
+  cxd56_geofence_open,  /* open */
+  cxd56_geofence_close, /* close */
+  cxd56_geofence_read,  /* read */
+  0,                    /* write */
+  0,                    /* seek */
+  cxd56_geofence_ioctl, /* ioctl */
 #ifndef CONFIG_DISABLE_POLL
-  geofence_poll, /* poll */
+  cxd56_geofence_poll,  /* poll */
 #endif
+};
+
+/* ioctl command list */
+
+FAR static int (*g_cmdlist[CXD56_GEOFENCE_IOCTL_MAX])(unsigned long) = {
+  NULL,              /* CXD56_GEOFENCE_IOCTL_INVAL = 0 */
+  cxd56_geofence_start,
+  cxd56_geofence_stop,
+  cxd56_geofence_add_region,
+  cxd56_geofence_modify_region,
+  cxd56_geofence_delete_region,
+  cxd56_geofence_delete_all_region,
+  cxd56_geofence_get_region_data,
+  cxd56_geofence_get_used_id,
+  cxd56_geofence_get_all_status,
+  cxd56_geofence_set_mode,
+  /* max                CXD56_GEOFENCE_IOCTL_MAX */
 };
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_START ###
- * 
- * Start GEOFENCE Detect
- */
-static int start(unsigned long arg)
+/****************************************************************************
+ * Name: cxd56_geofence_start
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_START command.
+ *   Start GEOFENCE Detect
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_geofence_start(unsigned long arg)
 {
   return GD_RegisterGeofence();
 }
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_STOP ###
- * 
- * Start GEOFENCE Detect
- */
-static int stop(unsigned long arg)
+/****************************************************************************
+ * Name: cxd56_geofence_stop
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_STOP command.
+ *   Stop GEOFENCE Detect
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_geofence_stop(unsigned long arg)
 {
   return GD_ReleaseGeofence();
 }
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_ADD ###
- * 
- * Add region
- */
-static int add_region(unsigned long arg)
+/****************************************************************************
+ * Name: cxd56_geofence_add_region
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_ADD command.
+ *   Add region
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_geofence_add_region(unsigned long arg)
 {
   int                                    ret;
   FAR struct cxd56_geofence_region_s *reg_data;
-  
+
   if (!arg)
     {
       return -EINVAL;
     }
   reg_data = (FAR struct cxd56_geofence_region_s *)arg;
-  
+
   ret = GD_GeoAddRegion(reg_data->id, reg_data->latitude, reg_data->longitude,
-                                                          reg_data->radius);
-  
+                        reg_data->radius);
+
   return ret;
 }
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_MODIFY ###
- * 
- * Modify region
- */
-static int modify_region(unsigned long arg)
+/****************************************************************************
+ * Name: cxd56_geofence_modify_region
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_MODIFY command.
+ *   Modify region
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_geofence_modify_region(unsigned long arg)
 {
   int                                    ret;
   FAR struct cxd56_geofence_region_s *reg_data;
-  
+
   if (!arg)
     {
       return -EINVAL;
     }
   reg_data = (FAR struct cxd56_geofence_region_s *)arg;
- 
-  ret = GD_GeoModifyRegion(reg_data->id, reg_data->latitude, 
+
+  ret = GD_GeoModifyRegion(reg_data->id, reg_data->latitude,
                            reg_data->longitude, reg_data->radius);
-  
+
   return ret;
 }
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_DELETE ###
- * 
- * delete region
- */
-static int delete_region(unsigned long arg)
+/****************************************************************************
+ * Name: cxd56_geofence_delete_region
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_DELETE command.
+ *   Delete region
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_geofence_delete_region(unsigned long arg)
 {
   int         ret;
   FAR uint8_t id;
-  
+
   if (UINT8_MAX < arg)
     {
       return -EINVAL;
     }
-  
+
   id = (uint8_t)arg;
   ret = GD_GeoDeleteRegione(id);
-  
+
   return ret;
 }
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_ALL_DELETE ###
- * 
- * All delete region
- */
-static int delete_all_region(unsigned long arg)
+/****************************************************************************
+ * Name: cxd56_geofence_delete_all_region
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_ALL_DELETE command.
+ *   All delete region
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_geofence_delete_all_region(unsigned long arg)
 {
   int ret;
-  
+
   ret = GD_GeoDeleteAllRegion();
-  
+
   return ret;
 }
 
+/****************************************************************************
+ * Name: cxd56_geofence_get_region_data
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_GET_REGION_DATA command.
+ *   Get used region ID
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_GET_REGION_DATA ###
- * 
- * Get used region ID
- */
-static int get_region_data(unsigned long arg)
+static int cxd56_geofence_get_region_data(unsigned long arg)
 {
   int                                    ret;
   FAR struct cxd56_geofence_region_s *reg_data;
-  
+
   if (!arg)
     {
       return -EINVAL;
     }
   reg_data = (FAR struct cxd56_geofence_region_s *)arg;
-  
-  ret = GD_GeoGetRegionData(reg_data->id, &reg_data->latitude, 
+
+  ret = GD_GeoGetRegionData(reg_data->id, &reg_data->latitude,
                             &reg_data->longitude, &reg_data->radius);
-  
+
   return ret;
 }
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_GET_USED_ID ###
- * 
- * Get used region ID
- */
-static int get_used_id(unsigned long arg)
+/****************************************************************************
+ * Name: cxd56_geofence_get_used_id
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_GET_USED_ID command.
+ *   Get used region ID
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_geofence_get_used_id(unsigned long arg)
 {
   if (!arg)
     {
       return -EINVAL;
     }
-  
+
   *(uint32_t *)arg = GD_GeoGetUsedRegionId();
-  
+
   return 0;
 }
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_GET_ALL_STATUS ###
- * 
- * Get All transition status
- */
-static int get_all_status(unsigned long arg)
+/****************************************************************************
+ * Name: cxd56_geofence_get_all_status
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_GET_ALL_STATUS command.
+ *   Get All transition status
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_geofence_get_all_status(unsigned long arg)
 {
   int ret;
-  
+
   ret = GD_GeoSetAllRgionNotifyRequest();
-  
+
   return ret;
 }
 
-/*
- * ### CXD56_GEOFENCE_IOCTL_SET_MODE ###
- * 
- * Set geofence operation mode
- */
-static int set_mode(unsigned long arg)
+/****************************************************************************
+ * Name: cxd56_geofence_set_mode
+ *
+ * Description:
+ *   Process CXD56_GEOFENCE_IOCTL_SET_MODE command.
+ *   Set geofence operation mode
+ *
+ * Input Parameters:
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_geofence_set_mode(unsigned long arg)
 {
   int                                   ret;
   FAR struct cxd56_geofence_mode_s *mode;
-  
+
   if (!arg)
     {
       return -EINVAL;
     }
   mode = (FAR struct cxd56_geofence_mode_s *)arg;
-  
+
   ret = GD_GeoSetOpMode(mode->deadzone, mode->dwell_detecttime);
-  
+
   return ret;
 }
 
-/*
- *  GEOFENCE worker for poll
- */
+/****************************************************************************
+ * Name: cxd56_geofence_sighandler
+ *
+ * Description:
+ *   Common signal handler from GNSS CPU.
+ *
+ * Input Parameters:
+ *   data     - Received data from GNSS CPU
+ *   userdata - User data, this is the device information specified by the
+ *              second argument of the function cxd56_cpu1siginit.
+ *
+ * Returned Value:
+ *   None
+ *
+ ****************************************************************************/
 
-static void geofence_sighandler(uint32_t data, void *userdata)
+
+static void cxd56_geofence_sighandler(uint32_t data, FAR void *userdata)
 {
-  FAR struct geofence_dev_s *priv = (FAR struct geofence_dev_s *)userdata;
-  int                        i;
-  int                        ret;
+  FAR struct cxd56_geofence_dev_s *priv =
+    (FAR struct cxd56_geofence_dev_s *)userdata;
+  int i;
+  int ret;
 
   ret = sem_wait(&priv->devsem);
   if (ret < 0)
     {
       return;
     }
-  
+
   for (i = 0; i < CONFIG_GEOFENCE_NPOLLWAITERS; i++)
     {
       struct pollfd *fds = priv->fds[i];
       if (fds)
         {
           fds->revents |= POLLIN;
-          snvdbg("Report events: %02x\n", fds->revents);
+          _info("Report events: %02x\n", fds->revents);
           sem_post(fds->sem);
         }
     }
@@ -316,13 +463,19 @@ static void geofence_sighandler(uint32_t data, void *userdata)
 }
 
 /****************************************************************************
- * Name: geofence_initialize
+ * Name: cxd56_geofence_initialize
  *
  * Description:
- *   initialize gnss device
+ *   initialize GEOFENCE device
+ *
+ * Input Parameters:
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
  *
  ****************************************************************************/
-static int geofence_initialize(struct geofence_dev_s* dev)
+
+static int cxd56_geofence_initialize(FAR struct cxd56_geofence_dev_s* dev)
 {
   int32_t ret = 0;
 
@@ -330,29 +483,41 @@ static int geofence_initialize(struct geofence_dev_s* dev)
 }
 
 /****************************************************************************
- * Name: geofence_open
+ * Name: cxd56_geofence_open
  *
  * Description:
  *   Standard character driver open method.
  *
+ * Input Parameters:
+ *   filep - File structure pointer
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
  ****************************************************************************/
 
-static int geofence_open(FAR struct file *filep)
+static int cxd56_geofence_open(FAR struct file *filep)
 {
   int32_t ret = 0;
-  
+
   return ret;
 }
 
 /****************************************************************************
- * Name: geofence_close
+ * Name: cxd56_geofence_close
  *
  * Description:
  *   Standard character driver close method.
  *
+ * Input Parameters:
+ *   filep - File structure pointer
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
  ****************************************************************************/
 
-static int geofence_close(FAR struct file *filep)
+static int cxd56_geofence_close(FAR struct file *filep)
 {
   int32_t ret = 0;
 
@@ -360,17 +525,27 @@ static int geofence_close(FAR struct file *filep)
 }
 
 /****************************************************************************
- * Name: geofence_read
+ * Name: cxd56_geofence_read
  *
  * Description:
  *   Standard character driver read method.
  *
+ * Input Parameters:
+ *   filep - File structure pointer
+ *   buffer - Buffer to write
+ *   buflen - The write length of the buffer
+ *
+ * Returned Value:
+ *   Always returns -ENOENT error.
+ * 
  ****************************************************************************/
 
-static ssize_t geofence_read(FAR struct file *filep, FAR char *buffer,
-                              size_t len)
+static ssize_t cxd56_geofence_read(FAR struct file *filep, FAR char *buffer,
+                                   size_t len)
 {
   int32_t ret = 0;
+
+  /* Check argument */
 
   if (!buffer)
     {
@@ -379,72 +554,71 @@ static ssize_t geofence_read(FAR struct file *filep, FAR char *buffer,
     }
   if (len == 0)
     {
-      return 0;
+      ret = 0;
+      goto _err;
     }
-  
+
   /* GD_ReadBuffer returns copied data size or negative error code */
+
   ret = GD_ReadBuffer(CXD56_CPU1_DEV_GEOFENCE, 0, buffer, len);
-  if (ret > 0)
-    {
-      ret = 0; /* always return EOF if reading successfully */
-    }
 
 _err:
   return ret;
 }
 
-
-
 /****************************************************************************
- * Name: geofence_ioctl
+ * Name: cxd56_geofence_ioctl
  *
  * Description:
  *   Standard character driver ioctl method.
+ *
+ * Input Parameters:
+ *   filep - File structure pointer
+ *   fds   - Array of file descriptor
+ *   setup - 1 if start poll, 0 if stop poll
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
  ****************************************************************************/
-static int geofence_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
-{
-  static int (*cmd_list[GEOFENCE_IOCTL_MAX])(unsigned long) = {
-    NULL,                           /* CXD56_GEOFENCE_IOCTL_INVAL = 0 */
-    start,                          /* CXD56_GEOFENCE_IOCTL_START */
-    stop,                           /* CXD56_GEOFENCE_IOCTL_STOP */
-    add_region,                     /* CXD56_GEOFENCE_IOCTL_ADD */
-    modify_region,                  /* CXD56_GEOFENCE_IOCTL_MODIFY */
-    delete_region,                  /* CXD56_GEOFENCE_IOCTL_DELETE */
-    delete_all_region,              /* CXD56_GEOFENCE_IOCTL_ALL_DELETE */
-    get_region_data,                /* CXD56_GEOFENCE_IOCTL_GET_REGION_DATA */
-    get_used_id,                    /* CXD56_GEOFENCE_IOCTL_GET_USED_ID */
-    get_all_status,                 /* CXD56_GEOFENCE_IOCTL_GET_ALL_STATUS */
-    set_mode,                       /* CXD56_GEOFENCE_IOCTL_SET_MODE */
-    /* max                             CXD56_GEOFENCE_IOCTL_MAX */
-  };
 
-  if (cmd <= GEOFENCE_IOCTL_INVAL || cmd >= GEOFENCE_IOCTL_MAX)
+static int cxd56_geofence_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
+{
+  if (cmd <= CXD56_GEOFENCE_IOCTL_INVAL || cmd >= CXD56_GEOFENCE_IOCTL_MAX)
     {
       return -EINVAL;
     }
 
-  return cmd_list[cmd](arg);
+  return g_cmdlist[cmd](arg);
 }
 
-
 /****************************************************************************
- * Name: geofence_poll
+ * Name: cxd56_geofence_poll
  *
  * Description:
  *   Standard character driver poll method.
+ *
+ * Input Parameters:
+ *   filep - File structure pointer
+ *   fds   - array of file descriptor
+ *   setup - 1 if start poll, 0 if stop poll
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
  ****************************************************************************/
 
 #ifndef CONFIG_DISABLE_POLL
-static int geofence_poll(FAR struct file *filep, FAR struct pollfd *fds,
-                          bool setup)
+static int cxd56_geofence_poll(FAR struct file *filep, FAR struct pollfd *fds,
+                               bool setup)
 {
-  FAR struct inode *          inode;
-  FAR struct geofence_dev_s  *priv;
-  int                         ret = OK;
-  int                         i;
+  FAR struct inode *               inode;
+  FAR struct cxd56_geofence_dev_s *priv;
+  int                              ret = OK;
+  int                              i;
 
   inode = filep->f_inode;
-  priv  = (FAR struct geofence_dev_s *)inode->i_private;
+  priv  = (FAR struct cxd56_geofence_dev_s *)inode->i_private;
 
   ret = sem_wait(&priv->devsem);
   if (ret < 0)
@@ -492,8 +666,8 @@ static int geofence_poll(FAR struct file *filep, FAR struct pollfd *fds,
 
       /* Remove all memory of the poll setup */
 
-      *slot                = NULL;
-      fds->priv            = NULL;
+      *slot     = NULL;
+      fds->priv = NULL;
     }
 
 errout:
@@ -503,7 +677,7 @@ errout:
 #endif
 
 /****************************************************************************
- * Name: geofence_register
+ * Name: cxd56_geofence_register
  *
  * Description:
  *   Register the GEOFENCE character device as 'devpath'
@@ -516,45 +690,47 @@ errout:
  *
  ****************************************************************************/
 
-static int geofence_register(FAR const char *devpath)
+static int cxd56_geofence_register(FAR const char *devpath)
 {
-  FAR struct geofence_dev_s *priv;
-  int                        ret;
+  FAR struct cxd56_geofence_dev_s *priv;
+  int                              ret;
 
-  priv = (FAR struct geofence_dev_s *)kmm_malloc(
-      sizeof(struct geofence_dev_s));
+  priv = (FAR struct cxd56_geofence_dev_s *)kmm_malloc(
+    sizeof(struct cxd56_geofence_dev_s));
   if (!priv)
     {
-      sndbg("Failed to allocate instance\n");
+      _err("Failed to allocate instance\n");
       return -ENOMEM;
     }
-  memset(priv, 0, sizeof(struct geofence_dev_s));
+
+  memset(priv, 0, sizeof(struct cxd56_geofence_dev_s));
   sem_init(&priv->devsem, 0, 1);
 
-  ret = geofence_initialize(priv);
+  ret = cxd56_geofence_initialize(priv);
   if (ret < 0)
     {
-      sndbg("Failed to initialize geofence device!\n");
+      _err("Failed to initialize geofence device!\n");
       goto _err0;
     }
-  
+
   ret = register_driver(devpath, &g_geofencefops, 0666, priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver: %d\n", ret);
+      _err("Failed to register driver: %d\n", ret);
       goto _err0;
     }
 
   ret = cxd56_cpu1siginit(CXD56_CPU1_DEV_GEOFENCE, priv);
   if (ret < 0)
     {
-      sndbg("Failed to initialize ICC for GPS CPU: %d\n", ret);
+      _err("Failed to initialize ICC for GPS CPU: %d\n", ret);
       goto _err2;
     }
 
-  cxd56_cpu1sigregisterhandler(CXD56_CPU1_DEV_GEOFENCE, geofence_sighandler);
+  cxd56_cpu1sigregisterhandler(CXD56_CPU1_DEV_GEOFENCE,
+                               cxd56_geofence_sighandler);
 
-  snvdbg("GEOFENCE driver loaded successfully!\n");
+  _info("GEOFENCE driver loaded successfully!\n");
 
   return ret;
 
@@ -567,18 +743,28 @@ _err0:
 
 /****************************************************************************
  * Name: cxd56_geofenceinitialize
+ *
+ * Description:
+ *   Initialize GEOFENCE device
+ *
+ * Input Parameters:
+ *   devpath - The full path to the driver to register. E.g., "/dev/gps"
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
  ****************************************************************************/
 
 int cxd56_geofenceinitialize(FAR const char *devpath)
 {
   int ret;
 
-  snvdbg("Initializing GEOFENCE..\n");
+  _info("Initializing GEOFENCE..\n");
 
-  ret = geofence_register(devpath);
+  ret = cxd56_geofence_register(devpath);
   if (ret < 0)
     {
-      sndbg("Error registering GEOFENCE\n");
+      _err("Error registering GEOFENCE\n");
     }
 
   return ret;

@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/cxd56_geofence.h
+ * sdk/modules/include/gpsutils/cxd56_geofence_compat.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *   Author: Takefumi Hayashi <Takefumi.Hayashi@sony.com>
@@ -33,10 +33,14 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_INCLUDE_CXD56XX_CXD56_GEOFENCE_H
-#define __ARCH_ARM_INCLUDE_CXD56XX_CXD56_GEOFENCE_H
+#ifndef __SDK_MODULES_INCLUDE_GPSUTILS_CXD56_GNSS_GEOFENCE_COMPAT_H
+#define __SDK_MODULES_INCLUDE_GPSUTILS_CXD56_GNSS_GEOFENCE_COMPAT_H
 
-#include <nuttx/config.h>
+/*
+ * This file is an old definition file to maintain compatibility with the old
+ * API specification of CXD56_GNSS. Since it will be abolished in the future, 
+ * PLEASE REWRITE THE APPLICATION USING THE NEW DEFINITION.
+ */
 
 #ifdef __cplusplus
 #define EXTERN extern "C"
@@ -250,6 +254,6 @@ struct cxd56_geofence_status_s
 }
 #endif
 
-#endif /* __ARCH_ARM_INCLUDE_CXD56XX_CXD56_GEOFENCE_H */
+#endif /* __SDK_MODULES_INCLUDE_GPSUTILS_CXD56_GNSS_GEOFENCE_COMPAT_H */
 
 
