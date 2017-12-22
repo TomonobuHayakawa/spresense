@@ -43,6 +43,7 @@
 
 #include <sys/types.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "chip/cxd5602_pinconfig.h"
 
@@ -223,6 +224,16 @@
  * Public Types
  ********************************************************************************************/
 
+struct cxd56_pin_status_s
+{
+  uint32_t mode;     /* alternate pin function mode */
+  uint32_t input_en; /* input enable or disable */
+  uint32_t drive;    /* strength of drive current */
+  uint32_t pull;     /* internal pull-up, pull-down or floating */
+};
+
+typedef struct cxd56_pin_status_s cxd56_pin_status_t;
+
 /********************************************************************************************
  * Public Data
  ********************************************************************************************/
@@ -272,6 +283,19 @@ int cxd56_pin_config(uint32_t pinconf);
  ********************************************************************************************/
 
 int cxd56_pin_configs(uint32_t pinconfs[], size_t n);
+
+/********************************************************************************************
+ * Name: cxd56_pin_status
+ *
+ * Description:
+ *   Get a pin status.
+ *
+ * Returned Value:
+ *   OK on success; A negated errno value on failure.
+ *
+ ********************************************************************************************/
+
+int cxd56_pin_status(uint32_t pin, cxd56_pin_status_t *stat);
 
 /********************************************************************************************
  * Function:  cxd56_pin_dump

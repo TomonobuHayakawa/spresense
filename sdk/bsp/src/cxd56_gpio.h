@@ -54,6 +54,14 @@
  * Public Types
  ********************************************************************************************/
 
+struct cxd56_gpio_status_s
+{
+  bool input_en;
+  bool output_en;
+};
+
+typedef struct cxd56_gpio_status_s cxd56_gpio_status_t;
+
 /********************************************************************************************
  * Public Data
  ********************************************************************************************/
@@ -110,6 +118,19 @@ void cxd56_gpio_write(uint32_t pin, bool value);
  ********************************************************************************************/
 
 bool cxd56_gpio_read(uint32_t pin);
+
+/********************************************************************************************
+ * Name: cxd56_gpio_status
+ *
+ * Description:
+ *   Get a gpio status which input/output is enabled or not.
+ *
+ * Returned Value:
+ *   OK on success; A negated errno value on failure.
+ *
+ ********************************************************************************************/
+
+int cxd56_gpio_status(uint32_t pin, cxd56_gpio_status_t *stat);
 
 /********************************************************************************************
  * Function:  cxd56_gpio_dump

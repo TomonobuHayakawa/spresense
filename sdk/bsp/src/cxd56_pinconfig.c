@@ -40,6 +40,7 @@
 
 #include <sys/types.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <assert.h>
 #include <debug.h>
@@ -403,17 +404,18 @@ int cxd56_pin_configs(uint32_t pinconfs[], size_t n)
   return 0;
 }
 
-#ifdef CONFIG_DEBUG
-
-/****************************************************************************
- * Function:  cxd56_pin_dump
+/********************************************************************************************
+ * Name: cxd56_pin_status
  *
  * Description:
- *   Dump a pin configuration
+ *   Get a pin status.
  *
- ****************************************************************************/
+ * Returned Value:
+ *   OK on success; A negated errno value on failure.
+ *
+ ********************************************************************************************/
 
-int cxd56_pin_dump(uint32_t pin, const char *msg)
+int cxd56_pin_status(uint32_t pin, cxd56_pin_status_t *stat)
 {
   int ret = 0;
   uint32_t ioreg;
@@ -421,6 +423,13 @@ int cxd56_pin_dump(uint32_t pin, const char *msg)
   uint32_t modereg;
   uint32_t modeval;
   uint32_t shift;
+
+  DEBUGASSERT(stat);
+
+  stat->mode     = -1;
+  stat->input_en = -1;
+  stat->drive    = -1;
+  stat->pull     = -1;
 
   if (((PIN_GNSS_1PPS_OUT < pin) && (pin < PIN_SPI0_CS_X)) ||
       ((PIN_HIF_GPIO0 < pin) && (pin < PIN_SEN_IRQ_IN)) ||
@@ -439,11 +448,41 @@ int cxd56_pin_dump(uint32_t pin, const char *msg)
       modeval = getreg32(modereg);
       modeval = (modeval >> shift) & 0x3;
 
-      dbg("[CONF] PIN: %3d MODE: %d %dmA %s %s --- %s\n", pin, modeval,
-          PINCONF_IS_DRIVE_NORM(ioval) ? 2 : 4,
-          PINCONF_INPUT_ENABLED(ioval) ? "ENI" : "DSI",
-          PINCONF_IS_FLOAT(ioval) ? "PF" : PINCONF_IS_PULLUP(ioval) ? "PU"
-                                                                    : "PD",
+      stat->mode = modeval;
+      stat->input_en = (ioval & PINCONF_IN_EN_MASK);
+      stat->drive = (ioval & PINCONF_DRIVE_MASK);
+      stat->pull = (ioval & PINCONF_PULL_MASK);
+    }
+
+  return ret;
+}
+
+#ifdef CONFIG_DEBUG
+
+/****************************************************************************
+ * Function:  cxd56_pin_dump
+ *
+ * Description:
+ *   Dump a pin configuration
+ *
+ ****************************************************************************/
+
+int cxd56_pin_dump(uint32_t pin, const char *msg)
+{
+  int ret = 0;
+  cxd56_pin_status_t stat;
+
+  ret = cxd56_pin_status(pin, &stat);
+
+  if (!ret)
+    {
+      dbg("[CONF] PIN: %3d MODE: %d %dmA %s %s --- %s\n",
+          pin,
+          stat.mode,
+          PINCONF_IS_DRIVE_NORM(stat.drive) ? 2 : 4,
+          PINCONF_INPUT_ENABLED(stat.input_en) ? "ENI" : "DSI",
+          PINCONF_IS_FLOAT(stat.pull) ? "PF" :
+          PINCONF_IS_PULLUP(stat.pull) ? "PU" : "PD",
           msg);
     }
 

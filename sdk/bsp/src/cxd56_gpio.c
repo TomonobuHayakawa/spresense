@@ -218,21 +218,23 @@ bool cxd56_gpio_read(uint32_t pin)
   return ((regval & (1 << shift)) != 0);
 }
 
-#ifdef CONFIG_DEBUG
-
 /********************************************************************************************
- * Function:  cxd56_gpio_dump
+ * Name: cxd56_gpio_status
  *
  * Description:
- *   Dump a gpio pin configuration
+ *   Get a gpio status which input/output is enabled or not.
+ *
+ * Returned Value:
+ *   OK on success; A negated errno value on failure.
  *
  ********************************************************************************************/
 
-int cxd56_gpio_dump(uint32_t pin, const char *msg)
+int cxd56_gpio_status(uint32_t pin, cxd56_gpio_status_t *stat)
 {
   uint32_t regaddr;
   uint32_t regval;
-  uint32_t ioreg, ioval;
+  uint32_t ioreg;
+  uint32_t ioval;
 
   if ((pin < PIN_I2C4_BCK) ||
       ((PIN_GNSS_1PPS_OUT < pin) && (pin < PIN_SPI0_CS_X)) ||
@@ -249,13 +251,39 @@ int cxd56_gpio_dump(uint32_t pin, const char *msg)
   regaddr = get_gpio_regaddr(pin);
   regval = getreg32(regaddr);
 
-  dbg("[GPIO] PIN: %3d %c%c %s --- %s\n",
-      pin,
-      PINCONF_INPUT_ENABLED(ioval) ? 'I' : ' ',
-      GPIO_OUTPUT_ENABLED(regval) ? 'O' : ' ',
-      cxd56_gpio_read(pin) ? "Hi " : "Lo", msg);
+  stat->input_en  = PINCONF_INPUT_ENABLED(ioval);
+  stat->output_en = GPIO_OUTPUT_ENABLED(regval);
 
   return 0;
+}
+
+#ifdef CONFIG_DEBUG
+
+/********************************************************************************************
+ * Function:  cxd56_gpio_dump
+ *
+ * Description:
+ *   Dump a gpio pin configuration
+ *
+ ********************************************************************************************/
+
+int cxd56_gpio_dump(uint32_t pin, const char *msg)
+{
+  int ret = 0;
+  cxd56_gpio_status_t stat;
+
+  ret = cxd56_gpio_status(pin, &stat);
+
+  if (!ret)
+    {
+      dbg("[GPIO] PIN: %3d %c%c %s --- %s\n",
+          pin,
+          stat.input_en ? 'I' : ' ',
+          stat.output_en ? 'O' : ' ',
+          cxd56_gpio_read(pin) ? "Hi " : "Lo", msg);
+    }
+
+  return ret;
 }
 
 #endif
