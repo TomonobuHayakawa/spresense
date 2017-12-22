@@ -1,7 +1,8 @@
 ############################################################################
 # modules/sensing/tap/Makefile
 #
-#   Copyright (C) 2017 Sony Corporation. All rights reserved.
+#   Copyright (C) 2017 Sony Corporation
+#   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -32,60 +33,48 @@
 #
 ###########################################################################
 
-# Do not change
-
 -include $(TOPDIR)/Make.defs
 -include $(SDKDIR)/Make.defs
 DELIM ?= $(strip /)
 CXXEXT ?= .cpp
 
-CSRCS   =
-CXXSRCS =
+CXXSRCS = tap.cpp
+ifeq ($(CONFIG_TAP_MANAGER),y)
+CXXSRCS += tap_manager.cpp
+endif
 
 BIN = libtap$(LIBEXT)
 
-AOBJS = $(ASRCS:.S=$(OBJEXT))
-COBJS = $(CSRCS:.c=$(OBJEXT))
 CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
 
-SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS)
-LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
+SRCS = $(CXXSRCS)
+LIB_OBJS = $(CXXOBJS)
 
-# Here is a example of adding include paths.
-# Note that include path addtion will be affected to build time.
-# Don't add unnecessary include paths for module.
-#
-#SKELETONSRCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)skeleton
-#ifeq ($(WINTOOL),y)
-#  CFLAGS += -I "${shell cygpath -w $(SKELETONSRCDIR)}"
-#else
-#  CFLAGS += -I$(SKELETONSRCDIR)
-#endif
+SENSINGDIR = $(SDKDIR)$(DELIM)modules$(DELIM)sensing
+ifeq ($(WINTOOL),y)
+  CXXFLAGS += -I "$(shell cygpath -w $(SDKDIR)/bsp/include)"
+  CXXFLAGS += -I "$(shell cygpath -w $(SDKDIR)/modules/include)"
+  CXXFLAGS += -I "${shell cygpath -w $(SENSINGDIR)$(DELIM)include}"
+else
+  CXXFLAGS += -I $(SDKDIR)/bsp/include
+  CXXFLAGS += -I $(SDKDIR)/modules/include
+  CXXFLAGS += -I$(SENSINGDIR)$(DELIM)include
+endif
 
 all: $(BIN)
 .PHONY: context depend clean distclean
 
-$(AOBJS): %$(OBJEXT): %.S
-	$(call ASSEMBLE, $<, $@)
-
-$(COBJS): %$(OBJEXT): %.c
-	$(call COMPILE, $<, $@)
-
 $(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
-	$(call COMPILE, $<, $@)
+	$(call COMPILEXX, $<, $@)
 
 $(BIN): $(LIB_OBJS)
 	$(call ARCHIVE, $@, $(LIB_OBJS))
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(ASRCS) $(CSRCS) >Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CXXFLAGS) -- $(CXXSRCS) >>Make.dep
 	$(Q) touch $@
 
 depend: .depend
-
-# context target proceeds before depend. User can be used this rule
-# to prerequisite process (e.g. generate header file).
 
 .context:
 	$(Q) touch $@

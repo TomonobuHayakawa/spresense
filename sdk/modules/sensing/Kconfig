@@ -5,15 +5,15 @@
 
 menu "Sensing"
 
-config SENSORUTILS_MANAGER
+config SENSING_MANAGER
 	bool "Sensor manager"
 	default n
 	---help---
 		Enable support for sensor manager.
 
-if SENSORUTILS_MANAGER
+if SENSING_MANAGER
 
-config SENSORUTILS_MANAGER_POWERCTRL
+config SENSING_MANAGER_POWERCTRL
 	bool "Sensor manager power control enable"
 	default n
 	---help---
@@ -28,5 +28,7 @@ source "$SDKDIR/modules/sensing/compass/Kconfig"
 source "$SDKDIR/modules/sensing/step_counter/Kconfig"
 source "$SDKDIR/modules/sensing/tap/Kconfig"
 source "$SDKDIR/modules/sensing/transport_mode/Kconfig"
+source "$SDKDIR/modules/sensing/transport_mode_lite/Kconfig"
+source "$SDKDIR/modules/sensing/voice_detection/Kconfig"
 
 endmenu # Sensor Utilities

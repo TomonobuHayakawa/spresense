@@ -1,5 +1,5 @@
 
-ifeq ($(CONFIG_TRAM),y)
+ifeq ($(CONFIG_SENSING_TRAM),y)
 SDKLIBS += lib$(DELIM)libtram$(LIBEXT)
 SDKMODDIRS += modules$(DELIM)sensing$(DELIM)transport_mode
 #CONTEXTDIRS += modules$(DELIM)sensing$(DELIM)transport_mode

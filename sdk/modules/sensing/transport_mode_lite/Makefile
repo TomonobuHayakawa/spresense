@@ -1,5 +1,5 @@
 ############################################################################
-# modules/sensing/barometer/Makefile
+# modules/sensing/transport_mode_lite/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation
 #   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
@@ -38,9 +38,10 @@
 DELIM ?= $(strip /)
 CXXEXT ?= .cpp
 
-CXXSRCS = barometer.cpp
+CXXSRCS  = transport_mode_lite.cpp
+CXXSRCS += tramlite_state_transition.cpp
 
-BIN = libbarometer$(LIBEXT)
+BIN = libtramlite$(LIBEXT)
 
 CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
 

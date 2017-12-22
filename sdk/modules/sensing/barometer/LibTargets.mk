@@ -1,5 +1,5 @@
 
-ifeq ($(CONFIG_BAROMETER),y)
+ifeq ($(CONFIG_SENSING_BAROMETER),y)
 SDKLIBS += lib$(DELIM)libbarometer$(LIBEXT)
 SDKMODDIRS += modules$(DELIM)sensing$(DELIM)barometer
 #CONTEXTDIRS += modules$(DELIM)sensing$(DELIM)barometer

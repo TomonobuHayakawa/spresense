@@ -1,5 +1,5 @@
 
-ifeq ($(CONFIG_COMPASS),y)
+ifeq ($(CONFIG_SENSING_COMPASS),y)
 SDKLIBS += lib$(DELIM)libcompass$(LIBEXT)
 SDKMODDIRS += modules$(DELIM)sensing$(DELIM)compass
 #CONTEXTDIRS += modules$(DELIM)sensing$(DELIM)compass

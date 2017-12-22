@@ -1,0 +1,19 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SENSING_TRAMLITE
+	bool "transport mode light version"
+	default n
+	select SENSING_MANAGER_POWERCTRL
+	---help---
+		Enable support for transport mode light version.
+
+if SENSING_TRAMLITE
+
+config SENSING_TRAMLITE_LOW_LATENCY
+	bool "Enable low latency mode"
+	default n
+
+endif

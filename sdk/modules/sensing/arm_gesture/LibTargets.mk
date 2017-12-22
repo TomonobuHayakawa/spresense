@@ -1,5 +1,5 @@
 
-ifeq ($(CONFIG_ARMGESTURE),y)
+ifeq ($(CONFIG_SENSING_ARMGESTURE),y)
 SDKLIBS += lib$(DELIM)libarmgesture$(LIBEXT)
 SDKMODDIRS += modules$(DELIM)sensing$(DELIM)arm_gesture
 #CONTEXTDIRS += modules$(DELIM)sensing$(DELIM)arm_gesture

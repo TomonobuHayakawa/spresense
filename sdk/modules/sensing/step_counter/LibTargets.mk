@@ -1,5 +1,5 @@
 
-ifeq ($(CONFIG_STEPCOUNTER),y)
+ifeq ($(CONFIG_SENSING_STEPCOUNTER),y)
 SDKLIBS += lib$(DELIM)libstepcounter$(LIBEXT)
 SDKMODDIRS += modules$(DELIM)sensing$(DELIM)step_counter
 #CONTEXTDIRS += modules$(DELIM)sensing$(DELIM)step_counter

@@ -1,5 +1,5 @@
 ############################################################################
-# modules/sensing/barometer/Makefile
+# modules/sensing/manager/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation
 #   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
@@ -38,14 +38,16 @@
 DELIM ?= $(strip /)
 CXXEXT ?= .cpp
 
-CXXSRCS = barometer.cpp
+CXXSRCS = sensor_manager.cpp
 
-BIN = libbarometer$(LIBEXT)
+BIN = libsensingmgr$(LIBEXT)
 
 CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
 
 SRCS = $(CXXSRCS)
 LIB_OBJS = $(CXXOBJS)
+
+CXXFLAGS += -D_POSIX
 
 SENSINGDIR = $(SDKDIR)$(DELIM)modules$(DELIM)sensing
 ifeq ($(WINTOOL),y)

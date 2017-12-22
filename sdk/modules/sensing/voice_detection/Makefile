@@ -1,5 +1,5 @@
 ############################################################################
-# modules/sensing/barometer/Makefile
+# modules/sensing/voice_detection/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation
 #   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
@@ -38,9 +38,9 @@
 DELIM ?= $(strip /)
 CXXEXT ?= .cpp
 
-CXXSRCS = barometer.cpp
+CXXSRCS = voice_detection.cpp
 
-BIN = libbarometer$(LIBEXT)
+BIN = libvad$(LIBEXT)
 
 CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
 
@@ -48,14 +48,17 @@ SRCS = $(CXXSRCS)
 LIB_OBJS = $(CXXOBJS)
 
 SENSINGDIR = $(SDKDIR)$(DELIM)modules$(DELIM)sensing
+AUDIODIR = $(SDKDIR)$(DELIM)modules$(DELIM)audio
 ifeq ($(WINTOOL),y)
   CXXFLAGS += -I "$(shell cygpath -w $(SDKDIR)/bsp/include)"
   CXXFLAGS += -I "$(shell cygpath -w $(SDKDIR)/modules/include)"
   CXXFLAGS += -I "${shell cygpath -w $(SENSINGDIR)$(DELIM)include}"
+  CXXFLAGS += -I "${shell cygpath -w $(AUDIODIR)$(DELIM)include}"
 else
   CXXFLAGS += -I $(SDKDIR)/bsp/include
   CXXFLAGS += -I $(SDKDIR)/modules/include
   CXXFLAGS += -I$(SENSINGDIR)$(DELIM)include
+  CXXFLAGS += -I$(AUDIODIR)
 endif
 
 all: $(BIN)

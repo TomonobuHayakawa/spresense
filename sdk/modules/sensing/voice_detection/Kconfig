@@ -3,9 +3,8 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-config SENSING_TRAM
-	bool "transport mode"
+config SENSING_VAD
+	bool "Voice Activity Detection"
 	default n
-	select SENSING_MANAGER_POWERCTRL
 	---help---
-		Enable support for transport mode.
+		Enable support for voice activity detection.
