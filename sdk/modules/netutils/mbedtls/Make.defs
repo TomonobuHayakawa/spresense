@@ -1,0 +1,68 @@
+############################################################################
+# modules/netutils/mbedtls/Makefile
+#
+#   Copyright (C) 2017 Sony Corporation. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name NuttX nor Sony nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+###########################################################################
+
+ifeq ($(CONFIG_NETUTILS_MBEDTLS),y)
+
+CSRCS += aes.c aesni.c arc4.c asn1parse.c asn1write.c base64.c bignum.c
+CSRCS += blowfish.c camellia.c ccm.c cipher.c cipher_wrap.c ctr_drbg.c
+CSRCS += des.c dhm.c ecdh.c ecdsa.c ecjpake.c ecp.c ecp_curves.c entropy.c
+CSRCS += gcm.c hmac_drbg.c md.c md_wrap.c memory_buffer_alloc.c oid.c
+CSRCS += padlock.c pem.c pk.c pk_wrap.c pkcs12.c pkcs5.c pkparse.c
+CSRCS += pkwrite.c platform.c ripemd160.c rsa.c sha1.c sha256.c sha512.c
+CSRCS += threading.c havege.c timing.c version.c version_features.c xtea.c
+
+CSRCS += certs.c pkcs11.c x509.c x509_create.c x509_crl.c x509_crt.c
+CSRCS += x509_csr.c x509write_crt.c x509write_csr.c
+
+CSRCS += debug.c net.c ssl_cache.c ssl_ciphersuites.c ssl_cli.c
+CSRCS += ssl_cookie.c ssl_srv.c ssl_ticket.c ssl_tls.c
+
+CFLAGS += -DCONFIG_OS_NUTTX -DMBEDTLS_HAVE_IPV6
+
+MBEDTLSINCDIR = $(NETUTILSDIR)$(DELIM)mbedtls$(DELIM)include
+NETINCDIR     = $(SDKDIR)$(DELIM)modules$(DELIM)include$(DELIM)net
+
+ifeq ($(WINTOOL),y)
+  CFLAGS += -I "${shell cygpath -w $(MBEDTLSINCDIR)}"
+  CFLAGS += -I "${shell cygpath -w $(NETINCDIR)}"
+else
+  CFLAGS += -I$(MBEDTLSINCDIR)
+  CFLAGS += -I$(NETINCDIR)
+endif
+
+# Add the mbedtls directory to the build
+
+DEPPATH += --dep-path mbedtls
+VPATH += :mbedtls
+endif

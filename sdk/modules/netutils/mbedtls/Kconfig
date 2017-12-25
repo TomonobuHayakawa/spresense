@@ -1,0 +1,26 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config NETUTILS_MBEDTLS
+	bool "mbedTLS support"
+	default n
+	select NET_LWIP
+	---help---
+		Enable or disable mbedTLS features
+
+if NETUTILS_MBEDTLS
+
+config NETUTILS_MBEDTLS_SSL_MAX_CONTENT_LEN
+	int "Maxium fragment length in bytes"
+	default 16384
+	---help---
+		the RFC defines the default size of SSL / TLS messages. If you
+		change the value here, other clients / servers may not be able to
+		communicate with you anymore. Only change this value if you control
+		both sides of the connection and have it reduced at both sides, or
+		if you're using the Max Fragment Length extension and you know all your
+		peers are using it too!
+
+endif

@@ -1,0 +1,15 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menuconfig EXTNETUTILS
+	bool "Network Utilities"
+
+if EXTNETUTILS
+
+source "$SDKDIR/modules/netutils/mbedtls/Kconfig"
+source "$SDKDIR/modules/netutils/httpc/Kconfig"
+source "$SDKDIR/modules/netutils/mqtt/Kconfig"
+
+endif
