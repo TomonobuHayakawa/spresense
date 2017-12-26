@@ -5,10 +5,10 @@
 
 menu "LTE"
 
-config LTE_CLI_LIB
-	bool "LTE Client Library Support"
+config LTE
+	bool "LTE Library Support"
 	default n
 	---help---
-		Enables support for the LTE client library.
+		Enables support for the LTE library.
 
-endmenu # LTE Library
+endmenu # LTE
