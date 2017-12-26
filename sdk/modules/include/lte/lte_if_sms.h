@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 
-#include "ril/lte_if_system.h"
+#include "lte_if_system.h"
 
 /* Definition */
 

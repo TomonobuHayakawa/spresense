@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 
-#include "ril/lte_if_system.h"
+#include "lte_if_system.h"
 #if 0 /* FIXME Wait until gnss header has been updated */
 #include <arch/chip/gnss_type.h>
 #include <arch/chip/gnss.h>
