@@ -1,0 +1,40 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_STREAMING
+	bool "streaming example"
+	default n
+	select LTE
+	select NETUTILS_HTTPC
+	select LIB_ASMP
+	select SDK_AUDIO
+	select AUDIOUTILS_MANAGER
+	select AUDIOUTILS_PLAYER
+	select MEMUTILS
+	select MEMUTILS_MEMORY_MANAGER
+	select MEMUTILS_MESSAGE
+	select MEMUTILS_SIMPLE_FIFO
+	---help---
+		Enable the streaming Interface
+
+if EXAMPLES_STREAMING
+
+config EXAMPLES_STREAMING_PROGNAME
+	string "Program name"
+	default "streaming"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_STREAMING_PRIORITY
+	int "streaming test task priority"
+	default 100
+
+config EXAMPLES_STREAMING_STACKSIZE
+	int "streaming stack size"
+	default 4096
+
+endif
