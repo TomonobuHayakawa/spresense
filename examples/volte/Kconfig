@@ -1,0 +1,41 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_VOLTE
+	bool "volte example"
+	default n
+	select NET_LWIP
+	select LTE
+	select SDK_AUDIO
+	select AUDIOUTILS_PLAYER
+	select AUDIOUTILS_VOICE_CALL
+	select HAVE_CXX
+	select HAVE_CXXINITIALIZE
+	select MEMUTILS_MEMORY_MANAGER
+	select MEMUTILS_MESSAGE
+	select MEMUTILS_SIMPLE_FIFO
+	select LIB_ASMP
+	---help---
+		Enable the VoLTE Interface
+
+if EXAMPLES_VOLTE
+
+config EXAMPLES_VOLTE_PROGNAME
+	string "Program name"
+	default "volte"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_VOLTE_PRIORITY
+	int "volte test task priority"
+	default 100
+
+config EXAMPLES_VOLTE_STACKSIZE
+	int "volte test stack size"
+	default 4096
+
+endif
