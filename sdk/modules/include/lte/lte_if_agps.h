@@ -37,10 +37,8 @@ extern "C" {
 #endif
 
 #include "lte_if_system.h"
-#if 0 /* FIXME Wait until gnss header has been updated */
 #include <arch/chip/gnss_type.h>
 #include <arch/chip/gnss.h>
-#endif
 
 /* Definition */
 
@@ -128,7 +126,6 @@ extern "C" {
 #define LTE_AGPS_REPORTING_RECURRENCE_MAX      999 /**< Maximum reporting recurrence */
 /**@}*/
 
-#if 0 /* FIXME Wait until gnss header has been updated */
 /**
  * @defgroup lteagpsgnssctrlid GNSS control command
  * GNSS control command usage of LTECommand_AgpsGnssCtlReq and LTECommand_AgpsGnssCtlCnf
@@ -149,7 +146,6 @@ extern "C" {
 #define LTE_AGPS_GNSS_CTL_SET_TOW_ASSIST          CXD56_GNSS_IOCTL_AGPS_SET_TOW_ASSIST               /**< Set TOW assist data */
 #define LTE_AGPS_GNSS_CTL_SET_UTC_MODEL           CXD56_GNSS_IOCTL_AGPS_SET_UTC_MODEL                /**< Set UTC model data */
 /**@}*/
-#endif
   
 /** 
  * @defgroup lteagpscap GPS location
@@ -227,7 +223,6 @@ typedef struct {
     int                       gps_location; /* [in] GPS location */
 }LTECommand_AgpsSetCap;
 
-#if 0 /* FIXME Wait until gnss header has been updated */
 /**
  * LTE A-GPS GNSS control request structure for A-GPS Manager.
  */
@@ -251,7 +246,6 @@ typedef struct
     } u;
   } param;
 }  LTECommand_AgpsGnssCtlReq;
-#endif
 
 /**
  * LTE A-GPS GNSS control confirm structure for A-GPS Manager.
@@ -269,7 +263,6 @@ typedef struct
   } param;
 }  LTECommand_AgpsGnssCtlCnf;
 
-#if 0 /* FIXME Wait until gnss header has been updated */
 /**
  * LTE A-GPS GNSS measurement indication structure for A-GPS Manager.
  */
@@ -278,7 +271,6 @@ typedef struct
   struct cxd56_gnss_positiondata_s   gnss_pos_data;  /**< [in] Positioning data with SV data */
   struct cxd56_supl_mesurementdata_s supl_meas_data; /**< [in] SUPL positioning data */
 }  LTECommand_AgpsGnssMeasInd;
-#endif
 
 /**
  * LTE A-GPS netowok positioning indication structure for A-GPS Manager.
@@ -337,12 +329,10 @@ typedef struct {
         LTECommand_AgpsSatellite   satellite;     /**< [in] A-GPS satellite usage structure */
         LTECommand_AgpsSetCap      set_cap;       /**< [in] A-GPS GPS capability setting structure */
         LTECommand_AgpsSetReport   set_report;    /**< [in] A-GPS location reporting recurrence structure */
-#if 0 /* FIXME Wait until gnss header has been updated */
         LTECommand_AgpsGnssCtlReq  gnss_ctl_req;  /**< [out] A-GPS GNSS control request structure */
         LTECommand_AgpsGnssCtlCnf  gnss_ctl_cnf;  /**< [in] A-GPS GNSS control confirm structure */
         LTECommand_AgpsGnssMeasInd gnss_meas_ind; /**< [in] A-GPS GNSS measurement indication structure */
         LTECommand_AgpsNetPosInd   nw_pos_ind;    /**< [out] A-GPS netowok positioning indication structure */
-#endif
     } message;						/**< [in,out] Command message union */
 } LTECommand_Agps;
 /**@}*/
