@@ -1,0 +1,36 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_HTTP_POST
+	bool "http POST method example"
+	default n
+	select NETUTILS_HTTPC
+	select NETUTILS_MBEDTLS
+	select LTE_CLIENT
+	---help---
+		Enable the http_post Interface
+
+if EXAMPLES_HTTP_POST
+
+config EXAMPLES_HTTP_POST_PROGNAME
+	string "Program name"
+	default "http_post"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_HTTP_POST_PRIORITY
+	int "http_post task priority"
+	default 100
+	---help---
+		This is task priority of http_post example
+
+config EXAMPLES_HTTP_POST_STACKSIZE
+	int "http_post stack size"
+	default 5120
+	---help---
+		This is task stack size of http_post example
+endif

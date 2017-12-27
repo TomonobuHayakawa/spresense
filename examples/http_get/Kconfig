@@ -1,0 +1,36 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_HTTP_GET
+	bool "http GET method example"
+	default n
+	select NETUTILS_HTTPC
+	select NETUTILS_MBEDTLS
+	select LTE_CLIENT
+	---help---
+		Enable the http_get Interface
+
+if EXAMPLES_HTTP_GET
+
+config EXAMPLES_HTTP_GET_PROGNAME
+	string "Program name"
+	default "http_get"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_HTTP_GET_PRIORITY
+	int "http_get task priority"
+	default 100
+	---help---
+		This is task priority of http_get example
+
+config EXAMPLES_HTTP_GET_STACKSIZE
+	int "http_get stack size"
+	default 5120
+	---help---
+		This is task stack size of http_get example
+endif
