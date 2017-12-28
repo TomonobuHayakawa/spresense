@@ -1,0 +1,334 @@
+/******************************************************************************
+ *
+ *  Copyright (C) 2003-2014 Broadcom Corporation
+ *  Copyright (C) 2013 Sony Corporation
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at:
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
+
+
+/******************************************************************************
+ *
+ *  This is the main implementation file for the NFA_RW
+ *
+ ******************************************************************************/
+#include <string.h>
+#include "nfa_rw_api.h"
+#include "nfa_sys.h"
+#include "nfa_rw_int.h"
+#include "nfa_dm_int.h"
+#include "nfa_sys_int.h"
+#include "nfc_int.h"
+#include "rw_int.h" /* LIBNCI bugfix: FIX_MEMORY_LEAK_0001 */
+
+/* NFA_RW control block */
+#if NFA_DYNAMIC_MEMORY == FALSE
+tNFA_RW_CB nfa_rw_cb;
+#else
+#include <stdlib.h>
+tNFA_RW_CB *nfa_rw_cb_ptr=NULL;
+#endif
+
+/*****************************************************************************
+** Constants and types
+*****************************************************************************/
+static const tNFA_SYS_REG nfa_rw_sys_reg =
+{
+    NULL,
+    nfa_rw_handle_event,
+    nfa_rw_sys_disable,
+    NULL
+};
+
+/* NFA_RW actions */
+const tNFA_RW_ACTION nfa_rw_action_tbl[] =
+{
+    nfa_rw_handle_op_req,           /* NFA_RW_OP_REQUEST_EVT            */
+    nfa_rw_activate_ntf,            /* NFA_RW_ACTIVATE_NTF_EVT          */
+    nfa_rw_deactivate_ntf,          /* NFA_RW_DEACTIVATE_NTF_EVT        */
+    nfa_rw_presence_check_tick,     /* NFA_RW_PRESENCE_CHECK_TICK_EVT   */
+    nfa_rw_presence_check_timeout   /* NFA_RW_PRESENCE_CHECK_TIMEOUT_EVT*/
+};
+
+
+/*****************************************************************************
+** Local function prototypes
+*****************************************************************************/
+#if (BT_TRACE_VERBOSE == TRUE)
+static char *nfa_rw_evt_2_str (UINT16 event);
+#endif
+
+/*******************************************************************************
+**
+** Function         nfa_rw_init
+**
+** Description      Initialize NFA RW
+**
+** Returns          None
+**
+*******************************************************************************/
+void nfa_rw_init (void)
+{
+    NFA_TRACE_DEBUG0 ("nfa_rw_init ()");
+
+#if NFA_DYNAMIC_MEMORY == TRUE
+#include <assert.h>
+    nfa_rw_cb_ptr = (tNFA_RW_CB *)GKI_os_malloc( sizeof(tNFA_RW_CB) );
+    assert (nfa_rw_cb_ptr);
+#endif
+
+    /* initialize control block */
+    memset (&nfa_rw_cb, 0, sizeof (tNFA_RW_CB));
+
+    /* register message handler on NFA SYS */
+    nfa_sys_register (NFA_ID_RW,  &nfa_rw_sys_reg);
+}
+
+/*******************************************************************************
+**
+** Function         nfa_rw_destroy
+**
+** Description      Destroy NFA RW
+**
+** Returns          None
+**
+*******************************************************************************/
+void nfa_rw_destroy (void)
+{
+#if NFA_DYNAMIC_MEMORY == TRUE
+    if (nfa_rw_cb_ptr)
+        GKI_os_free (nfa_rw_cb_ptr);
+    nfa_rw_cb_ptr = NULL;
+#endif
+}
+
+/*******************************************************************************
+**
+** Function         nfa_rw_sys_disable
+**
+** Description      Clean up rw sub-system
+**
+**
+** Returns          void
+**
+*******************************************************************************/
+void nfa_rw_sys_disable (void)
+{
+    /* LIBNCI bugfix: FIX_MEMORY_LEAK_0001 begin */
+    tRW_T1T_CB  *p_t1t;
+    tRW_T2T_CB  *p_t2t;
+    tRW_T3T_CB  *p_t3t;
+    tRW_T4T_CB  *p_t4t;
+    tRW_I93_CB  *p_i93;
+
+    NFA_TRACE_DEBUG1 ("nfa_rw_sys_disable() rw_cb.tcb_type=%d", rw_cb.tcb_type);
+
+    switch(rw_cb.tcb_type)
+    {
+    case RW_CB_TYPE_T1T:
+        p_t1t  = &rw_cb.tcb.t1t;
+        nfc_stop_quick_timer (&p_t1t->timer);
+        if(p_t1t->p_cur_cmd_buf !=  NULL)
+        {
+            GKI_freebuf(p_t1t->p_cur_cmd_buf);
+            p_t1t->p_cur_cmd_buf = NULL;
+        }
+        break;
+    case RW_CB_TYPE_T2T:
+        p_t2t  = &rw_cb.tcb.t2t;
+        nfc_stop_quick_timer (&p_t2t->t2_timer);
+        if(p_t2t->p_cur_cmd_buf != NULL)
+        {
+            GKI_freebuf(p_t2t->p_cur_cmd_buf);
+            p_t2t->p_cur_cmd_buf = NULL;
+        }
+        if(p_t2t->p_sec_cmd_buf != NULL)
+        {
+            GKI_freebuf(p_t2t->p_sec_cmd_buf);
+            p_t2t->p_sec_cmd_buf = NULL;
+        }
+        break;
+    case RW_CB_TYPE_T3T:
+        p_t3t  = &rw_cb.tcb.t3t;
+        nfc_stop_quick_timer (&p_t3t->timer);
+        nfc_stop_quick_timer (&p_t3t->poll_timer);
+        if(p_t3t->p_cur_cmd_buf != NULL)
+        {
+            GKI_freebuf(p_t3t->p_cur_cmd_buf);
+            p_t3t->p_cur_cmd_buf = NULL;
+        }
+        break;
+    case RW_CB_TYPE_T4T:
+        p_t4t  = &rw_cb.tcb.t4t;
+        nfc_stop_quick_timer (&p_t4t->timer);
+        break;
+    case RW_CB_TYPE_I93:
+        p_i93  = &rw_cb.tcb.i93;
+        nfc_stop_quick_timer (&p_i93->timer);
+        if(p_i93->p_retry_cmd != NULL)
+        {
+            GKI_freebuf(p_i93->p_retry_cmd);
+            p_i93->p_retry_cmd = NULL;
+        }
+        break;
+    default: /* do nothing */
+        break;
+    }
+    /* LIBNCI bugfix: FIX_MEMORY_LEAK_0001 end */
+
+    /* Return to idle */
+    NFC_SetStaticRfCback (NULL);
+
+    /* Stop presence check timer (if started) */
+    nfa_rw_stop_presence_check_timer ();
+
+    /* Free scratch buffer if any */
+    nfa_rw_free_ndef_rx_buf ();
+
+    /* Free pending command if any */
+    if (nfa_rw_cb.p_pending_msg)
+    {
+        GKI_freebuf (nfa_rw_cb.p_pending_msg);
+        nfa_rw_cb.p_pending_msg = NULL;
+    }
+
+    nfa_sys_deregister (NFA_ID_RW);
+}
+
+/*******************************************************************************
+**
+** Function         nfa_rw_proc_disc_evt
+**
+** Description      Called by nfa_dm to handle ACTIVATED/DEACTIVATED  events
+**
+** Returns          void
+**
+*******************************************************************************/
+void nfa_rw_proc_disc_evt (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_data, BOOLEAN excl_rf_not_active)
+{
+    tNFA_RW_MSG msg;
+
+    switch (event)
+    {
+    case NFA_DM_RF_DISC_ACTIVATED_EVT:
+        msg.hdr.event                       = NFA_RW_ACTIVATE_NTF_EVT;
+        msg.activate_ntf.p_activate_params  = &p_data->activate;
+        msg.activate_ntf.excl_rf_not_active = excl_rf_not_active;
+
+        nfa_rw_handle_event ((BT_HDR *) &msg);
+        break;
+
+    case NFA_DM_RF_DISC_DEACTIVATED_EVT:
+        msg.hdr.event = NFA_RW_DEACTIVATE_NTF_EVT;
+
+        nfa_rw_handle_event ((BT_HDR *) &msg);
+        break;
+
+    default:
+        break;
+    }
+}
+
+/*******************************************************************************
+**
+** Function         nfa_rw_send_raw_frame
+**
+** Description      Called by nfa_dm to send raw frame
+**
+** Returns          tNFA_STATUS
+**
+*******************************************************************************/
+tNFA_STATUS nfa_rw_send_raw_frame (BT_HDR *p_data)
+{
+    tNFA_RW_MSG *p_msg;
+
+    if ((p_msg = (tNFA_RW_MSG *) GKI_getbuf ((UINT16) sizeof(tNFA_RW_MSG))) != NULL)
+    {
+        p_msg->hdr.event = NFA_RW_OP_REQUEST_EVT;
+        p_msg->op_req.op = NFA_RW_OP_SEND_RAW_FRAME;
+
+        p_msg->op_req.params.send_raw_frame.p_data = p_data;
+
+        if (nfa_rw_handle_event ((BT_HDR *) p_msg))
+            GKI_freebuf (p_msg);
+
+        return (NFA_STATUS_OK);
+    }
+    return NFA_STATUS_FAILED;
+}
+
+/*******************************************************************************
+**
+** Function         nfa_rw_handle_event
+**
+** Description      nfa rw main event handling function.
+**
+** Returns          TRUE if caller should free p_msg buffer
+**
+*******************************************************************************/
+BOOLEAN nfa_rw_handle_event(BT_HDR *p_msg)
+{
+    UINT16 act_idx;
+
+#if (BT_TRACE_VERBOSE == TRUE)
+    NFA_TRACE_EVENT3 ("nfa_rw_handle_event event: %s (0x%02x), flags: %08x", nfa_rw_evt_2_str (p_msg->event), p_msg->event, nfa_rw_cb.flags);
+#else
+    NFA_TRACE_EVENT2 ("nfa_rw_handle_event event: 0x%x, flags: %08x",p_msg->event, nfa_rw_cb.flags);
+#endif
+
+    /* Get NFA_RW sub-event */
+    if ((act_idx = (p_msg->event & 0x00FF)) < (NFA_RW_MAX_EVT & 0xFF))
+    {
+        return (*nfa_rw_action_tbl[act_idx]) ( (tNFA_RW_MSG*) p_msg);
+    }
+    else
+    {
+        NFA_TRACE_ERROR1 ("nfa_rw_handle_event: unhandled event 0x%02X", p_msg->event);
+        return TRUE;
+    }
+}
+
+
+#if (BT_TRACE_VERBOSE == TRUE)
+/*******************************************************************************
+**
+** Function         nfa_rw_evt_2_str
+**
+** Description      convert nfa_rw evt to string
+**
+*******************************************************************************/
+static char *nfa_rw_evt_2_str (UINT16 event)
+{
+    switch (event)
+    {
+    case NFA_RW_OP_REQUEST_EVT:
+        return "NFA_RW_OP_REQUEST_EVT";
+
+    case NFA_RW_ACTIVATE_NTF_EVT:
+        return "NFA_RW_ACTIVATE_NTF_EVT";
+
+    case NFA_RW_DEACTIVATE_NTF_EVT:
+        return "NFA_RW_DEACTIVATE_NTF_EVT";
+
+    case NFA_RW_PRESENCE_CHECK_TICK_EVT:
+        return "NFA_RW_PRESENCE_CHECK_TICK_EVT";
+
+    case NFA_RW_PRESENCE_CHECK_TIMEOUT_EVT:
+        return "NFA_RW_PRESENCE_CHECK_TIMEOUT_EVT";
+
+    default:
+        return "Unknown";
+    }
+}
+#endif /* BT_TRACE_VERBOSE */

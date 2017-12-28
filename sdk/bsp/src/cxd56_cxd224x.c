@@ -513,6 +513,6 @@ void cxd224x_initialize( FAR const char *devpath,
   ret = register_driver(devpath, &cxd224x_i2c_fops, 0666, NULL);
   if (ret < 0)
     {
-      dbg("register_driver failure.\n");
+      _err("register_driver failure.\n");
     }
 }
