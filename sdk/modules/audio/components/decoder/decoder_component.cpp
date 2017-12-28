@@ -486,13 +486,11 @@ bool DecoderComponent::deactivate(void)
     }
 #endif
 
-#ifdef ENABLE_FLASH_BOOT
   if (DD_Unload(m_dsp_handler) != 0)
     {
       DECODER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
       result = false;
     }
-#endif
 
   DECODER_INF(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_DONE);
 

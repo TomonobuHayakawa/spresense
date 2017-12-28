@@ -208,13 +208,11 @@ bool EncoderComponent::deactivate_apu(void)
     }
 #endif
 
-#ifdef ENABLE_FLASH_BOOT
   if (DD_Unload(m_dsp_handler) != 0)
     {
       ENCODER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
       return false;
     }
-#endif
   ENCODER_INF(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_DONE);
 
   return true;

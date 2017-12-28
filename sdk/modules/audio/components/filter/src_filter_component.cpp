@@ -97,7 +97,6 @@ uint32_t SRCComponent::activate_apu(SRCComponent *p_component,
 
   sp_src_component = p_component;
 
-#ifdef ENABLE_FLASH_BOOT
   if (NULL == (m_dsp_handler = DD_Load("SRC",
                                        src_filter_dsp_done_callback,
                                        (void *)this)))
@@ -105,7 +104,6 @@ uint32_t SRCComponent::activate_apu(SRCComponent *p_component,
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
       return AS_RESPONSE_CODE_DSP_LOAD_ERROR;
     }
-#endif
 
   /* wait for DSP boot up */
 
@@ -141,13 +139,11 @@ bool SRCComponent::deactivate_apu(void)
     }
 #endif
 
-#ifdef ENABLE_FLASH_BOOT
   if (DD_Unload(m_dsp_handler) != 0)
     {
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
       return false;
     }
-#endif
 
   FILTER_INF(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_DONE);
 

@@ -25,12 +25,6 @@
 
 __WIEN2_BEGIN_NAMESPACE
 
-#if defined(ENABLE_FLASH_BOOT)
-#define SEMAPHORE_WAIT_TIME 3000
-#else
-#define SEMAPHORE_WAIT_TIME 30000
-#endif /* ENABLE_FLASH_BOOT */
-
 static MPPComponent *sp_mpp_component = NULL;
 
 #define DSP_CORE_ID_DUMMY 3 /* dummy */
@@ -108,7 +102,6 @@ uint32_t MPPComponent::activate_apu(MPPComponent *p_component,
 
   sp_mpp_component = p_component;
 
-#ifdef ENABLE_FLASH_BOOT
   /* TODO: To be able to configure DSP imange file name by Config menu */
 
   if (NULL == (m_dsp_handler = DD_Load("MPPEAX",
@@ -118,7 +111,6 @@ uint32_t MPPComponent::activate_apu(MPPComponent *p_component,
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
       return AS_RESPONSE_CODE_DSP_LOAD_ERROR;
     }
-#endif
 
   /* wait for DSP boot up... */
 
@@ -143,13 +135,11 @@ bool MPPComponent::deactivate_apu(void)
 {
   FILTER_DBG("DEACT MPP:\n");
 
-#ifdef ENABLE_FLASH_BOOT
   if (DD_Unload(m_dsp_handler) != 0)
     {
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
       return false;
     }
-#endif
 
   FILTER_INF(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_DONE);
   return true;

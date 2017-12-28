@@ -29,12 +29,6 @@
 
 __WIEN2_BEGIN_NAMESPACE
 
-#if defined(ENABLE_FLASH_BOOT)
-#define SEMAPHORE_WAIT_TIME 3000
-#else
-#define SEMAPHORE_WAIT_TIME 30000
-#endif /* ENABLE_FLASH_BOOT */
-
 static MFEComponent *sp_mfe_component = NULL;
 static MPPComponent *sp_mpp_component = NULL; /* MFE/SRC 1core Only */
 
@@ -121,7 +115,6 @@ uint32_t MFEComponent::activate_apu(MFEComponent *p_component,
 
   sp_mfe_component = p_component;
 
-#ifdef ENABLE_FLASH_BOOT
   /* TODO: To be able to configure DSP imange file name by Config menu */
 
   if (NULL == (m_dsp_handler = DD_Load_Secure("MFESRC",
@@ -136,7 +129,6 @@ uint32_t MFEComponent::activate_apu(MFEComponent *p_component,
     {
       sp_mpp_component->m_dsp_handler = m_dsp_handler;
     }
-#endif
 
   /* wait for DSP boot up... */
 
@@ -187,13 +179,11 @@ bool MFEComponent::deactivate_apu(void)
     }
 #endif
 
-#ifdef ENABLE_FLASH_BOOT
   if (DD_Unload(m_dsp_handler) != 0)
     {
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
       return false;
     }
-#endif
 
   FILTER_INF(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_DONE);
 
