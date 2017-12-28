@@ -1,5 +1,5 @@
 
-Usage of audio_player
+Usage of audio_recorder
 ===========================
 
 Usage
@@ -23,12 +23,11 @@ Select options in below.
     [Audio] <= Y
 - [SDK audio] <= Y
     [Audio Utilities]
-      [Audio Player] <= Y
-      [Playlist manager] <= Y
+      [Audio Recorder] <= Y
 - [Memory manager] <= Y
 - [ASMP] <= Y
 - [Examples]
-    [Audio player example] <= Y
+    [Audio recorder example] <= Y
 
 Build and install
 --------------------------
@@ -36,19 +35,18 @@ Build and install
 Build Kernel and SDK.
 Install 'nuttx.spk' to system.
 
-After that, you can see worker binary 'AACDEC', 'MP3DEC', 'OPUSDEC'
+After that, you can see worker binary 'MP3ENC', 'OPUSENC', 'SRC'
 in directory sdk/modules/audio/dsp.
 Store worker binary, playlist and play contents in the path specified by option.
  - Default path
     worker binary : /mnt/vfat/bin
-    play list     : /mnt/vfat/playlist
-    contents      : /mnt/vfat/audio
+    contents      : /mnt/vfat/rec
 
 Execute
 --------------------------
 
-Type 'player' on nsh.
-nsh>player
+Type 'recorder' on nsh.
+nsh>recorder
 
-The first content of playlist will be played for 10 seconds.
+Audio from the microphone is recorded in the WAV file for 10 seconds.
 

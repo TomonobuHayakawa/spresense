@@ -6,7 +6,6 @@
 config EXAMPLES_AUDIO_PLAYER
 	bool "Audio player example"
 	default n
-	select AUDIOUTILS_PLAYER
 	depends on CXD56_AUDIO
 	---help---
 		Enable the audio player example
