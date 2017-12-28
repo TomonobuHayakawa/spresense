@@ -1,5 +1,5 @@
 ############################################################################
-# examples/audo_player/Makefile
+# examples/voice_call/Make.defs
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
@@ -33,42 +33,6 @@
 #
 ############################################################################
 
--include $(TOPDIR)/.config
--include $(TOPDIR)/Make.defs
--include $(SDKDIR)/Make.defs
-include $(APPDIR)/Make.defs
-
-# Audio application info
-
-CONFIG_EXAMPLES_AUDIO_PLAYER_APP_NAME ?= player
-CONFIG_EXAMPLES_AUDIO_PLAYER_PRIORITY ?= SCHED_PRIORITY_DEFAULT
-CONFIG_EXAMPLES_AUDIO_PLAYER_STACKSIZE ?= 2048
-
-APPNAME   = $(CONFIG_EXAMPLES_AUDIO_PLAYER_APP_NAME)
-PRIORITY  = $(CONFIG_EXAMPLES_AUDIO_PLAYER_PRIORITY)
-STACKSIZE = $(CONFIG_EXAMPLES_AUDIO_PLAYER_STACKSIZE)
-
-# Audio Example
-
-MAINSRC = audio_player_main.cxx
-
-# Audio Example paths
-
-AUDIODIR = $(SDKDIR)$(DELIM)modules$(DELIM)audio
-
-# Audio Example flags
-
-ifeq ($(WINTOOL),y)
-CXXFLAGS += -I "${shell cygpath -w $(AUDIODIR)}"
-else
-CXXFLAGS += -I $(AUDIODIR)
+ifeq ($(CONFIG_EXAMPLES_VOICE_CALL),y)
+CONFIGURED_APPS += voice_call
 endif
-
-CXXFLAGS += -D_POSIX
-CXXFLAGS += -DUSE_MEMMGR_FENCE
-CXXFLAGS += -DATTENTION_USE_FILENAME_LINE
-
-CONFIG_EXAMPLES_AUDIO_PLAYER_PROGNAME ?= audio_player$(EXEEXT)
-PROGNAME = $(CONFIG_EXAMPLES_AUDIO_PLAYER_PROGNAME)
-
-include $(APPDIR)/Application.mk
