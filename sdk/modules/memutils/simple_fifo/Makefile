@@ -1,5 +1,5 @@
 ############################################################################
-# modules/memutils/Makefile
+# modules/memutils/simple_fifo/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #
@@ -37,63 +37,41 @@
 -include $(TOPDIR)/Make.defs
 -include $(SDKDIR)/Make.defs
 DELIM ?= $(strip /)
-CXXEXT ?= .cpp
+
+DEPPATH += --dep-path src
 
 # Add sub directory if exists
 
-CSRCS   =
-CXXSRCS =
+VPATH = src
+
+CSRCS += CMN_SimpleFifo.c
 
 # Include sub directory source files
 
-include memory_manager/Make.defs
-include message/Make.defs
-#include s_stl/Make.defs # no nessesity to compile
-include simple_fifo/Make.defs
 
-BIN = libmemutils$(LIBEXT)
+BIN = libsimplefifo$(LIBEXT)
 
-AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
-CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
 
-SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS)
-LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
+SRCS = $(CSRCS)
+LIB_OBJS = $(COBJS)
 
 # Here is a example of adding include paths.
 # Note that include path addtion will be affected to build time.
 # Don't add unnecessary include paths for module.
 #
-CXXFLAGS += -D_POSIX
-
-#MODINCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)include
-#BSPINCDIR = $(SDKDIR)$(DELIM)bsp$(DELIM)include
-#ifeq ($(WINTOOL),y)
-#  CXXFLAGS += -I "${shell cygpath -w $(MODINCDIR)}"
-#  CXXFLAGS += -I "${shell cygpath -w $(BSPINCDIR)}"
-#else
-#  CXXFLAGS += -I$(MODINCDIR)
-#  CXXFLAGS += -I$(BSPINCDIR)
-#endif
 
 all: $(BIN)
 .PHONY: context depend clean distclean
 
-$(AOBJS): %$(OBJEXT): %.S
-	$(call ASSEMBLE, $<, $@)
-
-$(COBJS): %$(OBJEXT): %.c
+$(CXXOBJS): %$(OBJEXT): %$.c
 	$(call COMPILE, $<, $@)
-
-$(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
-	$(call COMPILEXX, $<, $@)
 
 $(BIN): $(LIB_OBJS)
 	$(call ARCHIVE, $@, $(LIB_OBJS))
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(ASRCS) $(CSRCS) >Make.dep
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CXXFLAGS) -- $(CXXSRCS) >>Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(CSRCS) >Make.dep
 	$(Q) touch $@
 
 depend: .depend
@@ -116,4 +94,3 @@ distclean: clean
 	$(call DELFILE, .depend)
 
 -include Make.dep
-

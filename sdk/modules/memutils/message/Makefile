@@ -1,8 +1,7 @@
 ############################################################################
-# memutils/memory_manager/Make.defs
+# modules/memutils/message/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
-#   Author: Ryuuta Sakane <Ryuuta.Sakane@sony.com>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -14,8 +13,8 @@
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-# 3. Neither the name NuttX nor the names of its contributors may be
-#    used to endorse or promote products derived from this software
+# 3. Neither the name NuttX nor Sony nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
 #    without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -31,15 +30,70 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-############################################################################
+###########################################################################
 
-ifeq ($(CONFIG_MEMUTILS_MEMORY_MANAGER),y)
-CXXSRCS += allocSeg.cpp createDynamicPool.cpp createPool.cpp createStaticPools.cpp
-CXXSRCS += destroyDynamicPool.cpp destroyPool.cpp destroyStaticPools.cpp
-CXXSRCS += fence.cpp freeSeg.cpp getSegAddr.cpp getSegSize.cpp getUsedSegs.cpp
-CXXSRCS += incSegRefCnt.cpp initFirst.cpp initPerCpu.cpp ScopedLock.cpp
+# Do not change
 
-VPATH   += memory_manager/src
-SUBDIRS +=
-DEPPATH += --dep-path memory_manager/src
-endif
+-include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
+DELIM ?= $(strip /)
+CXXEXT ?= .cpp
+
+DEPPATH += --dep-path src
+
+# Add sub directory if exists
+
+VPATH = src
+
+CXXSRCS += MsgLib.cpp
+
+# Include sub directory source files
+
+
+BIN = libmessage$(LIBEXT)
+
+CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
+
+SRCS = $(CXXSRCS)
+LIB_OBJS = $(CXXOBJS)
+
+# Here is a example of adding include paths.
+# Note that include path addtion will be affected to build time.
+# Don't add unnecessary include paths for module.
+#
+
+CXXFLAGS += -D_POSIX
+
+all: $(BIN)
+.PHONY: context depend clean distclean
+
+$(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
+	$(call COMPILEXX, $<, $@)
+
+$(BIN): $(LIB_OBJS)
+	$(call ARCHIVE, $@, $(LIB_OBJS))
+
+.depend: Makefile $(SRCS)
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CXXFLAGS) -- $(CXXSRCS) >Make.dep
+	$(Q) touch $@
+
+depend: .depend
+
+# context target proceeds before depend. User can be used this rule
+# to prerequisite process (e.g. generate header file).
+
+.context:
+	$(Q) touch $@
+
+context:
+
+clean:
+	$(call DELFILE, $(BIN))
+	$(call CLEAN)
+
+distclean: clean
+	$(call DELFILE, .context)
+	$(call DELFILE, Make.dep)
+	$(call DELFILE, .depend)
+
+-include Make.dep
