@@ -1,5 +1,5 @@
 ############################################################################
-# modules/skeleton/Makefile
+# modules/spcommandfw/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #
@@ -39,47 +39,42 @@
 DELIM ?= $(strip /)
 CXXEXT ?= .cpp
 
-CSRCS   =
-CXXSRCS =
+DEPPATH += --dep-path .
 
-BIN = libskeleton$(LIBEXT)
+CSRCS = spritzer_command.c spritzer_command_parser.c
+CSRCS += spritzer_command_creator.c spritzer_command_event.c
+# Activate after BT library is prepared.
+#CSRCS += bt_ble_wrapper.c
 
-AOBJS = $(ASRCS:.S=$(OBJEXT))
+BIN = libcmdfw$(LIBEXT)
+
 COBJS = $(CSRCS:.c=$(OBJEXT))
-CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
 
-SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS)
-LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
+SRCS = $(CSRCS)
+LIB_OBJS = $(COBJS)
 
 # Here is a example of adding include paths.
 # Note that include path addtion will be affected to build time.
 # Don't add unnecessary include paths for module.
-#
-#SKELETONSRCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)skeleton
-#ifeq ($(WINTOOL),y)
-#  CFLAGS += -I "${shell cygpath -w $(SKELETONSRCDIR)}"
-#else
-#  CFLAGS += -I$(SKELETONSRCDIR)
-#endif
+
+APPSDIR       = $(SDKDIR)/../apps
+ifeq ($(WINTOOL),y)
+  CFLAGS += -I "${shell cygpath -w $(APPSDIR)/include}"
+else
+  CFLAGS += -I$(APPSDIR)/include
+endif
 
 all: $(BIN)
 .PHONY: context depend clean distclean
 
-$(AOBJS): %$(OBJEXT): %.S
-	$(call ASSEMBLE, $<, $@)
-
 $(COBJS): %$(OBJEXT): %.c
-	$(call COMPILE, $<, $@)
-
-$(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
 	$(call COMPILE, $<, $@)
 
 $(BIN): $(LIB_OBJS)
 	$(call ARCHIVE, $@, $(LIB_OBJS))
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(ASRCS) $(CSRCS) >Make.dep
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CXXFLAGS) -- $(CXXSRCS) >>Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(CSRCS) >Make.dep
 	$(Q) touch $@
 
 depend: .depend
