@@ -93,7 +93,7 @@
  * Private Function Prototypes
  ****************************************************************************/
 
-static int cxd224x_i2c_host_int_hdr(int irq, FAR void *context);
+static int cxd224x_i2c_host_int_hdr(int irq, FAR void *context, void *dummy);
 
 static int     cxd224x_i2c_open(FAR struct file *filep);
 static int     cxd224x_i2c_close(FAR struct file *filep);
@@ -103,8 +103,10 @@ static ssize_t cxd224x_i2c_write(FAR struct file *filep,
                                  FAR const char *buffer, size_t buflen);
 static int     cxd224x_i2c_ioctl(FAR struct file *filep, int cmd,
                                  unsigned long arg);
+#ifndef CONFIG_DISABLE_POLL
 static int     cxd224x_i2c_poll(FAR struct file *filep, struct pollfd *fds,
                                 bool setup);
+#endif
 
 /****************************************************************************
  * Private Data
@@ -397,7 +399,7 @@ static int cxd224x_i2c_poll(FAR struct file *filep, FAR struct pollfd *fds,
 }
 #endif
 
-static int cxd224x_i2c_host_int_hdr(int irq, FAR void *context)
+static int cxd224x_i2c_host_int_hdr(int irq, FAR void *context, void *dummy)
 {
   int ret;
   int pin;
