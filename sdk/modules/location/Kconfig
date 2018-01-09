@@ -1,0 +1,15 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menu "Location"
+
+config LOCATION_MANAGER
+	bool "Location manager"
+	default n
+	select CXD56_GNSS
+	---help---
+		Enable support for location manager.
+
+endmenu # Location
