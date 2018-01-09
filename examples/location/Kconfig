@@ -1,0 +1,32 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_LOCATION
+	bool "Location manager example"
+	default n
+	select LIBC_FLOATINGPOINT
+	select LOCATION_MANAGER
+	---help---
+		Enable the location manager Interface
+
+if EXAMPLES_LOCATION
+
+config EXAMPLES_LOCATION_PROGNAME
+	string "Program name"
+	default "location"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_LOCATION_PRIORITY
+	int "Location manager test task priority"
+	default 100
+
+config EXAMPLES_LOCATION_STACKSIZE
+	int "Location manager test stack size"
+	default 2048
+
+endif
