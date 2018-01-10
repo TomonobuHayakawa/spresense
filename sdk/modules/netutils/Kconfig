@@ -11,5 +11,6 @@ if EXTNETUTILS
 source "$SDKDIR/modules/netutils/mbedtls/Kconfig"
 source "$SDKDIR/modules/netutils/httpc/Kconfig"
 source "$SDKDIR/modules/netutils/mqtt/Kconfig"
+source "$SDKDIR/modules/netutils/json/Kconfig"
 
 endif
