@@ -71,7 +71,12 @@ LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
 #  CFLAGS += -I$(SKELETONSRCDIR)
 #endif
 
-CFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIM)nfc$(DELIM)nfc_sequencer$(DELIM)include)"
+NFCSEQUENCER_INCLUDEDIR = $(SDKDIR)$(DELIM)modules$(DELIM)nfc$(DELIM)nfc_sequencer$(DELIM)include
+ifeq ($(WINTOOL),y)
+  CFLAGS += -I"${shell cygpath -w $(NFCSEQUENCER_INCLUDEDIR)}"
+else
+  CFLAGS += -I$(NFCSEQUENCER_INCLUDEDIR)
+endif
 CFLAGS  += -DNF_INVALID_ERROR_NTF -DSPZ_IMPL -DSPZ2_IMPL -DCXD224X_I2C
 
 all: $(BIN)

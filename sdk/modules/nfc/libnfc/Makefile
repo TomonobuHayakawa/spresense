@@ -1,5 +1,5 @@
 ############################################################################
-# modules/nfc/nfc_sequencer/Makefile
+# modules/nfc/libnfc/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #
@@ -91,8 +91,12 @@ VPATH += libnfc-nci/halimpl
 
 ## External GKI nci 
 
-BASE_DIR = "$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIM)nfc$(DELIM)libnfc)"
-
+TEMP_BASE_DIR = $(SDKDIR)$(DELIM)modules$(DELIM)nfc$(DELIM)libnfc
+ifeq ($(WINTOOL),y)
+  BASE_DIR = "${shell cygpath -w $(TEMP_BASE_DIR)}"
+else
+  BASE_DIR = $(TEMP_BASE_DIR)
+endif
 
 INCLUDES += -I$(BASE_DIR)$(DELIM)include
 INCLUDES += -I$(BASE_DIR)$(DELIM)..$(DELIM)..$(DELIM)include

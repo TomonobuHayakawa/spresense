@@ -6,10 +6,8 @@ SDKMODDIRS += modules$(DELIM)nfc$(DELIM)nfc_sequencer
 endif
 SDKCLEANDIRS += modules$(DELIM)nfc$(DELIM)nfc_sequencer
 
-ifeq ($(CONFIG_NFC_SEQUENCER),y)
 modules$(DELIM)nfc$(DELIM)nfc_sequencer$(DELIM)libnfc_sequencer$(LIBEXT): context
 	$(Q) $(MAKE) -C modules$(DELIM)nfc$(DELIM)nfc_sequencer TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libnfc_sequencer$(LIBEXT)
 
 lib$(DELIM)libnfc_sequencer$(LIBEXT): modules$(DELIM)nfc$(DELIM)nfc_sequencer$(DELIM)libnfc_sequencer$(LIBEXT)
 	$(Q) install $< $@
-endif
