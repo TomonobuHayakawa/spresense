@@ -6,6 +6,7 @@
 config SENSING_TRAMLITE
 	bool "transport mode light version"
 	default n
+	select SENSING_MANAGER
 	select SENSING_MANAGER_POWERCTRL
 	---help---
 		Enable support for transport mode light version.
