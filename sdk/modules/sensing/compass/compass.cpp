@@ -83,9 +83,14 @@ static void *receiver_thread_entry(FAR void *p_instance)
 /*--------------------------------------------------------------------*/
 int CompassClass::open(void)
 {
+  int errout_ret;
+  int ret;
+  int id;
+  uint32_t msgdata;
+
   /* Initalize Worker as task. */
 
-  int ret = mptask_init_secure(&m_mptask, "ORIENTATION"/* tentative *//*filename*/);
+  ret = mptask_init_secure(&m_mptask, "ORIENTATION"/* tentative *//*filename*/);
   if (ret != 0)
     {
       _err("mptask_init() failure. %d\n", ret);
@@ -105,7 +110,8 @@ int CompassClass::open(void)
   if (ret < 0)
     {
       _err("mpmq_init() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      goto compass_errout_with_mptask_destroy;
     }
 
   /* Release subcore. */
@@ -114,32 +120,34 @@ int CompassClass::open(void)
   if (ret != 0)
     {
       _err("mptask_exec() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      goto compass_errout_with_mpmq_destory;
     }
 
   /* Wait boot response event. */
 
-  uint32_t msgdata; /* 0 is nomal boot. */
-
-  int id = mpmq_receive(&m_mq, &msgdata);
+  id = mpmq_receive(&m_mq, &msgdata);
   if (id != DSP_BOOTED_CMD_ID)
     {
       _err("boot error! %d\n", id);
-      return SENSOR_DSP_BOOT_ERROR;
+      errout_ret = SENSOR_DSP_BOOT_ERROR;
+      goto compass_errout_with_mpmq_destory;
     }
   if (msgdata != DSP_ORIENTATION_VERSION)
     {
       _err("boot error! [dsp version:0x%x] [sensing version:0x%x]\n",
           msgdata, DSP_ORIENTATION_VERSION);
-      return SENSOR_DSP_VERSION_ERROR;
+      errout_ret = SENSOR_DSP_VERSION_ERROR;
+      goto compass_errout_with_mpmq_destory;
     }
 
   /* Send InitEvent and wait response. */
 
-  int ercd = this->sendInit();
-  if (ercd != SENSOR_OK)
+  ret = this->sendInit();
+  if (ret != SENSOR_OK)
     {
-      return ercd;
+      errout_ret = ret;
+      goto compass_errout_with_mpmq_destory;
     }
 
   /* Create receive tread. */
@@ -150,11 +158,23 @@ int CompassClass::open(void)
                        static_cast<pthread_addr_t>(this));
   if (ret != 0)
     {
-      _err("DD_load: Failed to create receiver_thread_entry, error=%d\n", ret);
-      return SENSOR_TASK_CREATE_ERROR;
+      _err("Failed to create receiver_thread_entry, error=%d\n", ret);
+      errout_ret = SENSOR_TASK_CREATE_ERROR;
+    }
+  else
+    {
+      return SENSOR_OK;
     }
 
-  return SENSOR_OK;
+compass_errout_with_mpmq_destory:
+  ret = mpmq_destroy(&m_mq);
+  DEBUGASSERT(ret == 0);
+
+compass_errout_with_mptask_destroy:
+  ret = mptask_destroy(&m_mptask, false, NULL);
+  DEBUGASSERT(ret == 0);
+
+  return errout_ret;
 }
 
 

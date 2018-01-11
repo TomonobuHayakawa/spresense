@@ -170,6 +170,11 @@ static void load_freq_release(void)
 
 int TramClass::open(FAR float *likelihood)
 {
+  int errout_ret;
+  int ret;
+  int id;
+  uint32_t msgdata; /* 0 is nomal boot. */
+
   /*TODO: It's a necessary code, but we need to fix it. To disable. */
 #if 0
   load_freq_lock(PM_CPUFREQLOCK_FLAG_HV);
@@ -177,7 +182,7 @@ int TramClass::open(FAR float *likelihood)
 
   /* Initalize Worker as task. */
 
-  int ret = mptask_init_secure(&m_mptask, "TRAM"/* tentative *//*filename*/);
+  ret = mptask_init_secure(&m_mptask, "TRAM"/* tentative *//*filename*/);
 
   if (ret != 0)
     {
@@ -199,7 +204,8 @@ int TramClass::open(FAR float *likelihood)
   if (ret < 0)
     {
       _err("mpmq_init() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      goto transport_mode_errout_with_mptask_destroy;
     }
 
   /* Release subcore. */
@@ -208,7 +214,8 @@ int TramClass::open(FAR float *likelihood)
   if (ret != 0)
     {
       _err("mptask_exec() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      goto transport_mode_errout_with_mpmq_destory;
     }
 
   /*TODO: It's a necessary code, but we need to fix it. To disable. */
@@ -218,27 +225,28 @@ int TramClass::open(FAR float *likelihood)
 
   /* Wait boot response event. */
 
-  uint32_t msgdata; /* 0 is nomal boot. */
-
-  int id = mpmq_receive(&m_mq, &msgdata);
+  id = mpmq_receive(&m_mq, &msgdata);
   if (id != DSP_BOOTED_CMD_ID)
     {
       _err("boot error! %d\n", id);
-      return SENSOR_DSP_BOOT_ERROR;
+      errout_ret = SENSOR_DSP_BOOT_ERROR;
+      goto transport_mode_errout_with_mpmq_destory;
     }
   if (msgdata != DSP_TRAM_VERSION)
     {
       _err("boot error! [dsp version:0x%x] [sensorutils version:0x%x]\n",
           msgdata, DSP_TRAM_VERSION);
-      return SENSOR_DSP_VERSION_ERROR;
+      errout_ret = SENSOR_DSP_VERSION_ERROR;
+      goto transport_mode_errout_with_mpmq_destory;
     }
 
   /* Send InitEvent and wait response. */
 
-  int ercd = this->sendInit(likelihood);
-  if (ercd != SENSOR_OK)
+  ret = this->sendInit(likelihood);
+  if (ret != SENSOR_OK)
     {
-      return ercd;
+      errout_ret = ret;
+      goto transport_mode_errout_with_mpmq_destory;
     }
 
   /* Create receive thread. */
@@ -250,10 +258,22 @@ int TramClass::open(FAR float *likelihood)
   if (ret != 0)
     {
       _err("DD_load: Failed to create receiver_thread_entry, error=%d\n", ret);
-      return SENSOR_TASK_CREATE_ERROR;
+      errout_ret = SENSOR_TASK_CREATE_ERROR;
+    }
+  else
+    {
+      return SENSOR_OK;
     }
 
-  return SENSOR_OK;
+transport_mode_errout_with_mpmq_destory:
+  ret = mpmq_destroy(&m_mq);
+  DEBUGASSERT(ret == 0);
+
+transport_mode_errout_with_mptask_destroy:
+  ret = mptask_destroy(&m_mptask, false, NULL);
+  DEBUGASSERT(ret == 0);
+
+  return errout_ret;
 }
 
 /*--------------------------------------------------------------------*/

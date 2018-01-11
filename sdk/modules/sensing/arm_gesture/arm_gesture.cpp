@@ -82,9 +82,14 @@ static void *receiver_thread_entry(FAR void *p_instance)
 /*--------------------------------------------------------------------*/
 int GestureClass::open(void)
 {
+  int errout_ret;
+  int ret;
+  int id;
+  uint32_t msgdata;
+
   /* Initalize Worker as task. */
 
-  int ret = mptask_init_secure(&m_mptask, "ARMGESTURE"/* tentative *//*filename*/);
+  ret = mptask_init_secure(&m_mptask, "ARMGESTURE"/* tentative *//*filename*/);
 
   if (ret != 0)
     {
@@ -106,7 +111,8 @@ int GestureClass::open(void)
   if (ret < 0)
     {
       _err("mpmq_init() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      goto arm_gesture_errout_with_mptask_destroy;
     }
 
   /* Release subcore. */
@@ -115,24 +121,25 @@ int GestureClass::open(void)
   if (ret != 0)
     {
       _err("mptask_exec() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      goto arm_gesture_errout_with_mpmq_destory;
     }
 
   /* Wait boot response event */
 
-  uint32_t msgdata; /* 0 is nomal boot. */
-
-  int id = mpmq_receive(&m_mq, &msgdata);
+  id = mpmq_receive(&m_mq, &msgdata);
   if (id != DSP_BOOTED_CMD_ID)
     {
       _err("boot error! %d\n", id);
-      return SENSOR_DSP_BOOT_ERROR;
+      errout_ret = SENSOR_DSP_BOOT_ERROR;
+      goto arm_gesture_errout_with_mpmq_destory;
     }
   if (msgdata != DSP_ARMGESTURE_VERSION)
     {
       _err("boot error! [dsp version:0x%x] [sensing version:0x%x]\n",
         msgdata, DSP_ARMGESTURE_VERSION);
-      return SENSOR_DSP_VERSION_ERROR;
+      errout_ret = SENSOR_DSP_VERSION_ERROR;
+      goto arm_gesture_errout_with_mpmq_destory;
     }
 
   /* Send InitEvent and wait response. */
@@ -141,7 +148,8 @@ int GestureClass::open(void)
   if (ret != 0)
     {
       _err("sendInit() failure. %d\n", ret);
-      return SENSOR_DSP_INIT_ERROR;
+      errout_ret = ret;
+      goto arm_gesture_errout_with_mpmq_destory;
     }
 
   /* Create receive tread/ */
@@ -153,10 +161,22 @@ int GestureClass::open(void)
   if (ret != 0)
     {
       _err("Failed to create receiver_thread_entry, error=%d\n", ret);
-      return SENSOR_TASK_CREATE_ERROR;
+      errout_ret = SENSOR_TASK_CREATE_ERROR;
+    }
+  else
+    {
+      return SENSOR_OK;
     }
 
-  return SENSOR_OK;
+arm_gesture_errout_with_mpmq_destory:
+  ret = mpmq_destroy(&m_mq);
+  DEBUGASSERT(ret == 0);
+
+arm_gesture_errout_with_mptask_destroy:
+  ret = mptask_destroy(&m_mptask, false, NULL);
+  DEBUGASSERT(ret == 0);
+
+  return errout_ret;
 }
 
 /*--------------------------------------------------------------------*/
