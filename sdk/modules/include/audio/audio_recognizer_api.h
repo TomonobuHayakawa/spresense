@@ -144,14 +144,6 @@ typedef enum
   AS_RECOGNITION_STATUS_NUM
 } AsVoiceRecognitionStatus;
 
-/** Voice Trigger Callback function
- * @param[in] command_code: #AUDCMD_SETWAITKEYSTATUS
- * @param[in] sub_code: 0x00
- */
-
-typedef void (*AudioFindTriggerCallbackFunction)(uint8_t command_code,
-                                                 uint8_t sub_code);
-
 /** Voice Command Callback function
  * @param[in] keyword : currently 0 only
  * @param[in] status  : Use #AsVoiceRecognitionStatus enum type
@@ -198,20 +190,6 @@ typedef struct
 
   AudioFindCommandCallbackFunction  callback_function;
 } StartVoiceCommandParam;
-
-/** (__not supported__) SetWaitKeyStatus Command (#AUDCMD_SETWAITKEYSTATUS)
- * parameter */
-
-typedef struct
-{
-  /*! \brief [in] callback function */
-
-  AudioFindTriggerCallbackFunction callback_function;
-
-  /*! \brief [in] SCU math function coefficient and parameter table address */
-
-  uint32_t  mathfunc_config_table;
-} SetWaitKeyStatusParam;
 
 /** Message queue ID parameter of activate function */
 

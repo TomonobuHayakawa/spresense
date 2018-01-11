@@ -118,7 +118,6 @@ private:
       MNG_ALLSTATE_BBREADY,
       MNG_ALLSTATE_BBACTIVE,
       MNG_ALLSTATE_WAITCMDWORD,
-      MNG_ALLSTATE_WAITKEY,
       MNG_ALLSTATE_POWEROFF,
       MNG_ALLSTATE_NUM /*11*/
   };
@@ -146,7 +145,6 @@ private:
   void ignore(AudioCommand &cmd);
   void powerOn(AudioCommand &cmd);
   void powerOff(AudioCommand &cmd);
-  void setPowerOffOnWait(AudioCommand &cmd);
   void soundFx(AudioCommand &cmd);
   void mfe(AudioCommand &cmd);
   void mpp(AudioCommand &cmd);
@@ -165,9 +163,7 @@ private:
   void setVolume(AudioCommand &cmd);
   void setVolumeMute(AudioCommand &cmd);
   void setBeep(AudioCommand &cmd);
-  void setWait(AudioCommand &cmd);
   void setRdyOnAct(AudioCommand &cmd);
-  void setRdyOnWait(AudioCommand &cmd);
   void setRdyOnPlay(AudioCommand &cmd);
   void setRdyOnRecorder(AudioCommand &cmd);
   void setActive(AudioCommand &cmd);
@@ -182,14 +178,12 @@ private:
   void illegalCmplt(const AudioMngCmdCmpltResult &cmd);
   void cmpltOnReady(const AudioMngCmdCmpltResult &cmd);
   void cmpltOnSoundFx(const AudioMngCmdCmpltResult &cmd);
-  void cmpltOnWaitkey(const AudioMngCmdCmpltResult &cmd);
   void cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd);
   void cmpltOnRecorder(const AudioMngCmdCmpltResult &cmd);
   void cmpltOnPowerOff(const AudioMngCmdCmpltResult &cmd);
 
   int getAllState(void);
 
-  static void execFindTriggerCallback(void);
   static void execFindCommandCallback(uint16_t key_word, uint8_t status);
 
   void execAttentions(const AttentionInfo&);

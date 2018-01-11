@@ -134,10 +134,6 @@
 
 #define AUDCMD_SETBEEPPARAM      0x18
 
-/*! \brief Command Code: SetWaitKeyStatus (__not supported__) */
-
-#define AUDCMD_SETWAITKEYSTATUS  0x40
-
 /*! \brief Command Code: SetReadyStartus */
 
 #define AUDCMD_SETREADYSTATUS    0x41
@@ -297,10 +293,6 @@
 /*! \brief SetRecorderStatus command (#AUDCMD_SETRECORDERSTATUS) packet length */
 
 #define LENGTH_SET_RECORDER_STATUS  4
-
-/*! \brief SetWaitKey command (#AUDCMD_SETWAITKEYSTATUS) packet length */
-
-#define LENGTH_SET_WAITKEY_STATUS   3
 
 /*! \brief SetBaseBandStatus command (#AUDCMD_SETBASEBANDSTATUS) packet length */
 
@@ -1282,12 +1274,6 @@ typedef struct
     AsInitRecorderParam init_recorder_param;
 #endif
 #ifdef AS_FEATURE_RECOGNIZER_ENABLE
-    /*! \brief [in] for SetWaitKeyStatus
-     * (header.command_code==#AUDCMD_SETWAITKEYSTATUS)
-     */
-
-    SetWaitKeyStatusParam set_waitkey_status_param;
-
     /*! \brief [in] for StratVoiceCommand
      * (header.command_code==#AUDCMD_STARTVOICECOMMAND)
      */
@@ -1384,10 +1370,6 @@ typedef enum
 
   AS_MNG_STATUS_BASEBAND,
 
-  /*! \brief WaitKeyword */
-
-  AS_MNG_STATUS_WAIT_KEYWORD,
-
   /*! \brief Player */
 
   AS_MNG_STATUS_PLAYER,
@@ -1471,10 +1453,6 @@ typedef enum
   /*! \brief to BaseBand */
 
   AS_STATUS_CHANGED_STS_BASEBAND,
-
-  /*! \brief to  WaitKeyword */
-
-  AS_STATUS_CHANGED_STS_WAITKEYWORD,
 
   /*! \brief to  Player */
 

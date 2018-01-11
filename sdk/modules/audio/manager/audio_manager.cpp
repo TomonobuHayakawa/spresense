@@ -180,10 +180,6 @@ void AS_SendAudioCommand(FAR AudioCommand *packet)
         msg_type = MSG_AUD_MGR_CMD_SETREADY;
         break;
 
-      case AUDCMD_SETWAITKEYSTATUS:
-        msg_type = MSG_AUD_MGR_CMD_SETWAIT;
-        break;
-
       case AUDCMD_SETBBACTIVESTATUS:
         msg_type = MSG_AUD_MGR_CMD_SETACTIVE;
         break;
@@ -357,24 +353,7 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
-  },
-
-  /* SetWait command. */
-
-  {                                    /* AudioManager all status: */
-    &AudioManager::illegal,            /*   Ready state.           */
-    &AudioManager::illegal,            /*   PlayerReady state.     */
-    &AudioManager::illegal,            /*   PlayerActive state.    */
-    &AudioManager::illegal,            /*   PlayerPause state.     */
-    &AudioManager::illegal,            /*   RecorderReady state.   */
-    &AudioManager::illegal,            /*   RecorderActive state.  */
-    &AudioManager::illegal,            /*   BasebandReady state.   */
-    &AudioManager::illegal,            /*   BasebandActive state.  */
-    &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
-    &AudioManager::setWait             /*   PowerOff state.        */
   },
 
   /* SetReady command. */
@@ -389,7 +368,6 @@ AudioManager::MsgProc
     &AudioManager::setRdyOnAct,        /*   BasebandReady state.   */
     &AudioManager::setRdyOnAct,        /*   BasebandActive state.  */
     &AudioManager::setRdyOnAct,        /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -405,7 +383,6 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -421,7 +398,6 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -437,7 +413,6 @@ AudioManager::MsgProc
     &AudioManager::voiceCommand,       /*   BasebandReady state.   */
     &AudioManager::voiceCommand,       /*   BasebandActive state.  */
     &AudioManager::voiceCommand,       /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -453,7 +428,6 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -469,7 +443,6 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -485,7 +458,6 @@ AudioManager::MsgProc
     &AudioManager::soundFx,            /*   BasebandReady state.   */
     &AudioManager::soundFx,            /*   BasebandActive state.  */
     &AudioManager::soundFx,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -501,7 +473,6 @@ AudioManager::MsgProc
     &AudioManager::mfe,                /*   BasebandReady state.   */
     &AudioManager::mfe,                /*   BasebandActive state.  */
     &AudioManager::mfe,                /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -517,7 +488,6 @@ AudioManager::MsgProc
     &AudioManager::mpp,                /*   BasebandReady state.   */
     &AudioManager::mpp,                /*   BasebandActive state.  */
     &AudioManager::mpp,                /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -533,7 +503,6 @@ AudioManager::MsgProc
     &AudioManager::getstatus,          /*   BasebandReady state.   */
     &AudioManager::getstatus,          /*   BasebandActive state.  */
     &AudioManager::getstatus,          /*   WaitCommandWord state. */
-    &AudioManager::getstatus,          /*   WaitKey state.         */
     &AudioManager::getstatus           /*   PowerOff state.        */
   },
 
@@ -549,7 +518,6 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::initAttentions      /*   PowerOff state.        */
   },
 
@@ -565,7 +533,6 @@ AudioManager::MsgProc
     &AudioManager::setMicGain,         /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::initMicGain         /*   PowerOff state.        */
   },
 
@@ -581,7 +548,6 @@ AudioManager::MsgProc
     &AudioManager::setI2SParam,        /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::initI2SParam        /*   PowerOff state.        */
   },
 
@@ -597,7 +563,6 @@ AudioManager::MsgProc
     &AudioManager::initDEQParam,       /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::initDEQParam        /*   PowerOff state.        */
   },
 
@@ -613,7 +578,6 @@ AudioManager::MsgProc
     &AudioManager::setOutputSelect,    /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::initOutputSelect    /*   PowerOff state.        */
   },
 
@@ -629,7 +593,6 @@ AudioManager::MsgProc
     &AudioManager::initDNCParam,       /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::initDNCParam        /*   PowerOff state.        */
   },
 
@@ -645,7 +608,6 @@ AudioManager::MsgProc
     &AudioManager::setClearStereo,     /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::initClearStereo     /*   PowerOff state.        */
   },
 
@@ -661,7 +623,6 @@ AudioManager::MsgProc
     &AudioManager::setVolume,          /*   BasebandReady state.   */
     &AudioManager::setVolume,          /*   BasebandActive state.  */
     &AudioManager::setVolume,          /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -677,7 +638,6 @@ AudioManager::MsgProc
     &AudioManager::setVolumeMute,      /*   BasebandReady state.   */
     &AudioManager::setVolumeMute,      /*   BasebandActive state.  */
     &AudioManager::setVolumeMute,      /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -693,7 +653,6 @@ AudioManager::MsgProc
     &AudioManager::setBeep,            /*   BasebandReady state.   */
     &AudioManager::setBeep,            /*   BasebandActive state.  */
     &AudioManager::setBeep,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -709,7 +668,6 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::powerOn             /*   PowerOff state.        */
   },
 
@@ -725,7 +683,6 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::setPowerOffOnWait,  /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -741,7 +698,6 @@ AudioManager::MsgProc
     &AudioManager::outputMixSoundFx,   /*   BasebandReady state.   */
     &AudioManager::outputMixSoundFx,   /*   BasebandActive state.  */
     &AudioManager::outputMixSoundFx,   /*   WaitCommandWord state. */
-    &AudioManager::outputMixSoundFx,   /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -757,7 +713,6 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
@@ -773,7 +728,6 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::illegal,            /*   WaitKey state.         */
     &AudioManager::illegal             /*   PowerOff state.        */
   }
 };
@@ -785,7 +739,6 @@ AudioManager::RstProc AudioManager::RstProcTbl[1][AS_MNG_STATUS_NUM] =
   {                                  /* AudioManager status: */
     &AudioManager::cmpltOnReady,     /*   Ready state.       */
     &AudioManager::cmpltOnSoundFx,   /*   Baseband state.    */
-    &AudioManager::cmpltOnWaitkey,   /*   WaitKeyword state. */
     &AudioManager::cmpltOnPlayer,    /*   Player state.      */
     &AudioManager::cmpltOnRecorder,  /*   Recorder state.    */
     &AudioManager::cmpltOnPowerOff   /*   PowerOff state.    */
@@ -1018,17 +971,6 @@ void AudioManager::powerOff(AudioCommand &cmd)
           F_ASSERT(0);
         }
       m_enable_sound_effect = AS_DISABLE_SOUNDEFFECT;
-    }
-}
-
-/*--------------------------------------------------------------------------*/
-void AudioManager::setPowerOffOnWait(AudioCommand &cmd)
-{
-  bool check =
-    packetCheck(LENGTH_SET_POWEROFF_STATUS, AUDCMD_SETPOWEROFFSTATUS, cmd);
-  if (!check)
-    {
-      return;
     }
 }
 
@@ -1427,16 +1369,6 @@ void AudioManager::recorder(AudioCommand &cmd)
 }
 
 /*--------------------------------------------------------------------------*/
-void AudioManager::setWait(AudioCommand &cmd)
-{
-  /* No support. */
-
-  sendErrRespResult(cmd.header.sub_code,
-                    AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
-}
-
-/*--------------------------------------------------------------------------*/
 void AudioManager::setRdyOnAct(AudioCommand &cmd)
 {
 #ifdef AS_FEATURE_EFFECTOR_ENABLE
@@ -1472,17 +1404,6 @@ void AudioManager::setRdyOnAct(AudioCommand &cmd)
                     AS_MODULE_ID_AUDIO_MANAGER,
                     AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_EFFECTOR_ENABLE */
-}
-
-/*--------------------------------------------------------------------------*/
-void AudioManager::setRdyOnWait(AudioCommand &cmd)
-{
-  bool check =
-    packetCheck(LENGTH_SET_READY_STATUS, AUDCMD_SETREADYSTATUS, cmd);
-  if (!check)
-    {
-      return;
-    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -2114,9 +2035,6 @@ void AudioManager::cmpltOnReady(const AudioMngCmdCmpltResult &cmd)
     {
       switch (cmd.command_code)
         {
-          case AUDCMD_SETWAITKEYSTATUS:
-            break;
-
           case AUDCMD_SETPLAYERSTATUS:
             deactivatePlayer();
             break;
@@ -2354,40 +2272,6 @@ void AudioManager::cmpltOnSoundFx(const AudioMngCmdCmpltResult &cmd)
 }
 
 /*--------------------------------------------------------------------------*/
-void AudioManager::cmpltOnWaitkey(const AudioMngCmdCmpltResult &cmd)
-{
-  uint8_t result_code = AUDRLT_ERRORRESPONSE;
-
-  if (cmd.result != AS_RESPONSE_CODE_OK)
-    {
-      sendErrRespResult(cmd.sub_code, cmd.module_id, cmd.result);
-      return;
-    }
-
-  switch (cmd.command_code)
-    {
-      case AUDCMD_SETPOWEROFFSTATUS:
-        {
-          /* MicBiasA OFF. */
-
-          AS_BaseBandDisable_input(AS_MICMODE_HPADC);
-
-          result_code = AUDRLT_STATUSCHANGED;
-          m_State    = AS_MNG_STATUS_POWEROFF;
-          m_SubState = AS_MNG_SUB_STATUS_NONE;
-        }
-        break;
-
-      default:
-        sendErrRespResult(cmd.sub_code,
-                          AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
-        return;
-    }
-  sendResult(result_code);
-}
-
-/*--------------------------------------------------------------------------*/
 void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
 {
 #ifdef AS_FEATURE_PLAYER_ENABLE
@@ -2586,12 +2470,6 @@ void AudioManager::cmpltOnPowerOff(const AudioMngCmdCmpltResult &cmd)
 
   switch (cmd.command_code)
     {
-      case AUDCMD_SETWAITKEYSTATUS:
-        result_code = AUDRLT_STATUSCHANGED;
-        m_State    = AS_MNG_STATUS_WAIT_KEYWORD;
-        m_SubState = AS_MNG_SUB_STATUS_NONE;
-        break;
-
       case AUDCMD_POWERON:
         m_State    = AS_MNG_STATUS_READY;
         m_SubState = AS_MNG_SUB_STATUS_NONE;
@@ -2819,10 +2697,6 @@ int AudioManager::getAllState(void)
         switch (m_State)
           {
             case AS_MNG_STATUS_READY:
-              break;
-
-            case AS_MNG_STATUS_WAIT_KEYWORD:
-              allstate = MNG_ALLSTATE_WAITKEY;
               break;
 
             case AS_MNG_STATUS_POWEROFF:
@@ -3275,11 +3149,6 @@ S_ASSERT((LENGTH_START_VOICE_COMMAND << 2) ==
 
 S_ASSERT((LENGTH_STOP_VOICE_COMMAND << 2) ==
   (sizeof(AudioCommandHeader) + 4));
-
-/* SetWaitKey command (AUDCMD_SETWAITKEYSTATUS) packet length. */
-
-S_ASSERT((LENGTH_SET_WAITKEY_STATUS << 2) ==
-  (sizeof(AudioCommandHeader) + sizeof(SetWaitKeyStatusParam)));
 #endif /* #ifdef AS_FEATURE_RECOGNIZER_ENABLE */
 
 #ifdef AS_FEATURE_RECORDER_ENABLE
