@@ -89,13 +89,13 @@ static ssize_t cxd56_bread(FAR struct mtd_dev_s *dev, off_t startblock,
 {
   int ret;
 
-  finfo("bread: %08lx (%u blocks)\n", startblock, nblocks);
+  finfo("bread: %08lx (%u blocks)\n", startblock << PAGE_SHIFT, nblocks);
 
   ret = FM_RawRead(startblock << PAGE_SHIFT, buffer, nblocks << PAGE_SHIFT);
-  if (ret)
+  if (ret < 0)
     {
-      set_errno(ret);
-      return 0;
+      set_errno(-ret);
+      return ERROR;
     }
 
   return nblocks;
@@ -106,17 +106,17 @@ static ssize_t cxd56_bwrite(FAR struct mtd_dev_s *dev, off_t startblock,
 {
   int ret;
 
-  finfo("bwrite: %08lx (%u blocks)\n", startblock, nblocks);
+  finfo("bwrite: %08lx (%u blocks)\n", startblock << PAGE_SHIFT, nblocks);
 
 #ifdef CONFIG_CXD56_SFC_VERIFY_WRITE
   ret = FM_RawVerifyWrite(startblock << PAGE_SHIFT, buffer, nblocks << PAGE_SHIFT);
 #else
   ret = FM_RawWrite(startblock << PAGE_SHIFT, buffer, nblocks << PAGE_SHIFT);
 #endif
-  if (ret)
+  if (ret < 0)
     {
-      set_errno(ret);
-      return 0;
+      set_errno(-ret);
+      return ERROR;
     }
 
   return nblocks;
@@ -130,10 +130,10 @@ static ssize_t cxd56_read(FAR struct mtd_dev_s *dev, off_t offset,
   finfo("read: %08lx (%u bytes)\n", offset, nbytes);
 
   ret = FM_RawRead(offset, buffer, nbytes);
-  if (ret)
+  if (ret < 0)
     {
-      set_errno(ret);
-      return 0;
+      set_errno(-ret);
+      return ERROR;
     }
 
   return nbytes;
