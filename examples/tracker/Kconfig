@@ -1,0 +1,66 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_TRACKER
+	bool "Tracker example"
+	default n
+	select LIBC_FLOATINGPOINT
+	select LOCATION_MANAGER
+	select EXTNETUTILS
+	select EXTNETUTILS_JSON
+	select NETUTILS_HTTPC
+	select NETUTILS_MBEDTLS
+	select LTE
+	select LTE_CLIENT
+
+if EXAMPLES_TRACKER
+
+config EXAMPLES_TRACKER_PROGNAME
+	string "Program name"
+	default "tracker"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_TRACKER_PRIORITY
+	int "Tracker task priority"
+	default 100
+
+config EXAMPLES_TRACKER_STACKSIZE
+	int "Tracker stack size"
+	default 5120
+
+config EXAMPLES_TRACKER_HTTP_CUSTOM_HEADER_NUM
+	int "Max number of custom headers"
+	default 5
+
+config EXAMPLES_TRACKER_USING_EVENT_TRIGGER
+	bool "Using event driven method"
+	default n
+
+if EXAMPLES_TRACKER_USING_EVENT_TRIGGER
+
+config EXAMPLES_TRACKER_TAP_TRIGGER
+	bool "Triggered by TAP detection"
+	default y
+	select HAVE_CXX
+	select HAVE_CXXINITIALIZE
+	select TAP
+	select TAP_MANAGER
+
+config EXAMPLES_TRACKER_BUTTON_TRIGGER
+	bool "Triggered by button detection"
+	default n
+	select ARCH_BUTTONS
+	select ARCH_IRQBUTTONS
+
+endif
+
+config EXAMPLES_TRACKER_USING_NXFB
+	bool "Using NX graphics with frame buffer"
+	default n
+
+endif
