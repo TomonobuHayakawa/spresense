@@ -79,9 +79,21 @@ static struct flash_controller_s g_sfc;
 static int cxd56_erase(FAR struct mtd_dev_s *dev, off_t startblock,
                        size_t nblocks)
 {
-  finfo("erase: block %08x\n", startblock);
+  int ret;
+  size_t i;
 
-  return FM_RawEraseSector(startblock);
+  finfo("erase: %08lx (%u blocks)\n", startblock << PAGE_SHIFT, nblocks);
+
+  for (i = 0; i < nblocks; i++)
+    {
+      ret = FM_RawEraseSector(startblock + i);
+      if (ret < 0)
+        {
+          set_errno(-ret);
+          return ERROR;
+        }
+    }
+  return OK;
 }
 
 static ssize_t cxd56_bread(FAR struct mtd_dev_s *dev, off_t startblock,
