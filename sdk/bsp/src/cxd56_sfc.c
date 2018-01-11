@@ -151,6 +151,29 @@ static ssize_t cxd56_read(FAR struct mtd_dev_s *dev, off_t offset,
   return nbytes;
 }
 
+#ifdef CONFIG_MTD_BYTE_WRITE
+static ssize_t cxd56_write(FAR struct mtd_dev_s *dev, off_t offset,
+                           size_t nbytes, FAR const uint8_t *buffer)
+{
+  int ret;
+
+  finfo("write: %08lx (%u bytes)\n", offset, nbytes);
+
+#ifdef CONFIG_CXD56_SFC_VERIFY_WRITE
+  ret = FM_RawVerifyWrite(offset, buffer, nbytes);
+#else
+  ret = FM_RawWrite(offset, buffer, nbytes);
+#endif
+  if (ret < 0)
+    {
+      set_errno(-ret);
+      return ERROR;
+    }
+
+  return nbytes;
+}
+#endif
+
 static int cxd56_ioctl(FAR struct mtd_dev_s *dev, int cmd, unsigned long arg)
 {
   struct flash_controller_s *priv = (struct flash_controller_s *)dev;
@@ -218,6 +241,9 @@ FAR struct mtd_dev_s *cxd56_sfc_initialize(void)
   priv->mtd.bread  = cxd56_bread;
   priv->mtd.bwrite = cxd56_bwrite;
   priv->mtd.read   = cxd56_read;
+#ifdef CONFIG_MTD_BYTE_WRITE
+  priv->mtd.write  = cxd56_write;
+#endif
   priv->mtd.ioctl  = cxd56_ioctl;
 
   /* TODO: Flash reserved area should be configurable dynamically. */
