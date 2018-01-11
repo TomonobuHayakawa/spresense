@@ -92,8 +92,7 @@ private:
     m_State(AS_MNG_STATUS_POWEROFF),
     m_SubState(AS_MNG_SUB_STATUS_NONE),
     m_attentionCBFunc(NULL),
-    m_active_player(0),
-    m_enable_sound_effect(AS_DISABLE_SOUNDEFFECT)
+    m_active_player(0)
   {
     cxd56_audio_bb_register("/dev/audio/baseband");
   };
@@ -128,7 +127,6 @@ private:
 #endif
   BasebandConfig bbConfig;
   uint32_t m_active_player;
-  uint32_t m_enable_sound_effect;
   uint32_t m_command_code;
   static const int   ActivePlayerNum = 2;
   s_std::Queue<uint8_t, ActivePlayerNum> m_player_transition_que;
@@ -169,7 +167,6 @@ private:
   void setActive(AudioCommand &cmd);
   void setPlayerStatus(AudioCommand &cmd);
   void setRecorder(AudioCommand &cmd);
-  void outputMixSoundFx(AudioCommand &cmd);
   void subPlayer(AudioCommand &cmd);
   void voiceCommand(AudioCommand &cmd);
   void getstatus(AudioCommand &cmd);

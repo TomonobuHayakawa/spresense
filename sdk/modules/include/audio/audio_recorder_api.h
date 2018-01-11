@@ -64,43 +64,6 @@
 
 #define AS_FEATURE_RECORDER_ENABLE
 
-/* command code */
-/** @name Command code */
-/** @{ */
-
-/*! \brief Command Code: StartRec */
-
-#define AUDCMD_STARTREC   0x31
-
-/*! \brief Command Code: StopRec */
-
-#define AUDCMD_STOPREC    0x32
-
-/*! \brief Command Code: InitRecorder */
-
-#define  AUDCMD_INITREC   0x34
-
-/** @} */
-
-/* result code */
-
-/** @name Result code */
-/** @{ */
-
-/*! \brief Result Code: RecCmplt */
-
-#define AUDRLT_RECCMPLT      0x31
-
-/*! \brief Result Code: StopRecCmplt */
-
-#define AUDRLT_STOPRECCMPLT  0x32
-
-/*! \brief Result Code: InitRecCmplt */
-
-#define AUDRLT_INITRECCMPLT  0x34
-
-/** @} */
-
 /** @name Packet length of command*/
 /** @{ */
 

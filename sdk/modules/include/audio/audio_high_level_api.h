@@ -58,6 +58,7 @@
 
 #include <sdk/config.h>
 
+#include "audio/audio_command_id.h"
 #ifdef CONFIG_AUDIOUTILS_PLAYER
 #  include "audio/audio_player_api.h"
 #  include "audio/audio_outputmix_api.h"
@@ -87,95 +88,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/** @name Command code */
-/** @{ */
-
-/*! \brief Command Code: GetStatus */
-
-#define AUDCMD_GETSTATUS         0x02
-
-/*! \brief Command Code: InitMicGain */
-
-#define AUDCMD_INITMICGAIN       0x03
-
-/*! \brief Command Code: InitI2SParam */
-
-#define AUDCMD_INITI2SPARAM      0x04
-
-/*! \brief Command Code: InitDEQParam (__not supported__) */
-
-#define AUDCMD_INITDEQPARAM      0x05
-
-/*! \brief Command Code: InitOutputSelect */
-
-#define AUDCMD_INITOUTPUTSELECT  0x06
-
-/*! \brief Command Code: InitDNCParam (__not supported__) */
-
-#define AUDCMD_INITDNCPARAM      0x07
-
-/*! \brief Command Code: InitAttentions */
-
-#define AUDCMD_INITATTENTIONS    0x08
-
-/*! \brief Command Code: InitClearStereo */
-
-#define AUDCMD_INITCLEARSTEREO   0x09
-
-/*! \brief Command Code: SetVolume */
-
-#define AUDCMD_SETVOLUME         0x16
-
-/*! \brief Command Code: SetVolumeMute */
-
-#define AUDCMD_SETVOLUMEMUTE     0x17
-
-/*! \brief Command Code: SetBeep */
-
-#define AUDCMD_SETBEEPPARAM      0x18
-
-/*! \brief Command Code: SetReadyStartus */
-
-#define AUDCMD_SETREADYSTATUS    0x41
-
-/*! \brief Command Code: SetBaseBandStatus */
-
-#define AUDCMD_SETBASEBANDSTATUS 0x42
-
-/*! \brief Command Code: SetBBActiveStatus, Be removed in future */
-
-#define AUDCMD_SETBBACTIVESTATUS (AUDCMD_SETBASEBANDSTATUS)
-
-/*! \brief Command Code: SetPlayerStatus */
-
-#define AUDCMD_SETPLAYERSTATUS   0x43
-
-/*! \brief Command Code: SetRecorderStatus */
-
-#define AUDCMD_SETRECORDERSTATUS 0x44
-
-/*! \brief Command Code: PowerOn */
-
-#define AUDCMD_POWERON           0x45
-
-/*! \brief Command Code: SetPowerOffStatus */
-
-#define AUDCMD_SETPOWEROFFSTATUS 0x46
-
-/*! \brief Command Code: InitSoundEffect (__not supported__) */
-
-#define AUDCMD_INITSOUNDEFFECT   0x51
-
-/*! \brief Command Code: StartSoundEffect (__not supported__) */
-
-#define AUDCMD_STARTSOUNDEFFECT  0x52
-
-/*! \brief Command Code: StopSoundEffect (__not supported__) */
-
-#define AUDCMD_STOPSOUNDEFFECT   0x53
-
-/** @} */
-
 /* const for baseband */
 /** @name Constant parameters */
 /** @{ */
@@ -185,80 +97,6 @@
 /* TODO:Be removed in future */
 
 #define AS_AC_CODEC_VOL_DAC      -20
-
-/** @} */
-
-/* result code */
-/** @name Result code */
-/** @{ */
-
-/*! \brief Result Code: NotifyStatus */
-
-#define AUDRLT_NOTIFYSTATUS           0x02
-
-/*! \brief Result Code: InitMicGainCmplt */
-
-#define AUDRLT_INITMICGAINCMPLT       0x03
-
-/*! \brief Result Code: InitI2SCmplt */
-
-#define AUDRLT_INITI2SPARAMCMPLT      0x04
-
-/*! \brief Result Code: InitDEQCmplt */
-
-#define AUDRLT_INITDEQPARAMCMPLT      0x05
-
-/*! \brief Result Code: InitOutputSelectCmplt */
-
-#define AUDRLT_INITOUTPUTSELECTCMPLT  0x06
-
-/*! \brief Result Code: InitDNCCmplt */
-
-#define AUDRLT_INITDNCPARAMCMPLT      0x07
-
-/*! \brief Result Code: InitAttentions */
-
-#define AUDRLT_INITATTENTIONSCMPLT    0x08
-
-/*! \brief Result Code: InitClearStereoCmplt */
-
-#define AUDRLT_INITCLEARSTEREOCMPLT   0x09
-
-/*! \brief Result Code: SetVolumeCmplt */
-
-#define AUDRLT_SETVOLUMECMPLT         0x16
-
-/*! \brief Result Code: SetVolumeMuteCmplt */
-
-#define AUDRLT_SETVOLUMEMUTECMPLT     0x17
-
-/*! \brief Result Code: SetBeepCmplt */
-
-#define AUDRLT_SETBEEPCMPLT           0x18
-
-/*! \brief Result Code: StatusChanged */
-
-#define AUDRLT_STATUSCHANGED          0x40
-
-/*! \brief Result Code: InitSoundEffectCmplt */
-
-#define AUDCMD_INITSOUNDEFFECT_CMPLT  0x51
-
-/*! \brief Result Code: StartSoundEffectCmplt */
-
-#define AUDCMD_STARTSOUNDEFFECT_CMPLT 0x52
-
-/*! \brief Result Code: StopSoundEffectCmplt */
-
-#define AUDCMD_STOPSOUNDEFFECT_CMPLT  0x53
-
-/*! \brief Result Code: ErrorResponse */
-
-#define AUDRLT_ERRORRESPONSE          0x80
-
-/*! \brief Result Code: ErrorAttention */
-
-#define AUDRLT_ERRORATTENTION         0x81
 
 /** @} */
 

@@ -64,35 +64,6 @@
 
 #define AS_FEATURE_RECOGNIZER_ENABLE
 
-/** @name Command code */
-/** @{ */
-
-/*! \brief Command Code: StartVoiceCommand */
-
-#define AUDCMD_STARTVOICECOMMAND  0x11
-
-/*! \brief Command Code: StopVoiceCommand */
-
-#define AUDCMD_STOPVOICECOMMAND   0x12
-
-/** @} */
-
-/* result code */
-
-/** @name Result code */
-/** @{ */
-
-/*! \brief Result Code: StartVoiceCommandCmplt */
-
-#define  AUDRLT_STARTVOICECOMMANDCMPLT  0x11
-
-/*! \brief Result Code: StopVoiceCommandCmplt */
-
-#define  AUDRLT_STOPVOICECOMMANDCMPLT   0x12
-
-/** @} */
-
-
 /** @name Packet length of command */
 /** @{ */
 

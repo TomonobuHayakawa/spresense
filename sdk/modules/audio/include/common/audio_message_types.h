@@ -262,32 +262,6 @@
 
 #define MSG_AUD_MIX_RST    (MSG_AUD_MIX_RES | MSG_SET_SUBTYPE(0x00))
 
-/************************************************************************
- *
- *    MSG_CAT_AUD_MIX_SEF: Output mix sound effect Command/Result(bi-directional)
- *
- *   D15 D14 D13 D12 D11 D10 D9  D8  D7  D6  D5  D4  D3  D2  D1  D0
- *  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
- *  |REQ|USER_AUDIO |               |   MSG_SUB_TYPE                |
- *  +---+---+---+---+-v-+---+---+---+---+---+---+---+---+---+---+---+
- *                   MSG_CAT_AUD_MIX_SEF
- ************************************************************************
- */
-#define MSG_AUD_MIX_SEF_REQ    (MSG_TYPE_AUD_REQ | MSG_CAT_AUD_MIX_SEF)
-#define MSG_AUD_MIX_SEF_RES    (MSG_TYPE_AUD_RES | MSG_CAT_AUD_MIX_SEF)
-
-#define MSG_AUD_MIX_SEF_CMD_ACT         (MSG_AUD_MIX_SEF_REQ | MSG_SET_SUBTYPE(0x00))
-#define MSG_AUD_MIX_SEF_CMD_INIT        (MSG_AUD_MIX_SEF_REQ | MSG_SET_SUBTYPE(0x01))
-#define MSG_AUD_MIX_SEF_CMD_START       (MSG_AUD_MIX_SEF_REQ | MSG_SET_SUBTYPE(0x02))
-#define MSG_AUD_MIX_SEF_CMD_DATA        (MSG_AUD_MIX_SEF_REQ | MSG_SET_SUBTYPE(0x03))
-#define MSG_AUD_MIX_SEF_CMD_STOP        (MSG_AUD_MIX_SEF_REQ | MSG_SET_SUBTYPE(0x04))
-#define MSG_AUD_MIX_SEF_CMD_DEACT       (MSG_AUD_MIX_SEF_REQ | MSG_SET_SUBTYPE(0x05))
-#define MSG_AUD_MIX_SEF_CMD_RENDER_DONE (MSG_AUD_MIX_SEF_REQ | MSG_SET_SUBTYPE(0x06))
-
-#define LAST_AUD_MIX_SEF_MSG   (MSG_AUD_MIX_SEF_CMD_RENDER_DONE + 1)
-#define AUD_MIX_SEF_MSG_NUM    (LAST_AUD_MIX_SEF_MSG & MSG_TYPE_SUBTYPE)
-
-#define MSG_AUD_MIX_SEF_RST    (MSG_AUD_MIX_SEF_RES | MSG_SET_SUBTYPE(0x00))
 
 /************************************************************************
  *

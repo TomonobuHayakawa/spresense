@@ -170,11 +170,6 @@ void AS_SendAudioCommand(FAR AudioCommand *packet)
         break;
 
 #endif  /* AS_FEATURE_EFFECTOR_ENABLE */
-      case AUDCMD_INITSOUNDEFFECT:
-      case AUDCMD_STARTSOUNDEFFECT:
-      case AUDCMD_STOPSOUNDEFFECT:
-        msg_type = MSG_AUD_MGR_CMD_OUTPUTMIXSOUNDFX;
-        break;
 
       case AUDCMD_SETREADYSTATUS:
         msg_type = MSG_AUD_MGR_CMD_SETREADY;
@@ -686,21 +681,6 @@ AudioManager::MsgProc
     &AudioManager::illegal             /*   PowerOff state.        */
   },
 
-  /* OutputMixSoundEffect command. */
-
-  {                                    /* AudioManager all status: */
-    &AudioManager::outputMixSoundFx,   /*   Ready state.           */
-    &AudioManager::outputMixSoundFx,   /*   PlayerReady state.     */
-    &AudioManager::outputMixSoundFx,   /*   PlayerActive state.    */
-    &AudioManager::outputMixSoundFx,   /*   PlayerPause state.     */
-    &AudioManager::outputMixSoundFx,   /*   RecorderReady state.   */
-    &AudioManager::outputMixSoundFx,   /*   RecorderActive state.  */
-    &AudioManager::outputMixSoundFx,   /*   BasebandReady state.   */
-    &AudioManager::outputMixSoundFx,   /*   BasebandActive state.  */
-    &AudioManager::outputMixSoundFx,   /*   WaitCommandWord state. */
-    &AudioManager::illegal             /*   PowerOff state.        */
-  },
-
   /* SubPlayer command. */
 
   {                                    /* AudioManager all status: */
@@ -886,49 +866,10 @@ void AudioManager::powerOn(AudioCommand &cmd)
       return;
     }
 
-  if (cmd.power_on_param.enable_sound_effect != AS_DISABLE_SOUNDEFFECT)
-    {
-      sendErrRespResult(cmd.header.sub_code,
-                        AS_MODULE_ID_AUDIO_MANAGER,
-                        AS_RESPONSE_CODE_COMMAND_PARAM_FUNCTION_ENABLE);
-      return;
-    }
-
   m_command_code = 0;
-  if (cmd.power_on_param.enable_sound_effect == AS_ENABLE_SOUNDEFFECT)
-    {
-      uint8_t rst = AS_RESPONSE_CODE_OK;
-      rst = bbConfig.setActiveBaseband(BB_POWER_OUTPUT);
-      if (rst != AS_RESPONSE_CODE_OK)
-        {
-          sendErrRespResult(cmd.header.sub_code,
-                            AS_MODULE_ID_AUDIO_DRIVER,
-                            rst);
-          return;
-        }
-
-      OutputMixObjActCmd init_output_mix_param;
-      init_output_mix_param.mixer_type    = SoundEffectOnly;
-      init_output_mix_param.output_device = HPOutputDevice;
-      err_t er = ERR_OK;
-      er = MsgLib::send<OutputMixObjActCmd>(s_mixSubMid,
-                                            MsgPriNormal,
-                                            MSG_AUD_MIX_CMD_ACT,
-                                            NULL,
-                                            init_output_mix_param);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-      m_enable_sound_effect = AS_ENABLE_SOUNDEFFECT;
-    }
-  else
-    {
-      m_State    = AS_MNG_STATUS_READY;
-      m_SubState = AS_MNG_SUB_STATUS_NONE;
-      sendResult(AUDRLT_STATUSCHANGED);
-      m_enable_sound_effect = AS_DISABLE_SOUNDEFFECT;
-    }
+  m_State    = AS_MNG_STATUS_READY;
+  m_SubState = AS_MNG_SUB_STATUS_NONE;
+  sendResult(AUDRLT_STATUSCHANGED);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -941,37 +882,19 @@ void AudioManager::powerOff(AudioCommand &cmd)
       return;
     }
 
-  if (m_enable_sound_effect == AS_DISABLE_SOUNDEFFECT)
+  uint8_t rst = AS_RESPONSE_CODE_OK;
+  rst = bbConfig.deactivate(BB_POWER_BOTH);
+  if (rst != AS_RESPONSE_CODE_OK)
     {
-      uint8_t rst = AS_RESPONSE_CODE_OK;
-      rst = bbConfig.deactivate(BB_POWER_BOTH);
-      if (rst != AS_RESPONSE_CODE_OK)
-        {
-          sendErrRespResult(cmd.header.sub_code,
-                            AS_MODULE_ID_AUDIO_DRIVER,
-                            rst);
-          return;
-        }
+      sendErrRespResult(cmd.header.sub_code,
+                        AS_MODULE_ID_AUDIO_DRIVER,
+                        rst);
+      return;
+    }
 
-      m_State    = AS_MNG_STATUS_POWEROFF;
-      m_SubState = AS_MNG_SUB_STATUS_NONE;
-      sendResult(AUDRLT_STATUSCHANGED);
-      m_enable_sound_effect = AS_DISABLE_SOUNDEFFECT;
-    }
-  else
-    {
-      err_t er = ERR_OK;
-      er = MsgLib::send<bool>(s_mixSubMid,
-                              MsgPriNormal,
-                              MSG_AUD_MIX_CMD_DEACT,
-                              NULL,
-                              true);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-      m_enable_sound_effect = AS_DISABLE_SOUNDEFFECT;
-    }
+  m_State    = AS_MNG_STATUS_POWEROFF;
+  m_SubState = AS_MNG_SUB_STATUS_NONE;
+  sendResult(AUDRLT_STATUSCHANGED);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1418,18 +1341,6 @@ void AudioManager::setRdyOnPlay(AudioCommand &cmd)
     }
 
   err_t er = ERR_OK;
-  if (m_enable_sound_effect == AS_ENABLE_SOUNDEFFECT)
-    {
-      er = MsgLib::send<bool>(s_mixSubMid,
-                              MsgPriNormal,
-                              MSG_AUD_MIX_SEF_CMD_DEACT,
-                              NULL,
-                              false);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-    }
 
   if (m_active_player & AS_ACTPLAYER_MAIN)
     {
@@ -1479,18 +1390,6 @@ void AudioManager::setRdyOnRecorder(AudioCommand &cmd)
     }
 
   err_t er = ERR_OK;
-  if (m_enable_sound_effect == AS_ENABLE_SOUNDEFFECT)
-    {
-      er = MsgLib::send<bool>(s_mixSubMid,
-                              MsgPriNormal,
-                              MSG_AUD_MIX_SEF_CMD_DEACT,
-                              NULL,
-                              false);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-    }
 
   er = MsgLib::send<AudioCommand>(s_rcdSubMid,
                                   MsgPriNormal,
@@ -1522,29 +1421,6 @@ void AudioManager::setActive(AudioCommand &cmd)
     }
 
   uint32_t rst = AS_RESPONSE_CODE_OK;
-  if (m_enable_sound_effect == AS_ENABLE_SOUNDEFFECT)
-    {
-      err_t er = ERR_OK;
-      er = MsgLib::send<bool>(s_mixSubMid,
-                              MsgPriNormal,
-                              MSG_AUD_MIX_SEF_CMD_DEACT,
-                              NULL,
-                              false);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-
-      rst = bbConfig.deactivate(BB_POWER_OUTPUT);
-      if (rst != AS_RESPONSE_CODE_OK)
-        {
-          sendErrRespResult(cmd.header.sub_code,
-                            AS_MODULE_ID_AUDIO_DRIVER,
-                            rst);
-          return;
-        }
-      MemMgrLite::Manager::destroyStaticPools();
-    }
 
   rst = bbConfig.setActiveBaseband(BB_POWER_BOTH);
   if (rst != AS_RESPONSE_CODE_OK)
@@ -1693,29 +1569,6 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
     }
 
   uint32_t rst = AS_RESPONSE_CODE_OK;
-  if (m_enable_sound_effect == AS_ENABLE_SOUNDEFFECT)
-    {
-      err_t er = ERR_OK;
-      er = MsgLib::send<bool>(s_mixSubMid,
-                              MsgPriNormal,
-                              MSG_AUD_MIX_SEF_CMD_DEACT,
-                              NULL,
-                              false);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-
-      rst = bbConfig.deactivate(BB_POWER_OUTPUT);
-      if (rst != AS_RESPONSE_CODE_OK)
-        {
-          sendErrRespResult(cmd.header.sub_code,
-                            AS_MODULE_ID_AUDIO_DRIVER,
-                            rst);
-          return;
-        }
-      MemMgrLite::Manager::destroyStaticPools();
-    }
 
   rst = bbConfig.setActiveBaseband(BB_POWER_OUTPUT);
   if (rst != AS_RESPONSE_CODE_OK)
@@ -1814,29 +1667,6 @@ void AudioManager::setRecorder(AudioCommand &cmd)
     }
 
   uint32_t rst = AS_RESPONSE_CODE_OK;
-  if (m_enable_sound_effect == AS_ENABLE_SOUNDEFFECT)
-    {
-      err_t er = ERR_OK;
-      er = MsgLib::send<bool>(s_mixSubMid,
-                              MsgPriNormal,
-                              MSG_AUD_MIX_SEF_CMD_DEACT,
-                              NULL,
-                              false);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-
-      rst = bbConfig.deactivate(BB_POWER_OUTPUT);
-      if (rst != AS_RESPONSE_CODE_OK)
-        {
-          sendErrRespResult(cmd.header.sub_code,
-                            AS_MODULE_ID_AUDIO_DRIVER,
-                            rst);
-          return;
-        }
-      MemMgrLite::Manager::destroyStaticPools();
-    }
 
   rst = bbConfig.setActiveBaseband(BB_POWER_INPUT);
   if (rst != AS_RESPONSE_CODE_OK)
@@ -1961,62 +1791,6 @@ void AudioManager::voiceCommand(AudioCommand &cmd)
 #endif /* AS_FEATURE_RECOGNIZER_ENABLE */
 }
 
-/*--------------------------------------------------------------------------*/
-void AudioManager::outputMixSoundFx(AudioCommand &cmd)
-{
-  MSG_TYPE msg_type;
-  bool check = false;
-
-  switch (cmd.header.command_code)
-    {
-      case AUDCMD_INITSOUNDEFFECT:
-        check =
-          packetCheck(LENGTH_INIT_SOUNDEFFECT, AUDCMD_INITSOUNDEFFECT, cmd);
-        if (!check)
-          {
-            return;
-          }
-        msg_type = MSG_AUD_MIX_SEF_CMD_INIT;
-        break;
-
-      case AUDCMD_STARTSOUNDEFFECT:
-        check = packetCheck(LENGTH_START_SOUNDEFFECT,
-                            AUDCMD_STARTSOUNDEFFECT,
-                            cmd);
-        if (!check)
-          {
-            return;
-          }
-        msg_type = MSG_AUD_MIX_SEF_CMD_START;
-        break;
-
-      case AUDCMD_STOPSOUNDEFFECT:
-        check =
-          packetCheck(LENGTH_STOP_SOUNDEFFECT, AUDCMD_STOPSOUNDEFFECT, cmd);
-        if (!check)
-          {
-            return;
-          }
-        msg_type = MSG_AUD_MIX_SEF_CMD_STOP;
-        break;
-
-      default:
-        sendErrRespResult(cmd.header.sub_code,
-                          AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
-        return;
-    }
-
-  err_t er = MsgLib::send<AudioCommand>(s_mixSubMid,
-                                        MsgPriNormal,
-                                        msg_type,
-                                        m_selfDtq,
-                                        cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
-}
 
 /*--------------------------------------------------------------------------*/
 void AudioManager::illegalCmplt(const AudioMngCmdCmpltResult &cmd)
@@ -2055,64 +1829,24 @@ void AudioManager::cmpltOnReady(const AudioMngCmdCmpltResult &cmd)
     {
       case AUDCMD_SETPLAYERSTATUS:
         m_command_code = AUDCMD_SETPLAYERSTATUS;
-        if (m_enable_sound_effect == AS_DISABLE_SOUNDEFFECT)
+        m_player_transition_que.pop();
+        if (m_player_transition_que.empty())
           {
-            m_player_transition_que.pop();
-            if (m_player_transition_que.empty())
-              {
-                result_code = AUDRLT_STATUSCHANGED;
-                m_State    = AS_MNG_STATUS_PLAYER;
-                m_SubState = AS_MNG_SUB_STATUS_PLAYREADY;
-              }
-            else
-              {
-                return;
-              }
+            result_code = AUDRLT_STATUSCHANGED;
+            m_State    = AS_MNG_STATUS_PLAYER;
+            m_SubState = AS_MNG_SUB_STATUS_PLAYREADY;
           }
         else
           {
-            OutputMixObjActCmd init_output_mix_param;
-            init_output_mix_param.mixer_type    = MainSoundEffectMix;
-            init_output_mix_param.output_device = HPOutputDevice;
-            err_t er = ERR_OK;
-            er = MsgLib::send<OutputMixObjActCmd>(s_mixSubMid,
-                                                  MsgPriNormal,
-                                                  MSG_AUD_MIX_SEF_CMD_ACT,
-                                                  NULL,
-                                                  init_output_mix_param);
-            if (er)
-              {
-                F_ASSERT(0);
-              }
             return;
           }
         break;
 
       case AUDCMD_SETRECORDERSTATUS:
         m_command_code = AUDCMD_SETRECORDERSTATUS;
-        if (m_enable_sound_effect == AS_DISABLE_SOUNDEFFECT)
-          {
-            result_code = AUDRLT_STATUSCHANGED;
-            m_State    = AS_MNG_STATUS_RECORDER;
-            m_SubState = AS_MNG_SUB_STATUS_RECORDERREADY;
-          }
-        else
-          {
-            OutputMixObjActCmd init_output_mix_param;
-            init_output_mix_param.mixer_type    = SoundEffectOnly;
-            init_output_mix_param.output_device = HPOutputDevice;
-            err_t er = ERR_OK;
-            er = MsgLib::send<OutputMixObjActCmd>(s_mixSubMid,
-                                                  MsgPriNormal,
-                                                  MSG_AUD_MIX_SEF_CMD_ACT,
-                                                  NULL,
-                                                  init_output_mix_param);
-            if (er)
-              {
-                F_ASSERT(0);
-              }
-            return;
-          }
+        result_code = AUDRLT_STATUSCHANGED;
+        m_State    = AS_MNG_STATUS_RECORDER;
+        m_SubState = AS_MNG_SUB_STATUS_RECORDERREADY;
         break;
 
       case AUDCMD_SETBBACTIVESTATUS:
@@ -2121,17 +1855,6 @@ void AudioManager::cmpltOnReady(const AudioMngCmdCmpltResult &cmd)
         m_SubState = AS_MNG_SUB_STATUS_BASEBANDREADY;
         break;
 
-      case AUDCMD_INITSOUNDEFFECT:
-        result_code = AUDCMD_INITSOUNDEFFECT_CMPLT;
-        break;
-
-      case AUDCMD_STARTSOUNDEFFECT:
-        result_code = AUDCMD_STARTSOUNDEFFECT_CMPLT;
-        break;
-
-      case AUDCMD_STOPSOUNDEFFECT:
-        result_code = AUDCMD_STOPSOUNDEFFECT_CMPLT;
-        break;
 
       case AUDCMD_POWERON:
         if (m_command_code == AUDCMD_SETPLAYERSTATUS)
@@ -2189,12 +1912,7 @@ void AudioManager::cmpltOnSoundFx(const AudioMngCmdCmpltResult &cmd)
       case AUDCMD_SETREADYSTATUS:
         if (deactivateSoundFx())
           {
-            if (m_enable_sound_effect == AS_DISABLE_SOUNDEFFECT)
-              {
-                result_code = AUDRLT_STATUSCHANGED;
-                break;
-              }
-            return;
+            result_code = AUDRLT_STATUSCHANGED;
           }
         break;
 
@@ -2312,12 +2030,7 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
           {
             if (deactivatePlayer())
               {
-                if (m_enable_sound_effect == AS_DISABLE_SOUNDEFFECT)
-                  {
-                    result_code = AUDRLT_STATUSCHANGED;
-                    break;
-                  }
-                return;
+                result_code = AUDRLT_STATUSCHANGED;
               }
           }
         else
@@ -2342,17 +2055,6 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
         result_code = AUDRLT_CLKRECOVERYSUB_CMPLT;
         break;
 
-      case AUDCMD_INITSOUNDEFFECT:
-        result_code = AUDCMD_INITSOUNDEFFECT_CMPLT;
-        break;
-
-      case AUDCMD_STARTSOUNDEFFECT:
-        result_code = AUDCMD_STARTSOUNDEFFECT_CMPLT;
-        break;
-
-      case AUDCMD_STOPSOUNDEFFECT:
-        result_code = AUDCMD_STOPSOUNDEFFECT_CMPLT;
-        break;
 
       case AUDCMD_POWERON:
         m_State    = AS_MNG_STATUS_READY;
@@ -2412,25 +2114,8 @@ void AudioManager::cmpltOnRecorder(const AudioMngCmdCmpltResult &cmd)
       case AUDCMD_SETREADYSTATUS:
         if (deactivateRecorder())
           {
-            if (m_enable_sound_effect == AS_DISABLE_SOUNDEFFECT)
-              {
-                result_code = AUDRLT_STATUSCHANGED;
-                break;
-              }
-            return;
+            result_code = AUDRLT_STATUSCHANGED;
           }
-        break;
-
-      case AUDCMD_INITSOUNDEFFECT:
-        result_code = AUDCMD_INITSOUNDEFFECT_CMPLT;
-        break;
-
-      case AUDCMD_STARTSOUNDEFFECT:
-        result_code = AUDCMD_STARTSOUNDEFFECT_CMPLT;
-        break;
-
-      case AUDCMD_STOPSOUNDEFFECT:
-        result_code = AUDCMD_STOPSOUNDEFFECT_CMPLT;
         break;
 
       case AUDCMD_POWERON:
@@ -2557,41 +2242,15 @@ bool AudioManager::deactivatePlayer()
 {
   uint32_t rst = AS_RESPONSE_CODE_OK;
 
-  if (m_enable_sound_effect == AS_DISABLE_SOUNDEFFECT)
+  rst = bbConfig.deactivate(BB_POWER_OUTPUT);
+  if (rst != AS_RESPONSE_CODE_OK)
     {
-      rst = bbConfig.deactivate(BB_POWER_OUTPUT);
-      if (rst != AS_RESPONSE_CODE_OK)
-        {
-          return false;
-        }
-
-      m_State    = AS_MNG_STATUS_READY;
-      m_SubState = AS_MNG_SUB_STATUS_NONE;
-      return true;
+      return false;
     }
-  else
-    {
-      rst = bbConfig.deactivate(BB_POWER_OUTPUT);
-      if (rst != AS_RESPONSE_CODE_OK)
-        {
-          return false;
-        }
 
-      OutputMixObjActCmd init_output_mix_param;
-      init_output_mix_param.mixer_type    = SoundEffectOnly;
-      init_output_mix_param.output_device = HPOutputDevice;
-      err_t er = ERR_OK;
-      er = MsgLib::send<OutputMixObjActCmd>(s_mixSubMid,
-                                            MsgPriNormal,
-                                            MSG_AUD_MIX_SEF_CMD_ACT,
-                                            NULL,
-                                            init_output_mix_param);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-      return true;
-    }
+  m_State    = AS_MNG_STATUS_READY;
+  m_SubState = AS_MNG_SUB_STATUS_NONE;
+  return true;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -2607,29 +2266,8 @@ bool AudioManager::deactivateRecorder()
 
   MemMgrLite::Manager::destroyStaticPools();
 
-  if (m_enable_sound_effect == AS_DISABLE_SOUNDEFFECT)
-    {
-      m_State    = AS_MNG_STATUS_READY;
-      m_SubState = AS_MNG_SUB_STATUS_NONE;
-    }
-  else
-    {
-      bbConfig.setActiveBaseband(BB_POWER_OUTPUT);
-
-      OutputMixObjActCmd init_output_mix_param;
-      init_output_mix_param.mixer_type    = SoundEffectOnly;
-      init_output_mix_param.output_device = HPOutputDevice;
-      err_t er = ERR_OK;
-      er = MsgLib::send<OutputMixObjActCmd>(s_mixSubMid,
-                                            MsgPriNormal,
-                                            MSG_AUD_MIX_SEF_CMD_ACT,
-                                            NULL,
-                                            init_output_mix_param);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-    }
+  m_State    = AS_MNG_STATUS_READY;
+  m_SubState = AS_MNG_SUB_STATUS_NONE;
 
   return true;
 }
@@ -2645,29 +2283,8 @@ bool AudioManager::deactivateSoundFx()
       return false;
     }
 
-  if (m_enable_sound_effect == AS_DISABLE_SOUNDEFFECT)
-    {
-      m_State    = AS_MNG_STATUS_READY;
-      m_SubState = AS_MNG_SUB_STATUS_NONE;
-    }
-  else
-    {
-      bbConfig.setActiveBaseband(BB_POWER_OUTPUT);
-
-      OutputMixObjActCmd init_output_mix_param;
-      init_output_mix_param.mixer_type    = SoundEffectOnly;
-      init_output_mix_param.output_device = HPOutputDevice;
-      err_t er = ERR_OK;
-      er = MsgLib::send<OutputMixObjActCmd>(s_mixSubMid,
-                                            MsgPriNormal,
-                                            MSG_AUD_MIX_SEF_CMD_ACT,
-                                            NULL,
-                                            init_output_mix_param);
-      if (er)
-        {
-          F_ASSERT(0);
-        }
-    }
+  m_State    = AS_MNG_STATUS_READY;
+  m_SubState = AS_MNG_SUB_STATUS_NONE;
 
   return true;
 }
