@@ -188,6 +188,7 @@ int DspDrv::init(FAR const char  *pfilename,
   if (ret < 0)
     {
       err("mpmq_init() failure. %d\n", ret);
+      errout_ret = ret;
       goto dsp_drv_errout_with_mptask_destroy;
     }
 
@@ -199,6 +200,7 @@ int DspDrv::init(FAR const char  *pfilename,
   if (ret != 0)
     {
       err("pthread_attr_setschedparam() failure. %d\n", ret);
+      errout_ret = ret;
       goto dsp_drv_errout_with_mpmq_destory;
     }
 
@@ -209,6 +211,7 @@ int DspDrv::init(FAR const char  *pfilename,
   if (ret != 0)
     {
       err("pthread_create() failure. %d\n", ret);
+      errout_ret = ret;
       (void)pthread_attr_destroy(&attr);
       goto dsp_drv_errout_with_mpmq_destory;
     }
@@ -220,28 +223,28 @@ int DspDrv::init(FAR const char  *pfilename,
   ret = mptask_exec(&m_mptask);
   if (ret < 0)
     {
-      errout_ret = ret;
       err("mptask_exec() failure. %d\n", ret);
+      errout_ret = ret;
       ret = pthread_cancel(m_thread_id);
       DEBUGASSERT(ret == 0);
 
       ret = pthread_join(m_thread_id, NULL);
       DEBUGASSERT(ret == 0);
-
-      return errout_ret;
+    }
+  else
+    {
+      return 0;
     }
 
-  return 0;
-
 dsp_drv_errout_with_mpmq_destory:
-  errout_ret = mpmq_destroy(&m_mq);
-  DEBUGASSERT(errout_ret == 0);
+  ret = mpmq_destroy(&m_mq);
+  DEBUGASSERT(ret == 0);
 
 dsp_drv_errout_with_mptask_destroy:
-  errout_ret = mptask_destroy(&m_mptask, false, NULL);
-  DEBUGASSERT(errout_ret == 0);
+  ret = mptask_destroy(&m_mptask, false, NULL);
+  DEBUGASSERT(ret == 0);
 
-  return ret;
+  return errout_ret;
 }
 
 /*--------------------------------------------------------------------------*/
