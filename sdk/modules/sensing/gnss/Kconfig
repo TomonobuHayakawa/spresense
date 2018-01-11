@@ -1,7 +1,5 @@
-menuconfig GNSS
-
 config CXD56_GNSS
-	 bool "GNSS device"
+	bool "GNSS device"
 	default y
 
 if CXD56_GNSS

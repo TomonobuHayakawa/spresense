@@ -1,5 +1,5 @@
 
-ifeq ($(CONFIG_GNSS),y)
+ifeq ($(CONFIG_CXD56_GNSS),y)
 SDKLIBS += lib$(DELIM)libgnss$(LIBEXT)
 SDKMODDIRS += modules$(DELIM)sensing$(DELIM)gnss
 #CONTEXTDIRS += modules$(DELIM)sensing$(DELIM)gnss
