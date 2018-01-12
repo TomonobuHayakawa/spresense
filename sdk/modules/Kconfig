@@ -7,7 +7,6 @@ source modules/sensing/Kconfig
 source modules/audio/Kconfig
 source modules/memutils/Kconfig
 source modules/asmp/Kconfig
-source modules/bluetooth/Kconfig
 source modules/lte/Kconfig
 source modules/nfc/Kconfig
 source modules/cmdfw/Kconfig
