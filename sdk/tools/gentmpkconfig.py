@@ -2,10 +2,7 @@
 
 import os
 import sys
-
-# Append external directories to SDK Kconfig
-
-EXTDIRS = ['examples', 'demo', 'test', 'diag']
+import glob
 
 if len(sys.argv) < 2:
     print('output file not specified.', file=sys.stderr)
@@ -21,11 +18,14 @@ else:
 
 print(buf, file=outfile)
 
-# Search exact directories and top of Kconfig
+# Search top of Kconfig in the same level directories
 
-for d in EXTDIRS:
-    path = os.path.join('..', d, 'Kconfig')
-    if os.path.exists(path):
-        print('source "../%s/Kconfig"' % d, file=outfile)
+kconfigs = glob.glob('../*/Kconfig')
+for c in kconfigs:
+
+    # Add Kconfig excpet nuttx, apps and sdk directories
+
+    if 'nuttx' not in c and 'apps' not in c and 'sdk' not in c:
+        print('source "%s"' % d, file=outfile)
 
 outfile.close()
