@@ -26,6 +26,6 @@ for c in kconfigs:
     # Add Kconfig excpet nuttx, apps and sdk directories
 
     if 'nuttx' not in c and 'apps' not in c and 'sdk' not in c:
-        print('source "%s"' % d, file=outfile)
+        print('source "%s"' % c, file=outfile)
 
 outfile.close()
