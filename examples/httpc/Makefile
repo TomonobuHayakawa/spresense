@@ -36,14 +36,6 @@
 -include $(TOPDIR)/Make.defs
 -include $(SDKDIR)/Make.defs
 
-ifeq ($(WINTOOL),y)
-CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/modules/include/net)"
-else
-CFLAGS += -isystem $(SDKDIR)/modules/include/net
-endif
-
-CFLAGS += -DLWIP_IPV6=0
-
 # built-in application info
 
 CONFIG_EXAMPLES_HTTPC_PRIORITY ?= SCHED_PRIORITY_DEFAULT

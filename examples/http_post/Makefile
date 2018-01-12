@@ -36,12 +36,6 @@
 -include $(TOPDIR)/Make.defs
 -include $(SDKDIR)/Make.defs
 
-ifeq ($(WINTOOL),y)
-CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/modules/include/net)"
-else
-CFLAGS += -isystem $(SDKDIR)/modules/include/net
-endif
-
 # built-in application info
 
 CONFIG_EXAMPLES_HTTP_POST_PRIORITY ?= SCHED_PRIORITY_DEFAULT

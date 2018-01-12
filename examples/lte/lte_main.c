@@ -46,8 +46,8 @@
 #include <lte/lte_if_util.h>
 #include <lte/lte_if_sms.h>
 #include <lte/lte_if_system.h>
-#include <lwip/netdb.h>
-#include <lwip/sockets.h>
+#include <net/lwip/netdb.h>
+#include <net/lwip/sockets.h>
 
 
 /****************************************************************************

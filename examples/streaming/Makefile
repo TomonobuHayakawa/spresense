@@ -36,19 +36,13 @@
 -include $(TOPDIR)/Make.defs
 -include $(SDKDIR)/Make.defs
 
-RILINC = -I../../include
-
-
 AUDINC =
 AUDINC += -I./include
-AUDINC += -I../../audioutils/include
 
-CFLAGS += $(RILINC)
 CFLAGS += $(AUDINC)
 
 CFLAGS += -D_POSIX
 
-CXXFLAGS += $(RILINC)
 CXXFLAGS += $(AUDINC)
 
 CXXFLAGS += -D_POSIX

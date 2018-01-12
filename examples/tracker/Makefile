@@ -37,16 +37,6 @@
 -include $(SDKDIR)/Make.defs
 
 ifeq ($(WINTOOL),y)
-CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/modules/include/net)"
-CXXFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/modules/include/net)"
-else
-CFLAGS += -isystem $(SDKDIR)/modules/include/net
-CXXFLAGS += -isystem $(SDKDIR)/modules/include/net
-endif
-
-CFLAGS += -DLWIP_IPV6=0
-
-ifeq ($(WINTOOL),y)
 TRACKERINC += "${shell cygpath -w ./include}"
 else
 TRACKERINC += "./include"

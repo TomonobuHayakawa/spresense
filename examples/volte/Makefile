@@ -36,9 +36,7 @@
 -include $(SDKDIR)/Make.defs
 
 CFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "./include"}
-CFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(SDKDIR)/modules/include/net"}
 CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "./include"}
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(SDKDIR)/modules/include/net"}
 
 CFLAGS += -D_POSIX
 
