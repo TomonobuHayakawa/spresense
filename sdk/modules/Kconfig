@@ -8,7 +8,6 @@ source modules/audio/Kconfig
 source modules/memutils/Kconfig
 source modules/asmp/Kconfig
 source modules/lte/Kconfig
-source modules/nfc/Kconfig
 source modules/cmdfw/Kconfig
 source modules/net/Kconfig
 source modules/netutils/Kconfig
