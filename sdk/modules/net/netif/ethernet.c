@@ -38,12 +38,12 @@
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_ARP || LWIP_ETHERNET
 
 #include "netif/ethernet.h"
-#include "lwip/def.h"
+#include "net/lwip/def.h"
 #include "lwip/stats.h"
 #include "lwip/etharp.h"
 #include "lwip/ip.h"

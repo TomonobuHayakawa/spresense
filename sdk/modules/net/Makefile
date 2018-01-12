@@ -65,18 +65,17 @@ CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
 SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS)
 LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
 
-INCDIR    = $(SDKDIR)$(DELIM)modules$(DELIM)include$(DELIM)net
 NETINCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)net$(DELIM)include
 
 ifeq ($(WINTOOL),y)
-  CFLAGS += -I "${shell cygpath -w $(INCDIR)}"
   CFLAGS += -I "${shell cygpath -w $(NETINCDIR)}"
 else
-  CFLAGS += -I$(INCDIR)
   CFLAGS += -I$(NETINCDIR)
 endif
 
 CFLAGS += -DCONFIG_OS_NUTTX
+CFLAGS += -DCONFIG_LWIP_IPV6
+CFLAGS += -DCONFIG_NET_LWIP2
 
 all: $(BIN)
 .PHONY: context depend clean distclean

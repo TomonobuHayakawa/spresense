@@ -32,7 +32,7 @@
 #ifndef LWIP_HDR_NETIFAPI_H
 #define LWIP_HDR_NETIFAPI_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_NETIF_API /* don't build if not configured for use in lwipopts.h */
 

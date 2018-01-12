@@ -30,4 +30,4 @@
  *
  */
 
-#include "lwip/netdb.h"
+#include "net/lwip/netdb.h"

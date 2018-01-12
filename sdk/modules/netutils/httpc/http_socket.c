@@ -44,8 +44,8 @@
 #include <string.h>
 #include <strings.h>
 
-#include "lwip/netdb.h"
-#include "socket.h"
+#include "net/lwip/netdb.h"
+#include "net/socket.h"
 
 #include "netutils/httpc/http_socket.h"
 #include "tls_internal.h"

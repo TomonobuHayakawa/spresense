@@ -36,7 +36,7 @@
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if !NO_SYS /* don't build if not configured for use in lwipopts.h */
 
@@ -44,7 +44,7 @@
 #include "lwip/sys.h"
 #include "lwip/memp.h"
 #include "lwip/mem.h"
-#include "lwip/init.h"
+#include "net/lwip/init.h"
 #include "lwip/ip.h"
 #include "lwip/pbuf.h"
 #include "lwip/etharp.h"

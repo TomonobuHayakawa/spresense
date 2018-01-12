@@ -39,14 +39,14 @@
  * <delamer@inicotech.com>
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_ICMP6 && LWIP_IPV6 /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/icmp6.h"
 #include "lwip/prot/icmp6.h"
 #include "lwip/ip6.h"
-#include "lwip/ip6_addr.h"
+#include "net/lwip/ip6_addr.h"
 #include "lwip/inet_chksum.h"
 #include "lwip/pbuf.h"
 #include "lwip/netif.h"

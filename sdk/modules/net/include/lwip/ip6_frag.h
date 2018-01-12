@@ -41,9 +41,9 @@
 #ifndef LWIP_HDR_IP6_FRAG_H
 #define LWIP_HDR_IP6_FRAG_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 #include "lwip/pbuf.h"
-#include "lwip/ip6_addr.h"
+#include "net/lwip/ip6_addr.h"
 #include "lwip/ip6.h"
 #include "lwip/netif.h"
 

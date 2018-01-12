@@ -40,7 +40,7 @@
 #ifndef LWIP_HDR_NETIF_SLIPIF_H
 #define LWIP_HDR_NETIF_SLIPIF_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 #include "lwip/netif.h"
 
 /** Set this to 1 to start a thread that blocks reading on the serial line

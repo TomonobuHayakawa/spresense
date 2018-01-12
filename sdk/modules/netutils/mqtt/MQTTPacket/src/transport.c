@@ -15,7 +15,7 @@
  *    Sergio R. Caprile - "commonalization" from prior samples and/or documentation extension
  *******************************************************************************/
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if !defined(SOCKET_ERROR)
 	/** error in socket operation */
@@ -40,8 +40,8 @@
 #elif defined(CONFIG_OS_MERLOT)
 #include "net_lwip/socket.h"
 #elif defined(CONFIG_OS_NUTTX)
-#include "lwip/netdb.h"
-#include "socket.h"
+#include "net/lwip/netdb.h"
+#include "net/socket.h"
 #else
 #define INVALID_SOCKET SOCKET_ERROR
 #include <sys/socket.h>

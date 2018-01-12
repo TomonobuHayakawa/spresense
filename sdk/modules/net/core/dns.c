@@ -82,17 +82,17 @@
  * Includes
  *----------------------------------------------------------------------------*/
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_DNS /* don't build if not configured for use in lwipopts.h */
 
-#include "lwip/def.h"
+#include "net/lwip/def.h"
 #include "lwip/udp.h"
 #include "lwip/mem.h"
 #include "lwip/memp.h"
 #include "lwip/dns.h"
 #include "lwip/prot/dns.h"
-#include "lwip/inet.h"
+#include "net/lwip/inet.h"
 #include "lwip/timeouts.h"
 
 #include <string.h>

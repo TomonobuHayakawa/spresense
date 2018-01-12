@@ -56,13 +56,13 @@
  * Author: Dominik Spies <kontakt@dspies.de>
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_IPV4 && LWIP_AUTOIP /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/mem.h"
 /* #include "lwip/udp.h" */
-#include "lwip/ip_addr.h"
+#include "net/lwip/ip_addr.h"
 #include "lwip/netif.h"
 #include "lwip/autoip.h"
 #include "lwip/etharp.h"

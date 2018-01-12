@@ -36,8 +36,8 @@
  *
  */
 
-#include "lwip/err.h"
-#include "lwip/def.h"
+#include "net/lwip/err.h"
+#include "net/lwip/def.h"
 
 #if !NO_SYS
 /** Table to quickly map an lwIP error (err_t) to a socket error

@@ -39,7 +39,7 @@
 #ifndef LWIP_HDR_SOCKETS_H
 #define LWIP_HDR_SOCKETS_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_SOCKET /* don't build if not configured for use in lwipopts.h */
 
@@ -47,9 +47,9 @@
 /* FIXME: Avoid conflicting definition of F_GETFL, F_SETFL, and O_NONBLOCK. */
 #include <fcntl.h>
 
-#include "lwip/ip_addr.h"
-#include "lwip/err.h"
-#include "lwip/inet.h"
+#include "net/lwip/ip_addr.h"
+#include "net/lwip/err.h"
+#include "net/lwip/inet.h"
 
 #ifdef __cplusplus
 extern "C" {

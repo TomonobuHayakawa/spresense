@@ -46,7 +46,7 @@
 
 /* Based on igmp.c implementation of igmp v2 protocol */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_IPV6 && LWIP_IPV6_MLD  /* don't build if not configured for use in lwipopts.h */
 
@@ -54,7 +54,7 @@
 #include "lwip/prot/mld6.h"
 #include "lwip/icmp6.h"
 #include "lwip/ip6.h"
-#include "lwip/ip6_addr.h"
+#include "net/lwip/ip6_addr.h"
 #include "lwip/ip.h"
 #include "lwip/inet_chksum.h"
 #include "lwip/pbuf.h"

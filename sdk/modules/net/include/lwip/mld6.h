@@ -43,7 +43,7 @@
 #ifndef LWIP_HDR_MLD6_H
 #define LWIP_HDR_MLD6_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_IPV6_MLD && LWIP_IPV6  /* don't build if not configured for use in lwipopts.h */
 

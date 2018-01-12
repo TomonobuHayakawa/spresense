@@ -37,7 +37,7 @@
 #ifndef LWIP_HDR_SNMP_OPTS_H
 #define LWIP_HDR_SNMP_OPTS_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 /**
  * @defgroup snmp_opts Options

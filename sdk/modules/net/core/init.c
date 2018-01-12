@@ -35,16 +35,16 @@
  * Author: Adam Dunkels <adam@sics.se>
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
-#include "lwip/init.h"
+#include "net/lwip/init.h"
 #include "lwip/stats.h"
 #include "lwip/sys.h"
 #include "lwip/mem.h"
 #include "lwip/memp.h"
 #include "lwip/pbuf.h"
 #include "lwip/netif.h"
-#include "lwip/sockets.h"
+#include "net/lwip/sockets.h"
 #include "lwip/ip.h"
 #include "lwip/raw.h"
 #include "lwip/udp.h"

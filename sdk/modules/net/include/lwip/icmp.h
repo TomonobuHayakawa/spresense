@@ -37,9 +37,9 @@
 #ifndef LWIP_HDR_ICMP_H
 #define LWIP_HDR_ICMP_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 #include "lwip/pbuf.h"
-#include "lwip/ip_addr.h"
+#include "net/lwip/ip_addr.h"
 #include "lwip/netif.h"
 #include "lwip/prot/icmp.h"
 

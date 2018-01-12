@@ -28,7 +28,7 @@
 
 #include <string.h>
 
-#include "lwip/err.h"
+#include "net/lwip/err.h"
 
 #include "netif/ppp/ppp_impl.h"
 #include "netif/ppp/ccp.h"

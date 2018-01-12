@@ -36,11 +36,11 @@
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_IPV4
 
-#include "lwip/ip_addr.h"
+#include "net/lwip/ip_addr.h"
 #include "lwip/netif.h"
 
 /* used by IP4_ADDR_ANY and IP_ADDR_BROADCAST in ip_addr.h */

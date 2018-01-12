@@ -37,7 +37,7 @@
 #ifndef LWIP_HDR_SYS_H
 #define LWIP_HDR_SYS_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,7 +93,7 @@ typedef u8_t sys_mbox_t;
  */
 #define SYS_MBOX_EMPTY SYS_ARCH_TIMEOUT
 
-#include "lwip/err.h"
+#include "net/lwip/err.h"
 #include "arch/sys_arch.h"
 
 /** Function prototype for thread functions */

@@ -41,7 +41,7 @@
 #ifndef LWIP_HDR_AUTOIP_H
 #define LWIP_HDR_AUTOIP_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_IPV4 && LWIP_AUTOIP /* don't build if not configured for use in lwipopts.h */
 

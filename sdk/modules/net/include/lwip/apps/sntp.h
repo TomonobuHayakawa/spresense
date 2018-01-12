@@ -38,7 +38,7 @@
 #define LWIP_HDR_APPS_SNTP_H
 
 #include "lwip/apps/sntp_opts.h"
-#include "lwip/ip_addr.h"
+#include "net/lwip/ip_addr.h"
 
 #ifdef __cplusplus
 extern "C" {

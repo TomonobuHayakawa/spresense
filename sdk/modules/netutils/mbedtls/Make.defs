@@ -51,14 +51,11 @@ CSRCS += ssl_cookie.c ssl_srv.c ssl_ticket.c ssl_tls.c
 CFLAGS += -DCONFIG_OS_NUTTX -DMBEDTLS_HAVE_IPV6
 
 MBEDTLSINCDIR = $(NETUTILSDIR)$(DELIM)mbedtls$(DELIM)include
-NETINCDIR     = $(SDKDIR)$(DELIM)modules$(DELIM)include$(DELIM)net
 
 ifeq ($(WINTOOL),y)
   CFLAGS += -I "${shell cygpath -w $(MBEDTLSINCDIR)}"
-  CFLAGS += -I "${shell cygpath -w $(NETINCDIR)}"
 else
   CFLAGS += -I$(MBEDTLSINCDIR)
-  CFLAGS += -I$(NETINCDIR)
 endif
 
 # Add the mbedtls directory to the build

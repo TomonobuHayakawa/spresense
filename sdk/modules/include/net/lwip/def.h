@@ -38,8 +38,8 @@
 #define LWIP_HDR_DEF_H
 
 /* arch.h might define NULL already */
-#include "lwip/arch.h"
-#include "lwip/opt.h"
+#include "net/lwip/arch.h"
+#include "net/lwip/opt.h"
 #if LWIP_PERF
 #include "arch/perf.h"
 #else /* LWIP_PERF */

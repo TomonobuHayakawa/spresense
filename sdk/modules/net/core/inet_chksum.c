@@ -45,11 +45,11 @@
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #include "lwip/inet_chksum.h"
-#include "lwip/def.h"
-#include "lwip/ip_addr.h"
+#include "net/lwip/def.h"
+#include "net/lwip/ip_addr.h"
 
 #include <string.h>
 

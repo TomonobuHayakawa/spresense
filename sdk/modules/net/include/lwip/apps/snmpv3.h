@@ -36,7 +36,7 @@
 #define LWIP_HDR_APPS_SNMP_V3_H
 
 #include "lwip/apps/snmp_opts.h"
-#include "lwip/err.h"
+#include "net/lwip/err.h"
 
 #if LWIP_SNMP && LWIP_SNMP_V3
 

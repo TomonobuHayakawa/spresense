@@ -44,15 +44,15 @@
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_SOCKET /* don't build if not configured for use in lwipopts.h */
 
-#include "lwip/sockets.h"
+#include "net/lwip/sockets.h"
 #include "lwip/api.h"
 #include "lwip/sys.h"
 #include "lwip/igmp.h"
-#include "lwip/inet.h"
+#include "net/lwip/inet.h"
 #include "lwip/tcp.h"
 #include "lwip/raw.h"
 #include "lwip/udp.h"

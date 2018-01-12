@@ -39,7 +39,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "socket.h"
+#include "net/socket.h"
 #include "netutils/mbedtls/ssl.h"
 
 /**

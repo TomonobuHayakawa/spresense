@@ -109,10 +109,10 @@ void eth_rx_irq()
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #include "lwip/stats.h"
-#include "lwip/def.h"
+#include "net/lwip/def.h"
 #include "lwip/mem.h"
 #include "lwip/memp.h"
 #include "lwip/pbuf.h"

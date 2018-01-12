@@ -54,7 +54,7 @@
 #include "tls_internal.h"
 #include "rootca_certs.h"
 
-#include "socket.h"
+#include "net/socket.h"
 
 /****************************************************************************
  * Pre-processor Definitions

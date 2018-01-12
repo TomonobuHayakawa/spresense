@@ -40,8 +40,8 @@
 #ifndef LWIP_HDR_IGMP_H
 #define LWIP_HDR_IGMP_H
 
-#include "lwip/opt.h"
-#include "lwip/ip_addr.h"
+#include "net/lwip/opt.h"
+#include "net/lwip/ip_addr.h"
 #include "lwip/netif.h"
 #include "lwip/pbuf.h"
 

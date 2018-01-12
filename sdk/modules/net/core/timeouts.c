@@ -39,12 +39,12 @@
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #include "lwip/timeouts.h"
 #include "lwip/priv/tcp_priv.h"
 
-#include "lwip/def.h"
+#include "net/lwip/def.h"
 #include "lwip/memp.h"
 #include "lwip/priv/tcpip_priv.h"
 

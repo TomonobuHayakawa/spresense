@@ -37,7 +37,7 @@
 #ifndef LWIP_HDR_STATS_H
 #define LWIP_HDR_STATS_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #include "lwip/mem.h"
 #include "lwip/memp.h"

@@ -36,8 +36,8 @@
 
 #include <string.h>
 
-#include "lwip/arch.h"
-#include "lwip/err.h"
+#include "net/lwip/arch.h"
+#include "net/lwip/err.h"
 #include "lwip/pbuf.h"
 #include "lwip/sys.h"
 #include "lwip/memp.h"

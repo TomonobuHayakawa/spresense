@@ -40,14 +40,11 @@ CSRCS += http_socket.c tls_socket.c rootca_certs.c
 CFLAGS += -DCONFIG_OS_NUTTX
 
 HTTPCINCDIR = $(NETUTILSDIR)$(DELIM)httpc$(DELIM)include
-NETINCDIR   = $(SDKDIR)$(DELIM)modules$(DELIM)include$(DELIM)net
 
 ifeq ($(WINTOOL),y)
   CFLAGS += -I "${shell cygpath -w $(HTTPCINCDIR)}"
-  CFLAGS += -I "${shell cygpath -w $(NETINCDIR)}"
 else
   CFLAGS += -I$(HTTPCINCDIR)
-  CFLAGS += -I$(NETINCDIR)
 endif
 
 # Add the httpc directory to the build

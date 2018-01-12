@@ -39,12 +39,12 @@
  * <delamer@inicotech.com>
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_IPV6 && LWIP_IPV6_DHCP6 /* don't build if not configured for use in lwipopts.h */
 
-#include "lwip/ip6_addr.h"
-#include "lwip/def.h"
+#include "net/lwip/ip6_addr.h"
+#include "net/lwip/def.h"
 
 
 #endif /* LWIP_IPV6 && LWIP_IPV6_DHCP6 */

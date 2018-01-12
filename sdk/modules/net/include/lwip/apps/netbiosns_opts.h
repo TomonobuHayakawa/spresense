@@ -32,7 +32,7 @@
 #ifndef LWIP_HDR_APPS_NETBIOS_OPTS_H
 #define LWIP_HDR_APPS_NETBIOS_OPTS_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 /**
  * @defgroup netbiosns_opts Options

@@ -73,9 +73,9 @@ static int wsa_init_done = 0;
 #include <sched.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "lwip/ip_addr.h"
-#include "lwip/netdb.h"
-#include "socket.h"
+#include "net/lwip/ip_addr.h"
+#include "net/lwip/netdb.h"
+#include "net/socket.h"
 #else
 #include <sys/types.h>
 #include <sys/socket.h>

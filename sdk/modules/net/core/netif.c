@@ -48,13 +48,13 @@
  * Author: Adam Dunkels <adam@sics.se>
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #include <string.h>
 
-#include "lwip/def.h"
-#include "lwip/ip_addr.h"
-#include "lwip/ip6_addr.h"
+#include "net/lwip/def.h"
+#include "net/lwip/ip_addr.h"
+#include "net/lwip/ip6_addr.h"
 #include "lwip/netif.h"
 #include "lwip/priv/tcp_priv.h"
 #include "lwip/udp.h"

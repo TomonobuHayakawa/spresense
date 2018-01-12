@@ -43,11 +43,11 @@
  * something that better describes your network interface.
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if 0 /* don't build, this is only a skeleton, see previous comment */
 
-#include "lwip/def.h"
+#include "net/lwip/def.h"
 #include "lwip/mem.h"
 #include "lwip/pbuf.h"
 #include "lwip/stats.h"

@@ -43,7 +43,7 @@
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #include "lwip/memp.h"
 #include "lwip/sys.h"
@@ -62,14 +62,14 @@
 #include "lwip/api.h"
 #include "lwip/priv/tcpip_priv.h"
 #include "lwip/priv/api_msg.h"
-#include "lwip/sockets.h"
+#include "net/lwip/sockets.h"
 #include "lwip/netifapi.h"
 #include "lwip/etharp.h"
 #include "lwip/igmp.h"
 #include "lwip/timeouts.h"
 /* needed by default MEMP_NUM_SYS_TIMEOUT */
 #include "netif/ppp/ppp_opts.h"
-#include "lwip/netdb.h"
+#include "net/lwip/netdb.h"
 #include "lwip/dns.h"
 #include "lwip/priv/nd6_priv.h"
 #include "lwip/ip6_frag.h"

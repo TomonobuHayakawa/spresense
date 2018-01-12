@@ -39,7 +39,7 @@
  * <delamer@inicotech.com>
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 #include "lwip/ip6_frag.h"
 #include "lwip/ip6.h"
 #include "lwip/icmp6.h"

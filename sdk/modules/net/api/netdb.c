@@ -35,14 +35,14 @@
  *
  */
 
-#include "lwip/netdb.h"
+#include "net/lwip/netdb.h"
 
 #if LWIP_DNS && LWIP_SOCKET
 
-#include "lwip/err.h"
+#include "net/lwip/err.h"
 #include "lwip/mem.h"
 #include "lwip/memp.h"
-#include "lwip/ip_addr.h"
+#include "net/lwip/ip_addr.h"
 #include "lwip/api.h"
 #include "lwip/dns.h"
 

@@ -33,7 +33,7 @@
  *
  ****************************************************************************/
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 /** @defgroup NET_LWIP_DEBUG LWIP debug re-direction
  * @ingroup NET_LWIP

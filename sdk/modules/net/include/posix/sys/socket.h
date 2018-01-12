@@ -30,4 +30,4 @@
  *
  */
 
-#include "lwip/sockets.h"
+#include "net/lwip/sockets.h"

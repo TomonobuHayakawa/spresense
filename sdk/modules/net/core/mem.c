@@ -53,12 +53,12 @@
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 #include "lwip/mem.h"
-#include "lwip/def.h"
+#include "net/lwip/def.h"
 #include "lwip/sys.h"
 #include "lwip/stats.h"
-#include "lwip/err.h"
+#include "net/lwip/err.h"
 
 #include <string.h>
 

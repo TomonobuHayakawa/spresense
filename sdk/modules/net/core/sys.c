@@ -74,7 +74,7 @@
  * @ingroup sys_os
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #include "lwip/sys.h"
 

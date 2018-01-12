@@ -31,10 +31,10 @@
  */
 /* lwIP includes. */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
-#include "lwip/debug.h"
-#include "lwip/def.h"
+#include "net/lwip/debug.h"
+#include "net/lwip/def.h"
 #include "lwip/sys.h"
 #include "lwip/mem.h"
 

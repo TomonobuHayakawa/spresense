@@ -1,5 +1,5 @@
-#include "lwip/sockets.h"
-#include "lwip/netdb.h"
+#include "net/lwip/sockets.h"
+#include "net/lwip/netdb.h"
 
 #define NT_GetHostByName(host) gethostbyname((char *)host)
 #define NT_GetAddrInfo getaddrinfo

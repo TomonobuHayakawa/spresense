@@ -41,7 +41,7 @@
 #ifndef LWIP_HDR_NETIF_ETHERNET_H
 #define LWIP_HDR_NETIF_ETHERNET_H
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #include "lwip/pbuf.h"
 #include "lwip/netif.h"

@@ -45,7 +45,6 @@
 #include <string.h>
 
 #if defined(MBEDTLS_FS_IO)
-//#include "lwip/sys.h"
 #include <stdio.h>
 #if defined(CONFIG_OS_MERLOT)
 #include <system/sys_flash_mgr.h>

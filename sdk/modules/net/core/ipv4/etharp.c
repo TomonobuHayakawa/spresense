@@ -43,7 +43,7 @@
  *
  */
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if LWIP_ARP || LWIP_ETHERNET
 

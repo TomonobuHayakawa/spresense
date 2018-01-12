@@ -48,7 +48,7 @@
 
 #include "lwip/pbuf.h"
 #include "lwip/ip.h"
-#include "lwip/ip_addr.h"
+#include "net/lwip/ip_addr.h"
 #include "lwip/netif.h"
 
 #ifdef __cplusplus

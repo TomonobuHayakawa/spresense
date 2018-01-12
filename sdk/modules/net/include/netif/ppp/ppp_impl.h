@@ -47,7 +47,7 @@
 #include <stdlib.h> /* strtol() */
 
 #include "lwip/netif.h"
-#include "lwip/def.h"
+#include "net/lwip/def.h"
 #include "lwip/timeouts.h"
 
 #include "ppp.h"

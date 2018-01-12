@@ -51,7 +51,7 @@
 
 #include "lwip/ip.h"
 #include "lwip/pbuf.h"
-#include "lwip/ip_addr.h"
+#include "net/lwip/ip_addr.h"
 #include "lwip/netif.h"
 #include "lwip/nd6.h"
 #include "lwip/mem.h"

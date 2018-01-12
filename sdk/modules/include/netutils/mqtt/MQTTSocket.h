@@ -22,7 +22,7 @@
 #include <mqueue.h>
 #include <semaphore.h>
 #include <time.h>
-#include "lwip/netdb.h"
+#include "net/lwip/netdb.h"
 #else
 #include <FreeRTOS.h>
 #include "task.h"
@@ -30,7 +30,7 @@
 #include "semphr.h"
 #endif
 
-#include "socket.h"
+#include "net/socket.h"
 
 #define USE_SSL 1
 

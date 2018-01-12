@@ -32,7 +32,7 @@
 #ifndef __ARCH_SYS_ARCH_H__
 #define __ARCH_SYS_ARCH_H__
 
-#include "lwip/opt.h"
+#include "net/lwip/opt.h"
 
 #if NO_SYS == 0
 #if defined(CONFIG_OS_MERLOT)
