@@ -63,7 +63,7 @@ LIB_OBJS = $(CXXOBJS)
 #
 AUDIODIR = $(SDKDIR)$(DELIM)modules$(DELIM)audio
 ifeq ($(WINTOOL),y)
-  CXXFLAGS += -I "${shell cygpath -w ./include)}"
+  CXXFLAGS += -I "${shell cygpath -w ./include}"
   CXXFLAGS += -I "${shell cygpath -w $(AUDIODIR)}"
   CXXFLAGS += -I "${shell cygpath -w $(AUDIODIR)/include}"
 else
