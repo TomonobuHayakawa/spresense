@@ -231,7 +231,7 @@ static bool app_open_playlist(void)
       return false;
     }
 
-  s_player_info.playlist_ins->setRepeatMode(Playlist::RepeatModeNormal);
+  s_player_info.playlist_ins->setRepeatMode(Playlist::RepeatModeOff);
   if (!result)
     {
       printf("Error: Playlist::setRepeatMode() failure.\n");
