@@ -148,6 +148,100 @@ public:
       return m_ch_num;
     }
 
+  uint32_t getFrameSize(void)
+    {
+      uint32_t size = 0;
+      switch (m_codec_type)
+        {
+          case AudCodecMP3:
+            {
+              switch (m_es_sampling_rate)
+                {
+                  case AS_INITPLAYER_INPUT_FS_48000:
+                    size = 1152 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_44100:
+                    /* Sample size fluctuates but chooses a smaller value. */
+
+                    size = 1253 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_32000:
+                    size = 1728 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_16000:
+                    size = 1728 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  default:
+                    break;
+                }
+            }
+            break;
+          case AudCodecXAVCLPCM:
+            {
+              switch (m_es_sampling_rate)
+                {
+                  case AS_INITPLAYER_INPUT_FS_48000:
+                    size = 640 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_44100:
+                    /* Sample size fluctuates but chooses a smaller value. */
+
+                    size = 696 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_32000:
+                    size = 960* TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_16000:
+                    size = 1920 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  default:
+                    break;
+                }
+            }
+            break;
+          case AudCodecAAC:
+            {
+              switch (m_es_sampling_rate)
+                {
+                  case AS_INITPLAYER_INPUT_FS_48000:
+                    size = 1024 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_44100:
+                    /* Sample size fluctuates but chooses a smaller value. */
+
+                    size = 1114 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_32000:
+                    size = 1536 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_24000:
+                    size = 2048 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  default:
+                    break;
+                }
+            }
+            break;
+          case AudCodecOPUS:
+            {
+              switch (m_es_sampling_rate)
+                {
+                  case AS_INITPLAYER_INPUT_FS_16000:
+                    size = 960 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  case AS_INITPLAYER_INPUT_FS_8000:
+                    size = 960 * TwoChannels * AudSrc16BitLen;
+                    break;
+                  default:
+                    break;
+                }
+            }
+            break;
+          default:
+            break;
+        }
+        return size;
+    }
 protected:
   uint32_t    m_es_sampling_rate;
   AudioCodec  m_codec_type;

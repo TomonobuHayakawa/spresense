@@ -258,13 +258,6 @@ void OutputMixToHPI2S::input_data_on_active(MsgPacket* msg)
   OutputMixObjInputDataCmd input =
     msg->moveParam<OutputMixObjInputDataCmd>();
 
-  /* If invalid frame, the size is maximum of DMA transfer. */
-
-  if (input.is_valid != true)
-    {
-      input.size = DMA_MAX_SAMPLE * BYTE_SIZE_PER_SAMPLE;
-    }
-
   if(check_sample(&input))
     {
       /* Keep the resource until render done has been received. */

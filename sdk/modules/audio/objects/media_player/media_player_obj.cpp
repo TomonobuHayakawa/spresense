@@ -885,6 +885,16 @@ void PlayerObj::decDoneOnPlay(MsgPacket *msg)
   data.is_valid = ((data.size == 0) ?
                     false : cmplt.exec_dec_cmplt.is_valid_frame);
 
+  if (!data.is_valid)
+    {
+      uint32_t size = m_input_device_handler->getFrameSize();
+      if (size == 0)
+        {
+          return;
+        }
+        data.size = size;
+    }
+
   if (!m_decoded_pcm_mh_que.push(data))
     {
       MEDIA_PLAYER_FATAL(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
@@ -955,6 +965,16 @@ void PlayerObj::decDoneOnWaitStop(MsgPacket *msg)
       data.is_es_end = true;
     }
 
+  if (!data.is_valid)
+    {
+      uint32_t size = m_input_device_handler->getFrameSize();
+      if (size == 0)
+        {
+          return;
+        }
+      data.size = size;
+    }
+
   if (!m_decoded_pcm_mh_que.push(data))
     {
       MEDIA_PLAYER_FATAL(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
@@ -979,13 +999,20 @@ void PlayerObj::decDoneOnPrePlay(MsgPacket *msg)
   data.is_valid = ((data.size == 0) ?
                    false : cmplt.exec_dec_cmplt.is_valid_frame);
 
-  if (data.size != 0)
+  if (!data.is_valid)
     {
-      if (!m_decoded_pcm_mh_que.push(data))
+      uint32_t size = m_input_device_handler->getFrameSize();
+      if (size == 0)
         {
-          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
           return;
         }
+      data.size = size;
+    }
+
+  if (!m_decoded_pcm_mh_que.push(data))
+    {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+      return;
     }
 
   freePcmBuf();
@@ -1344,12 +1371,6 @@ void PlayerObj::stopPlay(void)
 void PlayerObj::sendPcmToOutputMix(const OutputMixObjInputDataCmd& data)
 {
   err_t er;
-
-  if (data.size == 0)
-    {
-      MEDIA_PLAYER_INF(AS_ATTENTION_SUB_CODE_DECODED_SIZE_ZERO);
-      return;
-    }
 
   er = MsgLib::send<OutputMixObjInputDataCmd>(m_output_mix_dtq,
                                               MsgPriNormal,
