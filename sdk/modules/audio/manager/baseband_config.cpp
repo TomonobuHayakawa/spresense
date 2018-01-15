@@ -483,6 +483,100 @@ uint32_t BasebandConfig::setBeep(AudioCommand &cmd)
 }
 
 /*--------------------------------------------------------------------------*/
+inline asPathFromId conv_path_in(uint8_t path)
+{
+  switch(path)
+  {
+    case AS_THROUGH_PATH_IN_MIC:
+      return AS_PATH_FROM_MIC12;
+    case AS_THROUGH_PATH_IN_I2S1:
+      return AS_PATH_FROM_I2S1;
+    case AS_THROUGH_PATH_IN_I2S2:
+      return AS_PATH_FROM_I2S2;
+    case AS_THROUGH_PATH_IN_MIXER:
+      return AS_PATH_FROM_MIXER;
+    default:
+      break;
+  }
+  return AS_PATH_FROM_MIC12;
+}
+
+inline asPathToId conv_path_out(uint8_t path)
+{
+  switch(path)
+  {
+    case AS_THROUGH_PATH_OUT_MIXER1:
+      return AS_PATH_TO_MIXER1;
+    case AS_THROUGH_PATH_OUT_MIXER2:
+      return AS_PATH_TO_MIXER2;
+    case AS_THROUGH_PATH_OUT_I2S1:
+      return AS_PATH_TO_I2S1;
+    case AS_THROUGH_PATH_OUT_I2S2:
+      return AS_PATH_TO_I2S2;
+    default:
+      break;
+  }
+  return AS_PATH_TO_MIXER1;
+}
+
+uint32_t BasebandConfig::setThroughPath(AudioCommand &cmd)
+{
+  if (!chkEnableBaseBandInput() || !chkEnableBaseBandOutput())
+    {
+      return AS_RESPONSE_CODE_NOT_AUDIO_DATA_PATH;
+    }
+
+  if (cmd.set_through_path.path1.en && cmd.set_through_path.path2.en)
+    {
+      if ((cmd.set_through_path.path1.in == cmd.set_through_path.path2.in) ||
+          (cmd.set_through_path.path1.out == cmd.set_through_path.path2.out))
+        {
+          return AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR;
+        }
+    }
+
+  AS_ClearAudioDataPathAll();
+
+  asDmacSelId dmac_id;
+  asPathSelParam path_sel_param;
+  path_sel_param.mic_dma_channel = 0;
+
+  E_AS rtCode = E_AS_OK;
+  if (cmd.set_through_path.path1.en)
+    {
+      path_sel_param.pathFrom = conv_path_in(cmd.set_through_path.path1.in);
+      path_sel_param.pathTo   = conv_path_out(cmd.set_through_path.path1.out);
+
+      rtCode = AS_SetAudioDataPath(&path_sel_param,
+                                   &dmac_id,
+                                   AS_DMAC_ID_NONE);
+      checkErrCode(rtCode, E_AS_OK);
+      if (E_AS_OK != rtCode)
+        {
+          return AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR;
+        }
+
+    }
+
+  if (cmd.set_through_path.path2.en)
+    {
+      path_sel_param.pathFrom = conv_path_in(cmd.set_through_path.path2.in);
+      path_sel_param.pathTo   = conv_path_out(cmd.set_through_path.path2.out);
+
+      rtCode = AS_SetAudioDataPath(&path_sel_param,
+                                   &dmac_id,
+                                   AS_DMAC_ID_NONE);
+      checkErrCode(rtCode, E_AS_OK);
+      if (E_AS_OK != rtCode)
+        {
+          return AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR;
+        }
+    }
+
+  return AS_RESPONSE_CODE_OK;
+}
+
+/*--------------------------------------------------------------------------*/
 void BasebandConfig::clearBasebandInitConfig()
 {
   m_bb_config_init_tbl.rate[0]           = 48000;

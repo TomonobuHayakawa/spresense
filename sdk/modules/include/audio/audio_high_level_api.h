@@ -33,8 +33,8 @@
  *
  ****************************************************************************/
 
-#ifndef __SONY_APPS_INCLUDE_AUDIOUTIL_AUDIO_HIGH_LEVEL_API_H
-#define __SONY_APPS_INCLUDE_AUDIOUTIL_AUDIO_HIGH_LEVEL_API_H
+#ifndef __MODULES_INCLUDE_AUDIO_AUDIO_HIGH_LEVEL_API_H
+#define __MODULES_INCLUDE_AUDIO_AUDIO_HIGH_LEVEL_API_H
 
 /**
  * @defgroup audioutils Audio Utility
@@ -136,6 +136,10 @@
 
 #define LENGTH_SET_BASEBAND_STATUS  3
 
+/*! \brief SetThroughStatus command (#AUDCMD_SETTHROUGHSTATUS) packet length */
+
+#define LENGTH_SET_THROUGH_STATUS  3
+
 /*! \brief SetBBActive command ("AUDCMF_SETBBACTIVESTATUS)packet length,
  * Be removed in future
  */
@@ -205,6 +209,10 @@
 /*! \brief StopSoundEffect command ("AUDCMD_STOPSOUNDEFFECT)packet length */
 
 #define LENGTH_STOP_SOUNDEFFECT     2
+
+/*! \brief SetThroughPath command ("AUDCMD_SETTHROUGHPATH)packet length */
+
+#define LENGTH_SET_THROUGH_PATH     4
 
 /** @} */
 
@@ -993,6 +1001,69 @@ typedef struct
 
 } AsStartSoundEffectParam;
 
+/** Select direct input path */
+
+typedef enum
+{
+  AS_THROUGH_PATH_IN_MIC = 0,
+  AS_THROUGH_PATH_IN_I2S1,
+  AS_THROUGH_PATH_IN_I2S2,
+  AS_THROUGH_PATH_IN_MIXER,
+  AS_THROUGH_PATH_IN_NUM
+} AsThroughPathIn;
+
+/** Select direct output path */
+
+typedef enum
+{
+  AS_THROUGH_PATH_OUT_MIXER1 = 0,
+  AS_THROUGH_PATH_OUT_MIXER2,
+  AS_THROUGH_PATH_OUT_I2S1,
+  AS_THROUGH_PATH_OUT_I2S2,
+  AS_THROUGH_PATH_OUT_NUM
+} AsThroughPathOut;
+
+/** Through path of audio data (used in AsSetThroughPathParam) parameter */
+
+typedef struct
+{
+  /*! \brief  Select direct path Enable/Disable
+   *
+   *  1:Enable, 0:Disable.
+   */
+
+  bool en;
+
+  /*! \brief  input path
+   *
+   * Use AsThroughPathIn
+   */
+
+  uint8_t in;
+
+  /*! \brief  output path
+   *
+   * Use AsThroughPathOut
+   */
+
+  uint8_t out;
+
+} AsThroughPath;
+
+/** SetThroughPath Command (#AUDCMD_SETDIRECTPATH) parameter */
+
+typedef struct
+{
+  /*! \brief [in] path1 */
+
+  AsThroughPath  path1;
+
+  /*! \brief [in] path2 */
+
+  AsThroughPath  path2;
+
+} AsSetThroughPathParam;
+
 /** Audio command packet */
 
 #if defined(__CC_ARM)
@@ -1172,6 +1243,12 @@ typedef struct
      */
 
     PowerOnParam power_on_param;
+
+    /*! \brief [in] for SetThrouhgPath
+     * (header.command_code==#AUDCMD_SETTHROUGHPATH)
+     */
+
+    AsSetThroughPathParam set_through_path;
   };
 
 #ifdef __cplusplus
@@ -1219,6 +1296,11 @@ typedef enum
   /*! \brief PowerOff */
 
   AS_MNG_STATUS_POWEROFF,
+
+  /*! \brief Through */
+
+  AS_MNG_STATUS_THROUGH,
+
   AS_MNG_STATUS_NUM
 } AsMngStatus;
 
@@ -1303,6 +1385,11 @@ typedef enum
   /*! \brief to PowerOff */
 
   AS_STATUS_CHANGED_STS_POWEROFF,
+
+  /*! \brief to Through */
+
+  AS_STATUS_CHANGED_STS_THROUGH,
+
   AS_STATUS_CHANGED_STS_NUM
 } AsStatusChangedSts;
 
@@ -1710,7 +1797,7 @@ void AS_DeactivateAudioSubSystem(void);
 
 /** @} */
 
-#endif /* __SONY_APPS_INCLUDE_AUDIOUTIL_AUDIO_HIGH_LEVEL_API_H */
+#endif /* __MODULES_INCLUDE_AUDIO_AUDIO_HIGH_LEVEL_API_H */
 
 /**
  * @}

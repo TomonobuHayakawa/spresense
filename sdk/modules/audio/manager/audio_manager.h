@@ -118,7 +118,8 @@ private:
       MNG_ALLSTATE_BBACTIVE,
       MNG_ALLSTATE_WAITCMDWORD,
       MNG_ALLSTATE_POWEROFF,
-      MNG_ALLSTATE_NUM /*11*/
+      MNG_ALLSTATE_THROUGH,
+      MNG_ALLSTATE_NUM
   };
 
   AudioAttentionCallbackFunction          m_attentionCBFunc;
@@ -164,11 +165,14 @@ private:
   void setRdyOnAct(AudioCommand &cmd);
   void setRdyOnPlay(AudioCommand &cmd);
   void setRdyOnRecorder(AudioCommand &cmd);
+  void setRdyOnThrough(AudioCommand &cmd);
   void setActive(AudioCommand &cmd);
   void setPlayerStatus(AudioCommand &cmd);
   void setRecorder(AudioCommand &cmd);
   void subPlayer(AudioCommand &cmd);
   void voiceCommand(AudioCommand &cmd);
+  void setThroughStatus(AudioCommand &cmd);
+  void setThroughPath(AudioCommand &cmd);
   void getstatus(AudioCommand &cmd);
   void initAttentions(AudioCommand &cmd);
 

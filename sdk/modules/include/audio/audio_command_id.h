@@ -70,7 +70,8 @@
 #define AUDCMD_CATEGORY_RECORDER     0x30
 #define AUDCMD_CATEGORY_RECOGNITION  0x40
 #define AUDCMD_CATEGORY_BASEBAND     0x50
-#define AUDCMD_CATEGORY_TRANSITION   0x60
+#define AUDCMD_CATEGORY_THROUGH      0x60
+#define AUDCMD_CATEGORY_TRANSITION   0x70
 
 #define AUDCMD_CATEGORY_ERRNOTIFY    0xF0
 
@@ -412,6 +413,28 @@
 /** @} */
 
 /*--------------------------------------------------------------------------*/
+/*--- Through Function Code ------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+/** @name Command Through Function code */
+/** @{ */
+
+/*! \brief Command Code: SetThroughPath */
+
+#define AUDCMD_SETTHROUGHPATH   (AUDCMD_CATEGORY_THROUGH | 0x01)
+
+/** @} */
+
+/** @name Through Result code */
+/** @{ */
+
+/*! \brief Result Code: SetThroughPathCmplt */
+
+#define AUDRLT_SETTHROUGHPATHCMPLT       AUDCMD_SETTHROUGHPATH
+
+/** @} */
+
+/*--------------------------------------------------------------------------*/
 /*--- Transition Function Code ---------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -445,6 +468,10 @@
 /*! \brief Command Code: SetReadyStartus */
 
 #define AUDCMD_SETREADYSTATUS       (AUDCMD_CATEGORY_TRANSITION | 0x07)
+
+/*! \brief Command Code: SetReadyStartus */
+
+#define AUDCMD_SETTHROUGHSTATUS     (AUDCMD_CATEGORY_TRANSITION | 0x08)
 
 /** @} */
 
