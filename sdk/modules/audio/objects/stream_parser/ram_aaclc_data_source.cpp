@@ -148,12 +148,16 @@ InputDataManagerObject::GetEsResult
     }
   else
     {
-      uint16_t pReadData = 0;
-      if (!simpleFifoPeek(&pReadData, DATA_BUFF_LEN_SIZE))
+      uint16_t payload_size = 0;
+      if (!simpleFifoPeek(&payload_size, DATA_BUFF_LEN_SIZE))
         {
           return EsEnd;
         }
-      if (size < (uint32_t)pReadData + DATA_BUFF_LEN_SIZE)
+      if (A2DP_AAC_BUFF_SIZE < payload_size)
+        {
+          return EsEnd;
+        }
+      if (size < (uint32_t)payload_size + DATA_BUFF_LEN_SIZE)
         {
           return EsEnd;
         }
@@ -163,20 +167,22 @@ InputDataManagerObject::GetEsResult
         }
       size_t poll_size = 0;
       memset(peek_data, 0, A2DP_AAC_BUFF_SIZE);
-      if (!simpleFifoPoll(peek_data, pReadData, &poll_size))
+      if (!simpleFifoPoll(peek_data, payload_size, &poll_size))
         {
           return EsEnd;
         }
 
       InfoStreamMuxConfig stream_mux_config;
       memset(&stream_mux_config, 0, sizeof(InfoStreamMuxConfig));
-      AACLC_getNextLatm(peek_data, &stream_mux_config);
-
-      *es_size = stream_mux_config.info_stream_frame[0].frame_length;
-      memcpy((FAR char *)es_buf,
-             &peek_data[stream_mux_config.info_stream_frame[0].
-              payload_offset / 8],
-             *es_size);
+      uint8_t *rest = AACLC_getNextLatm(peek_data, &stream_mux_config);
+      if (rest != 0)
+        {
+          *es_size = stream_mux_config.info_stream_frame[0].frame_length;
+          memcpy((FAR char *)es_buf,
+                 &peek_data[stream_mux_config.info_stream_frame[0].
+                 payload_offset / 8],
+                 *es_size);
+        }
       return EsExist;
     }
 }
@@ -235,27 +241,50 @@ bool RamAACLCDataSource::getSamplingRate(FAR uint32_t *p_sampling_rate)
         {
           return false;
         }
-      int16_t pReadData = 0;
+      uint16_t payload_size = 0;
       CMN_SimpleFifoCopyFromPeekHandle(&pPeekHandle,
-                                       &pReadData, DATA_BUFF_LEN_SIZE);
+                                       &payload_size, DATA_BUFF_LEN_SIZE);
+      if (A2DP_AAC_BUFF_SIZE < payload_size)
+        {
+          return false;
+        }
 
       size = CMN_SimpleFifoPeekWithOffset(p_simple_fifo_handler,
                                           &pPeekHandle,
-                                          pReadData,
+                                          payload_size,
                                           DATA_BUFF_LEN_SIZE);
       if (!size)
         {
           return false;
         }
-      CMN_SimpleFifoCopyFromPeekHandle(&pPeekHandle, peek_data, pReadData);
+      CMN_SimpleFifoCopyFromPeekHandle(&pPeekHandle, peek_data, payload_size);
 
       InfoStreamMuxConfig stream_mux_config;
       memset(&stream_mux_config, 0, sizeof(InfoStreamMuxConfig));
 
-      AACLC_getNextLatm(peek_data, &stream_mux_config);
+      uint8_t *rest = AACLC_getNextLatm(peek_data, &stream_mux_config);
+      if (rest == 0)
+        {
+          return false;
+        }
 
+      if (stream_mux_config.info_stream_id[0].asc.
+          channel_configuration != MonoChannels &&
+          stream_mux_config.info_stream_id[0].asc.
+          channel_configuration != TwoChannels)
+        {
+          return false;
+        }
       m_ch_num = stream_mux_config.info_stream_id[0].asc.
         channel_configuration;
+
+      if (stream_mux_config.info_stream_id[0].asc.
+          sampling_frequency_index < AudFs_48000 ||
+          stream_mux_config.info_stream_id[0].asc.
+          sampling_frequency_index > AudFs_24000)
+        {
+          return false;
+        }
       *p_sampling_rate = AudioFs2ApuValue[stream_mux_config.
         info_stream_id[0].asc.sampling_frequency_index];
 
