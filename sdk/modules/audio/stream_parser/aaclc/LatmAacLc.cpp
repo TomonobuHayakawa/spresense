@@ -43,7 +43,127 @@
 #include <stdlib.h>
 
 #include "common/LatmAacLc.h"
-#include "common/LatmAacLc_Local.h"
+
+/* Syncword to use with LATM / LOAS.
+ * (Compare after obtaining with 11bit value Å® long value)
+ */
+
+#define LATM_LENGTH_OF_SYNCWORD  11
+#define LATM_LENGTH_OF_FRAME     13
+#define LATM_SYNCWORD_LOAS       0x2B7        /* -010 1011 0111 */
+#define LATM_SYNCWORD_EXT_LOAS   LATM_SYNCWORD_LOAS
+#define LATM_SYNCWORD_EXT_PS     0x548        /* -101 0100 1000 */
+
+
+/* Channel_Configuration[ISO standard] */
+
+#define LATM_CC_IDX_PCE    0        /* call program_config_element() */
+
+/* SamplingFrequencyIndex[ISO standard] */
+
+#define LATM_FS_IDX_ESC    0xf      /* ESC value */
+
+#define LOCAL_CHECK_NG    -1
+
+/* bití∑ÇíËã` */
+
+#define LATM_BIT_OF_BYTE  8
+#define LATM_BIT_OF_LONG  32
+#define LATM_VAL_OF_5BIT  0x1F
+
+/* AudioObjectType[ISO standard] */
+
+enum latm_aot_e
+{
+  AotNull = 0,
+  AotAacMain,                     /*  1:AAC-MAIN */
+  AotAacLc,                       /*  2:AAC-LC */
+  AotAacSsr,                      /*  3:AAC-SSR */
+  AotAacLtp,                      /*  4:AAC-LTP */
+  AotSbr,                         /*  5:AAC-SBR */
+  AotAacScalable,                 /*  6:AAC scalable */
+  AotTwinVq,                      /*  7:TwinVQ */
+  AotCelp,                        /*  8:CELP */
+  AotHvxc,                        /*  9:HVXC */
+  AotReserved10,
+  AotReserved11,
+  AotTtsi,                        /* 12:TTSI */
+  AotMainSynthesis,               /* 13:Main synthesis */
+  AotWavetableSynthesis,          /* 14:Wavetable synthesis */
+  AotGeneralMidi,                 /* 15:General MIDI */
+  AotAlgorithmicSynthesisAudioFx, /* 16:Algorithmic synthesis and Audio FX */
+  AotErAacLc,                     /* 17:ER AAC-LC */
+  AotReserved18,
+  AotErAacLtp,                    /* 19:ER AAC-LTP */
+  AotErAacScalable,               /* 20:ER AAC scalable */
+  AotErTwinVq,                    /* 21:ER TwinVQ */
+  AotErBsac,                      /* 22:ER BSAC */
+  AotErAacLd,                     /* 23:ER AAC-LD */
+  AotErCelp,                      /* 24:ER CELP */
+  AotErHvxc,                      /* 25:ER HVXC */
+  AotErHiln,                      /* 26:ER HILN */
+  AotErParametric,                /* 27:ER Parametric */
+  AotSsc,                         /* 28:SSC */
+  AotPs,                          /* 29:PS */
+  AotMpegSurround,                /* 30:MPEG Surround */
+  AotEscape,                      /* 31:(escape) */
+  AotLayer1,                      /* 32:Layer-1 */
+  AotLayer2,                      /* 33:Layer-2 */
+  AotLayer3,                      /* 34:Layer-3 */
+  AotDst,                         /* 35:DST */
+  AotAls,                         /* 36:ALS */
+  AotSls,                         /* 37:SLS */
+  AotSlsNonCore,                  /* 38:SLS non-core */
+  AotErAacEld,                    /* 39:ER AAC-ELD */
+  AotSmrSimple,                   /* 40:SMR Simple */
+  AotSmrMain,                     /* 41:SMR Main */
+  AotMax
+};
+typedef enum latm_aot_e LatmAot;
+
+/* framLengthType[ISO standard] */
+
+enum latm_flt_e
+{
+  FltVariablePayload = 0, /* 0:Payload with variable frame length */
+  FltFixedPayload,  /* 1:Payload with fixed frame length */
+  FltReserved2,     /* 2:(reserved) */
+  FltCelp1of2,      /* 3:Payload CELP with one of 2 kinds of frame length */
+  FltCelpFixed,     /* 4:Payload CELP or ER CELP with fixed length */
+  FltErCelp1of4,    /* 5:Payload ER CELP with one of 4 kinds frame length */
+  FltHvxcFixed,     /* 6:Payload HVXC or ER HVXC with fixed frame length */
+  FltHvxc1of4,      /* 7:Payload HVXC or ER HVXC with one of
+                     *    4 kinds frame length
+                     */
+  FltMax
+};
+typedef enum latm_flt_e LatmFlt;
+
+/* Shared information to be used in each function in this tool. */
+
+struct latm_local_info_s
+{
+  uint8_t  *ptr_check_latm;    /* Current pointer */
+  uint32_t  total_bit_length;  /* Cumulative bit length read in */
+  uint32_t  stream_cnt;        /* = StreamID */
+
+  /* Temporarily use for data passing purpose. */
+
+  uint32_t  temp_long;        /* long value */
+};
+typedef struct latm_local_info_s LatmLocalInfo;
+
+/* Information necessary only when using chunk with Payload. */
+
+struct use_chunk_info_s
+{
+  uint8_t num_chunk;
+  uint8_t reserve;
+  int8_t stream_cnt_chunk[LATM_MAX_STREAM_ID]; /* Subscript = chunk number
+                                                * (streamID - 1)
+                                                */
+};
+typedef struct use_chunk_info_s UseChunkInfo;
 
 /* Mask value at bit processing. */
 
