@@ -65,8 +65,8 @@ public:
 
   enum RepeatMode
   {
-    RepeatModeNormal = 0, /* Play all track at once. */
-    RepeatModeRepeat,     /* Play all track repeat. */
+    RepeatModeOff = 0, /* Play all track at once. */
+    RepeatModeOn,      /* Play all track repeat. */
     NumOfRepeatMode,
   };
 
@@ -81,7 +81,7 @@ public:
 
   Playlist(FAR const char* file_name) :
     m_play_mode(PlayModeNormal),
-    m_repeat_mode(RepeatModeNormal),
+    m_repeat_mode(RepeatModeOff),
     m_list_type(ListTypeAllTrack),
     m_play_idx(0)
   {

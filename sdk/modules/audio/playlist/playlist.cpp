@@ -173,7 +173,7 @@ bool Playlist::getNextTrack(FAR Track *track)
 
   if (this->m_play_idx >= this->m_alias_list.size())
     {
-      if (this->m_repeat_mode == RepeatModeRepeat)
+      if (this->m_repeat_mode == RepeatModeOn)
         {
           this->m_play_idx = 0;
 
@@ -228,7 +228,7 @@ bool Playlist::getPrevTrack(Track *track)
 
   if (this->m_play_idx < 0)
     {
-      if (this->m_repeat_mode == RepeatModeRepeat)
+      if (this->m_repeat_mode == RepeatModeOn)
         {
           this->m_play_idx = this->m_alias_list.size() - 1;
 
