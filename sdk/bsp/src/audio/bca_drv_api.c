@@ -1,7 +1,7 @@
 /****************************************************************************
  * nuttx/arch/arm/src/cxd56xx/audio/drivers/baseband/src/bca_drv_api.c
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016, 2017 Sony Corporation
  *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,98 +31,137 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
+ ***************************************************************************/
+
+/****************************************************************************
+ * Included Files
  ****************************************************************************/
 
 #include <arch/chip/cxd56_audio.h>
 
 #include "audio/as_drv_common.h"
 
-E_AS asBca_StopDmac( asDmacSelId dmacId )
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+E_AS asBca_StopDmac(asDmacSelId dmacId)
 {
-	E_AS rtCode = E_AS_OK;
-	uint32_t stat = 0;
+  E_AS rtCode = E_AS_OK;
+  uint32_t stat = 0;
 
-	rtCode = getDmacCmdStatus( dmacId, &stat );
-	if (rtCode != E_AS_OK) return rtCode;
-	if (stat != 1) {
-		return E_AS_DMAC_BUSY;
-	}
+  rtCode = getDmacCmdStatus(dmacId, &stat);
+  if (rtCode != E_AS_OK)
+    return rtCode;
+  if (stat != 1)
+    {
+      return E_AS_DMAC_BUSY;
+    }
 
-	switch (dmacId) {
-	case AS_DMAC_SEL_AC_IN:
-		write32_bca_reg( bcaRegMap[BCA_Mic_In_rtd_trg].addr, 0x04 );
-		break;
-	case AS_DMAC_SEL_I2S_IN:
-		write32_bca_reg( bcaRegMap[BCA_I2s1_In_rtd_trg].addr, 0x04 );
-		break;
-	case AS_DMAC_SEL_I2S_OUT:
-		write32_bca_reg( bcaRegMap[BCA_I2s1_Out_rtd_trg].addr, 0x04 );
-		break;
-	case AS_DMAC_SEL_I2S2_IN:
-		write32_bca_reg( bcaRegMap[BCA_I2s2_In_rtd_trg].addr, 0x04 );
-		break;
-	case AS_DMAC_SEL_I2S2_OUT:
-		write32_bca_reg( bcaRegMap[BCA_I2s2_Out_rtd_trg].addr, 0x04 );
-		break;
-	default:
-		D_ASSERT(0);
-		break;
-	}
+  switch (dmacId)
+    {
+      case AS_DMAC_SEL_AC_IN:
+        write32_bca_reg(bcaRegMap[BCA_Mic_In_rtd_trg].addr, 0x04);
+        break;
 
-	return rtCode;
+      case AS_DMAC_SEL_I2S_IN:
+        write32_bca_reg(bcaRegMap[BCA_I2s1_In_rtd_trg].addr, 0x04);
+        break;
+
+      case AS_DMAC_SEL_I2S_OUT:
+        write32_bca_reg(bcaRegMap[BCA_I2s1_Out_rtd_trg].addr, 0x04);
+        break;
+
+      case AS_DMAC_SEL_I2S2_IN:
+        write32_bca_reg(bcaRegMap[BCA_I2s2_In_rtd_trg].addr, 0x04);
+        break;
+
+      case AS_DMAC_SEL_I2S2_OUT:
+        write32_bca_reg(bcaRegMap[BCA_I2s2_Out_rtd_trg].addr, 0x04);
+        break;
+
+      default:
+        D_ASSERT(0);
+        break;
+    }
+
+  return rtCode;
 }
 
 void asBca_SetSmstrParam()
 {
-	write_bca_reg( BCA_Int_m_ovf_smasl, 0 );
-	write_bca_reg( BCA_Int_m_ovf_smasr, 0 );
+  write_bca_reg(BCA_Int_m_ovf_smasl, 0);
+  write_bca_reg(BCA_Int_m_ovf_smasr, 0);
 }
 
 E_AS asBca_SetSrcParam()
 {
-	E_AS rtCode = E_AS_OK;
+  E_AS rtCode = E_AS_OK;
 
-	switch(bb_config_tblp->i2s_data_path) {
-	case AS_I2S_DATA_PATH_1:
-		write_bca_reg( BCA_Int_m_i2s1_bck_err1, 0 );
-		break;
-	case AS_I2S_DATA_PATH_2:
-		write_bca_reg( BCA_Int_m_i2s1_bck_err1, 0 );
-		write_bca_reg( BCA_Int_m_i2s1_bck_err2, 0 );
-		break;
-	default:
-		/* do nothing */
-		break;
-	}
-	return rtCode;
+  switch (bb_config_tblp->i2s_data_path)
+    {
+      case AS_I2S_DATA_PATH_1:
+        write_bca_reg(BCA_Int_m_i2s1_bck_err1, 0);
+        break;
+
+      case AS_I2S_DATA_PATH_2:
+        write_bca_reg(BCA_Int_m_i2s1_bck_err1, 0);
+        write_bca_reg(BCA_Int_m_i2s1_bck_err2, 0);
+        break;
+
+      default:
+        /* Do nothing. */
+        break;
+    }
+  return rtCode;
 }
 
 E_AS asBca_SetDncParam(asDncSelId dncId)
 {
-	E_AS rtCode = E_AS_OK;
+  E_AS rtCode = E_AS_OK;
 
-	switch( dncId ){
-	case AS_DNC_SEL_DNC1:
-		write_bca_reg( BCA_Int_m_anc_faint, 0 );
-		write_bca_reg( BCA_Int_m_ovf_dnc1l, 0 );
-		write_bca_reg( BCA_Int_m_ovf_dnc1r, 0 );
-		break;
-	case AS_DNC_SEL_DNC2:
-		write_bca_reg( BCA_Int_m_anc_faint, 0 );
-		write_bca_reg( BCA_Int_m_ovf_dnc2l, 0 );
-		write_bca_reg( BCA_Int_m_ovf_dnc2r, 0 );
-		break;
-	case AS_DNC_SEL_BOTH:
-		write_bca_reg( BCA_Int_m_anc_faint, 0 );
-		write_bca_reg( BCA_Int_m_ovf_dnc1l, 0 );
-		write_bca_reg( BCA_Int_m_ovf_dnc1r, 0 );
-		write_bca_reg( BCA_Int_m_ovf_dnc2l, 0 );
-		write_bca_reg( BCA_Int_m_ovf_dnc2r, 0 );
-		break;
-	default:
-		return E_AS_DNC_SEL_PARAM;
-	}
+  switch (dncId)
+    {
+      case AS_DNC_SEL_DNC1:
+        write_bca_reg(BCA_Int_m_anc_faint, 0);
+        write_bca_reg(BCA_Int_m_ovf_dnc1l, 0);
+        write_bca_reg(BCA_Int_m_ovf_dnc1r, 0);
+        break;
 
-	return rtCode;
+      case AS_DNC_SEL_DNC2:
+        write_bca_reg(BCA_Int_m_anc_faint, 0);
+        write_bca_reg(BCA_Int_m_ovf_dnc2l, 0);
+        write_bca_reg(BCA_Int_m_ovf_dnc2r, 0);
+        break;
+
+      case AS_DNC_SEL_BOTH:
+        write_bca_reg(BCA_Int_m_anc_faint, 0);
+        write_bca_reg(BCA_Int_m_ovf_dnc1l, 0);
+        write_bca_reg(BCA_Int_m_ovf_dnc1r, 0);
+        write_bca_reg(BCA_Int_m_ovf_dnc2l, 0);
+        write_bca_reg(BCA_Int_m_ovf_dnc2r, 0);
+        break;
+
+      default:
+        return E_AS_DNC_SEL_PARAM;
+    }
+
+  return rtCode;
 }
 

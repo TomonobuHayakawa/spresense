@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/arm/src/cxd56/cxd56_audio_baseband.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2017 Sony Corporation
  *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <sdk/config.h>
+#include <nuttx/config.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -55,7 +55,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define AUDIO_DEV_PATH_LEN  (32)
+#define AUDIO_DEV_PATH_LEN  32
 
 /****************************************************************************
  * Private Functions
@@ -63,15 +63,19 @@
 
 static int cxd56_audio_bb_open(FAR struct file *filep);
 static int cxd56_audio_bb_close(FAR struct file *filep);
-static ssize_t cxd56_audio_bb_read(FAR struct file *filep, FAR char *buffer, size_t len);
-static ssize_t cxd56_audio_bb_write(FAR struct file *filep, FAR const char *buffer, size_t buflen);
-static int cxd56_audio_bb_ioctl(FAR struct file *filep, int cmd, unsigned long arg);
+static ssize_t cxd56_audio_bb_read(FAR struct file *filep,
+                                   FAR char *buffer, size_t len);
+static ssize_t cxd56_audio_bb_write(FAR struct file *filep,
+                                    FAR const char *buffer, size_t buflen);
+static int cxd56_audio_bb_ioctl(FAR struct file *filep, int cmd,
+                                unsigned long arg);
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
-static const struct file_operations g_audio_bb_fops = {
+static const struct file_operations g_audio_bb_fops =
+{
   cxd56_audio_bb_open,  /* open */
   cxd56_audio_bb_close, /* close */
   cxd56_audio_bb_read,  /* read */
@@ -92,71 +96,81 @@ struct cxd56_audio_bb_dev_s
 static struct cxd56_audio_bb_dev_s g_audio_bb_dev;
 
 /****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+/****************************************************************************
  * Public Functions
  ****************************************************************************/
+
 int cxd56_audio_bb_power(int type, unsigned long arg)
 {
   int ret = 0;
   int target = 0;
   uint32_t mode = (uint32_t)arg;
 
-  switch (type) {
-    case AUDIO_IOCTL_TYPE_ENABLE:
-      {
-        if (mode & AUDIO_CXD5247)
-          {
-            _info("Power ON audio\n");
-            if (mode & AUDIO_CXD5247_AVDD)
-              {
-                target |= CXD5247_AVDD;
-              }
-            if (mode & AUDIO_CXD5247_DVDD)
-              {
-                target |= CXD5247_DVDD;
-              }
-            ret = board_aca_power_control(target, true);
-            if (ret != 0) {
-              printf("Failed Aca Power ON(%d)\n", ret);
+  switch (type)
+    {
+      case AUDIO_IOCTL_TYPE_ENABLE:
+        {
+          if (mode & AUDIO_CXD5247)
+            {
+              _info("Power ON audio\n");
+              if (mode & AUDIO_CXD5247_AVDD)
+                {
+                  target |= CXD5247_AVDD;
+                }
+              if (mode & AUDIO_CXD5247_DVDD)
+                {
+                  target |= CXD5247_DVDD;
+                }
+              ret = board_aca_power_control(target, true);
+              if (ret != 0)
+                {
+                  printf("Failed Aca Power ON(%d)\n", ret);
+                }
             }
-          }
-        if (mode & AUDIO_CXD56xx)
-          {
-            cxd56_audio_clock_enable(AUD_MCLK_EXT, 0);
-            setAudioIoMclk();
-          }
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_DISABLE:
-      {
-        if (mode & AUDIO_CXD56xx)
-          {
-            cxd56_audio_clock_disable();
-          }
-        if (mode & AUDIO_CXD5247)
-          {
-            _info("Power OFF audio\n");
-            if (mode & AUDIO_CXD5247_AVDD)
-              {
-                target |= CXD5247_AVDD;
-              }
-            if (mode & AUDIO_CXD5247_DVDD)
-              {
-                target |= CXD5247_DVDD;
-              }
-            ret = board_aca_power_control(target, false);
-            if (ret != 0) {
-              printf("Failed Aca Power OFF(%d)\n", ret);
+          if (mode & AUDIO_CXD56xx)
+            {
+              cxd56_audio_clock_enable(AUD_MCLK_EXT, 0);
+              setAudioIoMclk();
             }
-          }
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl type(%d)\n", type);
-        ret = -EINVAL;
-      }
-      break;
-  }
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_DISABLE:
+        {
+          if (mode & AUDIO_CXD56xx)
+            {
+              cxd56_audio_clock_disable();
+            }
+          if (mode & AUDIO_CXD5247)
+            {
+              _info("Power OFF audio\n");
+              if (mode & AUDIO_CXD5247_AVDD)
+                {
+                  target |= CXD5247_AVDD;
+                }
+              if (mode & AUDIO_CXD5247_DVDD)
+                {
+                  target |= CXD5247_DVDD;
+                }
+              ret = board_aca_power_control(target, false);
+              if (ret != 0)
+                {
+                  printf("Failed Aca Power OFF(%d)\n", ret);
+                }
+            }
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl type(%d)\n", type);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   return ret;
 }
@@ -165,26 +179,29 @@ int cxd56_audio_bb_common(int type, unsigned long arg)
 {
   int ret = 0;
 
-  switch (type) {
-    case AUDIO_IOCTL_TYPE_ENABLE:
-      {
-        struct audio_bb_power_param_s *param;
-        param = (struct audio_bb_power_param_s*)arg;
-        ret = AS_PowerOnBaseBand(param->rate, param->bypass_mode);
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_DISABLE:
-      {
-        ret = AS_PowerOffBaseBand();
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl type(%d)\n", type);
-        ret = -EINVAL;
-      }
-      break;
-  }
+  switch (type)
+    {
+      case AUDIO_IOCTL_TYPE_ENABLE:
+        {
+          FAR struct audio_bb_power_param_s *param;
+          param = (FAR struct audio_bb_power_param_s *)arg;
+          ret = AS_PowerOnBaseBand(param->rate, param->bypass_mode);
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_DISABLE:
+        {
+          ret = AS_PowerOffBaseBand();
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl type(%d)\n", type);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   return ret;
 }
@@ -192,27 +209,30 @@ int cxd56_audio_bb_common(int type, unsigned long arg)
 int cxd56_audio_bb_input(int type, unsigned long arg)
 {
   int ret = 0;
-  struct audio_bb_input_param_s *param;
+  FAR struct audio_bb_input_param_s *param;
 
-  switch (type) {
-    case AUDIO_IOCTL_TYPE_ENABLE:
-      {
-        param = (struct audio_bb_input_param_s*)arg;
-        ret = AS_BaseBandEnable_input(param->micMode, param->micGain);
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_DISABLE:
-      {
-        ret = AS_BaseBandDisable_input((asMicMode)arg);
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl type(%d)\n", type);
-        ret = -EINVAL;
-      }
-      break;
-  }
+  switch (type)
+    {
+      case AUDIO_IOCTL_TYPE_ENABLE:
+        {
+          param = (FAR struct audio_bb_input_param_s *)arg;
+          ret = AS_BaseBandEnable_input(param->micMode, param->micGain);
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_DISABLE:
+        {
+          ret = AS_BaseBandDisable_input((asMicMode)arg);
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl type(%d)\n", type);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   return ret;
 }
@@ -221,24 +241,27 @@ int cxd56_audio_bb_output(int type, unsigned long arg)
 {
   int ret = 0;
 
-  switch (type) {
-    case AUDIO_IOCTL_TYPE_ENABLE:
-      {
-        ret = AS_BaseBandEnable_output((asOutDeviceId)arg);
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_DISABLE:
-      {
-        ret = AS_BaseBandDisable_output();
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl type(%d)\n", type);
-        ret = -EINVAL;
-      }
-      break;
-  }
+  switch (type)
+    {
+      case AUDIO_IOCTL_TYPE_ENABLE:
+        {
+          ret = AS_BaseBandEnable_output((asOutDeviceId)arg);
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_DISABLE:
+        {
+          ret = AS_BaseBandDisable_output();
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl type(%d)\n", type);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   return ret;
 }
@@ -247,19 +270,21 @@ int cxd56_audio_bb_mic(int type, unsigned long arg)
 {
   int ret = 0;
 
-  switch (type) {
-    case AUDIO_IOCTL_TYPE_SET:
-      {
-        ret = AS_SetMicGain((int32_t*)arg);
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl type(%d)\n", type);
-        ret = -EINVAL;
-      }
-      break;
-  }
+  switch (type)
+    {
+      case AUDIO_IOCTL_TYPE_SET:
+        {
+          ret = AS_SetMicGain((int32_t *)arg);
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl type(%d)\n", type);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   return ret;
 }
@@ -268,29 +293,33 @@ int cxd56_audio_bb_volume(int type, unsigned long arg)
 {
   int ret = 0;
 
-  switch (type) {
-    case AUDIO_IOCTL_TYPE_SET:
-      {
-        ret = AS_SetVolume((asCodecVol*)arg);
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_MUTE:
-      {
-        ret = AS_MuteVolume((asCodecVolSelId)arg);
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_UNMUTE:
-      {
-        ret = AS_UnMuteVolume((asCodecVolSelId)arg);
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl type(%d)\n", type);
-        ret = -EINVAL;
-      }
-      break;
-  }
+  switch (type)
+    {
+      case AUDIO_IOCTL_TYPE_SET:
+        {
+          ret = AS_SetVolume((FAR asCodecVol *)arg);
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_MUTE:
+        {
+          ret = AS_MuteVolume((asCodecVolSelId)arg);
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_UNMUTE:
+        {
+          ret = AS_UnMuteVolume((asCodecVolSelId)arg);
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl type(%d)\n", type);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   return ret;
 }
@@ -298,22 +327,24 @@ int cxd56_audio_bb_volume(int type, unsigned long arg)
 int cxd56_audio_bb_clearstereo(int type, unsigned long arg)
 {
   int ret = 0;
-  struct audio_bb_clearstereo_param_s *param;
+  FAR struct audio_bb_clearstereo_param_s *param;
 
-  switch (type) {
-    case AUDIO_IOCTL_TYPE_INIT:
-      {
-        param = (struct audio_bb_clearstereo_param_s*)arg;
-        ret = AS_InitClearStereo(param->csEn, param->csSign, param->csVol);
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl type(%d)\n", type);
-        ret = -EINVAL;
-      }
-      break;
-  }
+  switch (type)
+    {
+      case AUDIO_IOCTL_TYPE_INIT:
+        {
+          param = (FAR struct audio_bb_clearstereo_param_s *)arg;
+          ret = AS_InitClearStereo(param->csEn, param->csSign, param->csVol);
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl type(%d)\n", type);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   return ret;
 }
@@ -321,32 +352,36 @@ int cxd56_audio_bb_clearstereo(int type, unsigned long arg)
 int cxd56_audio_bb_beep(int type, unsigned long arg)
 {
   int ret = 0;
-  struct audio_bb_beep_param_s *param;
+  FAR struct audio_bb_beep_param_s *param;
 
-  switch (type) {
-    case AUDIO_IOCTL_TYPE_SET:
-      {
-        param = (struct audio_bb_beep_param_s*)arg;
-        ret = AS_SetBeepParam(param->beepFreq, param->beepVol);
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_ENABLE:
-      {
-        ret = AS_BeepEnable();
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_DISABLE:
-      {
-        ret = AS_BeepDisable();
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl type(%d)\n", type);
-        ret = -EINVAL;
-      }
-      break;
-  }
+  switch (type)
+    {
+      case AUDIO_IOCTL_TYPE_SET:
+        {
+          param = (FAR struct audio_bb_beep_param_s *)arg;
+          ret = AS_SetBeepParam(param->beepFreq, param->beepVol);
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_ENABLE:
+        {
+          ret = AS_BeepEnable();
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_DISABLE:
+        {
+          ret = AS_BeepDisable();
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl type(%d)\n", type);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   return ret;
 }
@@ -354,32 +389,38 @@ int cxd56_audio_bb_beep(int type, unsigned long arg)
 int cxd56_audio_bb_datapath(int type, unsigned long arg)
 {
   int ret = 0;
-  struct audio_bb_datapath_param_s *param;
+  FAR struct audio_bb_datapath_param_s *param;
 
-  switch (type) {
-    case AUDIO_IOCTL_TYPE_RESET:
-      {
-        ret = AS_ClearAudioDataPathAll();
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_SET:
-      {
-        param = (struct audio_bb_datapath_param_s*)arg;
-        ret = AS_SetAudioDataPath(param->pPathSelParam, param->getDmacId, param->setDmacId);
-      }
-      break;
-    case AUDIO_IOCTL_TYPE_CLEAR:
-      {
-        ret = AS_ClearAudioDataPath((asPathSelParam*)arg);
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl type(%d)\n", type);
-        ret = -EINVAL;
-      }
-      break;
-  }
+  switch (type)
+    {
+      case AUDIO_IOCTL_TYPE_RESET:
+        {
+          ret = AS_ClearAudioDataPathAll();
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_SET:
+        {
+          param = (FAR struct audio_bb_datapath_param_s *)arg;
+          ret = AS_SetAudioDataPath(param->pPathSelParam,
+                                    param->getDmacId,
+                                    param->setDmacId);
+        }
+        break;
+
+      case AUDIO_IOCTL_TYPE_CLEAR:
+        {
+          ret = AS_ClearAudioDataPath((FAR asPathSelParam *)arg);
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl type(%d)\n", type);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   return ret;
 }
@@ -392,7 +433,7 @@ int cxd56_audio_bb_datapath(int type, unsigned long arg)
  *
  ****************************************************************************/
 
-static int cxd56_audio_bb_initialize(struct cxd56_audio_bb_dev_s* dev)
+static int cxd56_audio_bb_initialize(FAR struct cxd56_audio_bb_dev_s *dev)
 {
   return 0;
 }
@@ -405,7 +446,7 @@ static int cxd56_audio_bb_initialize(struct cxd56_audio_bb_dev_s* dev)
  *
  ****************************************************************************/
 
-static int cxd56_audio_bb_finalize(struct cxd56_audio_bb_dev_s* dev)
+static int cxd56_audio_bb_finalize(FAR struct cxd56_audio_bb_dev_s *dev)
 {
   return 0;
 }
@@ -444,7 +485,9 @@ static int cxd56_audio_bb_close(FAR struct file *filep)
  *
  ****************************************************************************/
 
-static ssize_t cxd56_audio_bb_read(FAR struct file *filep, FAR char *buffer, size_t len)
+static ssize_t cxd56_audio_bb_read(FAR struct file *filep,
+                                   FAR char *buffer,
+                                   size_t len)
 {
   return 0;
 }
@@ -457,7 +500,9 @@ static ssize_t cxd56_audio_bb_read(FAR struct file *filep, FAR char *buffer, siz
  *
  ****************************************************************************/
 
-static ssize_t cxd56_audio_bb_write(FAR struct file *filep, FAR const char *buffer, size_t buflen)
+static ssize_t cxd56_audio_bb_write(FAR struct file *filep,
+                                    FAR const char *buffer,
+                                    size_t buflen)
 {
   return 0;
 }
@@ -470,7 +515,9 @@ static ssize_t cxd56_audio_bb_write(FAR struct file *filep, FAR const char *buff
  *
  ****************************************************************************/
 
-static int cxd56_audio_bb_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
+static int cxd56_audio_bb_ioctl(FAR struct file *filep,
+                                int cmd,
+                                unsigned long arg)
 {
   int ret = 0;
 
@@ -482,59 +529,69 @@ static int cxd56_audio_bb_ioctl(FAR struct file *filep, int cmd, unsigned long a
   int type = cmd & 0xff;
   cmd &= 0xff00;
 
-  switch (cmd) {
-    case CXD56_AUDIO_IOCTL_BB_POWER:
-      {
-        ret = cxd56_audio_bb_power(type, arg);
-      }
-      break;
-    case CXD56_AUDIO_IOCTL_BB_COMMON:
-      {
-        ret = cxd56_audio_bb_common(type, arg);
-      }
-      break;
-    case CXD56_AUDIO_IOCTL_BB_INPUT:
-      {
-        ret = cxd56_audio_bb_input(type, arg);
-      }
-      break;
-    case CXD56_AUDIO_IOCTL_BB_OUTPUT:
-      {
-        ret = cxd56_audio_bb_output(type, arg);
-      }
-      break;
-    case CXD56_AUDIO_IOCTL_BB_MICGAIN:
-      {
-        ret = cxd56_audio_bb_mic(type, arg);
-      }
-      break;
-    case CXD56_AUDIO_IOCTL_BB_VOLUME:
-      {
-        ret = cxd56_audio_bb_volume(type, arg);
-      }
-      break;
-    case CXD56_AUDIO_IOCTL_BB_CLEARSTEREO:
-      {
-        ret = cxd56_audio_bb_clearstereo(type, arg);
-      }
-      break;
-    case CXD56_AUDIO_IOCTL_BB_BEEP:
-      {
-        ret = cxd56_audio_bb_beep(type, arg);
-      }
-      break;
-    case CXD56_AUDIO_IOCTL_BB_DATAPATH:
-      {
-        ret = cxd56_audio_bb_datapath(type, arg);
-      }
-      break;
-    default:
-      {
-        printf("ERROR: Invalid ioctl command(%d)\n", cmd);
-        ret = -EINVAL;
-      }
-      break;
-  }
+  switch (cmd)
+    {
+      case CXD56_AUDIO_IOCTL_BB_POWER:
+        {
+          ret = cxd56_audio_bb_power(type, arg);
+        }
+        break;
+
+      case CXD56_AUDIO_IOCTL_BB_COMMON:
+        {
+          ret = cxd56_audio_bb_common(type, arg);
+        }
+        break;
+
+      case CXD56_AUDIO_IOCTL_BB_INPUT:
+        {
+          ret = cxd56_audio_bb_input(type, arg);
+        }
+        break;
+
+      case CXD56_AUDIO_IOCTL_BB_OUTPUT:
+        {
+          ret = cxd56_audio_bb_output(type, arg);
+        }
+        break;
+
+      case CXD56_AUDIO_IOCTL_BB_MICGAIN:
+        {
+          ret = cxd56_audio_bb_mic(type, arg);
+        }
+        break;
+
+      case CXD56_AUDIO_IOCTL_BB_VOLUME:
+        {
+          ret = cxd56_audio_bb_volume(type, arg);
+        }
+        break;
+
+      case CXD56_AUDIO_IOCTL_BB_CLEARSTEREO:
+        {
+          ret = cxd56_audio_bb_clearstereo(type, arg);
+        }
+        break;
+
+      case CXD56_AUDIO_IOCTL_BB_BEEP:
+        {
+          ret = cxd56_audio_bb_beep(type, arg);
+        }
+        break;
+
+      case CXD56_AUDIO_IOCTL_BB_DATAPATH:
+        {
+          ret = cxd56_audio_bb_datapath(type, arg);
+        }
+        break;
+
+      default:
+        {
+          printf("ERROR: Invalid ioctl command(%d)\n", cmd);
+          ret = -EINVAL;
+        }
+        break;
+    }
 
   sem_post(&priv->devsem);
 
@@ -545,13 +602,15 @@ static int cxd56_audio_bb_ioctl(FAR struct file *filep, int cmd, unsigned long a
  * Name: cxd56_audio_bb_register
  *
  * Description:
- *   This function registers the audio baseband driver so that can be used with
- *   device path.
+ *   This function registers the audio baseband driver so that can be used
+ *   with device path.
  *
  * Input Parameters:
- *   devpath - The full path to the driver to be registers in the NuttX pseudo-
- *     filesystem.  The recommended convention is to name audio baseband drivers
- *     based on the function they provide such as "/dev/audio/baseband".
+ *   devpath - The full path to the driver to be registers in the NuttX
+ *             pseudo-filesystem.
+ *             The recommended convention is to name audio baseband drivers
+ *             based on the function they provide such
+ *             as "/dev/audio/baseband".
  *
  * Returned Value:
  *   Zero on success; a negated errno value on failure.

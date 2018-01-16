@@ -1,7 +1,7 @@
-/********************************************************************************************
+/****************************************************************************
  * arch/arm/src/cxd56xx/audio/drivers/baseband/include/audio_io_config.h
  *
- *   Copyright (C) 2015 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2015, 2017 Sony Corporation
  *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,39 +31,60 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************************/
+ ***************************************************************************/
 /* Description: Audio BaseBand I/O Settings */
 
 #ifndef __SDK_BSP_SRC_AUDIO_AUDIO_IO_CONFIG_H
 #define __SDK_BSP_SRC_AUDIO_AUDIO_IO_CONFIG_H
 
+/****************************************************************************
+ * Included Files
+ ***************************************************************************/
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-typedef enum {
-	AUDIO_IO_LOWEMI_UNKNOWN	= 0,
-	AUDIO_IO_LOWEMI_4MA,
-	AUDIO_IO_LOWEMI_2MA,
-	AUDIO_IO_LOWEMI_NUM
+/****************************************************************************
+ * Pre-processor Definitions
+ ***************************************************************************/
+
+typedef enum
+{
+  AUDIO_IO_LOWEMI_UNKNOWN  = 0,
+  AUDIO_IO_LOWEMI_4MA,
+  AUDIO_IO_LOWEMI_2MA,
+  AUDIO_IO_LOWEMI_NUM
 } audioIoLowemi;
 
-typedef enum {
-	AUDIO_IO_I2S_MODE_UNKNOWN	= 0,
-	AUDIO_IO_I2S_MODE_MASTER,
-	AUDIO_IO_I2S_MODE_SLAVE,
-	AUDIO_IO_I2S_MODE_NUM
+typedef enum
+{
+  AUDIO_IO_I2S_MODE_UNKNOWN  = 0,
+  AUDIO_IO_I2S_MODE_MASTER,
+  AUDIO_IO_I2S_MODE_SLAVE,
+  AUDIO_IO_I2S_MODE_NUM
 } audioIoI2sMode;
 
-typedef enum {
-	AUDIO_IO_I2S_SEL_I2S0	= 0,
-	AUDIO_IO_I2S_SEL_I2S1,
-	AUDIO_IO_I2S_SEL_NUM
+typedef enum
+{
+  AUDIO_IO_I2S_SEL_I2S0  = 0,
+  AUDIO_IO_I2S_SEL_I2S1,
+  AUDIO_IO_I2S_SEL_NUM
 } audioIoI2sSel;
+
+/****************************************************************************
+ * Public Types
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ***************************************************************************/
 
 void setAudioIoMclk(void);
 void setAudioIoPdm(audioIoLowemi lowemi);
-void setAudioIoI2s(audioIoI2sSel i2s_sel, audioIoI2sMode i2s_mode, audioIoLowemi lowemi);
+void setAudioIoI2s(audioIoI2sSel i2s_sel,
+                   audioIoI2sMode i2s_mode,
+                   audioIoLowemi lowemi);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

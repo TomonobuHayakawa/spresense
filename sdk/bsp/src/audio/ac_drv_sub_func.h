@@ -1,7 +1,7 @@
-/********************************************************************************************
+/****************************************************************************
  * arch/arm/src/cxd56xx/audio/drivers/baseband/include/ac_drv_func.h
  *
- *   Copyright (C) 2014 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2014, 2017 Sony Corporation
  *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,35 +31,54 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************************/
+ ***************************************************************************/
 /* Description: Audio Codec driver low-level API sub function */
 
 #ifndef __SDK_BSP_SRC_AUDIO_AC_DRV_SUB_FUNC_H
 #define __SDK_BSP_SRC_AUDIO_AC_DRV_SUB_FUNC_H
 
+/****************************************************************************
+ * Included Files
+ ***************************************************************************/
+
 #include "audio/as_drv_common.h"
 #include "audio/ac_drv.h"
 #include "audio/ac_drv_reg.h"
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Types
+ ***************************************************************************/
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+/****************************************************************************
+ * Public Data
+ ***************************************************************************/
 
 extern BaseBandConfigTbl *bb_config_tblp;
 
-E_AS setSrcParam( asSrcSelId srcId, asI2sParam *pI2sParam );
-E_AS setI2sMode( asSrcSelId srcId, asSrcParam *pSrc );
-E_AS setI2sChSwap( asSrcSelId srcId, asSrcParam *pSrc );
-E_AS setSelCicParam( asCicSelId cicId, asCicParam *pCicParam );
-E_AS setDecimCommon( asDecimParam *pDcmParam );
-E_AS setDecimOut( asDecimSelId dcmId, asDecimParam *pDcmParam );
-E_AS setAlcParam( void );
-E_AS setSpcParam( void );
-E_AS setDeqCoef( AC_REG_ID acRegId, const uint32_t *pCoef, uint32_t len );
-E_AS setDncRam( uint32_t offset, const uint32_t *pData, uint32_t len );
-E_AS setAcSmstrParam( asSmstrModeId mode );
-E_AS setAcSerDesParam( asSerDesParam *pSdesParam );
+/****************************************************************************
+ * Public Functions
+ ***************************************************************************/
+
+E_AS setSrcParam(asSrcSelId srcId, FAR asI2sParam *pI2sParam);
+E_AS setI2sMode(asSrcSelId srcId, FAR asSrcParam *pSrc);
+E_AS setI2sChSwap(asSrcSelId srcId, FAR asSrcParam *pSrc);
+E_AS setSelCicParam(asCicSelId cicId, FAR asCicParam *pCicParam);
+E_AS setDecimCommon(FAR asDecimParam *pDcmParam);
+E_AS setDecimOut(asDecimSelId dcmId, FAR asDecimParam *pDcmParam);
+E_AS setAlcParam(void);
+E_AS setSpcParam(void);
+E_AS setDeqCoef(AC_REG_ID acRegId, FAR const uint32_t *pCoef, uint32_t len);
+E_AS setDncRam(uint32_t offset, FAR const uint32_t *pData, uint32_t len);
+E_AS setAcSmstrParam(asSmstrModeId mode);
+E_AS setAcSerDesParam(FAR asSerDesParam *pSdesParam);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

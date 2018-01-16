@@ -1,7 +1,7 @@
-/********************************************************************************************
+/****************************************************************************
  * arch/arm/src/cxd56xx/audio/drivers/baseband/include/ac_drv_reg.h
  *
- *   Copyright (C) 2014 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2014, 2017 Sony Corporation
  *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,30 +31,50 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************************/
+ ***************************************************************************/
 /* Description: Audio Codec register access function */
 
 #ifndef __SDK_BSP_SRC_AUDIO_AC_DRV_REG_H
 #define __SDK_BSP_SRC_AUDIO_AC_DRV_REG_H
 
+/****************************************************************************
+ * Included Files
+ ***************************************************************************/
+
 #include <arch/chip/cxd56_audio.h>
 #include "audio/ac_reg_map.h"
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Types
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ***************************************************************************/
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-uint32_t write_ac_reg( AC_REG_ID regId, uint32_t data );
-uint32_t read_ac_reg( AC_REG_ID regId );
-uint32_t write32_ac_reg( uint32_t offset, uint32_t data );
-uint32_t read32_ac_reg( uint32_t offset );
+/****************************************************************************
+ * Public Functions
+ ***************************************************************************/
 
-/* debug function */
-void init_ac_reg( void );
-void read_ac_reg_all( void );
+uint32_t write_ac_reg(AC_REG_ID regId, uint32_t data);
+uint32_t read_ac_reg(AC_REG_ID regId);
+uint32_t write32_ac_reg(uint32_t offset, uint32_t data);
+uint32_t read32_ac_reg(uint32_t offset);
+
+/* Debug function */
+void init_ac_reg(void);
+void read_ac_reg_all(void);
 
 #ifdef __cplusplus
 } /* end of extern "C" */
 #endif /* __cplusplus */
 
-#endif /* _AC_DRV_REG_H_ */
+#endif /* __SDK_BSP_SRC_AUDIO_AC_DRV_REG_H */

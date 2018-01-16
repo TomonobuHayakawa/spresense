@@ -1,7 +1,7 @@
-/********************************************************************************************
+/****************************************************************************
  * arch/arm/src/cxd56xx/audio/drivers/baseband/include/common_assert.h
  *
- *   Copyright (C) 2010-2012 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2010-2012, 2017 Sony Corporation
  *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,48 +31,55 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************************/
+ ***************************************************************************/
 /* Description: Common assertion macros */
 
-#ifndef COMMON_ASSERT_H_INCLUDED
-#define COMMON_ASSERT_H_INCLUDED
+#ifndef __SDK_BSP_SRC_AUDIO_COMMON_ASSERT_H
+#define __SDK_BSP_SRC_AUDIO_COMMON_ASSERT_H
+
+/****************************************************************************
+ * Included Files
+ ***************************************************************************/
 
 #include "audio/common_macro.h"
 #include "assert.h"
 
+/****************************************************************************
+ * Pre-processor Definitions
+ ***************************************************************************/
+
 /*
- * static assert. expがfalseと評価されるとコンパイルエラーとなる
+ * Static assert. expがfalseと評価されるとコンパイルエラーとなる
  * expはコンパイル時に評価可能な定数式のみ記述可能
  */
 #define S_ASSERT(exp) \
-	enum { JOIN_MACRO(AssertionFail_, __LINE__) = 1/(!!(exp)) }
+  enum \
+    { \
+      JOIN_MACRO(AssertionFail_, __LINE__) = 1 / (!!(exp)) \
+    }
 
 /*
- * debug assert.
+ * Debug assert.
  * NDEBUGマクロ定義時に空文になるので、expやfuncに副作用のある式は記述不可
  */
 #ifdef NDEBUG
-#define D_ASSERT(exp)			((void)0)
-#define D_ASSERT2(exp, func)		((void)0)
+#  define D_ASSERT(exp)        ((void)0)
+#  define D_ASSERT2(exp, func) ((void)0)
 #else /* NDEBUG */
-#define D_ASSERT(exp)			F_ASSERT(exp)
-#define D_ASSERT2(exp, func)		F_ASSERT2((exp), (func))
+#  define D_ASSERT(exp)        F_ASSERT(exp)
+#  define D_ASSERT2(exp, func) F_ASSERT2((exp), (func))
 #endif /* NDEBUG */
 
 /*
- * fatal assert.
+ * Fatal assert.
  * D_ASSERTと違いNDEBUG時も無効にならない。expやfuncに副作用のある式を記述可能
  */
 #ifdef ASSERT_USE_RETURN_ADDR
-#define F_ASSERT(exp) ASSERT(exp)
-//	(void)((exp) || (_AssertionFail(#exp, __FILE__, __LINE__, GET_RETURN_ADDR()), 0))
-#define F_ASSERT2(exp, func) ASSERT(exp)
-//	(void)((exp) || ((func), _AssertionFail(#exp, __FILE__, __LINE__, GET_RETURN_ADDR()), 0))
+#  define F_ASSERT(exp) ASSERT(exp)
+#  define F_ASSERT2(exp, func) ASSERT(exp)
 #else  /* ASSERT_USE_RETURN_ADDR */
-#define F_ASSERT(exp) ASSERT(exp)
-//	(void)((exp) || (_AssertionFail(#exp, __FILE__, __LINE__), 0))
-#define F_ASSERT2(exp, func) ASSERT(exp)
-//	(void)((exp) || ((func), _AssertionFail(#exp, __FILE__, __LINE__), 0))
+#  define F_ASSERT(exp) ASSERT(exp)
+#  define F_ASSERT2(exp, func) ASSERT(exp)
 #endif /* ASSERT_USE_RETURN_ADDR */
 
 #ifdef  __cplusplus
@@ -81,28 +88,47 @@ extern "C" {
 
 #if defined(_MSC_VER)
 extern void * _ReturnAddress(void);
-#pragma intrinsic(_ReturnAddress)
-#define GET_RETURN_ADDR()	_ReturnAddress()
+# pragma intrinsic(_ReturnAddress)
+#  define GET_RETURN_ADDR() _ReturnAddress()
 #elif defined(__CC_ARM)
-#define GET_RETURN_ADDR()	(void*)__return_address()
+#  define GET_RETURN_ADDR() (void *)__return_address()
 #else
-/* x86向け以外の大半のgccでは、引数に0しか指定できないらしい(gcc3.3.6+allegro-2.2.3では0のみ) */
-#define GET_RETURN_ADDR()	__builtin_return_address(0)
+/*
+ * x86向け以外の大半のgccでは、
+ * 引数に0しか指定できないらしい(gcc3.3.6+allegro-2.2.3では0のみ)
+ */
+#  define GET_RETURN_ADDR() __builtin_return_address(0)
 #endif
 
 /*
  * BSPで、_AssertionFail関数を実装すること
  * ISS環境であれば、下記のような実装で良い
- *	printf("%s, Assert at %s line:%d\n", exp, filename, line); exit(1);
+ * printf("%s, Assert at %s line:%d\n", exp, filename, line); exit(1);
  */
 #ifdef ASSERT_USE_RETURN_ADDR
-//extern void _AssertionFail(const char* exp, const char* filename, int line, void* ret_addr);
+/* extern void _AssertionFail(const char* exp, FAR const char* filename,
+ * int line, void* ret_addr);
+ */
 #else  /* ASSERT_USE_RETURN_ADDR */
-//extern void _AssertionFail(const char* exp, const char* filename, int line);
+/* extern void _AssertionFail(const char* exp, FAR const char* filename,
+ * int line);
+ */
 #endif /* ASSERT_USE_RETURN_ADDR */
 
 #ifdef  __cplusplus
 } /* end of extern "C" */
 #endif
 
-#endif	/* COMMON_ASSERT_H_INCLUDED */
+/****************************************************************************
+ * Public Types
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ***************************************************************************/
+
+#endif	/* __SDK_BSP_SRC_AUDIO_COMMON_ASSERT_H */

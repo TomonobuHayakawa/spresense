@@ -1,7 +1,7 @@
-/********************************************************************************************
+/****************************************************************************
  * arch/arm/src/cxd56xx/audio/drivers/baseband/src/ac_drv_reg.c
  *
- *   Copyright (C) 2014 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2014, 2017 Sony Corporation
  *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,157 +31,208 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************************/
+ ***************************************************************************/
 /* Description: Audio Codec register access function */
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
 
 #include "audio/as_drv_common.h"
 #include "audio/ac_drv_reg.h"
 
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
 #ifdef AC_LOCAL_TEST
-#include "debug_print.h"
-#define DBG_LogPrintf(...)
+#  include "debug_print.h"
+#  define DBG_LogPrintf(...)
 uint32_t AC_SWREG[0x10000];
 #else
-#define AC_SWREG  0
+#  define AC_SWREG 0
 #endif
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
 
 #ifdef AC_LOCAL_TEST
-void init_ac_reg( void )
+void init_ac_reg(void)
 {
-	uint32_t i, offset;
+  uint32_t i;
+  uint32_t offset;
 
-	DEBUG_PRINT("=== %s ===\n", __func__);
-	for (i = 0; i < RI_REG_MAX_ENTRY; i++) {
-		write_ac_reg( (AC_REG_ID)i, acRegMap[i].init );
-	}
-	for (offset = DNC1_IRAM_BASE; offset < DNC2_CRAM_BASE+0x800; offset++) {
-		write32_ac_reg( offset, 0x00000000 );
-	}
+  DEBUG_PRINT("=== %s ===\n", __func__);
+  for (i = 0; i < RI_REG_MAX_ENTRY; i++)
+    {
+      write_ac_reg((AC_REG_ID)i, acRegMap[i].init);
+    }
+  for (offset = DNC1_IRAM_BASE; offset < DNC2_CRAM_BASE + 0x800; offset++)
+    {
+      write32_ac_reg(offset, 0x00000000);
+    }
 }
 
-void read_ac_reg_all( void )
+void read_ac_reg_all(void)
 {
-	uint32_t i, offset, data;
+  uint32_t i;
+  uint32_t offset;
+  uint32_t data;
 
-	DEBUG_PRINT("=== %s ===\n", __func__);
-	for (i = 0; i < RI_REG_MAX_ENTRY; i++) {
-		offset = acRegMap[i].addr;
-		data = read32_ac_reg( offset );
-		DEBUG_PRINT("[addr] %04x [data] %08x\n", offset, data);
-	}
-	for (offset = DNC1_IRAM_BASE; offset < DNC2_CRAM_BASE+0x800; offset++) {
-		data = read32_ac_reg( offset );
-		DEBUG_PRINT("[addr] %04x [data] %08x\n", offset, data);
-	}
+  DEBUG_PRINT("=== %s ===\n", __func__);
+  for (i = 0; i < RI_REG_MAX_ENTRY; i++)
+    {
+      offset = acRegMap[i].addr;
+      data = read32_ac_reg(offset);
+      DEBUG_PRINT("[addr] %04x [data] %08x\n", offset, data);
+    }
+  for (offset = DNC1_IRAM_BASE; offset < (DNC2_CRAM_BASE + 0x800); offset++)
+    {
+      data = read32_ac_reg(offset);
+      DEBUG_PRINT("[addr] %04x [data] %08x\n", offset, data);
+    }
 }
 #endif
 
-uint32_t write_ac_reg( AC_REG_ID regId, uint32_t data )
+uint32_t write_ac_reg(AC_REG_ID regId, uint32_t data)
 {
-	volatile uint32_t * addr;
-	uint32_t mask, curr;
+  volatile uint32_t *addr;
+  uint32_t mask;
+  uint32_t curr;
 
-	addr = (volatile uint32_t *)(AC_REG_BASE + AC_SWREG + acRegMap[regId].addr);
-	if (acRegMap[regId].len < 32) {
-		mask = (1 << acRegMap[regId].len) - 1;
-	} else {
-		mask = 0xffffffff;
-	}
+  addr = (volatile uint32_t *)(AC_REG_BASE + AC_SWREG + acRegMap[regId].addr);
+  if (acRegMap[regId].len < 32)
+    {
+      mask = (1 << acRegMap[regId].len) - 1;
+    }
+  else
+    {
+      mask = 0xffffffff;
+    }
 
-	if( addr != NULL ) {
-		curr = *addr & ~(mask << acRegMap[regId].pos);
-		*addr = curr | ((data & mask) << acRegMap[regId].pos);
-	} else {
-		D_ASSERT(0);
-	}
+  if(addr != NULL)
+    {
+      curr = *addr & ~(mask << acRegMap[regId].pos);
+      *addr = curr | ((data & mask) << acRegMap[regId].pos);
+    }
+  else
+    {
+      D_ASSERT(0);
+    }
 
-	return 0;
+  return 0;
 }
 
-uint32_t read_ac_reg( AC_REG_ID regId )
+uint32_t read_ac_reg(AC_REG_ID regId)
 {
-	volatile uint32_t * addr;
-	uint32_t mask, data = 0;
+  volatile uint32_t *addr;
+  uint32_t mask;
+  uint32_t data = 0;
 
-	addr = (volatile uint32_t *)(AC_REG_BASE + AC_SWREG + acRegMap[regId].addr);
-	if (acRegMap[regId].len < 32) {
-		mask = (1 << acRegMap[regId].len) - 1;
-	} else {
-		mask = 0xffffffff;
-	}
+  addr = (volatile uint32_t *)(AC_REG_BASE + AC_SWREG + acRegMap[regId].addr);
+  if (acRegMap[regId].len < 32)
+    {
+      mask = (1 << acRegMap[regId].len) - 1;
+    }
+  else
+    {
+      mask = 0xffffffff;
+    }
 
-	if( addr != NULL ) {
-		data = (*addr >> acRegMap[regId].pos) & mask;
-	} else {
-		D_ASSERT(0);
-	}
+  if (addr != NULL)
+    {
+      data = (*addr >> acRegMap[regId].pos) & mask;
+    }
+  else
+    {
+      D_ASSERT(0);
+    }
 
-	return data;
+  return data;
 }
 
-uint32_t write32_ac_reg( uint32_t offset, uint32_t data )
+uint32_t write32_ac_reg(uint32_t offset, uint32_t data)
 {
-	volatile uint32_t * addr;
+  volatile uint32_t *addr;
 
-	addr = (volatile uint32_t *)(AC_REG_BASE + AC_SWREG + offset);
-	if( addr != NULL ) {
-		*addr = data;
-	} else {
-		D_ASSERT(0);
-	}
+  addr = (volatile uint32_t *)(AC_REG_BASE + AC_SWREG + offset);
+  if (addr != NULL)
+    {
+      *addr = data;
+    }
+  else
+    {
+      D_ASSERT(0);
+    }
 
-	return 0;
+  return 0;
 }
 
-uint32_t read32_ac_reg( uint32_t offset )
+uint32_t read32_ac_reg(uint32_t offset)
 {
-	volatile uint32_t * addr;
-	uint32_t data = 0;
+  volatile uint32_t *addr;
+  uint32_t data = 0;
 
-	addr = (volatile uint32_t *)(AC_REG_BASE + AC_SWREG + offset);
-	if( addr != NULL ) {
-		data = *addr;
-	} else {
-		D_ASSERT(0);
-	}
+  addr = (volatile uint32_t *)(AC_REG_BASE + AC_SWREG + offset);
+  if (addr != NULL)
+    {
+      data = *addr;
+    }
+  else
+    {
+      D_ASSERT(0);
+    }
 
-	return data;
+  return data;
 }
 
-uint32_t read_as_reg( uint32_t reg )
+uint32_t read_as_reg(uint32_t reg)
 {
-	volatile uint32_t *addr;
-	uint32_t data = 0;
+  volatile uint32_t *addr;
+  uint32_t data = 0;
 
-	if (reg == AS_INT_EN1_REG)
-	  {
-	  	addr = (volatile uint32_t *)AS_INT_EN1_REG_ADDR;
-		data = *addr;
-	  }
-	else if (reg == AS_INT_IRQ1_REG)
-	  {
-	  	addr = (volatile uint32_t *)AS_INT_IRQ1_REG_ADDR;
-	  	data = *addr;
-	  }
-	else
-	  {
-		D_ASSERT(0);
-	  }
-	return data;
+  if (reg == AS_INT_EN1_REG)
+    {
+      addr = (volatile uint32_t *)AS_INT_EN1_REG_ADDR;
+      data = *addr;
+    }
+  else if (reg == AS_INT_IRQ1_REG)
+    {
+      addr = (volatile uint32_t *)AS_INT_IRQ1_REG_ADDR;
+      data = *addr;
+    }
+  else
+    {
+      D_ASSERT(0);
+    }
+  return data;
 }
 
-uint32_t write_as_reg( uint32_t reg, uint32_t data)
+uint32_t write_as_reg(uint32_t reg, uint32_t data)
 {
-	volatile uint32_t *addr;
+  volatile uint32_t *addr;
 
-	if (reg == AS_INT_EN1_REG)
-	  {
-		addr = (volatile uint32_t *)AS_INT_EN1_REG_ADDR;
-		*addr = data;
-	  }
-	else
-	  {
-		D_ASSERT(0);
-	  }
-	return 0;
+  if (reg == AS_INT_EN1_REG)
+    {
+      addr = (volatile uint32_t *)AS_INT_EN1_REG_ADDR;
+      *addr = data;
+    }
+  else
+    {
+      D_ASSERT(0);
+    }
+  return 0;
 }

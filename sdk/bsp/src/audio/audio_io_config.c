@@ -1,7 +1,7 @@
-/********************************************************************************************
+/****************************************************************************
  * arch/arm/src/cxd56xx/audio/drivers/baseband/src/audio_io_config.c
  *
- *   Copyright (C) 2015 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2015, 2017 Sony Corporation
  *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************************/
+ ***************************************************************************/
 /* Description: Audio BaseBand I/O Settings */
 
 /*******************************************************
@@ -44,109 +44,169 @@
 #include "audio/common_assert.h"
 #include "audio/audio_io_config.h"
 
-/* IO Setting for Audio MCLK */
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/* IO Setting for Audio MCLK. */
+
 void setAudioIoMclk(void)
 {
-	CXD56_PIN_CONFIGS(PINCONFS_MCLK);
+  CXD56_PIN_CONFIGS(PINCONFS_MCLK);
 }
 
-/* IO Setting for Audio PDM */
+/* IO Setting for Audio PDM. */
+
 void setAudioIoPdm(audioIoLowemi lowemi)
 {
-	switch(lowemi) {
-	case AUDIO_IO_LOWEMI_UNKNOWN:
-		/* Do Nothing. */
-		break;
-	case AUDIO_IO_LOWEMI_4MA:
-		CXD56_PIN_CONFIGS(PINCONFS_PDM_HIGH);
-		break;
-	case AUDIO_IO_LOWEMI_2MA:
-		CXD56_PIN_CONFIGS(PINCONFS_PDM_NORM);
-		break;
-	default:
-		F_ASSERT(0);
-	}
+  switch (lowemi)
+    {
+      case AUDIO_IO_LOWEMI_UNKNOWN:
+        /* Do Nothing. */
+        break;
+
+      case AUDIO_IO_LOWEMI_4MA:
+        CXD56_PIN_CONFIGS(PINCONFS_PDM_HIGH);
+        break;
+
+      case AUDIO_IO_LOWEMI_2MA:
+        CXD56_PIN_CONFIGS(PINCONFS_PDM_NORM);
+        break;
+
+      default:
+        F_ASSERT(0);
+    }
 }
 
 #ifdef CONFIG_CXD56_I2S0
-/* IO Setting for Audio I2S0 */
+/* IO Setting for Audio I2S0. */
+
 void setAudioIoI2s0(audioIoI2sMode i2s_mode, audioIoLowemi lowemi)
 {
-	switch(i2s_mode) {
-	case AUDIO_IO_I2S_MODE_UNKNOWN:
-		/* Do Nothing. */
-		break;
-	case AUDIO_IO_I2S_MODE_MASTER:
-		if (AUDIO_IO_LOWEMI_4MA == lowemi) {
-			CXD56_PIN_CONFIGS(PINCONFS_I2S0_M_HIGH);
-		} else if (AUDIO_IO_LOWEMI_2MA == lowemi) {
-			CXD56_PIN_CONFIGS(PINCONFS_I2S0_M_NORM);
-		} else {
-			/* Do Nothing. */
-		}
-		break;
-	case AUDIO_IO_I2S_MODE_SLAVE:
-		if (AUDIO_IO_LOWEMI_4MA == lowemi) {
-			CXD56_PIN_CONFIGS(PINCONFS_I2S0_S_HIGH);
-		} else if (AUDIO_IO_LOWEMI_2MA == lowemi) {
-			CXD56_PIN_CONFIGS(PINCONFS_I2S0_S_NORM);
-		} else {
-			/* Do Nothing. */
-		}
-		break;
-	default:
-		F_ASSERT(0);
-	}
+  switch (i2s_mode)
+    {
+      case AUDIO_IO_I2S_MODE_UNKNOWN:
+        /* Do Nothing. */
+        break;
+
+      case AUDIO_IO_I2S_MODE_MASTER:
+        if (AUDIO_IO_LOWEMI_4MA == lowemi)
+          {
+            CXD56_PIN_CONFIGS(PINCONFS_I2S0_M_HIGH);
+          }
+        else if (AUDIO_IO_LOWEMI_2MA == lowemi)
+          {
+            CXD56_PIN_CONFIGS(PINCONFS_I2S0_M_NORM);
+          }
+        else
+          {
+            /* Do Nothing. */
+          }
+        break;
+
+      case AUDIO_IO_I2S_MODE_SLAVE:
+        if (AUDIO_IO_LOWEMI_4MA == lowemi)
+          {
+            CXD56_PIN_CONFIGS(PINCONFS_I2S0_S_HIGH);
+          }
+        else if (AUDIO_IO_LOWEMI_2MA == lowemi)
+          {
+            CXD56_PIN_CONFIGS(PINCONFS_I2S0_S_NORM);
+          }
+        else
+          {
+            /* Do Nothing. */
+          }
+        break;
+
+      default:
+        F_ASSERT(0);
+    }
 }
 #endif /* CONFIG_CXD56_I2S0 */
 
 #ifdef CONFIG_CXD56_I2S1
-/* IO Setting for Audio I2S1 */
+/* IO Setting for Audio I2S1. */
+
 void setAudioIoI2s1(audioIoI2sMode i2s_mode, audioIoLowemi lowemi)
 {
-	switch(i2s_mode) {
-	case AUDIO_IO_I2S_MODE_UNKNOWN:
-		/* Do Nothing. */
-		break;
-	case AUDIO_IO_I2S_MODE_MASTER:
-		if (AUDIO_IO_LOWEMI_4MA == lowemi) {
-			CXD56_PIN_CONFIGS(PINCONFS_I2S1_M_HIGH);
-		} else if (AUDIO_IO_LOWEMI_2MA == lowemi) {
-			CXD56_PIN_CONFIGS(PINCONFS_I2S1_M_NORM);
-		} else {
-			/* Do Nothing. */
-		}
-		break;
-	case AUDIO_IO_I2S_MODE_SLAVE:
-		if (AUDIO_IO_LOWEMI_4MA == lowemi) {
-			CXD56_PIN_CONFIGS(PINCONFS_I2S1_S_HIGH);
-		} else if (AUDIO_IO_LOWEMI_2MA == lowemi) {
-			CXD56_PIN_CONFIGS(PINCONFS_I2S1_S_NORM);
-		} else {
-			/* Do Nothing. */
-		}
-		break;
-	default:
-		F_ASSERT(0);
-	}
+  switch (i2s_mode)
+    {
+      case AUDIO_IO_I2S_MODE_UNKNOWN:
+        /* Do Nothing. */
+        break;
+
+      case AUDIO_IO_I2S_MODE_MASTER:
+        if (AUDIO_IO_LOWEMI_4MA == lowemi)
+          {
+            CXD56_PIN_CONFIGS(PINCONFS_I2S1_M_HIGH);
+          }
+        else if (AUDIO_IO_LOWEMI_2MA == lowemi)
+          {
+            CXD56_PIN_CONFIGS(PINCONFS_I2S1_M_NORM);
+          }
+        else
+          {
+            /* Do Nothing. */
+          }
+        break;
+
+      case AUDIO_IO_I2S_MODE_SLAVE:
+        if (AUDIO_IO_LOWEMI_4MA == lowemi)
+          {
+            CXD56_PIN_CONFIGS(PINCONFS_I2S1_S_HIGH);
+          }
+        else if (AUDIO_IO_LOWEMI_2MA == lowemi)
+          {
+            CXD56_PIN_CONFIGS(PINCONFS_I2S1_S_NORM);
+          }
+        else
+          {
+            /* Do Nothing. */
+          }
+        break;
+
+      default:
+        F_ASSERT(0);
+    }
 }
 #endif /* CONFIG_CXD56_I2S1 */
 
-/* IO Setting for Audio I2S */
-void setAudioIoI2s(audioIoI2sSel i2s_sel, audioIoI2sMode i2s_mode, audioIoLowemi lowemi)
+/* IO Setting for Audio I2S. */
+
+void setAudioIoI2s(audioIoI2sSel i2s_sel,
+                   audioIoI2sMode i2s_mode,
+                   audioIoLowemi lowemi)
 {
-	switch (i2s_sel) {
+  switch (i2s_sel)
+    {
 #ifdef CONFIG_CXD56_I2S0
-	case AUDIO_IO_I2S_SEL_I2S0:
-		setAudioIoI2s0(i2s_mode, lowemi);
-		break;
+      case AUDIO_IO_I2S_SEL_I2S0:
+        setAudioIoI2s0(i2s_mode, lowemi);
+        break;
 #endif /* CONFIG_CXD56_I2S0 */
 #ifdef CONFIG_CXD56_I2S1
-	case AUDIO_IO_I2S_SEL_I2S1:
-		setAudioIoI2s1(i2s_mode, lowemi);
-		break;
+      case AUDIO_IO_I2S_SEL_I2S1:
+        setAudioIoI2s1(i2s_mode, lowemi);
+        break;
 #endif /* CONFIG_CXD56_I2S1 */
-	default:
-		F_ASSERT(0);
-	}
+      default:
+        F_ASSERT(0);
+    }
 }

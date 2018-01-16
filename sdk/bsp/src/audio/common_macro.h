@@ -1,7 +1,7 @@
-/********************************************************************************************
+/****************************************************************************
  * arch/arm/src/cxd56xx/audio/drivers/baseband/include/common_macro.h
  *
- *   Copyright (C) 2010 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2010, 2017 Sony Corporation
  *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,17 +31,25 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************************/
+ ***************************************************************************/
 /* Description: Common macros definitions. */
 
-#ifndef COMMON_MACRO_H_INCLUDED
-#define COMMON_MACRO_H_INCLUDED
+#ifndef __SDK_BSP_SRC_AUDIO_COMMON_MACRO_H
+#define __SDK_BSP_SRC_AUDIO_COMMON_MACRO_H
 
-#include <stddef.h>	/* size_t, offsetof */
+/****************************************************************************
+ * Included Files
+ ***************************************************************************/
+
+#include <stddef.h> /* size_t, offsetof */
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ***************************************************************************/
 
 #ifndef __cplusplus
 #ifndef __bool_true_false_are_defined
-#define __bool_true_false_are_defined
+#  define __bool_true_false_are_defined
 typedef enum { false, true } bool;
 #endif /* __bool_true_false_are_defined */
 #endif /* __cplusplus */
@@ -56,12 +64,24 @@ typedef enum { false, true } bool;
 #define JOIN_TOKEN(x, y) x ## y
 
 #if defined(__CC_ARM)
-#define INLINE __inline
+#  define INLINE __inline
 #else
-#define INLINE inline
+#  define INLINE inline
 #endif
 
-#endif /* COMMON_MACRO_H_INCLUDED */
+/****************************************************************************
+ * Public Types
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ***************************************************************************/
+
+#endif /* __SDK_BSP_SRC_AUDIO_COMMON_MACRO_H */
 /*
  * $Log: $
  */

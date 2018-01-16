@@ -1,7 +1,7 @@
-/********************************************************************************************
+/****************************************************************************
  * arch/arm/src/cxd56xx/audio/drivers/baseband/include/common_attention.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016, 2017 Sony Corporation
  *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,32 +31,45 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************************/
+ ***************************************************************************/
 /* Description: Attention Header */
 
-#ifndef __COMMON_ATTENTION_H_INCLUDED__
-#define __COMMON_ATTENTION_H_INCLUDED__
+#ifndef __SDK_BSP_SRC_AUDIO_COMMON_ATTENTION_H
+#define __SDK_BSP_SRC_AUDIO_COMMON_ATTENTION_H
+
+/****************************************************************************
+ * Included Files
+ ***************************************************************************/
 
 #include <stdint.h>
 
-typedef enum {
-	INFORMATION_ATTENTION_CODE = 0, /* Just Information */
-	WARNING_ATTENTION_CODE,         /* Warning. 自律復帰可能 */
-	ERROR_ATTENTION_CODE,           /* 上位からの制御次第で復帰可能 */
-	FATAL_ATTENTION_CODE,           /* 致命的な状態. リセットが必要 */
+/****************************************************************************
+ * Pre-processor Definitions
+ ***************************************************************************/
+
+typedef enum
+{
+  INFORMATION_ATTENTION_CODE = 0, /* Just Information */
+  WARNING_ATTENTION_CODE,         /* Warning. 自律復帰可能 */
+  ERROR_ATTENTION_CODE,           /* 上位からの制御次第で復帰可能 */
+  FATAL_ATTENTION_CODE,           /* 致命的な状態. リセットが必要 */
 } ErrorAttensionCode;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** 各プロジェクト毎に下記 IF で実装する
- **/
+/* 各プロジェクト毎に下記 IF で実装する */
 #ifdef ATTENTION_USE_FILENAME_LINE
-extern void _Attention(uint8_t module_id, uint8_t attention_code, uint8_t sub_code,
-		       const char* filename, uint32_t line);
+extern void _Attention(uint8_t module_id,
+                       uint8_t attention_code,
+                       uint8_t sub_code,
+                       FAR const char* filename,
+                       uint32_t line);
 #else
-extern void _Attention(uint8_t module_id, uint8_t attention_code, uint8_t sub_code);
+extern void _Attention(uint8_t module_id,
+                       uint8_t attention_code,
+                       uint8_t sub_code);
 #endif
 
 #ifdef __cplusplus
@@ -64,23 +77,51 @@ extern void _Attention(uint8_t module_id, uint8_t attention_code, uint8_t sub_co
 #endif
 
 #ifdef ATTENTION_USE_FILENAME_LINE
-#define INFORMATION_ATTENTION(module_id, sub_code) \
-	_Attention((module_id), INFORMATION_ATTENTION_CODE, (sub_code), __FILE__, __LINE__)
-#define WARNING_ATTENTION(module_id, sub_code) \
-	_Attention((module_id), WARNING_ATTENTION_CODE, (sub_code), __FILE__, __LINE__)
-#define ERROR_ATTENTION(module_id, sub_code) \
-	_Attention((module_id), ERROR_ATTENTION_CODE, (sub_code), __FILE__, __LINE__)
-#define FATAL_ATTENTION(module_id, sub_code) \
-	_Attention((module_id), FATAL_ATTENTION_CODE, (sub_code), __FILE__, __LINE__)
+#  define INFORMATION_ATTENTION(module_id, sub_code) \
+     _Attention((module_id), \
+                INFORMATION_ATTENTION_CODE, \
+                (sub_code), \
+                __FILE__, \
+                __LINE__)
+#  define WARNING_ATTENTION(module_id, sub_code) \
+     _Attention((module_id), \
+                WARNING_ATTENTION_CODE, \
+                (sub_code), \
+                __FILE__, \
+                __LINE__)
+#  define ERROR_ATTENTION(module_id, sub_code) \
+     _Attention((module_id), \
+                ERROR_ATTENTION_CODE, \
+                (sub_code), \
+                __FILE__, \
+                __LINE__)
+#  define FATAL_ATTENTION(module_id, sub_code) \
+     _Attention((module_id), \
+                FATAL_ATTENTION_CODE, \
+                (sub_code), \
+                __FILE__, \
+                __LINE__)
 #else /* ATTENTION_USE_FILENAME_LINE */
-#define INFORMATION_ATTENTION(module_id, sub_code) \
-	_Attention((module_id), INFORMATION_ATTENTION_CODE, (sub_code))
-#define WARNING_ATTENTION(module_id, sub_code) \
-	_Attention((module_id), WARNING_ATTENTION_CODE, (sub_code))
-#define ERROR_ATTENTION(module_id, sub_code) \
-	_Attention((module_id), ERROR_ATTENTION_CODE, (sub_code))
-#define FATAL_ATTENTION(module_id, sub_code) \
-	_Attention((module_id), FATAL_ATTENTION_CODE, (sub_code))
+#  define INFORMATION_ATTENTION(module_id, sub_code) \
+      _Attention((module_id), INFORMATION_ATTENTION_CODE, (sub_code))
+#  define WARNING_ATTENTION(module_id, sub_code) \
+      _Attention((module_id), WARNING_ATTENTION_CODE, (sub_code))
+#  define ERROR_ATTENTION(module_id, sub_code) \
+      _Attention((module_id), ERROR_ATTENTION_CODE, (sub_code))
+#  define FATAL_ATTENTION(module_id, sub_code) \
+      _Attention((module_id), FATAL_ATTENTION_CODE, (sub_code))
 #endif /* ATTENTION_USE_FILENAME_LINE */
 
-#endif /* __COMMON_ATTENTION_H_INCLUDED__ */
+/****************************************************************************
+ * Public Types
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ***************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ***************************************************************************/
+
+#endif /* __SDK_BSP_SRC_AUDIO_COMMON_ATTENTION_H */
