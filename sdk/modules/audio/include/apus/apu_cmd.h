@@ -84,32 +84,39 @@ enum apu_internal_err_src_e
 };
 typedef enum apu_internal_err_src_e ApuInternalErrorSource;
 
-/**
- * TODO(Hsingying, 2015/4/22):
- *   今まで使用した定義をそのままWien2 namespaceに持ってきただけ。
- *   直近、精査 & 定義をし直す必要がある。
- */
+/* Apu Internal Error Code. */
 
-enum apu_internal_err_code_e
-{
-  ApuSuccess         = 0x00,  /**< OK */
-  ApuStateErr        = 0x01,  /**< State violation */
-  ApuDumpInitError   = 0x10,  /**< Initialization error of dump function */
-  ApuCodecTypeError,          /**< Codec type value error */
-  ApuStaticAreaInsufficient,  /**< Library static area insufficient */
-  ApuChannelFormatError,      /**< Channel format value  error */
-  ApuSamplingRateError,       /**< Sampling rate value error */
-  ApuBitRateError,            /**< Bit rate value error */
-  ApuByteLenError,            /**< Byte length value error */
-  ApuComplexityError,         /**< Complexity value error */
-  ApuQueueFull,               /**< Queue is full */
-  ApuInitErr         = 0x20,  /**< Library initialization error */
-  ApuDecErr          = 0x30,  /**< Decoder library error */
-  ApuEncErr          = 0x40,  /**< Encoder library error */
-  ApuSRCErr          = 0x50,  /**< Sampling rate converter library error */
-  ApuMFEErr          = 0x60   /**< Mic front end library error */
-};
-typedef enum apu_internal_err_code_e ApuInternalErrorCode;
+#define APU_SUCCESS                 0x00  /**< OK */
+#define APU_STATE_ERROR             0x01  /**< State violation */
+#define APU_DUMPINIT_ERROR          0x10  /**< Initialization error of dump function */
+#define APU_CODECTYPE_ERROR         0x11  /**< Codec type value error */
+#define APU_STATICAREAINSUFFICIENT  0x12  /**< Library static area insufficient */
+#define APU_CHANNELFORMAT_ERROR     0x13  /**< Channel format value  error */
+#define APU_SAMPLINGRATE_ERROR      0x14  /**< Sampling rate value error */
+#define APU_BITRATE_ERROR           0x15  /**< Bit rate value error */
+#define APU_BYTELEN_ERROR           0x16  /**< Byte length value error */
+#define APU_COMPLEXITY_ERROR        0x17  /**< Complexity value error */
+#define APU_CONTEXTID_ERROR         0x18  /**< Parameter Context Id Error */
+#define APU_PROCESSMODE_ERROR       0x19  /**< Parameter Process Mode Error */
+#define APU_EVENTTYPE_ERROR         0x1A  /**< Parameter Event Type Error */
+#define APU_BUFFERADDR_ERROR        0x1B  /**< Parameter Buffer Address Error */
+#define APU_BUFFERSIZE_ERROR        0x1C  /**< Parameter Buffer Size Error */
+#define APU_LIBVERSION_ERROR        0x1D  /**< Library Version Error */
+#define APU_INIT_ERROR              0x20  /**< Library initialization error */
+#define APU_DECODE_ERROR            0x30  /**< Decoder library error */
+#define APU_ENCODE_ERROR            0x40  /**< Encoder library error */
+#define APU_SRC_ERROR               0x50  /**< Sampling rate converter library error */
+#define APU_MFE_ERROR               0x60  /**< Mic front end library error */
+#define APU_VAD_ERROR               0x70  /**< VAD library error */
+#define APU_WUWSR_ERROR             0x80  /**< WUWSR library error */
+#define APU_QUEUEFULL_ERROR         0x90  /**< Queue is full */
+#define APU_QUEUEEMPTY_ERROR        0x91  /**< Queue is empty */
+#define APU_QUEUEPOP_ERROR          0x92  /**< Queue pop error */
+#define APU_QUEUEPUSH_ERROR         0x93  /**< Queue push error */
+#define APU_RESORCEBUSY_ERROR       0x94  /**< Resorce busy error */
+#define APU_CPUFIFOSEND_ERROR       0x95  /**< CPU fifo send error */
+
+typedef unsigned char ApuInternalErrorCode;
 
 /* PCM format の型 */
 enum audio_pcm_format_type_e
