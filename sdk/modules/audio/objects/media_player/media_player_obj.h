@@ -157,6 +157,8 @@ private:
   typedef void (PlayerObj::*MsgProc)(MsgPacket *);
   static MsgProc MsgProcTbl[AUD_PLY_MSG_NUM][PlayerStateNum];
   static MsgProc PlayerSubStateTbl[AUD_PLY_MSG_NUM][SubStateNum];
+  static MsgProc PlayerResultTbl[AUD_PLY_RST_MSG_NUM][PlayerStateNum];
+  static MsgProc PlayerResultSubTbl[AUD_PLY_RST_MSG_NUM][SubStateNum];
 
   void illegalEvt(MsgPacket *);
 

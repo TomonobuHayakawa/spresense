@@ -295,32 +295,6 @@ PlayerObj::MsgProc PlayerObj::MsgProcTbl[AUD_PLY_MSG_NUM][PlayerStateNum] =
     &PlayerObj::illegalEvt           /*   WaitStopState.      */
   },
 
-  /* Message type: MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE. */
-
-  {                                  /* Player status:        */
-    &PlayerObj::sinkDoneOnBoot,      /*   BootedState.        */
-    &PlayerObj::sinkDoneOnReady,     /*   ReadyState.         */
-    &PlayerObj::parseSubState,       /*   PrePlayParentState. */
-    &PlayerObj::sinkDoneOnPlay,      /*   PlayState.          */
-    &PlayerObj::sinkDoneOnStopping,  /*   StoppingState.      */
-    &PlayerObj::sinkDoneOnWaitEsEnd, /*   WaitEsEndState.     */
-    &PlayerObj::sinkDoneOnUnderflow, /*   UnderflowState.     */
-    &PlayerObj::illegalSinkDone      /*   WaitStopState.      */
-  },
-
-  /* Message type: MSG_AUD_PLY_CMD_DEC_DONE. */
-
-  {                                  /* Player status:        */
-    &PlayerObj::illegalDecDone,      /*   BootedState.        */
-    &PlayerObj::illegalDecDone,      /*   ReadyState.         */
-    &PlayerObj::parseSubState,       /*   PrePlayParentState. */
-    &PlayerObj::decDoneOnPlay,       /*   PlayState.          */
-    &PlayerObj::decDoneOnWaitStop,   /*   StoppingState.      */
-    &PlayerObj::decDoneOnWaitEsEnd,  /*   WaitEsEndState.     */
-    &PlayerObj::decDoneOnWaitStop,   /*   UnderflowState.     */
-    &PlayerObj::illegalDecDone       /*   WaitStopState.      */
-  },
-
   /* Message type: MSG_AUD_PLY_CMD_CLKRECOVERY. */
 
   {                                  /* Player status:        */
@@ -383,6 +357,51 @@ PlayerObj::MsgProc PlayerObj::PlayerSubStateTbl[AUD_PLY_MSG_NUM][SubStateNum] =
     &PlayerObj::illegalEvt,                /*   SubStatePrePlayUnderflow. */
   },
 
+
+  /* Message type: MSG_AUD_PLY_CMD_CLKRECOVERY. */
+
+  {                                        /* Player sub status:          */
+    &PlayerObj::setClkRecovery,            /*   SubStatePrePlay.          */
+    &PlayerObj::setClkRecovery,            /*   SubStatePrePlayStopping.  */
+    &PlayerObj::setClkRecovery,            /*   SubStatePrePlayWaitEsEnd. */
+    &PlayerObj::setClkRecovery,            /*   SubStatePrePlayUnderflow. */
+  }
+};
+
+/*--------------------------------------------------------------------------*/
+PlayerObj::MsgProc PlayerObj::PlayerResultTbl[AUD_PLY_RST_MSG_NUM][PlayerStateNum] =
+{
+  /* Message type: MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE. */
+
+  {
+    &PlayerObj::sinkDoneOnBoot,      /*   BootedState.        */
+    &PlayerObj::sinkDoneOnReady,     /*   ReadyState.         */
+    &PlayerObj::parseSubState,       /*   PrePlayParentState. */
+    &PlayerObj::sinkDoneOnPlay,      /*   PlayState.          */
+    &PlayerObj::sinkDoneOnStopping,  /*   StoppingState.      */
+    &PlayerObj::sinkDoneOnWaitEsEnd, /*   WaitEsEndState.     */
+    &PlayerObj::sinkDoneOnUnderflow, /*   UnderflowState.     */
+    &PlayerObj::illegalSinkDone      /*   WaitStopState.      */
+ 
+  },
+
+  /* Message type: MSG_AUD_PLY_CMD_DEC_DONE. */
+
+  {
+    &PlayerObj::illegalDecDone,      /*   BootedState.        */
+    &PlayerObj::illegalDecDone,      /*   ReadyState.         */
+    &PlayerObj::parseSubState,       /*   PrePlayParentState. */
+    &PlayerObj::decDoneOnPlay,       /*   PlayState.          */
+    &PlayerObj::decDoneOnWaitStop,   /*   StoppingState.      */
+    &PlayerObj::decDoneOnWaitEsEnd,  /*   WaitEsEndState.     */
+    &PlayerObj::decDoneOnWaitStop,   /*   UnderflowState.     */
+    &PlayerObj::illegalDecDone       /*   WaitStopState.      */
+  }
+};
+
+/*--------------------------------------------------------------------------*/
+PlayerObj::MsgProc PlayerObj::PlayerResultSubTbl[AUD_PLY_RST_MSG_NUM][SubStateNum] =
+{
   /* Message type: MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE. */
 
   {                                        /* Player sub status:          */
@@ -399,15 +418,6 @@ PlayerObj::MsgProc PlayerObj::PlayerSubStateTbl[AUD_PLY_MSG_NUM][SubStateNum] =
     &PlayerObj::decDoneOnPrePlayStopping,  /*   SubStatePrePlayStopping.  */
     &PlayerObj::decDoneOnPrePlayWaitEsEnd, /*   SubStatePrePlayWaitEsEnd. */
     &PlayerObj::decDoneOnPrePlayUnderflow, /*   SubStatePrePlayUnderflow. */
-  },
-
-  /* Message type: MSG_AUD_PLY_CMD_CLKRECOVERY. */
-
-  {                                        /* Player sub status:          */
-    &PlayerObj::setClkRecovery,            /*   SubStatePrePlay.          */
-    &PlayerObj::setClkRecovery,            /*   SubStatePrePlayStopping.  */
-    &PlayerObj::setClkRecovery,            /*   SubStatePrePlayWaitEsEnd. */
-    &PlayerObj::setClkRecovery,            /*   SubStatePrePlayUnderflow. */
   }
 };
 
@@ -415,9 +425,17 @@ PlayerObj::MsgProc PlayerObj::PlayerSubStateTbl[AUD_PLY_MSG_NUM][SubStateNum] =
 void PlayerObj::parse(MsgPacket *msg)
 {
   uint event = MSG_GET_SUBTYPE(msg->getType());
-  F_ASSERT(event < AUD_PLY_MSG_NUM);
 
-  (this->*MsgProcTbl[event][m_state.get()])(msg);
+  if (MSG_IS_REQUEST(msg->getType()) != 0)
+    {
+      F_ASSERT(event < AUD_PLY_MSG_NUM);
+      (this->*MsgProcTbl[event][m_state.get()])(msg);
+    }
+  else
+    {
+      F_ASSERT(event < AUD_PLY_RST_MSG_NUM);
+      (this->*PlayerResultTbl[event][m_state.get()])(msg);
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1202,7 +1220,7 @@ void PlayerObj::setClkRecovery(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void PlayerObj::parseSubState(MsgPacket *msg)
 {
-  uint event  = MSG_GET_SUBTYPE(msg->getType());
+  uint32_t event = MSG_GET_SUBTYPE(msg->getType());
 
   if (PlayerObj::InvalidSubState == m_sub_state.get())
     {
@@ -1210,7 +1228,14 @@ void PlayerObj::parseSubState(MsgPacket *msg)
       return;
     }
 
-  (this->*PlayerSubStateTbl[event][m_sub_state.get()])(msg);
+  if (MSG_IS_REQUEST(msg->getType()) != 0)
+    {
+      (this->*PlayerSubStateTbl[event][m_sub_state.get()])(msg);
+    }
+  else
+    {
+      (this->*PlayerResultSubTbl[event][m_sub_state.get()])(msg);
+    }
 }
 
 /*--------------------------------------------------------------------------*/
