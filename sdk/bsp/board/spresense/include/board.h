@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/sparduino/include/board.h
+ * configs/spresense/include/board.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *   Author: Kazuya Hioki <Kazuya.Hioki@sony.com>
@@ -33,8 +33,8 @@
  *
  ****************************************************************************/
 
-#ifndef _CONFIGS_SPARDUINO_INCLUDE_BOARD_H
-#define _CONFIGS_SPARDUINO_INCLUDE_BOARD_H
+#ifndef _CONFIGS_SPRESENSE_INCLUDE_BOARD_H
+#define _CONFIGS_SPRESENSE_INCLUDE_BOARD_H
 
 /****************************************************************************
  * Included Files
@@ -167,7 +167,7 @@
 /* Power Control definitions ***********************************************/
 
 /*
- *   For SPARDUINO board:
+ *   For SPRESENSE board:
  *
  *     Switch    Device
  *     --------- -------------------------------
@@ -499,4 +499,4 @@ void board_isx012_release_sleep(void);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif  /* _CONFIGS_SPARDUINO_INCLUDE_BOARD_H */
+#endif  /* _CONFIGS_SPRESENSE_INCLUDE_BOARD_H */

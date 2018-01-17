@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/sparduino/src/cxd56_power.c
+ * config/spresense/src/cxd56_power.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *   Author: Kazuya Hioki <Kazuya.Hioki@sony.com>

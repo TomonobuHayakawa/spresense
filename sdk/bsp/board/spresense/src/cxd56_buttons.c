@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/sparduino/src/cxd56_buttons.c
+ * configs/spresense/src/cxd56_buttons.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *   Author: Hitoshi Fukuda <Hitoshi.Fukuda@sony.com>
@@ -49,7 +49,7 @@
 
 #include <arch/board/board.h>
 
-#include "sparduino.h"
+#include "spresense.h"
 #include "cxd56_gpio.h"
 #include "cxd56_gpioint.h"
 
@@ -63,7 +63,7 @@
  * Private Data
  ****************************************************************************/
 /* Pin configuration for each CXD56XX button.  This array is indexed
- * by the GPIO_* definitions in sparduino.h
+ * by the GPIO_* definitions in spresense.h
  */
 
 static const uint16_t g_buttoncfg[BOARD_NUM_BUTTONS] =

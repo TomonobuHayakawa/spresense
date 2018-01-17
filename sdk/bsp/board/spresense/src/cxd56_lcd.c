@@ -56,7 +56,7 @@
 #include <nuttx/lcd/et014tt1.h>
 #endif
 
-#include "sparduino.h"
+#include "spresense.h"
 #include "cxd56_spi.h"
 
 /* Debug ********************************************************************/

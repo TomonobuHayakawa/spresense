@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/sparduino/include/crashdump.h
+ * configs/spresense/include/crashdump.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *   Author: Kazuya Hioki <Kazuya.Hioki@sony.com>
@@ -33,8 +33,8 @@
  *
  ****************************************************************************/
 
-#ifndef _CONFIGS_SPARDUINO_INCLUDE_CRASHDUMP_H
-#define _CONFIGS_SPARDUINO_INCLUDE_CRASHDUMP_H
+#ifndef _CONFIGS_SPRESENSE_INCLUDE_CRASHDUMP_H
+#define _CONFIGS_SPRESENSE_INCLUDE_CRASHDUMP_H
 
 /****************************************************************************
  * Included Files
@@ -162,4 +162,4 @@ extern "C"
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif  /* _CONFIGS_SPARDUINO_INCLUDE_CRASHDUMP_H */
+#endif  /* _CONFIGS_SPRESENSE_INCLUDE_CRASHDUMP_H */

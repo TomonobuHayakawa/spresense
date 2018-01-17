@@ -9,14 +9,14 @@ choice
 	prompt "Board Selection"
 	default BOARD_CORVO
 
+	config BOARD_SPRESENSE
+		bool "SPRESENSE"
+
 	config BOARD_CORVO
 		bool "Corvo"
 
 	config BOARD_COLLET
 		bool "Collet"
-
-	config BOARD_SPARDUINO
-		bool "Sparduino"
 
 endchoice
 
@@ -24,11 +24,11 @@ config BOARD_NAME
 	string
 	default "corvo" if BOARD_CORVO
 	default "collet" if BOARD_COLLET
-	default "sparduino" if BOARD_SPARDUINO
+	default "spresense" if BOARD_SPRESENSE
 
 source "$SDKDIR/bsp/board/corvo/Kconfig"
 source "$SDKDIR/bsp/board/collet/Kconfig"
-source "$SDKDIR/bsp/board/sparduino/Kconfig"
+source "$SDKDIR/bsp/board/spresense/Kconfig"
 
 endmenu
 

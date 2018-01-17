@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/sparduino/src/cxd56_userleds.c
+ * configs/spresense/src/cxd56_autoleds.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *   Author: Hitoshi Fukuda <Hitoshi.Fukuda@sony.com>
@@ -43,16 +43,13 @@
 #include <stdbool.h>
 #include <debug.h>
 
+#include <nuttx/board.h>
 #include <arch/board/board.h>
 
-#ifdef CONFIG_USERLED_LOWER
-#include <nuttx/leds/userled.h>
-#endif
-
-#include "sparduino.h"
+#include "spresense.h"
 #include "cxd56_gpio.h"
 
-#ifndef CONFIG_ARCH_LEDS
+#ifdef CONFIG_ARCH_LEDS
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -71,44 +68,63 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_userled_initialize
+ * Name: board_autoled_initialize
  ****************************************************************************/
 
-void board_userled_initialize(void)
+void board_autoled_initialize(void)
 {
   cxd56_gpio_config(GPIO_LED1, false);
   cxd56_gpio_config(GPIO_LED2, false);
 }
 
 /****************************************************************************
- * Name: board_userled
+ * Name: board_autoled_on
  ****************************************************************************/
 
-void board_userled(int led, bool ledon)
+void board_autoled_on(int led)
 {
-  uint32_t pin = (led == BOARD_LED1 ? GPIO_LED1 : GPIO_LED2);
-  cxd56_gpio_write(pin, ledon);
+  switch (led)
+    {
+      default:
+      case 0:
+        /* LED1 OFF , LED2 OFF */
+
+        cxd56_gpio_write(GPIO_LED1, false);
+        cxd56_gpio_write(GPIO_LED2, false);
+        break;
+
+      case 1:
+        /* LED1 ON , LED2 OFF*/
+
+        cxd56_gpio_write(GPIO_LED1, true);
+        cxd56_gpio_write(GPIO_LED2, false);
+        break;
+
+      case 2:
+        /* LED2 ON */
+        cxd56_gpio_write(GPIO_LED2, true);
+        break;
+    }
 }
 
 /****************************************************************************
- * Name: board_userled_all
+ * Name: board_autoled_off
  ****************************************************************************/
 
-void board_userled_all(uint8_t ledset)
+void board_autoled_off(int led)
 {
-  cxd56_gpio_write(GPIO_LED1, (bool)(ledset & BOARD_LED1_BIT));
-  cxd56_gpio_write(GPIO_LED2, (bool)(ledset & BOARD_LED2_BIT));
+  switch (led)
+    {
+      default:
+      case 0:
+      case 1:
+        break;
+
+      case 2:
+        /* LED2 OFF */
+        cxd56_gpio_write(GPIO_LED2, false);
+        break;
+    }
 }
 
-#ifdef CONFIG_USERLED_LOWER
-/****************************************************************************
- * Name: cxd56_userled_initialize
- ****************************************************************************/
-
-int cxd56_userled_initialize(FAR const char *devname)
-{
-  return userled_lower_initialize(devname);
-}
-#endif
-
-#endif /* !CONFIG_ARCH_LEDS */
+#endif /* CONFIG_ARCH_LEDS */

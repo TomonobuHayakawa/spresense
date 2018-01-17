@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/sparduino/src/cxd56_appinit.c
+ * config/spresense/src/cxd56_appinit.c
  *
  *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
  *   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
@@ -50,7 +50,7 @@
 #include <arch/board/board.h>
 
 #include "chip.h"
-#include "sparduino.h"
+#include "spresense.h"
 #include "cxd56_i2c.h"
 #include "cxd56_sysctl.h"
 #include "cxd56_powermgr.h"
@@ -478,7 +478,7 @@ int board_ioctl(unsigned int cmd, uintptr_t arg)
  * as weak symbol to avoid link error.
  */
 
-int weak_function sparduino_main(int argc, char *argv[])
+int weak_function spresense_main(int argc, char *argv[])
 {
   return 0;
 }

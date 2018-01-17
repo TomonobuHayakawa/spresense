@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/sparduino/src/sparduino.h
+ * config/spresense/src/cxd56_sdcard.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *   Author: Kazuya Hioki <Kazuya.Hioki@sony.com>
@@ -33,94 +33,141 @@
  *
  ****************************************************************************/
 
-#ifndef __CONFIGS_SPARDUINO_SRC_SPARDUINO_H
-#define __CONFIGS_SPARDUINO_SRC_SPARDUINO_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/compiler.h>
-#include <stdint.h>
 
+#include <sys/types.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <assert.h>
+#include <debug.h>
+
+#include <nuttx/arch.h>
+
+#include "chip.h"
+#include "up_arch.h"
+
+#include <arch/board/board.h>
+#include "cxd56_gpio.h"
 #include "cxd56_pinconfig.h"
 
-struct i2c_master_s;
-struct spi_dev_s;
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
 
-/* LED definitions *********************************************************/
+/* IP4855CX25: SD memory card integrated dual voltage level translator */
 
-#define GPIO_LED1           (PIN_PWM0)
-#define GPIO_LED2           (PIN_PWM1)
-
-/* Buttons definitions *****************************************************/
-
-#define GPIO_BUT1           (PIN_SPI2_MOSI)
-#define GPIO_BUT2           (PIN_SPI2_MISO)
+#define SDCARD_VOLTAGE_LEVEL_TRANS_SEL PIN_GNSS_1PPS_OUT
+#define SDCARD_VOLTAGE_LEVEL_TRANS_EN  PIN_HIF_IRQ_OUT
 
 /****************************************************************************
- * Name: cxd56_gnssinitialize
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: board_sdcard_initialize
  *
  * Description:
- *   Called to configure an CXD56xx internal GNSS for sparduino board
+ *   Initialize SD Card on the board.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_CXD56_GNSS
-int cxd56_gnssinitialize(FAR const char *devpath);
-#endif
+void board_sdcard_initialize(void)
+{
+  /* Initialize pin configuration (input and output disabled yet) */
+
+  cxd56_gpio_config(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
+  cxd56_gpio_config(SDCARD_VOLTAGE_LEVEL_TRANS_EN, false);
+}
 
 /****************************************************************************
- * Name: cxd56_userled_initialize
+ * Name: board_sdcard_finalize
  *
  * Description:
- *   Called to configure an leds for sparduino board
+ *   Finalize SD Card on the board.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_USERLED_LOWER
-int cxd56_userled_initialize(FAR const char *devname);
-#endif
+void board_sdcard_finalize(void)
+{
+  /* Disable level translater */
+
+  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_EN, false);
+
+  /* Return back to pin configuration */
+
+  cxd56_gpio_config(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
+  cxd56_gpio_config(SDCARD_VOLTAGE_LEVEL_TRANS_EN, false);
+}
 
 /****************************************************************************
- * Name: cxd56_geofenceinitialize
+ * Name: board_sdcard_enable
  *
  * Description:
- *   Called to configure an CXD56xx internal GNSS for sparduino board
+ *   Enable SD Card on the board.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_CXD56_GEOFENCE
-int cxd56_geofenceinitialize(FAR const char *devpath);
-#endif
+void board_sdcard_enable(void)
+{
+  /* Enable level translater with 3.3V */
+
+  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
+  up_mdelay(100);
+  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_EN, true);
+  up_mdelay(100);
+}
 
 /****************************************************************************
- * Name: cxd56_lpm013m091a_initialize
+ * Name: board_sdcard_disable
  *
  * Description:
- *   Called to configure an LPM013M091A LCD driver for corvo board
+ *   Disable SD Card on the board.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_LCD_LPM013M091A
-#  ifdef CONFIG_NX_LCDDRIVER
-FAR struct lcd_dev_s *cxd56_lpm013m091a_initialize(FAR struct spi_dev_s *spi);
-#  else
-FAR struct fb_vtable_s *cxd56_lpm013m091a_fb_initialize(FAR const char *devpath, FAR struct spi_dev_s *spi);
-#  endif
-#endif
+void board_sdcard_disable(void)
+{
+  /* Disable level translater with 3.3V */
+
+  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
+  up_mdelay(100);
+  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_EN, false);
+  up_mdelay(100);
+}
 
 /****************************************************************************
- * Name: cxd56_isx012initialize
+ * Name: board_sdcard_set_high_voltage
  *
  * Description:
- *   Called to configure an I2C and to register ISX012 for the corvo board.
+ *   Set SD Card IO voltage to 3.3V
  *
  ****************************************************************************/
 
-#ifdef CONFIG_IMAGER_ISX012
-int cxd56_isx012initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c);
-#endif
+void board_sdcard_set_high_voltage(void)
+{
+  /* Switch 3.3V */
 
-#endif /* __CONFIGS_SPARDUINO_SRC_SPARDUINO_H */
+  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
+  up_mdelay(100);
+}
+
+/****************************************************************************
+ * Name: board_sdcard_set_low_voltage
+ *
+ * Description:
+ *   Set SD Card IO voltage to 1.8V
+ *
+ ****************************************************************************/
+
+void board_sdcard_set_low_voltage(void)
+{
+  /* Switch 1.8V */
+
+  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, true);
+  up_mdelay(100);
+}
