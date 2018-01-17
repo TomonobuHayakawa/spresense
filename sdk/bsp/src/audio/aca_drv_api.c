@@ -188,14 +188,6 @@ E_AS asAca_CheckID(void)
         return E_AS_ACAPULCO_ID_NG;
     }
 
-  /* Mute control for Merlot. */
-
-  if ((0x4D435201 == getreg32(CXD56_TOPREG_UDID0)) &&
-      (0x00000053 == getreg32(CXD56_TOPREG_UDID1)))
-    {
-      write_aca_reg(AU_GPO, 1); /* GPO_A */
-    }
-
   return E_AS_OK;
 }
 
