@@ -1230,6 +1230,7 @@ static void done_xfer(FAR struct alt1160_dev_s *priv, uint32_t xfer_mode,
         else
           {
             put_rxbufffifo(priv, spidev->rx_param.rxbuff);
+            spidev->rx_param.rxbuff = NULL;
           }
         break;
 
@@ -1250,6 +1251,7 @@ static void done_xfer(FAR struct alt1160_dev_s *priv, uint32_t xfer_mode,
         else
           {
             put_rxbufffifo(priv, spidev->rx_param.rxbuff);
+            spidev->rx_param.rxbuff = NULL;
           }
         break;
 
