@@ -167,14 +167,10 @@ int cxd56_alt1160initialize(FAR const char *devpath, FAR struct spi_dev_s* spi)
 
   spi_pincontrol(false);
 
-#ifndef CONFIG_BOARD_COLLET
-
   /* alt1160 shutdown (high) */
 
   cxd56_gpio_config(ALT1160_SHUTDOWN, false);
   cxd56_gpio_write(ALT1160_SHUTDOWN, true);
-
-#endif
 
   return ret;
 }
@@ -251,12 +247,6 @@ void board_alt1160_power_control(bool en)
       cxd56_gpio_write(ALT1160_SHUTDOWN, true);
 
       board_power_control(POWER_LTE, false);
-
-#ifdef CONFIG_BOARD_COLLET
-
-      cxd56_gpio_config(ALT1160_SHUTDOWN, false);
-
-#endif
     }
 }
 
