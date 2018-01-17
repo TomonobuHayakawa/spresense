@@ -38,6 +38,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -167,7 +168,7 @@ int cxd56_alt1160initialize(FAR const char *devpath, FAR struct spi_dev_s* spi)
 
   spi_pincontrol(false);
 
-#ifndef CONFIG_ARCH_BOARD_COLLET
+#ifndef CONFIG_BOARD_COLLET
 
   /* alt1160 shutdown (high) */
 
@@ -252,7 +253,7 @@ void board_alt1160_power_control(bool en)
 
       board_power_control(POWER_LTE, false);
 
-#ifdef CONFIG_ARCH_BOARD_COLLET
+#ifdef CONFIG_BOARD_COLLET
 
       cxd56_gpio_config(ALT1160_SHUTDOWN, false);
 

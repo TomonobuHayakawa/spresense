@@ -43,6 +43,7 @@
 #include <sdk/config.h>
 #include <nuttx/fs/ioctl.h>
 #include <queue.h>
+#include <debug.h>
 
 #if defined(CONFIG_MODEM_ALT_1160)
 
@@ -53,7 +54,7 @@
 /* Debug ********************************************************************/
 /* Non-standard debug that may be enabled just for testing the modem driver */
 
-#ifdef CONFIG_MODEM_U_BLOX_DEBUG
+#ifdef CONFIG_MODEM_ALT_1160_DEBUG
 #  define m_err     _err
 #  define m_info    _info
 #else

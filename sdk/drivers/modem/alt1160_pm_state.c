@@ -132,7 +132,7 @@ uint32_t alt1160_pm_getinternalstate(void)
 void alt1160_pm_setinternalstate(uint32_t state)
 {
   irqstate_t flags;
-#ifdef LTD_PM_PRINT_STATE_TRANSITION
+#ifdef CONFIG_MODEM_PM_PUTSTATE
   uint32_t   prev_state;
 #endif
 
