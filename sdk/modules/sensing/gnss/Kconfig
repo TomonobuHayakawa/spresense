@@ -1,6 +1,6 @@
 config CXD56_GNSS
 	bool "GNSS device"
-	default y
+	default n
 
 if CXD56_GNSS
 
