@@ -41,8 +41,6 @@
 
 #include "common/Mp3Parser.h"
 
-static uint8_t  poll_buff[MP3PARSER_LOCAL_POLL_BUFFERSIZE];
-
 /*--------------------------------------------------------------------------*/
 static inline
   Mp3ParserReturnValueOfFile peekbuffer_mp3parser(MP3PARSER_Handle *ptr_hndl,
@@ -118,8 +116,7 @@ static inline
 
 /*--------------------------------------------------------------------------*/
 static inline
-  Mp3ParserReturnValueOfFile skipbuffer_mp3parser(MP3PARSER_Handle *ptr_hndl,
-                                                  uint8_t *ptr_read_buff)
+  Mp3ParserReturnValueOfFile skipbuffer_mp3parser(MP3PARSER_Handle *ptr_hndl)
 {
   size_t size = 0;
   size_t occupied_size =
@@ -128,42 +125,12 @@ static inline
     {
       ptr_hndl->current_offset = occupied_size;
     }
-  if (ptr_hndl->current_offset <= MP3PARSER_LOCAL_POLL_BUFFERSIZE)
-    {
       size = CMN_SimpleFifoPoll(ptr_hndl->src.simple_fifo_handler,
-                                ptr_read_buff,
+                                NULL,
                                 ptr_hndl->current_offset);
-      if (!size)
-        {
-          return Mp3ParserReturnFileAccesError;
-        }
-    }
-  else
+  if (!size)
     {
-      uint32_t i = 0;
-      for (i = 0;
-            i < (ptr_hndl->current_offset - MP3PARSER_LOCAL_POLL_BUFFERSIZE);
-              i += MP3PARSER_LOCAL_POLL_BUFFERSIZE)
-        {
-          size = CMN_SimpleFifoPoll(ptr_hndl->src.simple_fifo_handler,
-                                    ptr_read_buff,
-                                    MP3PARSER_LOCAL_POLL_BUFFERSIZE);
-          if (!size)
-            {
-              return Mp3ParserReturnFileAccesError;
-            }
-        }
-      uint32_t remainder = ptr_hndl->current_offset - i;
-      if (remainder)
-        {
-          size = CMN_SimpleFifoPoll(ptr_hndl->src.simple_fifo_handler,
-                                    ptr_read_buff,
-                                    remainder);
-          if (!size)
-            {
-              return Mp3ParserReturnFileAccesError;
-            }
-        }
+      return Mp3ParserReturnFileAccesError;
     }
 
   return Mp3ParserReturnFileFavorable;
@@ -399,7 +366,7 @@ static Mp3ParserReturnValueOfSyncSearch
       if (ptr_info->sync_offset_1 != 0)
         {
           ptr_hndl->current_offset = ptr_info->sync_offset_1;
-          pollbuffer_mp3parser(ptr_hndl, &poll_buff[0]);
+          skipbuffer_mp3parser(ptr_hndl);
         }
       offset_syncword = Mp3ParserReturnFound1stOnly;
       return offset_syncword;
@@ -515,7 +482,7 @@ Mp3ParserReturnValueOfFile
   mp3parser_check_id3v2tag(ptr_hndl, ptr_info, &local_buff[0]);
   if (ptr_hndl->current_offset)
     {
-      status = skipbuffer_mp3parser(ptr_hndl, &poll_buff[0]);
+      status = skipbuffer_mp3parser(ptr_hndl);
       if (status != Mp3ParserReturnFileFavorable)
         {
           return status;
@@ -551,7 +518,7 @@ Mp3ParserReturnValueOfFile
   mp3parser_check_id3v1tag(ptr_hndl, ptr_info, &local_buff[0]);
   if (ptr_hndl->current_offset)
     {
-      status = skipbuffer_mp3parser(ptr_hndl, &poll_buff[0]);
+      status = skipbuffer_mp3parser(ptr_hndl);
       if (status != Mp3ParserReturnFileFavorable)
         {
           return status;
