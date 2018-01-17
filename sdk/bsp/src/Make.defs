@@ -81,10 +81,6 @@ CHIP_CSRCS += cxd56_gnss.c
 CHIP_CSRCS += cxd56_cpu1signal.c
 endif
 
-ifeq ($(CONFIG_CXD56_DMAC),y)
-CHIP_CSRCS += cxd56_dmac.c
-endif
-
 ifeq ($(CONFIG_CXD56_SCU),y)
 CHIP_CSRCS += cxd56_scu.c cxd56_scufifo.c
 ifeq ($(CONFIG_CXD56_ADC),y)
@@ -108,10 +104,6 @@ endif
 
 ifeq ($(CONFIG_PWM),y)
 CHIP_CSRCS += cxd56_pwm.c
-endif
-
-ifeq ($(CONFIG_ARCH_DMA),y)
-CHIP_CSRCS += cxd56_dmacinit.c
 endif
 
 ifeq ($(CONFIG_CXD56_AUDIO),y)
