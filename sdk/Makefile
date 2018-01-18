@@ -51,6 +51,11 @@ DIRLINK = $(TOPDIR)/tools/link.sh
 DIRUNLINK = $(TOPDIR)/tools/unlink.sh
 endif
 
+# Export tool definitions
+
+MKEXPORT = tools/mkexport.sh
+MKEXPORT_ARGS = -w$(WINTOOL) -t "$(TOPDIR)" -s "$(SDKDIR)"
+
 PHONY :=
 
 LDSTARTGROUP ?= --start-group
@@ -135,6 +140,9 @@ $(BIN): depend sdklibs
 sdklibs: $(EXPORTLIBS) $(SDKLIBS) $(EXTLIBS)
 
 $(EXPORTLIBS): installkernel
+
+export: $(BIN)
+	$(Q) MAKE=$(MAKE) $(MKEXPORT) $(MKEXPORT_ARGS) -l "$(EXPORTLIBS) $(SDKLIBS) $(EXTLIBS)"
 
 bsp/include/arch/board: .config
 	@echo "LN: bsp/include/arch/board to $(BOARD_DIR)/include"
