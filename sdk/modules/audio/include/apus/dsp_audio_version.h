@@ -50,20 +50,20 @@
 
 /* Decoder Version. */
 
-#define DSP_AACDEC_VERSION    0x010202    /* 01.02.02 */
-#define DSP_MP3DEC_VERSION    0x010202    /* 01.02.02 */
-#define DSP_OPUSDEC_VERSION   0x010202    /* 01.02.02 */
-#define DSP_WAVDEC_VERSION    0x010202    /* 01.02.02 */
+#define DSP_AACDEC_VERSION    0x010203    /* 01.02.03 */
+#define DSP_MP3DEC_VERSION    0x010203    /* 01.02.03 */
+#define DSP_OPUSDEC_VERSION   0x010203    /* 01.02.03 */
+#define DSP_WAVDEC_VERSION    0x010203    /* 01.02.03 */
 
 /* Encoder Version. */
 
-#define DSP_MP3ENC_VERSION    0x010202    /* 01.02.02 */
-#define DSP_OPUSENC_VERSION   0x010303    /* 01.03.03 */
+#define DSP_MP3ENC_VERSION    0x010203    /* 01.02.03 */
+#define DSP_OPUSENC_VERSION   0x010304    /* 01.03.04 */
 
 /* Filter Version. */
 
 #define DSP_MFESRC_VERSION    0x010202    /* 01.02.02 */
-#define DSP_SRC_VERSION       0x010202    /* 01.02.02 */
+#define DSP_SRC_VERSION       0x010203    /* 01.02.03 */
 #define DSP_MPPEAX_VERSION    0x010202    /* 01.02.02 */
 
 /* Recognizer Version. */
