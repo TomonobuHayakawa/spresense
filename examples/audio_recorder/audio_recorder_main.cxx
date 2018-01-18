@@ -410,7 +410,6 @@ static bool app_act_audio_sub_system(void)
 
   AsActRecorderParam_t recorder_act_param;
   recorder_act_param.msgq_id.recorder      = MSGQ_AUD_RECORDER;
-  recorder_act_param.msgq_id.recorder_sink = MSGQ_AUD_MEDIA_REC_SINK;
   recorder_act_param.msgq_id.mng           = MSGQ_AUD_MGR;
   recorder_act_param.msgq_id.dsp           = MSGQ_AUD_DSP;
   recorder_act_param.pool_id.input         = MIC_IN_BUF_POOL;
@@ -421,19 +420,6 @@ static bool app_act_audio_sub_system(void)
   if (!result)
     {
       printf("Error: AS_ActivateVoiceRecorder() failure. system memory insufficient!\n");
-      return false;
-    }
-
-  /* Activate recorder sink feature. */
-
-  AsActRecorderSinkParam_t recorder_sink_act_param;
-  recorder_sink_act_param.msgq_id.recorder      = MSGQ_AUD_RECORDER;
-  recorder_sink_act_param.msgq_id.recorder_sink = MSGQ_AUD_MEDIA_REC_SINK;
-
-  result = AS_ActivateVoiceRecorderSink(&recorder_sink_act_param);
-  if (!result)
-    {
-      printf("Error: AS_ActivateVoiceRecorderSink() failed. system memory insufficient!\n");
       return false;
     }
 
@@ -459,7 +445,6 @@ static void app_deact_audio_sub_system(void)
 {
   AS_DeactivateAudioSubSystem();
   AS_DeactivateVoiceRecorder();
-  AS_DeactivateVoiceRecorderSink();
   AS_DeactivateCapture();
 }
 

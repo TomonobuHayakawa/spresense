@@ -10,9 +10,9 @@
 #ifndef MSGQ_ID_H_INCLUDED
 #define MSGQ_ID_H_INCLUDED
 
-/* Message area size: 2352 bytes */
+/* Message area size: 1672 bytes */
 #define MSGQ_TOP_DRM	0xfc000
-#define MSGQ_END_DRM	0xfc930
+#define MSGQ_END_DRM	0xfc688
 
 /* Message area fill value after message poped */
 #define MSG_FILL_VALUE_AFTER_POP	0x0
@@ -26,16 +26,15 @@
 #define MSGQ_AUD_APP	2
 #define MSGQ_AUD_DSP	3
 #define MSGQ_AUD_RECORDER	4
-#define MSGQ_AUD_MEDIA_REC_SINK	5
-#define MSGQ_AUD_CAP	6
-#define MSGQ_AUD_CAP_SYNC	7
-#define NUM_MSGQ_POOLS	8
+#define MSGQ_AUD_CAP	5
+#define MSGQ_AUD_CAP_SYNC	6
+#define NUM_MSGQ_POOLS	7
 
 /* User defined constants */
 
 /************************************************************************/
 #define MSGQ_AUD_MGR_QUE_BLOCK_DRM	0xfc044
-#define MSGQ_AUD_MGR_N_QUE_DRM	0xfc220
+#define MSGQ_AUD_MGR_N_QUE_DRM	0xfc1dc
 #define MSGQ_AUD_MGR_N_SIZE	88
 #define MSGQ_AUD_MGR_N_NUM	3
 #define MSGQ_AUD_MGR_H_QUE_DRM	0xffffffff
@@ -43,7 +42,7 @@
 #define MSGQ_AUD_MGR_H_NUM	0
 /************************************************************************/
 #define MSGQ_AUD_APP_QUE_BLOCK_DRM	0xfc088
-#define MSGQ_AUD_APP_N_QUE_DRM	0xfc328
+#define MSGQ_AUD_APP_N_QUE_DRM	0xfc2e4
 #define MSGQ_AUD_APP_N_SIZE	40
 #define MSGQ_AUD_APP_N_NUM	2
 #define MSGQ_AUD_APP_H_QUE_DRM	0xffffffff
@@ -51,7 +50,7 @@
 #define MSGQ_AUD_APP_H_NUM	0
 /************************************************************************/
 #define MSGQ_AUD_DSP_QUE_BLOCK_DRM	0xfc0cc
-#define MSGQ_AUD_DSP_N_QUE_DRM	0xfc378
+#define MSGQ_AUD_DSP_N_QUE_DRM	0xfc334
 #define MSGQ_AUD_DSP_N_SIZE	20
 #define MSGQ_AUD_DSP_N_NUM	5
 #define MSGQ_AUD_DSP_H_QUE_DRM	0xffffffff
@@ -59,31 +58,23 @@
 #define MSGQ_AUD_DSP_H_NUM	0
 /************************************************************************/
 #define MSGQ_AUD_RECORDER_QUE_BLOCK_DRM	0xfc110
-#define MSGQ_AUD_RECORDER_N_QUE_DRM	0xfc3dc
+#define MSGQ_AUD_RECORDER_N_QUE_DRM	0xfc398
 #define MSGQ_AUD_RECORDER_N_SIZE	48
 #define MSGQ_AUD_RECORDER_N_NUM	5
 #define MSGQ_AUD_RECORDER_H_QUE_DRM	0xffffffff
 #define MSGQ_AUD_RECORDER_H_SIZE	0
 #define MSGQ_AUD_RECORDER_H_NUM	0
 /************************************************************************/
-#define MSGQ_AUD_MEDIA_REC_SINK_QUE_BLOCK_DRM	0xfc154
-#define MSGQ_AUD_MEDIA_REC_SINK_N_QUE_DRM	0xfc4cc
-#define MSGQ_AUD_MEDIA_REC_SINK_N_SIZE	36
-#define MSGQ_AUD_MEDIA_REC_SINK_N_NUM	17
-#define MSGQ_AUD_MEDIA_REC_SINK_H_QUE_DRM	0xffffffff
-#define MSGQ_AUD_MEDIA_REC_SINK_H_SIZE	0
-#define MSGQ_AUD_MEDIA_REC_SINK_H_NUM	0
-/************************************************************************/
-#define MSGQ_AUD_CAP_QUE_BLOCK_DRM	0xfc198
-#define MSGQ_AUD_CAP_N_QUE_DRM	0xfc730
+#define MSGQ_AUD_CAP_QUE_BLOCK_DRM	0xfc154
+#define MSGQ_AUD_CAP_N_QUE_DRM	0xfc488
 #define MSGQ_AUD_CAP_N_SIZE	24
 #define MSGQ_AUD_CAP_N_NUM	16
 #define MSGQ_AUD_CAP_H_QUE_DRM	0xffffffff
 #define MSGQ_AUD_CAP_H_SIZE	0
 #define MSGQ_AUD_CAP_H_NUM	0
 /************************************************************************/
-#define MSGQ_AUD_CAP_SYNC_QUE_BLOCK_DRM	0xfc1dc
-#define MSGQ_AUD_CAP_SYNC_N_QUE_DRM	0xfc8b0
+#define MSGQ_AUD_CAP_SYNC_QUE_BLOCK_DRM	0xfc198
+#define MSGQ_AUD_CAP_SYNC_N_QUE_DRM	0xfc608
 #define MSGQ_AUD_CAP_SYNC_N_SIZE	16
 #define MSGQ_AUD_CAP_SYNC_N_NUM	8
 #define MSGQ_AUD_CAP_SYNC_H_QUE_DRM	0xffffffff
