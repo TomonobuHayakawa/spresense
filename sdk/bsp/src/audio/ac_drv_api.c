@@ -940,7 +940,7 @@ void asAc_PowerOffAudioCodecInput()
   write_ac_reg(RI_PDN_DMIC, 1);
 }
 
-void asAc_PowerOffAudioCodecOutput()
+E_AS asAc_PowerOffAudioCodecOutput()
 {
   E_AS rtCode = E_AS_OK;
   asCodecVol codecVol;
@@ -952,14 +952,25 @@ void asAc_PowerOffAudioCodecOutput()
       codecVol.master_db = AS_VOLUME_MUTE;
       rtCode = AS_SetVolume(&codecVol);
       D_ASSERT(rtCode == E_AS_OK);
+      if (rtCode != E_AS_OK)
+        {
+          return rtCode;
+        }
+
       rtCode = AS_BeepDisable();
       D_ASSERT(rtCode == E_AS_OK);
+      if (rtCode != E_AS_OK)
+      {
+        return rtCode;
+      }
     }
 
   /* Power off S-Master. */
 
   write_ac_reg(RI_NSPMUTE, 1);
   write_ac_reg(RI_PDN_SMSTR, 1);
+
+  return rtCode;
 }
 
 void asAc_AhbmasterEnable()

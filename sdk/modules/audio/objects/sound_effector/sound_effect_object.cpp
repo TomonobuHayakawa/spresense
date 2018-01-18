@@ -173,7 +173,7 @@ static void render_done_callback(AudioDrvDmaResult *pParam, void *p_requester)
                                        NULL,
                                        pParam->dmac_id);
 
-  D_ASSERT(er == ERR_OK);
+  F_ASSERT(er == ERR_OK);
 }
 
 /*--------------------------------------------------------------------*/

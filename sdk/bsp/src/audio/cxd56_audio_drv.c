@@ -544,7 +544,11 @@ E_AS AS_BaseBandDisable_output(void)
       return E_AS_OK;
     }
 
-  asAc_PowerOffAudioCodecOutput();
+  rtCode = asAc_PowerOffAudioCodecOutput();
+  if (E_AS_OK != rtCode)
+    {
+      return rtCode;
+    }
 
   rtCode = AS_AcaControl(AS_ACA_POWER_OFF_OUTPUT, (uint32_t)NULL);
   if (E_AS_OK != rtCode)
