@@ -734,7 +734,7 @@ static bool app_open_file_dir(void)
 {
   DIR *dirp;
   int ret;
-  char *name = CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT;
+  const char *name = CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT;
 
   dirp = opendir("/mnt");
   if (!dirp)
