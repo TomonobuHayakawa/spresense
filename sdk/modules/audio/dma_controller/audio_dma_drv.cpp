@@ -778,6 +778,7 @@ void AsDmaDrv::dmaCmplt(void)
           resultParam.size1   = dmaParam.run_dmac_param.size;
           resultParam.addr2   = dmaParam.run_dmac_param.addr2;
           resultParam.size2   = dmaParam.run_dmac_param.size2;
+          resultParam.endflg  = false;
 
           if (m_state == AS_DMA_STATE_FLUSH)
             {
@@ -786,10 +787,6 @@ void AsDmaDrv::dmaCmplt(void)
                 {
                   resultParam.endflg  = true;
                 }
-            }
-          else
-            {
-              resultParam.endflg  = false;
             }
 
           (*m_dmadone_func)(&resultParam);

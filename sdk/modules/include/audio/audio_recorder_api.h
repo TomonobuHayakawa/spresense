@@ -451,10 +451,6 @@ typedef struct
 
   uint8_t recorder;
 
-  /*! \brief [in] Message queue id of recorder sink feature */
-
-  uint8_t recorder_sink;
-
   /*! \brief [in] Message queue id of audio_manager */
 
   uint8_t mng;
@@ -494,28 +490,6 @@ typedef struct
   AsRecorderPoolId_t   pool_id;
 } AsActRecorderParam_t;
 
-/** Message queue ID parameter of activate sink function */
-
-typedef struct
-{
-  /*! \brief [in] Message queue id of recorder */
-
-  uint8_t recorder;
-
-  /*! \brief [in] Message queue id of recorder sink feature */
-
-  uint8_t recorder_sink;
-} AsRecorderSinkMsgQueId_t;
-
-/** Activate sink function parameter */
-
-typedef struct
-{
-  /*! \brief [in] ID for sending messages to each function */
-
-  AsRecorderSinkMsgQueId_t msgq_id;
-} AsActRecorderSinkParam_t;
-
 /****************************************************************************
  * Public Data
  ****************************************************************************/
@@ -544,17 +518,6 @@ extern "C"
 bool AS_ActivateVoiceRecorder(FAR AsActRecorderParam_t *param);
 
 /**
- * @brief Activate audio recorder sink
- *
- * @param[in] param: Parameters of resources used by audio recorder sink
- *
- * @retval     true  : success
- * @retval     false : failure
- */
-
-bool AS_ActivateVoiceRecorderSink(FAR AsActRecorderSinkParam_t *param);
-
-/**
  * @brief Deactivate audio recorder
  *
  * @retval     true  : success
@@ -562,15 +525,6 @@ bool AS_ActivateVoiceRecorderSink(FAR AsActRecorderSinkParam_t *param);
  */
 
 bool AS_DeactivateVoiceRecorder(void);
-
-/**
- * @brief Deactivate audio recorder sink
- *
- * @retval     true  : success
- * @retval     false : failure
- */
-
-bool AS_DeactivateVoiceRecorderSink(void);
 
 #ifdef __cplusplus
 }

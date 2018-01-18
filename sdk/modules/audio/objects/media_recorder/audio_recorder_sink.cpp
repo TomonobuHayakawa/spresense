@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/objects/media_recorder/ram_sink_for_audio.cpp
+ * modules/audio/objects/media_recorder/raudio_recorder_sink.cpp
  *
  *   Copyright (C) 2017 Sony Corporation
  *   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
@@ -39,7 +39,7 @@
 
 #include "memutils/simple_fifo/CMN_SimpleFifo.h"
 #include "memutils/memory_manager/MemHandle.h"
-#include "ram_sink_for_audio.h"
+#include "audio_recorder_sink.h"
 #include "debug/dbg_log.h"
 
 __WIEN2_BEGIN_NAMESPACE
@@ -68,14 +68,14 @@ __WIEN2_BEGIN_NAMESPACE
  * Private Functions
  ****************************************************************************/
 
-bool RamSinkForAudio::init(const InitAudioRecSinkParam_s &param)
+bool AudioRecorderSink::init(const InitAudioRecSinkParam_s &param)
 {
   m_output_device_hdlr = param.init_audio_ram_sink.output_device_hdlr;
   return true;
 }
 
 /*--------------------------------------------------------------------------*/
-bool RamSinkForAudio::write(const AudioRecSinkData_s &param)
+bool AudioRecorderSink::write(const AudioRecSinkData_s &param)
 {
   if (param.byte_size > 0) {
     if (CMN_SimpleFifoGetVacantSize(static_cast<CMN_SimpleFifoHandle *>
@@ -99,7 +99,7 @@ bool RamSinkForAudio::write(const AudioRecSinkData_s &param)
 }
 
 /*--------------------------------------------------------------------------*/
-bool RamSinkForAudio::finalize(void)
+bool AudioRecorderSink::finalize(void)
 {
   /* Do nothing. */
 

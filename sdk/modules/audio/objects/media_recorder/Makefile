@@ -43,7 +43,7 @@ DEPPATH += --dep-path .
 
 # Add sub directory if exists
 
-CXXSRCS = media_recorder_obj.cpp audio_rec_sink_task.cpp ram_sink_for_audio.cpp
+CXXSRCS = media_recorder_obj.cpp audio_recorder_sink.cpp
 
 # Include sub directory source files
 

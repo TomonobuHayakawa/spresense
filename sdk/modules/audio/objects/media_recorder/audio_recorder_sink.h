@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/objects/media_recorder/audio_rec_sink_task.h
+ * modules/audio/objects/media_recorder/raudio_recorder_sink.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
@@ -33,17 +33,15 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_AUDIO_OBJECTS_MEDIA_RECORDER_AUDIO_REC_SINK_TASK_H
-#define __MODULES_AUDIO_OBJECTS_MEDIA_RECORDER_AUDIO_REC_SINK_TASK_H
+#ifndef __MODULES_AUDIO_OBJECTS_MEDIA_RECORDER_AUDIO_RECORDER_SINK_H
+#define __MODULES_AUDIO_OBJECTS_MEDIA_RECORDER_AUDIO_RECORDER_SINK_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
-#include "memutils/os_utils/chateau_osal.h"
-#include "memutils/message/Message.h"
-#include "ram_sink_for_audio.h"
-#include "common/audio_message_types.h"
+
 #include "wien2_common_defs.h"
+#include "wien2_internal_packet.h"
 
 __WIEN2_BEGIN_NAMESPACE
 
@@ -54,42 +52,56 @@ __WIEN2_BEGIN_NAMESPACE
 /****************************************************************************
  * Public Types
  ****************************************************************************/
-class AudioRecSinkTask {
+
+/* Internal parameters between voice recorder object and its user. */
+
+/* Parameters for initializing sinker of voice recorder
+ * that uses RAM to store output data.
+ */
+
+struct InitAudioRecRamSinkParam_s
+{
 public:
-  static void create(MsgQueId self_dtq);
+  AsRecorderOutputDeviceHdlr output_device_hdlr;
+};
+
+/* Parameters for initializing sinker of voice recorder. */
+
+struct InitAudioRecSinkParam_s
+{
+public:
+  uint32_t fs;
+  uint16_t ch;
+  uint16_t byte_length;
+  AudioCodec codec_type;
+  AsSetRecorderStsOutputDevice output_device;
+  union {
+    InitAudioRecRamSinkParam_s init_audio_ram_sink;
+  };
+};
+
+/* Data to the sinker of voice recorder. */
+
+struct AudioRecSinkData_s
+{
+public:
+  MemMgrLite::MemHandle mh;
+  uint32_t byte_size;
+};
+
+class AudioRecorderSink
+{
+public:
+  AudioRecorderSink() {}
+
+  ~AudioRecorderSink() {}
+
+  bool init(const InitAudioRecSinkParam_s &param);
+  bool write(const AudioRecSinkData_s &param);
+  bool finalize(void);
 
 private:
-  enum AudioRecSinkState
-  {
-    AudioRecSinkStateReady = 0,
-    AudioRecSinkStateActive,
-    AudioRecSinkStateOverflow,
-    AudioRecSinkStateNum
-  };
-
-  MsgQueId          m_self_dtq;
-  AudioRecSinkState m_state;
-  AudioCodec        m_codec_type;
-  AudioRecSinkTask *m_cur_instance;
-
-  typedef void (AudioRecSinkTask::*MsgProc)(MsgPacket*);
-  static MsgProc MsgProcTbl[AUD_SNK_MSG_NUM][AudioRecSinkStateNum];
-
-  AudioRecSinkTask(MsgQueId self_dtq):
-    m_self_dtq(self_dtq),
-    m_state(AudioRecSinkStateReady),
-    m_codec_type(InvalidCodecType)
-  {}
-
-  ~AudioRecSinkTask() {}
-  void run();
-  void parse(MsgPacket*);
-  void illegal(MsgPacket*);
-  void init(MsgPacket*);
-  void dataSinkOnReady(MsgPacket*);
-  void dataSinkOnActive(MsgPacket*);
-  void dataSinkOnOverflow(MsgPacket*);
-  void stopOnActive(MsgPacket*);
+  AsRecorderOutputDeviceHdlr m_output_device_hdlr;
 };
 
 /****************************************************************************
@@ -106,5 +118,4 @@ private:
 
 __WIEN2_END_NAMESPACE
 
-#endif /* __MODULES_AUDIO_OBJECTS_MEDIA_RECORDER_AUDIO_REC_SINK_TASK_H */
-
+#endif /* __MODULES_AUDIO_OBJECTS_MEDIA_RECORDER_AUDIO_RECORDER_SINK_H */

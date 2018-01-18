@@ -69,7 +69,6 @@ using namespace MemMgrLite;
 
 static pid_t    s_rcd_pid;
 static MsgQueId s_self_dtq;
-static MsgQueId s_data_sink_dtq;
 static MsgQueId s_manager_dtq;
 static MsgQueId s_apu_dtq;
 static PoolId   s_apu_pool_id;
@@ -94,7 +93,8 @@ static void capture_comp_done_callback(CaptureComponentCmpltParam param)
   er = MsgLib::send<CaptureComponentCmpltParam>(s_self_dtq,
                                                 MsgPriNormal,
                                                 MSG_AUD_VRC_RST_CAPTURE,
-                                                s_self_dtq, param);
+                                                s_self_dtq,
+                                                param);
   F_ASSERT(er == ERR_OK);
 }
 
@@ -286,7 +286,6 @@ bool VoiceRecorderObjectTask::unloadCodec(void)
 int AS_MediaRecorderObjEntry(int argc, char *argv[])
 {
   VoiceRecorderObjectTask::create(s_self_dtq,
-                                  s_data_sink_dtq,
                                   s_manager_dtq);
   return 0;
 }
@@ -395,7 +394,7 @@ VoiceRecorderObjectTask::MsgProc
     &VoiceRecorderObjectTask::illegalFilterDone,     /*   Ready.         */
     &VoiceRecorderObjectTask::filterDoneOnRec,       /*   Play.          */
     &VoiceRecorderObjectTask::filterDoneOnStop,      /*   Stopping.      */
-    &VoiceRecorderObjectTask::filterDoneOnStop,      /*   Overflow.      */
+    &VoiceRecorderObjectTask::filterDoneOnOverflow,  /*   Overflow.      */
     &VoiceRecorderObjectTask::illegalFilterDone      /*   WaitStop.      */
   },
 
@@ -406,41 +405,8 @@ VoiceRecorderObjectTask::MsgProc
     &VoiceRecorderObjectTask::illegalEncDone,        /*   Ready.         */
     &VoiceRecorderObjectTask::encDoneOnRec,          /*   Play.          */
     &VoiceRecorderObjectTask::encDoneOnStop,         /*   Stopping.      */
-    &VoiceRecorderObjectTask::encDoneOnStop,         /*   Overflow.      */
+    &VoiceRecorderObjectTask::encDoneOnOverflow,     /*   Overflow.      */
     &VoiceRecorderObjectTask::illegalEncDone         /*   WaitStop.      */
-  },
-
-  /* Message Type: MSG_AUD_VRC_RST_RSINK_INIT. */
-
-  {                                                  /* Recorder status: */
-    &VoiceRecorderObjectTask::illegalRecSinkDone,    /*   Inactive.      */
-    &VoiceRecorderObjectTask::recSinkDoneOnReady,    /*   Ready.         */
-    &VoiceRecorderObjectTask::illegalRecSinkDone,    /*   Play.          */
-    &VoiceRecorderObjectTask::illegalRecSinkDone,    /*   Stopping.      */
-    &VoiceRecorderObjectTask::illegalRecSinkDone,    /*   Overflow.      */
-    &VoiceRecorderObjectTask::illegalRecSinkDone     /*   WaitStop.      */
-  },
-
-  /* Message Type: MSG_AUD_VRC_RST_RSINK_DATA. */
-
-  {                                                  /* Recorder status: */
-    &VoiceRecorderObjectTask::illegalRecSinkDone,    /*   Inactive.      */
-    &VoiceRecorderObjectTask::illegalRecSinkDone,    /*   Ready.         */
-    &VoiceRecorderObjectTask::recSinkDoneOnRec,      /*   Play.          */
-    &VoiceRecorderObjectTask::recSinkDoneOnRec,      /*   Stopping.      */
-    &VoiceRecorderObjectTask::recSinkDoneOnRec,      /*   Overflow.      */
-    &VoiceRecorderObjectTask::illegalRecSinkDone     /*   WaitStop.      */
-  },
-
-  /* Message Type: MSG_AUD_VRC_RST_RSINK_STOP. */
-
-  {                                                  /* Recorder status: */
-    &VoiceRecorderObjectTask::illegalRecSinkDone,    /*   Inactive.      */
-    &VoiceRecorderObjectTask::illegalRecSinkDone,    /*   Ready.         */
-    &VoiceRecorderObjectTask::illegalRecSinkDone,    /*   Play.          */
-    &VoiceRecorderObjectTask::recSinkDoneOnStop,     /*   Stopping.      */
-    &VoiceRecorderObjectTask::recSinkDoneOnOverflow, /*   Overflow.      */
-    &VoiceRecorderObjectTask::illegalRecSinkDone     /*   WaitStop.      */
   }
 };
 
@@ -662,19 +628,11 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void VoiceRecorderObjectTask::startOnReady(MsgPacket *msg)
 {
-  err_t er;
-  InitAudioRecSinkParam_s init_sink;
   AudioCommand cmd = msg->moveParam<AudioCommand>();
 
   MEDIA_RECORDER_DBG("START:\n");
 
-  if (!m_external_cmd_que.push(cmd)) {
-    sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
-    return;
-  }
-
-  /* Create write destination directory. */
-
+  InitAudioRecSinkParam_s init_sink;
   init_sink.fs            = m_sampling_rate;
   init_sink.ch            = m_channel_num;
   init_sink.byte_length   = m_pcm_byte_len;
@@ -685,13 +643,105 @@ void VoiceRecorderObjectTask::startOnReady(MsgPacket *msg)
       init_sink.init_audio_ram_sink.output_device_hdlr =
         *m_p_output_device_handler;
     }
+  m_rec_sink.init(init_sink);
 
-  er = MsgLib::send<InitAudioRecSinkParam_s>(m_data_sink_dtq,
-                                             MsgPriNormal,
-                                             MSG_AUD_SNK_INIT,
-                                             m_self_dtq,
-                                             init_sink);
-  F_ASSERT(er == ERR_OK);
+  CaptureComponentParam cap_comp_param;
+  bool result = true;
+  uint32_t apu_result = AS_ECODE_OK;
+  uint32_t dsp_inf = 0;
+
+  cap_comp_param.init_capture_comp_param.capture_ch_num = m_channel_num;
+  cap_comp_param.init_capture_comp_param.capture_bit_width = m_pcm_bit_width;
+  cap_comp_param.init_capture_comp_param.callback =
+    capture_comp_done_callback;
+  cap_comp_param.handle = m_capture_from_mic_hdlr;
+  if (!AS_init_capture(cap_comp_param))
+    {
+      sendAudioCmdCmplt(cmd, AS_ECODE_DMAC_INITIALIZE_ERROR);
+      return;
+    }
+
+  if (m_codec_type == AudCodecXAVCLPCM)
+    {
+      FilterComponentParam filter_param;
+      filter_param.filter_type = Apu::SRC;
+      filter_param.init_src_param.sample_num = getPcmCaptureSample();
+      AsClkModeId clock_mode = GetClkMode();
+      if (AS_CLK_MODE_HIRES == clock_mode)
+        {
+          filter_param.init_src_param.input_sampling_rate =
+            192000; /* Fixed value. */
+        }
+      else
+        {
+          filter_param.init_src_param.input_sampling_rate =
+            48000; /* Fixed value. */
+        }
+      filter_param.init_src_param.output_sampling_rate   = m_sampling_rate;
+      filter_param.init_src_param.channel_num            = m_channel_num;
+      filter_param.init_src_param.input_pcm_byte_length  = m_pcm_byte_len;
+      filter_param.init_src_param.output_pcm_byte_length = m_pcm_byte_len;
+      filter_param.callback                              = src_done_callback;
+      if (m_sampling_rate != AS_INITREC_SAMPLING_48K)
+        {
+          apu_result = AS_filter_init(filter_param, &dsp_inf);
+          result = AS_filter_recv_done();
+          if (!result)
+            {
+              D_ASSERT(0);
+              sendAudioCmdCmplt(cmd,
+                                AS_ECODE_QUEUE_OPERATION_ERROR);
+              return;
+            }
+          if (apu_result != AS_ECODE_OK)
+            {
+              sendAudioCmdCmplt(cmd, apu_result, dsp_inf);
+              return;
+            }
+        }
+    }
+  else if ((m_codec_type == AudCodecMP3) || (m_codec_type == AudCodecOPUS))
+    {
+      InitEncParam enc_param;
+      enc_param.codec_type           = m_codec_type;
+      enc_param.input_sampling_rate  = 48000; /* Fixed value. */
+      enc_param.output_sampling_rate = m_sampling_rate;
+      enc_param.bit_width            = m_pcm_bit_width;
+      enc_param.channel_num          = m_channel_num;
+      enc_param.callback             = encoder_done_callback;
+      enc_param.bit_rate             = m_bit_rate;
+      if (m_codec_type == AudCodecOPUS)
+        {
+          enc_param.complexity = m_complexity;
+        }
+      apu_result = AS_encode_init(enc_param, &dsp_inf);
+      result = AS_encode_recv_done();
+      if (!result)
+        {
+          D_ASSERT(0);
+          sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
+          return;
+        }
+      if (apu_result != AS_ECODE_OK)
+        {
+          sendAudioCmdCmplt(cmd, apu_result, dsp_inf);
+          return;
+        }
+      }
+
+  m_output_buf_mh_que.clear();
+
+  if (startCapture())
+    {
+      m_state = RecorderStateRecording;
+      m_fifo_overflow = false;
+      sendAudioCmdCmplt(cmd, AS_ECODE_OK);
+      return;
+    }
+  else
+    {
+      sendAudioCmdCmplt(cmd, AS_ECODE_DMAC_READ_ERROR);
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -764,7 +814,7 @@ void VoiceRecorderObjectTask::filterDoneOnRec(MsgPacket *msg)
 
   freeMicInBuf();
 
-  sendToDataSinker(m_output_buf_mh_que.top(),
+  writeToDataSinker(m_output_buf_mh_que.top(),
                    filter_result.exec_src_param.output_buffer.size);
   freeOutputBuf();
 }
@@ -785,29 +835,78 @@ void VoiceRecorderObjectTask::filterDoneOnStop(MsgPacket *msg)
         {
           freeMicInBuf();
 
-          sendToDataSinker(m_output_buf_mh_que.top(),
+          writeToDataSinker(m_output_buf_mh_que.top(),
                            filter_result.exec_src_param.output_buffer.size);
           freeOutputBuf();
-
-          if (m_mic_in_buf_mh_que.empty())
-            {
-              stopEnc();
-            }
         }
     }
   else if (filter_result.event_type == Apu::FlushEvent)
     {
-      err_t er = ERR_OK;
       if (filter_result.stop_src_param.output_buffer.size > 0)
         {
-          sendToDataSinker(m_output_buf_mh_que.top(),
+          writeToDataSinker(m_output_buf_mh_que.top(),
                            filter_result.stop_src_param.output_buffer.size);
         }
-      er = MsgLib::send(m_data_sink_dtq,
-                        MsgPriNormal,
-                        MSG_AUD_SNK_STOP,
-                        m_self_dtq);
-      F_ASSERT(er == ERR_OK);
+      freeOutputBuf();
+
+      m_rec_sink.finalize();
+
+      if (m_external_cmd_que.empty())
+        {
+          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
+          return;
+        }
+      AudioCommand ext_cmd = m_external_cmd_que.top();
+      if (!m_external_cmd_que.pop())
+        {
+          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
+        }
+
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
+      m_state = RecorderStateReady;
+    }
+  else
+    {
+      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+      return;
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+void VoiceRecorderObjectTask::filterDoneOnOverflow(MsgPacket *msg)
+{
+  SrcFilterCompCmpltParam filter_result =
+    msg->moveParam<SrcFilterCompCmpltParam>();
+  if (m_sampling_rate != AS_INITREC_SAMPLING_48K)
+    {
+      AS_filter_recv_done();
+    }
+
+  if (filter_result.event_type == Apu::ExecEvent)
+    {
+      if (m_codec_type == AudCodecXAVCLPCM)
+        {
+          freeMicInBuf();
+
+          writeToDataSinker(m_output_buf_mh_que.top(),
+                           filter_result.exec_src_param.output_buffer.size);
+
+          freeOutputBuf();
+        }
+    }
+  else if (filter_result.event_type == Apu::FlushEvent)
+    {
+      if (filter_result.stop_src_param.output_buffer.size > 0)
+        {
+          writeToDataSinker(m_output_buf_mh_que.top(),
+                           filter_result.stop_src_param.output_buffer.size);
+        }
+
+      freeOutputBuf();
+
+      m_rec_sink.finalize();
+
+      m_state = RecorderStateWaitStop;
     }
   else
     {
@@ -831,7 +930,7 @@ void VoiceRecorderObjectTask::encDoneOnRec(MsgPacket *msg)
 
   freeMicInBuf();
 
-  sendToDataSinker(m_output_buf_mh_que.top(),
+  writeToDataSinker(m_output_buf_mh_que.top(),
                    enc_result.exec_enc_cmplt.output_buffer.size);
   freeOutputBuf();
 }
@@ -846,28 +945,34 @@ void VoiceRecorderObjectTask::encDoneOnStop(MsgPacket *msg)
     {
       freeMicInBuf();
 
-      sendToDataSinker(m_output_buf_mh_que.top(),
+      writeToDataSinker(m_output_buf_mh_que.top(),
                        enc_result.exec_enc_cmplt.output_buffer.size);
       freeOutputBuf();
-
-      if (m_mic_in_buf_mh_que.empty())
-        {
-          stopEnc();
-        }
     }
   else if (enc_result.event_type == Apu::FlushEvent)
     {
-      err_t er = ERR_OK;
       if (enc_result.stop_enc_cmplt.output_buffer.size > 0)
         {
-          sendToDataSinker(m_output_buf_mh_que.top(),
+          writeToDataSinker(m_output_buf_mh_que.top(),
                            enc_result.stop_enc_cmplt.output_buffer.size);
         }
-      er = MsgLib::send(m_data_sink_dtq,
-                        MsgPriNormal,
-                        MSG_AUD_SNK_STOP,
-                        m_self_dtq);
-      F_ASSERT(er == ERR_OK);
+      freeOutputBuf();
+
+      m_rec_sink.finalize();
+
+      if (m_external_cmd_que.empty())
+        {
+          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
+          return;
+        }
+      AudioCommand ext_cmd = m_external_cmd_que.top();
+      if (!m_external_cmd_que.pop())
+        {
+          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
+        }
+
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
+      m_state = RecorderStateReady;
     }
   else
     {
@@ -877,183 +982,39 @@ void VoiceRecorderObjectTask::encDoneOnStop(MsgPacket *msg)
 }
 
 /*--------------------------------------------------------------------------*/
-void VoiceRecorderObjectTask::illegalRecSinkDone(MsgPacket *msg)
+void VoiceRecorderObjectTask::encDoneOnOverflow(MsgPacket *msg)
 {
-  msg->moveParam<bool>();
-  MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_ILLEGAL_REQUEST);
-}
+  EncCmpltParam enc_result = msg->moveParam<EncCmpltParam>();
+  AS_encode_recv_done();
 
-/*--------------------------------------------------------------------------*/
-void VoiceRecorderObjectTask::recSinkDoneOnReady(MsgPacket *msg)
-{
-  CaptureComponentParam cap_comp_param;
-  bool result = true;
-  uint32_t apu_result = AS_ECODE_OK;
-  uint32_t dsp_inf = 0;
-  bool rec_sink_result = msg->moveParam<bool>();
-
-  if (m_external_cmd_que.empty())
+  if (enc_result.event_type == Apu::ExecEvent)
     {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
-      return;
+      freeMicInBuf();
+
+      writeToDataSinker(m_output_buf_mh_que.top(),
+                       enc_result.exec_enc_cmplt.output_buffer.size);
+
+      freeOutputBuf();
     }
-  AudioCommand ext_cmd = m_external_cmd_que.top();
-  if (!m_external_cmd_que.pop())
+  else if (enc_result.event_type == Apu::FlushEvent)
     {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-    }
+      if (enc_result.stop_enc_cmplt.output_buffer.size > 0)
+        {
+          writeToDataSinker(m_output_buf_mh_que.top(),
+                           enc_result.stop_enc_cmplt.output_buffer.size);
+        }
 
-  if (!rec_sink_result)
-    {
-      sendAudioCmdCmplt(ext_cmd,
-                        AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE);
-      return;
-    }
+      freeOutputBuf();
 
-  cap_comp_param.init_capture_comp_param.capture_ch_num = m_channel_num;
-  cap_comp_param.init_capture_comp_param.capture_bit_width = m_pcm_bit_width;
-  cap_comp_param.init_capture_comp_param.callback =
-    capture_comp_done_callback;
-  cap_comp_param.handle = m_capture_from_mic_hdlr;
-  if (!AS_init_capture(cap_comp_param) ||
-      ((m_codec_type != AudCodecXAVCLPCM) &&
-       (m_codec_type != AudCodecMP3)      &&
-       (m_codec_type != AudCodecOPUS)))
-    {
-      sendAudioCmdCmplt(ext_cmd, AS_ECODE_COMMAND_PARAM_CODEC_TYPE);
-      return;
-    }
+      m_rec_sink.finalize();
 
-  if (m_codec_type == AudCodecXAVCLPCM)
-    {
-      FilterComponentParam filter_param;
-      filter_param.filter_type = Apu::SRC;
-      filter_param.init_src_param.sample_num = getPcmCaptureSample();
-      AsClkModeId clock_mode = GetClkMode();
-      if (AS_CLK_MODE_HIRES == clock_mode)
-        {
-          filter_param.init_src_param.input_sampling_rate =
-            192000; /* Fixed value. */
-        }
-      else
-        {
-          filter_param.init_src_param.input_sampling_rate =
-            48000; /* Fixed value. */
-        }
-      filter_param.init_src_param.output_sampling_rate   = m_sampling_rate;
-      filter_param.init_src_param.channel_num            = m_channel_num;
-      filter_param.init_src_param.input_pcm_byte_length  = m_pcm_byte_len;
-      filter_param.init_src_param.output_pcm_byte_length = m_pcm_byte_len;
-      filter_param.callback                              = src_done_callback;
-      if (m_sampling_rate != AS_INITREC_SAMPLING_48K)
-        {
-          apu_result = AS_filter_init(filter_param, &dsp_inf);
-          result = AS_filter_recv_done();
-          if (!result)
-            {
-              D_ASSERT(0);
-              sendAudioCmdCmplt(ext_cmd,
-                                AS_ECODE_QUEUE_OPERATION_ERROR);
-              return;
-            }
-          if (apu_result != AS_ECODE_OK)
-            {
-              sendAudioCmdCmplt(ext_cmd, apu_result, dsp_inf);
-              return;
-            }
-        }
-    }
-  else if ((m_codec_type == AudCodecMP3) || (m_codec_type == AudCodecOPUS))
-    {
-      InitEncParam enc_param;
-      enc_param.codec_type           = m_codec_type;
-      enc_param.input_sampling_rate  = 48000; /* Fixed value. */
-      enc_param.output_sampling_rate = m_sampling_rate;
-      enc_param.bit_width            = m_pcm_bit_width;
-      enc_param.channel_num          = m_channel_num;
-      enc_param.callback             = encoder_done_callback;
-      enc_param.bit_rate             = m_bit_rate;
-      if (m_codec_type == AudCodecOPUS)
-        {
-          enc_param.complexity = m_complexity;
-        }
-      apu_result = AS_encode_init(enc_param, &dsp_inf);
-      result = AS_encode_recv_done();
-      if (!result)
-        {
-          D_ASSERT(0);
-          sendAudioCmdCmplt(ext_cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
-          return;
-        }
-      if (apu_result != AS_ECODE_OK)
-        {
-          sendAudioCmdCmplt(ext_cmd, apu_result, dsp_inf);
-          return;
-        }
-      }
-
-  m_output_buf_mh_que.clear();
-
-  if (startCapture())
-    {
-      m_state = RecorderStateRecording;
-      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
-      return;
+      m_state = RecorderStateWaitStop;
     }
   else
     {
-      sendAudioCmdCmplt(ext_cmd, AS_ECODE_DMAC_READ_ERROR);
-    }
-}
-
-/*--------------------------------------------------------------------------*/
-void VoiceRecorderObjectTask::recSinkDoneOnRec(MsgPacket *msg)
-{
-  bool cmd = msg->moveParam<bool>();
-  if (!cmd)
-    {
-      CaptureComponentParam cap_comp_param;
-      cap_comp_param.handle = m_capture_from_mic_hdlr;
-      cap_comp_param.stop_capture_comp_param.mode = AS_DMASTOPMODE_NORMAL;
-
-      AS_stop_capture(cap_comp_param);
-
-      m_state = RecorderStateOverflow;
-    }
-}
-
-/*--------------------------------------------------------------------------*/
-void VoiceRecorderObjectTask::recSinkDoneOnStop(MsgPacket *msg)
-{
-  AudioCommand ext_cmd;
-
-  msg->moveParam<bool>();
-
-  freeOutputBuf();
-
-  if (m_external_cmd_que.empty())
-    {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
+      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
       return;
     }
-  ext_cmd = m_external_cmd_que.top();
-  if (!m_external_cmd_que.pop())
-    {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-    }
-
-  sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
-  m_state = RecorderStateReady;
-}
-
-/*--------------------------------------------------------------------------*/
-void VoiceRecorderObjectTask::recSinkDoneOnOverflow(MsgPacket *msg)
-{
-  msg->moveParam<bool>();
-
-  freeOutputBuf();
-
-  m_state = RecorderStateWaitStop;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1109,6 +1070,11 @@ void VoiceRecorderObjectTask::captureDoneOnStop(MsgPacket *msg)
   execEnc(capture_result.exec_capture_comp_param.p_pcm,
           capture_result.exec_capture_comp_param.pcm_sample *
           m_pcm_byte_len * m_channel_num);
+
+  if (capture_result.end_flag)
+    {
+      stopEnc();
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1557,21 +1523,30 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
 }
 
 /*--------------------------------------------------------------------------*/
-void VoiceRecorderObjectTask::sendToDataSinker(
+void VoiceRecorderObjectTask::writeToDataSinker(
   const MemMgrLite::MemHandle& mh,
   uint32_t byte_size)
 {
-  err_t er;
-  AudioRecSinkData_s sink_data;
-  sink_data.mh = mh;
-  sink_data.byte_size = byte_size;
+  if (!m_fifo_overflow)
+    {
+      bool rst = false;
+      AudioRecSinkData_s sink_data;
+      sink_data.mh = mh;
+      sink_data.byte_size = byte_size;
 
-  er = MsgLib::send<AudioRecSinkData_s>(m_data_sink_dtq,
-                                        MsgPriNormal,
-                                        MSG_AUD_SNK_DATA,
-                                        m_self_dtq,
-                                        sink_data);
-  F_ASSERT(er == ERR_OK);
+      rst = m_rec_sink.write(sink_data);
+      if (!rst)
+        {
+          CaptureComponentParam cap_comp_param;
+          cap_comp_param.handle = m_capture_from_mic_hdlr;
+          cap_comp_param.stop_capture_comp_param.mode = AS_DMASTOPMODE_NORMAL;
+
+          AS_stop_capture(cap_comp_param);
+
+          m_state = RecorderStateOverflow;
+          m_fifo_overflow = true;
+        }
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1672,7 +1647,6 @@ extern "C"
 bool AS_ActivateVoiceRecorder(FAR AsActRecorderParam_t *param)
 {
   s_self_dtq      = param->msgq_id.recorder;
-  s_data_sink_dtq = param->msgq_id.recorder_sink;
   s_manager_dtq   = param->msgq_id.mng;
   s_apu_dtq       = param->msgq_id.dsp;
   s_in_pool_id    = param->pool_id.input;
@@ -1710,13 +1684,11 @@ bool AS_DeactivateVoiceRecorder(void)
 
 /*--------------------------------------------------------------------------*/
 void VoiceRecorderObjectTask::create(MsgQueId self_dtq,
-                                     MsgQueId data_sink_dtq,
                                      MsgQueId manager_dtq)
 {
   if(s_rcd_obj == NULL)
     {
       s_rcd_obj = new VoiceRecorderObjectTask(self_dtq,
-                                              data_sink_dtq,
                                               manager_dtq);
       s_rcd_obj->run();
     }

@@ -46,7 +46,7 @@
 #include "memutils/memory_manager/MemHandle.h"
 #include "audio/audio_high_level_api.h"
 #include "common/audio_message_types.h"
-#include "audio_rec_sink_task.h"
+#include "audio_recorder_sink.h"
 #include "components/capture/capture_component.h"
 #include "wien2_common_defs.h"
 #include "audio_state.h"
@@ -71,15 +71,12 @@ __WIEN2_BEGIN_NAMESPACE
 class VoiceRecorderObjectTask {
 public:
   static void create(MsgQueId self_dtq,
-                     MsgQueId data_sink_dtq,
                      MsgQueId manager_dtq);
 
 private:
   VoiceRecorderObjectTask(MsgQueId self_dtq,
-                          MsgQueId data_sink_dtq,
                           MsgQueId manager_dtq):
     m_self_dtq(self_dtq),
-    m_data_sink_dtq(data_sink_dtq),
     m_manager_dtq(manager_dtq),
     m_state(AS_MODULE_ID_MEDIA_RECORDER_OBJ, "", RecorderStateInactive),
     m_channel_num(2),
@@ -105,7 +102,8 @@ private:
     RecorderStateNum
   };
 
-  MsgQueId m_self_dtq, m_data_sink_dtq, m_manager_dtq;
+  MsgQueId m_self_dtq;
+  MsgQueId m_manager_dtq;
   AudioState<RecorderState_e> m_state;
   int8_t  m_channel_num;
   AudioPcmBitWidth m_pcm_bit_width;
@@ -119,6 +117,8 @@ private:
   CaptureDevice m_input_device;
   int8_t  m_complexity;
   int32_t m_bit_rate;
+  AudioRecorderSink m_rec_sink;
+  bool m_fifo_overflow;
 
   CaptureComponentHandler m_capture_from_mic_hdlr;
 
@@ -162,16 +162,12 @@ private:
   void illegalFilterDone(MsgPacket *);
   void filterDoneOnRec(MsgPacket *);
   void filterDoneOnStop(MsgPacket *);
+  void filterDoneOnOverflow(MsgPacket *);
 
   void illegalEncDone(MsgPacket *);
   void encDoneOnRec(MsgPacket *);
   void encDoneOnStop(MsgPacket *);
-
-  void illegalRecSinkDone(MsgPacket *);
-  void recSinkDoneOnReady(MsgPacket *);
-  void recSinkDoneOnRec(MsgPacket *);
-  void recSinkDoneOnStop(MsgPacket *);
-  void recSinkDoneOnOverflow(MsgPacket *);
+  void encDoneOnOverflow(MsgPacket *);
 
   void illegalCaptureDone(MsgPacket *);
   void captureDoneOnRec(MsgPacket *);
@@ -257,7 +253,7 @@ private:
   uint32_t isValidInitParamMP3(const AudioCommand& cmd);
   uint32_t isValidInitParamWAV(const AudioCommand& cmd);
   uint32_t isValidInitParamOPUS(const AudioCommand& cmd);
-  void sendToDataSinker(const MemMgrLite::MemHandle& mh, uint32_t byte_size);
+  void writeToDataSinker(const MemMgrLite::MemHandle& mh, uint32_t byte_size);
 
   bool getInputDeviceHdlr(void);
   bool delInputDeviceHdlr(void);
