@@ -1341,12 +1341,6 @@ typedef struct
 
     StopBBParam stop_bb_param;
 
-    /*! \brief [in] for DebugMFEParam
-     * (header.command_code==#AUDCMD_DEBUGMFEPARAM)
-     */
-
-    DebugMFEParam debug_mfe_param;
-
     /*! \brief [in] for InitMPP
      * (header.command_code==#AUDCMD_INITMPP)
      */
@@ -1358,12 +1352,6 @@ typedef struct
      */
 
     SetMPPParam set_mpp_param;
-
-    /*! \brief [in] for DebugMPPParam
-     * (header.command_code==#AUDCMD_DEBUGMPPPARAM)
-     */
-
-    DebugMPPParam debug_mpp_param;
 
     /*! \brief [in] for SetBaseBandStatus
      * (header.command_code==#AUDCMD_SETBASEBANDSTATUS)

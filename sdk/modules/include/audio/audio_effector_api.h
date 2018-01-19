@@ -77,20 +77,6 @@
 
 /** @} */
 
-/** @name sub code for DEBUGMPPPARAM command(0x2F) */
-/** @{ */
-
-/*! \brief Sub Code: MPP common setting */
-
-#define  SUB_DEBUGMPP_COMMON  0x00
-
-/*! \brief Sub Code: MPP xLOUD setting */
-
-#define  SUB_DEBUGMPP_XLOUD   0x01
-
-/** @} */
-
-
 /** @name Packet length of command*/
 /** @{ */
 
@@ -106,10 +92,6 @@
 
 #define  LENGTH_STOPBB              3
 
-/*! \brief DebugMFEParam command (#AUDCMD_DEBUGMFEPARAM) packet length */
-
-#define  LENGTH_DEBUGMFEPARAM       4
-
 /*! \brief InitMPP command (#AUDCMD_INITMPP) packet length */
 
 #define  LENGTH_INITMPP             5
@@ -121,20 +103,6 @@
 /*! \brief SetMPP command (#AUDCMD_SETMPPPARAM) packet length */
 
 #define  LENGTH_SUB_SETMPP_XLOUD    4
-
-/*! \brief DebugMPPParam command (#AUDCMD_DEBUGMPPPARAM) packet length
- * Be removed in future
- */
-
-#define  LENGTH_DEBUGMPPPARAM       5
-
-/*! \brief DebugMPPParam command (#AUDCMD_DEBUGMPPPARAM) packet length */
-
-#define  LENGTH_SUB_DEBUGMPP_COMMON 5
-
-/*! \brief DebugMPPParam command (#AUDCMD_DEBUGMPPPARAM) packet length */
-
-#define  LENGTH_SUB_DEBUGMPP_XLOUD  5
 
 /** @} */
 
@@ -511,23 +479,6 @@ typedef struct
   uint8_t  reserved6;
 } StopBBParam;
 
-/** (__obsolete__) DebugMFEParam Command (#AUDCMD_DEBUGMFEPARAM) parameter */
-
-typedef struct
-{
-  /*! \brief [in] Adjust MIC delay */
-
-  uint32_t mic_delay;
-
-  /*! \brief [in] Adjust SP delay */
-
-  uint32_t ref_delay;
-
-  /*! \brief [in] MFE configutation table address */
-
-  uint32_t mfe_config_table;
-} DebugMFEParam;
-
 /** InitMPP Command (#AUDCMD_INITMPP) parameter */
 
 typedef struct
@@ -664,81 +615,6 @@ typedef struct
 } SetMPPParam ;
 #else
 } SetMPPParam __attribute__((transparent_union));
-#endif
-
-/** Sub Command: MPP common debug setting parameter
- *
- * Used by following Commmand:
- *  - Command Code: #AUDCMD_DEBUGMPPPARAM, Sub code: #0x0
- */
-
-typedef struct
-{
-  /*! \brief [in] reserved */
-
-  uint32_t reserved1;
-
-  /*! \brief [in] reserved */
-
-  uint32_t reserved2;
-
-  /*! \brief [in] reserved */
-
-  uint32_t reserved3;
-
-  /*! \brief [in] reserved */
-
-  uint32_t reserved4;
-} MppCommonDebug;
-
-/** Sub Command: MPP xLOUD debug setting parameter
- *
- * Used by following Commmand:
- *  - Command Code: #AUDCMD_DEBUGMPPPARAM, Sub code: #0x1
- */
-
-typedef struct
-{
-  /*! \brief [in] xLOUD coefficient table address */
-
-  uint32_t xloud_config_table;
-
-  /*! \brief [in] xLOUD parameter table address */
-
-  uint32_t xloud_param_table;
-
-  /*! \brief [in] EAX coefficient table address */
-
-  uint32_t eax_config_table;
-
-  /*! \brief [in] EAX parameter table address */
-
-  uint32_t eax_param_table;
-} MppXloudDebug;
-
-/** (__obsolete__) DebugMPPParam Command (#AUDCMD_DEBUGMPPPARAM) parameter */
-
-#if defined(__CC_ARM)
-#pragma anon_unions
-#endif
-
-typedef struct
-{
-  union
-  {
-    /*! \brief [in] for Sub Code: 0x0 */
-
-    MppCommonDebug  mpp_common_debug;
-
-    /*! \brief [in] for Sub Code: 0x1 */
-
-    MppXloudDebug  mpp_xloud_debug;
-  };
-#if !defined(__CC_ARM)
-} DebugMPPParam;
-
-#else
-} DebugMPPParam __attribute__((transparent_union));
 #endif
 
 /** SetBaseBandStatus Command (#AUDCMD_SETBASEBANDSTATUS) parameter */

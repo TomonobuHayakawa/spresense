@@ -160,13 +160,11 @@ int AS_SendAudioCommand(FAR AudioCommand *packet)
         break;
 
       case AUDCMD_INITMFE:
-      case AUDCMD_DEBUGMFEPARAM:
         msg_type = MSG_AUD_MGR_CMD_MFE;
         break;
 
       case AUDCMD_INITMPP:
       case AUDCMD_SETMPPPARAM:
-      case AUDCMD_DEBUGMPPPARAM:
         msg_type = MSG_AUD_MGR_CMD_MPP;
         break;
 
@@ -1037,22 +1035,6 @@ void AudioManager::mfe(AudioCommand &cmd)
         msg_type = MSG_AUD_SEF_CMD_INIT;
         break;
 
-      case AUDCMD_DEBUGMFEPARAM:
-        check = packetCheck(LENGTH_DEBUGMFEPARAM, AUDCMD_DEBUGMFEPARAM, cmd);
-        if (!check)
-          {
-            return;
-          }
-        if (cmd.debug_mfe_param.mfe_config_table == 0)
-          {
-            sendErrRespResult(cmd.header.sub_code,
-                              AS_MODULE_ID_AUDIO_MANAGER,
-                              AS_ECODE_COMMAND_PARAM_CONFIG_TABLE);
-            return;
-          }
-        msg_type = MSG_AUD_SEF_CMD_DEBUG;
-        break;
-
       default:
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
@@ -1125,15 +1107,6 @@ void AudioManager::mpp(AudioCommand &cmd)
             return;
           }
         msg_type = MSG_AUD_SEF_CMD_SETPARAM;
-        break;
-
-      case AUDCMD_DEBUGMPPPARAM:
-        check = packetCheck(LENGTH_DEBUGMPPPARAM, AUDCMD_DEBUGMPPPARAM, cmd);
-        if (!check)
-          {
-            return;
-          }
-        msg_type = MSG_AUD_SEF_CMD_DEBUG;
         break;
 
       default:
@@ -2031,10 +2004,6 @@ void AudioManager::cmpltOnSoundFx(const AudioMngCmdCmpltResult &cmd)
         result_code = AUDRLT_INITMFECMPLT;
         break;
 
-      case AUDCMD_DEBUGMFEPARAM:
-        result_code = AUDRLT_DEBUGMFECMPLT;
-        break;
-
       case AUDCMD_INITMPP:
         result_code = AUDRLT_INITMPPCMPLT;
         break;
@@ -2054,10 +2023,6 @@ void AudioManager::cmpltOnSoundFx(const AudioMngCmdCmpltResult &cmd)
               sendResult(result_code, cmd.command_code);
               return;
           }
-        break;
-
-      case AUDCMD_DEBUGMPPPARAM:
-        result_code = AUDRLT_DEBUGMPPCMPLT;
         break;
 
 #endif  /* AS_FEATURE_EFFECTOR_ENABLE */
@@ -2811,10 +2776,6 @@ S_ASSERT((LENGTH_STARTBB << 2) ==
 S_ASSERT((LENGTH_STOPBB << 2) ==
   (sizeof(AudioCommandHeader) + sizeof(StopBBParam)));
 
-/* DebugMFEParam command (AUDCMD_DEBUGMFEPARAM) packet length. */
-S_ASSERT((LENGTH_DEBUGMFEPARAM << 2) ==
-  (sizeof(AudioCommandHeader) + sizeof(DebugMFEParam)));
-
 /* InitMPP command (AUDCMD_INITMPP) packet length. */
 S_ASSERT((LENGTH_INITMPP << 2) ==
   (sizeof(AudioCommandHeader) + sizeof(InitMPPParam)));
@@ -2827,20 +2788,6 @@ S_ASSERT((LENGTH_SUB_SETMPP_COMMON << 2) ==
 /* SetMPP command (AUDCMD_SETMPPPARAM) packet length. */
 S_ASSERT((LENGTH_SUB_SETMPP_XLOUD << 2) ==
   (sizeof(AudioCommandHeader) + sizeof(MppXloudSet)));
-
-/* DebugMPPParam command (AUDCMD_DEBUGMPPPARAM) packet length. */
-S_ASSERT((LENGTH_DEBUGMPPPARAM << 2) ==
-  (sizeof(AudioCommandHeader) + sizeof(DebugMPPParam)));
-
-/* DebugMPPParam command (AUDCMD_DEBUGMPPPARAM) packet length. */
-
-S_ASSERT((LENGTH_SUB_DEBUGMPP_COMMON << 2) ==
-  (sizeof(AudioCommandHeader) + sizeof(MppCommonDebug)));
-
-/* DebugMPPParam command (AUDCMD_DEBUGMPPPARAM) packet length. */
-
-S_ASSERT((LENGTH_SUB_DEBUGMPP_XLOUD << 2) ==
-  (sizeof(AudioCommandHeader) + sizeof(MppXloudDebug)));
 
 /* SetBaseBandStatus command (AUDCMD_SETBASEBANDSTATUS) packet length. */
 

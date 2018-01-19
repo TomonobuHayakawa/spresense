@@ -173,7 +173,6 @@ private:
   void dmaOutDoneCmpltOnActive(MsgPacket* msg);
   void dmaOutDoneCmpltOnStopping(MsgPacket* msg);
   void setParam(MsgPacket* msg);
-  void tuning(MsgPacket* msg);
   void filterDoneCmplt(MsgPacket* msg);
 
   void input(CaptureDataParam& param);

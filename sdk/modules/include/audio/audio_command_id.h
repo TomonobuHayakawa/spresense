@@ -117,21 +117,13 @@
 
 #define  AUDCMD_INITMFE       (AUDCMD_CATEGORY_EFFECTOR | 0x01)
 
-/*! brief Command Code: DebugMFEParam (__obsolete__) */
-
-#define  AUDCMD_DEBUGMFEPARAM (AUDCMD_CATEGORY_EFFECTOR | 0x02)
-
 /*! brief Command Code: InitMPP */
 
-#define  AUDCMD_INITMPP       (AUDCMD_CATEGORY_EFFECTOR | 0x03)
+#define  AUDCMD_INITMPP       (AUDCMD_CATEGORY_EFFECTOR | 0x02)
 
 /*! brief Command Code: SetMPPParam (__not supported__) */
 
-#define  AUDCMD_SETMPPPARAM   (AUDCMD_CATEGORY_EFFECTOR | 0x04)
-
-/*! brief Command Code: DebugMPPParam (__obsolete__) */
-
-#define  AUDCMD_DEBUGMPPPARAM (AUDCMD_CATEGORY_EFFECTOR | 0x05)
+#define  AUDCMD_SETMPPPARAM   (AUDCMD_CATEGORY_EFFECTOR | 0x03)
 
 /** @} */
 
@@ -142,10 +134,6 @@
 
 #define  AUDRLT_INITMFECMPLT    AUDCMD_INITMFE
 
-/*! \brief Result Code: DebugMFECmplt */
-
-#define  AUDRLT_DEBUGMFECMPLT   AUDCMD_DEBUGMFEPARAM
-
 /*! \brief Result Code: InitMPPCmplt */
 
 #define  AUDRLT_INITMPPCMPLT    AUDCMD_INITMPP
@@ -153,11 +141,6 @@
 /*! \brief Result Code: SetMPPParamCmplt */
 
 #define  AUDRLT_SETMPPCMPLT     AUDCMD_SETMPPPARAM
-
-/*! \brief Result Code: DebugMPPParamCmplt */
-
-#define  AUDRLT_DEBUGMPPCMPLT   AUDCMD_DEBUGMPPPARAM
-
 
 /** @} */
 

@@ -502,14 +502,6 @@ SoundEffectObject::MsgProc SoundEffectObject::MsgProcTbl[AUD_SEF_MSG_NUM][SoundF
     &SoundEffectObject::illegal                   /*   SoundFXStoppingState */
   },
 
-  /* DEBUG */
-  {                                               /* SoundEffector Status:  */
-    &SoundEffectObject::illegal,                  /*   SoundFXBootedState   */
-    &SoundEffectObject::tuning,                   /*   SoundFXReadyState    */
-    &SoundEffectObject::tuning,                   /*   SoundFXRunState      */
-    &SoundEffectObject::illegal                   /*   SoundFXStoppingState */
-  },
-
   /* CMPLT */
   {                                               /* SoundEffector Status:  */
     &SoundEffectObject::illegal,                  /*   SoundFXBootedState   */
@@ -1345,103 +1337,6 @@ void SoundEffectObject::setParam(MsgPacket *msg)
     }
 
   /* TODO: This is not synchronous command. */
-
-  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
-}
-
-/*--------------------------------------------------------------------*/
-void SoundEffectObject::tuning(MsgPacket *msg)
-{
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
-  FilterComponentParam filter_param;
-
-  bool result = false;
-
-  switch (cmd.header.command_code)
-    {
-      case AUDCMD_DEBUGMFEPARAM:
-        SOUNDFX_DBG("TUNING MFE: mic delay %d, ref delay %d\n",
-                    cmd.debug_mfe_param.mic_delay,
-                    cmd.debug_mfe_param.ref_delay);
-
-        filter_param.filter_type = Apu::MFE;
-        filter_param.callback = &mfe_done_callback;
-
-        filter_param.tuning_mfe_param.tuning_mfe.mic_delay =
-          cmd.debug_mfe_param.mic_delay;
-        filter_param.tuning_mfe_param.tuning_mfe.ref_delay =
-          cmd.debug_mfe_param.ref_delay;
-        filter_param.tuning_mfe_param.tuning_mfe.mfe_config_table =
-          cmd.debug_mfe_param.mfe_config_table;
-
-        result = AS_filter_tuning(filter_param);
-
-        if (!result)
-          {
-            sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
-            return;
-          }
-        break;
-
-      case AUDCMD_DEBUGMPPPARAM:
-        SOUNDFX_DBG("TUNING MPP:\n");
-        switch (cmd.header.sub_code)
-          {
-            case SUB_SETMPP_COMMON:
-              filter_param.filter_type = Apu::XLOUD;
-              filter_param.callback = &xloud_done_callback;
-              filter_param.tuning_mpp_param.tuning_mpp.param_idx = cmd.header.sub_code;
-
-              result = AS_filter_tuning(filter_param);
-              if (!result) {
-                  sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
-                  return;
-              }
-              break;
-
-            case SUB_SETMPP_XLOUD:
-              filter_param.filter_type = Apu::XLOUD;
-              filter_param.callback = &xloud_done_callback;
-
-              filter_param.tuning_mpp_param.tuning_mpp.param_idx =
-                cmd.header.sub_code;
-
-              filter_param.tuning_mpp_param.tuning_mpp.tuning_xloud.
-              xloud_config_table =
-                cmd.debug_mpp_param.mpp_xloud_debug.xloud_config_table;
-
-              filter_param.tuning_mpp_param.tuning_mpp.tuning_xloud.
-              xloud_param_table =
-                cmd.debug_mpp_param.mpp_xloud_debug.xloud_param_table;
-
-              filter_param.tuning_mpp_param.tuning_mpp.tuning_xloud.
-              eax_config_table =
-                cmd.debug_mpp_param.mpp_xloud_debug.eax_config_table;
-
-              filter_param.tuning_mpp_param.tuning_mpp.tuning_xloud.
-              eax_param_table =
-                cmd.debug_mpp_param.mpp_xloud_debug.eax_param_table;
-
-              result = AS_filter_tuning(filter_param);
-
-              if (!result)
-                {
-                  sendAudioCmdCmplt(cmd,
-                                    AS_ECODE_QUEUE_OPERATION_ERROR);
-                  return;
-                }
-              break;
-
-            default:
-                sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_CODE_ERROR);
-                return;
-          }
-        break;
-
-      default:
-          sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_CODE_ERROR);
-          return;
-    }
 
   sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
