@@ -113,9 +113,9 @@
 #  include "cxd56_usbdev.h"
 #endif
 
-#ifdef CONFIG_IMAGER_ISX012
+#ifdef CONFIG_VIDEO_ISX012
 #  include "cxd56_gpio.h"
-#  include <nuttx/imager/isx012.h>
+#  include <nuttx/video/isx012.h>
 #endif
 
 /****************************************************************************
@@ -357,7 +357,7 @@ int board_app_initialize(uintptr_t arg)
   devse_register();
 #endif
 
-#ifdef CONFIG_LIB_ASMP
+#ifdef CONFIG_ASMP
   asmp_initialize();
 #endif
 
@@ -374,7 +374,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 #endif
 
-#ifdef CONFIG_IMAGER_ISX012
+#ifdef CONFIG_VIDEO_ISX012
   cxd56_isx012initialize("/dev/imager", i2c2);
 #endif
 

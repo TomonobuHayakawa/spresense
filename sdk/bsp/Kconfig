@@ -1060,4 +1060,10 @@ config CXD56_GPIO_IRQ
 	---help---
 		Enable support for GPIO interrupts
 
+config CXD56_CISIF
+	bool "CMOS image sensor interface"
+	default n
+	---help---
+		TODO
+
 endmenu

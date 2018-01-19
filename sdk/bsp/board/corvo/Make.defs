@@ -69,3 +69,7 @@ ifeq ($(CONFIG_EINK_ET014TT1),y)
 CSRCS += cxd56_lcd.c
 endif
 endif
+
+ifeq ($(CONFIG_VIDEO_ISX012),y)
+CSRCS += cxd56_isx012.c
+endif

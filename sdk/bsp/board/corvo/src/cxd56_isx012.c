@@ -37,6 +37,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <debug.h>
@@ -74,7 +75,7 @@ int board_isx012_power_off(void)
 {
   int ret;
 
-  /* POWER_IMAGE_SENSOR==PMIC_GPO(4/5/7) */
+  /* 'POWER_IMAGE_SENSOR==PMIC_GPO(4/5/7)' */
 
   ret = board_power_control(POWER_IMAGE_SENSOR, false);
   if (ret)
@@ -88,17 +89,17 @@ int board_isx012_power_off(void)
 
 void board_isx012_set_reset(void)
 {
-  cxd56_gpio_write(PIN_SDIO_DIR1_3, false);
+  cxd56_gpio_write(PIN_SPI0_MISO, false);
 }
 
 void board_isx012_release_reset(void)
 {
-  cxd56_gpio_write(PIN_SDIO_DIR1_3, true);
+  cxd56_gpio_write(PIN_SPI0_MISO, true);
 }
 
 void board_isx012_set_sleep(int kind)
 {
-  cxd56_gpio_write(PIN_SDIO_DIR0, false);
+  cxd56_gpio_write(PIN_SPI0_MOSI, false);
   if (kind == 0)
     {
       /* PowerON -> sleep */
@@ -115,7 +116,7 @@ void board_isx012_set_sleep(int kind)
 
 void board_isx012_release_sleep(void)
 {
-  cxd56_gpio_write(PIN_SDIO_DIR0, true);
+  cxd56_gpio_write(PIN_SPI0_MOSI, true);
   usleep(SLEEP_CANCEL_TIME);
 }
 
@@ -128,8 +129,9 @@ int cxd56_isx012initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c
 
   _info("Initializing ISX012...\n");
 
-  cxd56_gpio_config(PIN_SDIO_DIR0, false);
-  cxd56_gpio_config(PIN_SDIO_DIR1_3, false);
+  cxd56_gpio_config(PIN_SDIO_CLKI, true);
+  cxd56_gpio_config(PIN_SPI0_MOSI,false);
+  cxd56_gpio_config(PIN_SPI0_MISO,false);
   board_isx012_set_reset();
   cxd56_gpio_write(PIN_SDIO_DIR0, false);
 

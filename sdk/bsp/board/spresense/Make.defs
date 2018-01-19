@@ -112,6 +112,6 @@ CSRCS += cxd56_lcd.c
 CSRCS += cxd56_lpm013m091a.c
 endif
 
-ifeq ($(CONFIG_IMAGER_ISX012),y)
+ifeq ($(CONFIG_VIDEO_ISX012),y)
 CSRCS += cxd56_isx012.c
 endif

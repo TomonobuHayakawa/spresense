@@ -1,8 +1,8 @@
 ############################################################################
-# modules/asmp/Makefile
+# drivers/imager/Make.defs
 #
-#   Copyright (C) 2016 Sony Corporation. All rights reserved.
-#   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
+#   Copyright (C) 2016 Gregory Nutt. All rights reserved.
+#   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -14,8 +14,8 @@
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-# 3. Neither the name NuttX nor Sony nor the names of its contributors
-#    may be used to endorse or promote products derived from this software
+# 3. Neither the name NuttX nor the names of its contributors may be
+#    used to endorse or promote products derived from this software
 #    without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -31,60 +31,18 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-###########################################################################
+############################################################################
 
--include $(TOPDIR)/Make.defs
--include $(SDKDIR)/Make.defs
-DELIM ?= $(strip /)
+# These video drivers depend on I2C support
 
-VPATH   =
-DEPPATH =
+ifeq ($(CONFIG_I2C),y)
 
-include sensors$(DELIM)Make.defs
-include lcd$(DELIM)Make.defs
-include modem$(DELIM)Make.defs
-include video$(DELIM)Make.defs
+ifeq ($(CONFIG_VIDEO_ISX012),y)
+CSRCS += isx012.c
+endif
 
-AOBJS = $(ASRCS:.S=$(OBJEXT))
-COBJS = $(CSRCS:.c=$(OBJEXT))
+DEPPATH += --dep-path video
+VPATH += :video
+CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(TOPDIR)$(DELIM)drivers$(DELIM)video}
 
-LIB_OBJS = $(AOBJS) $(COBJS)
-
-SRCS = $(ASRCS) $(CSRCS)
-OBJS = $(AOBJS) $(COBJS)
-
-BIN = libextdrivers$(LIBEXT)
-
-all: $(BIN)
-.PHONY: context depend clean distclean
-
-$(AOBJS): %$(OBJEXT): %.S
-	$(call ASSEMBLE, $<, $@)
-
-$(COBJS): %$(OBJEXT): %.c
-	$(call COMPILE, $<, $@)
-
-$(BIN): $(LIB_OBJS)
-	$(call ARCHIVE, $@, $(LIB_OBJS))
-
-.depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
-	$(Q) touch $@
-
-depend: .depend
-
-.context:
-	$(Q) touch $@
-
-context: .context
-
-clean:
-	$(call DELFILE, $(BIN))
-	$(call CLEAN)
-
-distclean: clean
-	$(call DELFILE, .context)
-	$(call DELFILE, Make.dep)
-	$(call DELFILE, .depend)
-
--include Make.dep
+endif

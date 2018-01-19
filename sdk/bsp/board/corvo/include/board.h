@@ -525,7 +525,7 @@ int board_bcm20707_get_firmware_size_in_flash(const char* firmware, int* firmwar
 int board_bcm20707_load_firmware_from_flash(const char* firmwareName, uint32_t* loadbuf);
 #endif /* CONFIG_BCM20707 */
 
-#ifdef CONFIG_IMAGER_ISX012
+#ifdef CONFIG_VIDEO_ISX012
 /****************************************************************************
  * Name: board_isx012_power_on
  *
@@ -585,6 +585,7 @@ void board_isx012_set_sleep(int kind);
  ****************************************************************************/
 
 void board_isx012_release_sleep(void);
+
 #endif /* CONFIG_IMAGER_ISX012 */
 
 /****************************************************************************

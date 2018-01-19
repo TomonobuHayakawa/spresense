@@ -119,7 +119,7 @@ FAR struct fb_vtable_s *cxd56_lpm013m091a_fb_initialize(FAR const char *devpath,
  *
  ****************************************************************************/
 
-#ifdef CONFIG_IMAGER_ISX012
+#ifdef CONFIG_VIDEO_ISX012
 int cxd56_isx012initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c);
 #endif
 

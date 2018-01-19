@@ -431,7 +431,7 @@ void board_sdcard_set_high_voltage(void);
 
 void board_sdcard_set_low_voltage(void);
 
-#ifdef CONFIG_IMAGER_ISX012
+#ifdef CONFIG_VIDEO_ISX012
 /****************************************************************************
  * Name: board_isx012_power_on
  *
@@ -491,7 +491,8 @@ void board_isx012_set_sleep(int kind);
  ****************************************************************************/
 
 void board_isx012_release_sleep(void);
-#endif /* CONFIG_IMAGER_ISX012 */
+
+#endif /* CONFIG_VIDEO_ISX012 */
 
 #undef EXTERN
 #if defined(__cplusplus)
