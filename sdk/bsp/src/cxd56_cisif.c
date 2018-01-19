@@ -1,8 +1,7 @@
 /****************************************************************************
  * arch/arm/src/cxd56xx/cxd56_cisif.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Tetsuro Itabashi <Tetsuro.x.Itabashi@sony.com>
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -59,6 +58,16 @@
 #define YUV_VSIZE_MAX (360)
 #define YUV_HSIZE_MAX (480)
 
+#ifdef CONFIG_CXD56_CISIF_DEBUG
+#  define ciferr    _err
+#  define cifwarn   _warn
+#  define cifinfo   _info
+#else
+#  define ciferr(x...)
+#  define cifwarn(x...)
+#  define cifinfo(x...)
+#endif
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -107,7 +116,7 @@ static void cisifJpgNstorageInt(uint8_t code);
 static void cisifYccErrInt(uint8_t code);
 static void cisifJpgErrInt(uint8_t code);
 
-static int cisifIntcHandler(int irq, FAR void *context);
+static int cisifIntcHandler(int irq, FAR void *context, FAR void *arg);
 static void cisifRegWrite(uint16_t reg, uint32_t val);
 static uint32_t cisifRegRead(uint16_t reg);
 
@@ -150,12 +159,13 @@ const IntcFancTable intcomp_func[] =
 /*******************************************************************************
  * cisifVsInt
  *******************************************************************************/
+
 static void cisifVsInt(uint8_t code)
 {
   switch (s_state)
     {
     case Standby:
-      dbg("invalid state\n");
+      ciferr("invalid state\n");
       break;
 
     case Ready:
@@ -204,7 +214,7 @@ static void cisifVsInt(uint8_t code)
       break;
 
     default:
-      dbg("invalid state\n");
+      ciferr("invalid state\n");
       break;
 
     }
@@ -213,6 +223,7 @@ static void cisifVsInt(uint8_t code)
 /*******************************************************************************
  * cisifYccAxiTrdnInt
  *******************************************************************************/
+
 static void cisifYccAxiTrdnInt(uint8_t code)
 {
   uint32_t size;
@@ -233,6 +244,7 @@ static void cisifYccAxiTrdnInt(uint8_t code)
 /*******************************************************************************
  * cisifYccNstorageInt
  *******************************************************************************/
+
 static void cisifYccNstorageInt(uint8_t code)
 {
   uint32_t size;
@@ -245,6 +257,7 @@ static void cisifYccNstorageInt(uint8_t code)
 /*******************************************************************************
  * cisifJpgAxiTrdnInt
  *******************************************************************************/
+
 static void cisifJpgAxiTrdnInt(uint8_t code)
 {
   uint32_t size;
@@ -265,6 +278,7 @@ static void cisifJpgAxiTrdnInt(uint8_t code)
 /*******************************************************************************
  * cisifJpgNstorageInt
  *******************************************************************************/
+
 static void cisifJpgNstorageInt(uint8_t code)
 {
   uint32_t size;
@@ -277,6 +291,7 @@ static void cisifJpgNstorageInt(uint8_t code)
 /*******************************************************************************
  * cisifYccErrInt
  *******************************************************************************/
+
 static void cisifYccErrInt(uint8_t code)
 {
   uint32_t size;
@@ -289,6 +304,7 @@ static void cisifYccErrInt(uint8_t code)
 /*******************************************************************************
  * cisifJpgErrInt
  *******************************************************************************/
+
 static void cisifJpgErrInt(uint8_t code)
 {
   uint32_t size;
@@ -301,7 +317,8 @@ static void cisifJpgErrInt(uint8_t code)
 /*******************************************************************************
  * cisifIntcHandler
  *******************************************************************************/
-static int cisifIntcHandler(int irq, FAR void *context)
+
+static int cisifIntcHandler(int irq, FAR void *context, FAR void *arg)
 {
   uint32_t value;
   uint32_t enable;
@@ -328,6 +345,7 @@ static int cisifIntcHandler(int irq, FAR void *context)
 /*******************************************************************************
  * cisifRegWrite
  *******************************************************************************/
+
 static void cisifRegWrite(uint16_t reg, uint32_t val)
 {
   putreg32(val, CXD56_CISIF_BASE + reg);
@@ -337,6 +355,7 @@ static void cisifRegWrite(uint16_t reg, uint32_t val)
 /*******************************************************************************
  * cisifRegRead
  *******************************************************************************/
+
 static uint32_t cisifRegRead(uint16_t reg)
 {
   return getreg32(CXD56_CISIF_BASE + reg);
@@ -348,6 +367,7 @@ static uint32_t cisifRegRead(uint16_t reg)
 /****************************************************************************
  * CISIF Driver Initialize
  ****************************************************************************/
+
 ResCode cxd56_cisifinit(CisifParam_t *pCisifPar)
 {
   uint32_t act_size = 0;
@@ -363,10 +383,11 @@ ResCode cxd56_cisifinit(CisifParam_t *pCisifPar)
     {
       /* CISIF Power ON */
       /* supposed that APP_SUB is already ON */
-      // TODO confirm
+      /* TODO confirm */
     }
 
   /* disable interrupt */
+
   cisifRegWrite(CISIF_INTR_DISABLE, ALL_DISABLE_INT);
 
   if (pCisifPar == NULL)
@@ -516,7 +537,8 @@ ResCode cxd56_cisifinit(CisifParam_t *pCisifPar)
   cisifRegWrite(CISIF_INTR_ENABLE, interrupts);
 
   /* CISIF interrupt handler */
-  irq_attach(CXD56_IRQ_CISIF, cisifIntcHandler);
+
+  irq_attach(CXD56_IRQ_CISIF, cisifIntcHandler, NULL);
   up_enable_irq(CXD56_IRQ_CISIF);
 
   cisifRegWrite(CISIF_INTR_CLEAR, ALL_CLEAR_INT);
@@ -528,6 +550,7 @@ ResCode cxd56_cisifinit(CisifParam_t *pCisifPar)
 /*******************************************************************************
  * cisifCaptureFrame
  *******************************************************************************/
+
 ResCode cxd56_cisifcaptureframe(StrageArea *yuv_area, StrageArea *jpg_area)
 {
   if (s_state != Ready)
@@ -559,7 +582,7 @@ ResCode cxd56_cisifcaptureframe(StrageArea *yuv_area, StrageArea *jpg_area)
       break;
 
     default:
-      dbg("invalid format\n");
+      ciferr("invalid format\n");
       return E_SETTING_FAILED;
     }
 
@@ -598,6 +621,7 @@ ResCode cxd56_cisifcaptureframe(StrageArea *yuv_area, StrageArea *jpg_area)
 /*******************************************************************************
  * cisifStartMonitoring
  *******************************************************************************/
+
 ResCode cxd56_cisifstartmonitoring(BankStrageArea *yuv_area, BankStrageArea *jpg_area)
 {
   if (s_state != Ready)
@@ -629,7 +653,7 @@ ResCode cxd56_cisifstartmonitoring(BankStrageArea *yuv_area, BankStrageArea *jpg
       break;
 
     default:
-      dbg("invalid format\n");
+      ciferr("invalid format\n");
       return E_SETTING_FAILED;
     }
 
@@ -672,6 +696,7 @@ ResCode cxd56_cisifstartmonitoring(BankStrageArea *yuv_area, BankStrageArea *jpg
 /*******************************************************************************
  * cisifStopMonitoring
  *******************************************************************************/
+
 ResCode cxd56_cisifstopmonitoring()
 {
   if (s_state != Monitoring)
@@ -683,4 +708,3 @@ ResCode cxd56_cisifstopmonitoring()
 
   return E_OK;
 }
-
