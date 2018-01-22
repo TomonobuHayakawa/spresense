@@ -118,9 +118,13 @@ FAR uint8_t *zm_putzdle(FAR struct zm_state_s *pzm, FAR uint8_t *buffer,
       ch7  == ASCII_DC3 ||
       ch7  == ASCII_GS ||
       (ch7 == '\r' && (pzm->flags & ZM_FLAG_ATSIGN)  != 0) ||
+#ifndef CONFIG_SYSTEM_ZMODEM_DISABLE_ZRUB
       (ch7 <  ' '  && (pzm->flags & ZM_FLAG_ESCCTRL) != 0) ||
       ch7  == ASCII_DEL ||
       ch   == 0xff
+#else
+      (ch7 <  ' '  && (pzm->flags & ZM_FLAG_ESCCTRL) != 0)
+#endif /* CONFIG_SYSTEM_ZMODEM_DISABLE_ZRUB */
       )
     {
       /* Yes... save the data link escape the character */

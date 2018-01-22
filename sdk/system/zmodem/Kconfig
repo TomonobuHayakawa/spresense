@@ -164,4 +164,12 @@ config SYSTEM_ZMODEM_DUMPBUFFER
 		Dump the contents of all incoming and outgoing buffers that are
 		exchanged with the remote peer.
 
+config SYSTEM_ZMODEM_DISABLE_ZRUB
+	bool "Disable ZRUB"
+	default n
+	---help---
+		Disable ZRUB0/ZRUB1 character while parse escape sequence character.
+		This option is for some terminal application which cannot transfer
+		via zmodem.
+
 endif
