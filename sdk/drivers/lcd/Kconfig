@@ -26,4 +26,14 @@ config LCD_ET014TT1
 	---help---
 		Supports the E Ink ET014TT1 1.43 inch monochrome display.
 
+config LCD_ILI9340
+	bool "ILI9340 LCD Driver"
+	default n
+#	select LCD_NOGETRUN
+	---help---
+		ILI9340 LCD Driver.
+		This driver doesn't support reading data.
+		Recommended to use DMA to transfer data or displayed image would be
+		broken.
+
 endif
