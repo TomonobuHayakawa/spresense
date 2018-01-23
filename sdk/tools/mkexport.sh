@@ -230,12 +230,15 @@ cp -LR -p "${TOPDIR}/include" "${EXPORTNXDIR}/." || \
 # architectures keep all of the header files there, some a few, and others
 # none
 
-cp -f "${ARCHDIR}"/*.h "${EXPORTNXDIR}"/arch/. 2>/dev/null
+cp -LR -f "${ARCHDIR}"/*.h "${EXPORTNXDIR}"/arch/. 2>/dev/null
 
 # Copy SDK header files
-
+cp -LR -pf "${SDKDIR}"/bsp/include/arch "${EXPORTNXDIR}"/include/.
 cp -rp "${SDKDIR}"/bsp/include/sdk/*.h "${EXPORTSDKDIR}"/bsp/include/sdk/.
 cp -rp "${SDKDIR}"/modules/include/* "${EXPORTSDKDIR}"/modules/include/.
+
+# An unnecessary copy, but copying driver headers so using in Arduino library.
+cp -rp "${SDKDIR}"/bsp/src/*.h "${EXPORTSDKDIR}"/bsp/include/sdk/.
 
 # Import build related tools and files
 
