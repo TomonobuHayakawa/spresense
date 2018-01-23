@@ -220,5 +220,4 @@ FAR struct lcd_dev_s *board_lcd_getdev(int lcddev)
   return g_lcd;
 }
 
-
 #endif /* CONFIG_LCD_ILI9340 */

@@ -38,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <sdk/config.h>
+#include <nuttx/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -52,53 +52,64 @@
 #include <nuttx/board.h>
 #include <nuttx/spi/spi.h>
 #include <arch/board/board.h>
-#include "cxd56_gpio.h"
-#include "cxd56_pinconfig.h"
+#if defined(CONFIG_EINK_ET014TT1)
 #include "cxd56_et014tt1.h"
+#endif
+#include "cxd56_gpio.h"
+#include "cxd56_spi.h"
+#include "cxd56_pinconfig.h"
+#include "pinassign.h"
 
 #if defined(CONFIG_EINK_ET014TT1)
 
-FAR struct fb_vtable_s *cxd56_et014tt1_initialize(FAR const char *devpath,
-                    FAR struct spi_dev_s *spi);
 int EPD_HAL_Init(void);
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
+static struct lcd_dev_s *g_lcd;
+
 static FAR struct spi_dev_s *g_spi = NULL;
 static struct et014tt1_pin_s g_pin =
 {
-#ifdef CONFIG_ARCH_BOARD_COLLET
-  .rst = PIN_SPI2_CS_X,         /* rst */
-  .busy = PIN_SPI2_SCK,         /* busy */
-  .cs = PIN_SEN_IRQ_IN,         /* cs */
-  .oei = -1,                    /* oei */
-  .power = -1                   /* power */
-#else
-   .rst = PIN_PWM2,              /* rst */
-   .busy = PIN_SPI3_CS1_X,       /* busy */
-   .cs = PIN_PWM3,               /* cs */
-   .oei = -1,                    /* oei */
-   .power = -1                   /* power */
-#endif
+  .rst   = ET014TT1_RST,       /* rst */
+  .busy  = ET014TT1_BUSY,      /* busy */
+  .cs    = ET014TT1_CS,        /* cs */
+  .oei   = -1,                 /* oei */
+  .power = -1                  /* power */
 };
 
 /****************************************************************************
- * Name: cxd56_et014tt1_initialize
+ * Name: board_graphics_setup
  *
- * Initialize LCD Device
+ * Description:
+ *   Called by NX initialization logic to configure the LCD
  *
- *******************************************************************************/
+ ****************************************************************************/
 
-FAR struct fb_vtable_s *cxd56_et014tt1_initialize(FAR const char *devpath, FAR struct spi_dev_s *spi)
+FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
 {
   int ret;
+  FAR struct fb_vtable_s *dev
+
+  dbg("Initializing lcd\n");
+
+  /* globally initialize spi bus for peripherals */
+
+  dbg("initialize spi %d.\n", DISPLAY_SPI);
+  FAR struct spi_dev_s *spi = cxd56_spibus_initialize(DISPLAY_SPI);
+  if (!spi)
+    {
+      dbg("ERROR: Failed to initialize spi bus.\n");
+      return NULL;
+    }
+
   DEBUGASSERT(spi != 0);
 
   g_spi = spi;
 
-  FAR struct fb_vtable_s *dev = et014tt1_initialize(g_spi, &g_pin);
+  dev = et014tt1_initialize(g_spi, &g_pin);
 
 #ifdef CONFIG_ARCH_BOARD_COLLET
   board_power_control(POWER_EINK, true);
@@ -107,16 +118,32 @@ FAR struct fb_vtable_s *cxd56_et014tt1_initialize(FAR const char *devpath, FAR s
   ret = EPD_HAL_Init();
   if (ret < 0)
     {
-      _err("Error EPD_HAL_Init\n");
+      dbg("Error EPD_HAL_Init\n");
     }
 
-  ret = et014tt1_register(devpath);
+  ret = et014tt1_register("/dev/lcd0");
   if (ret < 0)
     {
-      _err("Error et014tt1_register\n");
+      dbg("Error et014tt1_register\n");
     }
 
   return dev;
+
+}
+
+/****************************************************************************
+ * Name:  board_lcd_getdev
+ *
+ * Description:
+ *   Return a a reference to the LCD object for the specified LCD.  This
+ *   allows support for multiple LCD devices.
+ *
+ ****************************************************************************/
+
+FAR struct lcd_dev_s *board_lcd_getdev(int lcddev)
+{
+  DEBUGASSERT(lcddev == 0);
+  return g_lcd;
 }
 
 /****************************************************************************

@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <sdk/config.h>
+#include <nuttx/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -48,53 +48,81 @@
 
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
+#include <nuttx/spi/spi.h>
+#include <nuttx/lcd/lcd.h>
+#if defined(CONFIG_LCD_LPM013M091A)
 #include <nuttx/lcd/lpm013m091a.h>
+#endif
 #include "cxd56_gpio.h"
+#include "cxd56_spi.h"
 #include "cxd56_pinconfig.h"
+#include "pinassign.h"
 
 #if defined(CONFIG_LCD_LPM013M091A)
 
 /****************************************************************************
  * Private Type Definition
  ****************************************************************************/
+/* Define CONFIG_DEBUG_LCD to enable detailed LCD debug output.
+ * Verbose debug must also be enabled.
+ */
 
-/* Board specific GPIO pin assignment */
+#ifndef CONFIG_DEBUG
+#  undef CONFIG_DEBUG_VERBOSE
+#  undef CONFIG_DEBUG_GRAPHICS
+#  undef CONFIG_DEBUG_LCD
+#endif
 
-#define DISPLAY_RST PIN_SPI2_MOSI /* Reset signal */
-#define DISPLAY_DC  PIN_SPI2_MISO /* Data/Command signal */
+#ifndef CONFIG_DEBUG_VERBOSE
+#  undef CONFIG_DEBUG_LCD
+#endif
+
+#ifdef CONFIG_DEBUG_LCD
+#  define lcddbg(format, ...)  vdbg(format, ##__VA_ARGS__)
+#else
+#  define lcddbg(x...)
+#endif
+
 
 /****************************************************************************
  * Private Function Protototypes
  ****************************************************************************/
 
-static ResCode lpm013m091a_sendReset(FAR struct lpm013m091a_lcd_s *lcd);
-static ResCode lpm013m091a_setTransferMode(FAR struct lpm013m091a_lcd_s *lcd, TransferMode mode);
+static int lpm013m091a_send_reset(FAR struct lpm013m091a_lcd_s *lcd);
+static int lpm013m091a_set_transfer_mode(FAR struct lpm013m091a_lcd_s *lcd,
+                                         lpm013m091a_trans_mode_t mode);
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
-static struct lpm013m091a_lcd_s g_lcd =
+static struct lcd_dev_s *g_lcd;
+
+static struct lpm013m091a_lcd_s g_lpm013m091a =
 {
-  .sendReset = lpm013m091a_sendReset,
-  .setTransferMode = lpm013m091a_setTransferMode,
+  .send_reset = lpm013m091a_send_reset,
+  .set_transfer_mode = lpm013m091a_set_transfer_mode,
 };
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
 
 /*******************************************************************************
  * Send Reset Command to LCD Driver
  *******************************************************************************/
 
-static ResCode lpm013m091a_sendReset(FAR struct lpm013m091a_lcd_s *lcd)
+static int lpm013m091a_send_reset(FAR struct lpm013m091a_lcd_s *lcd)
 {
-  cxd56_gpio_write(DISPLAY_RST, false);
+  cxd56_gpio_write(LPM013M091A_RST, false);
 
   up_mdelay(10);
 
-  cxd56_gpio_write(DISPLAY_RST, true);
+  cxd56_gpio_write(LPM013M091A_RST, true);
 
   up_mdelay(50);
 
-  return ResCodeOk;
+  return OK;
 }
 
 /*******************************************************************************
@@ -102,54 +130,117 @@ static ResCode lpm013m091a_sendReset(FAR struct lpm013m091a_lcd_s *lcd)
  * High:=> data, Low:=> command
  *******************************************************************************/
 
-static ResCode lpm013m091a_setTransferMode(FAR struct lpm013m091a_lcd_s *lcd, TransferMode mode)
+static int lpm013m091a_set_transfer_mode(FAR struct lpm013m091a_lcd_s *lcd, lpm013m091a_trans_mode_t mode)
 {
-  bool value = (mode == TransferData) ? true : false;
+  bool value = (mode == TRANSFER_DATA) ? true : false;
 
-  cxd56_gpio_write(DISPLAY_DC, value);
+  cxd56_gpio_write(LPM013M091A_DC, value);
 
-  return ResCodeOk;
+  return OK;
 }
 
-/*******************************************************************************
- * Initialize LCD Device
- *******************************************************************************/
-
-#if defined(CONFIG_NX_LCDDRIVER)
-FAR struct lcd_dev_s *cxd56_lpm013m091a_initialize(FAR struct spi_dev_s *spi)
-{
-  DEBUGASSERT(spi != 0);
-
-  FAR struct lcd_dev_s *dev = lpm013m091a_initialize(&g_lcd, spi);
-
-  return dev;
-}
-
-#else
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
 
 extern FAR struct fb_vtable_s *lpm013m091a_fb_initialize(FAR struct lpm013m091a_lcd_s *lcd, struct spi_dev_s *spi);
 extern int lpm013m091a_register(FAR const char *devpath, FAR struct lpm013m091a_lcd_s *lcd);
 
-FAR struct fb_vtable_s *cxd56_lpm013m091a_fb_initialize(FAR const char *devpath, FAR struct spi_dev_s *spi)
+#if defined(CONFIG_NX_LCDDRIVER)
+/****************************************************************************
+ * Name:  board_lcd_initialize
+ *
+ * Description:
+ *   Initialize the LCD video hardware.  The initial state of the LCD is
+ *   fully initialized, display memory cleared, and the LCD ready to use,
+ *   but with the power setting at 0 (full off).
+ *
+ ****************************************************************************/
+
+int board_lcd_initialize(void)
+{
+  lcddbg("Initializing lcd\n");
+
+  if (g_lcd == NULL)
+    {
+      /* globally initialize spi bus for peripherals */
+
+      lcddbg("initialize spi %d.\n", DISPLAY_SPI);
+      FAR struct spi_dev_s *spi = cxd56_spibus_initialize(DISPLAY_SPI);
+      if (!spi)
+        {
+          lcddbg("ERROR: Failed to initialize spi bus.\n");
+          return -ENODEV;
+        }
+
+      DEBUGASSERT(spi != 0);
+      g_lcd = lpm013m091a_initialize(&g_lpm013m091a, spi);
+    }
+
+  DEBUGASSERT(g_lcd);
+
+  return OK;
+}
+
+#else /* CONFIG_NX_LCDDRIVER */
+/****************************************************************************
+ * Name: board_graphics_setup
+ *
+ * Description:
+ *   Called by NX initialization logic to configure the LCD
+ *
+ ****************************************************************************/
+
+FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
 {
   int ret;
-  DEBUGASSERT(spi != 0);
+  FAR struct fb_vtable_s *dev;
 
-  FAR struct fb_vtable_s *dev = lpm013m091a_fb_initialize(&g_lcd, spi);
+  dbg("Initializing lcd\n");
+
+  /* globally initialize spi bus for peripherals */
+
+  dbg("initialize spi %d.\n", DISPLAY_SPI);
+  FAR struct spi_dev_s *spi = cxd56_spibus_initialize(DISPLAY_SPI);
+  if (!spi)
+    {
+      dbg("ERROR: Failed to initialize spi bus.\n");
+      return NULL;
+    }
+
+  DEBUGASSERT(spi != 0);
+  dev = lpm013m091a_fb_initialize(&g_lpm013m091a, spi);
 
   /* Configure GPIO output pin */
 
-  cxd56_gpio_config(DISPLAY_RST, false);
-  cxd56_gpio_config(DISPLAY_DC, false);
+  cxd56_gpio_config(LPM013M091A_RST, false);
+  cxd56_gpio_config(LPM013M091A_DC, false);
 
-  ret = lpm013m091a_register(devpath, &g_lcd);
+  ret = lpm013m091a_register("/dev/lcd0", &g_lpm013m091a);
   if (ret < 0)
     {
-      _err("Error registering lpm013m091a\n");
+      dbg("Error registering lpm013m091a\n");
     }
 
   return dev;
+
 }
 #endif /* CONFIG_NX_LCDDRIVER */
+
+/****************************************************************************
+ * Name:  board_lcd_getdev
+ *
+ * Description:
+ *   Return a a reference to the LCD object for the specified LCD.  This
+ *   allows support for multiple LCD devices.
+ *
+ ****************************************************************************/
+
+FAR struct lcd_dev_s *board_lcd_getdev(int lcddev)
+{
+  DEBUGASSERT(lcddev == 0);
+  return g_lcd;
+}
+
 
 #endif /* CONFIG_LCD_LPM013M091A */
