@@ -63,11 +63,11 @@ CSRCS += cxd56_bcm20706.c
 endif
 
 ifeq ($(CONFIG_LCD_LPM013M091A),y)
-CSRCS += cxd56_lcd.c
-else
-ifeq ($(CONFIG_EINK_ET014TT1),y)
-CSRCS += cxd56_lcd.c
+CSRCS += cxd56_lpm013m091a.c
 endif
+
+ifeq ($(CONFIG_EINK_ET014TT1),y)
+CSRCS += cxd56_et014tt1.c
 endif
 
 ifeq ($(CONFIG_VIDEO_ISX012),y)

@@ -110,7 +110,6 @@ CSRCS += cxd56_sdcard.c
 endif
 
 ifeq ($(CONFIG_LCD_LPM013M091A),y)
-CSRCS += cxd56_lcd.c
 CSRCS += cxd56_lpm013m091a.c
 endif
 
