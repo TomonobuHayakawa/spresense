@@ -38,7 +38,7 @@
  ****************************************************************************/
 
 #include <sdk/config.h>
-#include <nuttx/pwm.h>
+#include <nuttx/drivers/pwm.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -62,23 +62,6 @@
 
 #ifndef CONFIG_DEBUG
 #  undef CONFIG_DEBUG_PWM
-#endif
-
-#ifdef CONFIG_DEBUG_PWM
-#  define pwmdbg              dbg
-#  define pwmlldbg            lldbg
-#  ifdef CONFIG_DEBUG_VERBOSE
-#    define pwmvdbg           vdbg
-#    define pwmllvdbg         llvdbg
-#  else
-#    define pwmvdbg(x...)
-#    define pwmllvdbg(x...)
-#  endif
-#else
-#  define pwmdbg(x...)
-#  define pwmlldbg(x...)
-#  define pwmvdbg(x...)
-#  define pwmllvdbg(x...)
 #endif
 
 #define PWM_REG_BASE        (0x04195600)
@@ -260,7 +243,7 @@ static int convert_freq2period(uint32_t freq, ub16_t duty, uint32_t *param)
   pwmfreq = cxd56_get_pwm_baseclock();
   if (pwmfreq == 0)
     {
-      pwmdbg("Unknown pwm frequency\n");
+      pwmerr("Unknown pwm frequency\n");
       return -1;
     }
 
@@ -268,7 +251,7 @@ static int convert_freq2period(uint32_t freq, ub16_t duty, uint32_t *param)
 
   if ((freq > ((pwmfreq + 1) >> 1)) || (freq < (pwmfreq >> 16)))
     {
-      pwmdbg("Frequency out of range. %d [Effective range:%d - %d]\n",
+      pwmerr("Frequency out of range. %d [Effective range:%d - %d]\n",
                 freq, pwmfreq >> 16, (pwmfreq + 1) >> 1);
       return -1;
     }
@@ -277,7 +260,7 @@ static int convert_freq2period(uint32_t freq, ub16_t duty, uint32_t *param)
 
   if ((duty < 0x00000001) || (duty > 0x0000ffff))
     {
-      pwmdbg("Duty out of range. %d\n", duty);
+      pwmerr("Duty out of range. %d\n", duty);
       return -1;
     }
 
@@ -476,13 +459,13 @@ FAR struct pwm_lowerhalf_s *cxd56_pwminitialize(uint32_t channel)
         break;
 #endif
       default:
-        pwmdbg("Illeagal channel number:%d\n", channel);
+        pwmerr("Illeagal channel number:%d\n", channel);
         return NULL;
     }
 
   if (ret < 0)
     {
-      pwmdbg("Failed to pinconf():%d\n", channel);
+      pwmerr("Failed to pinconf():%d\n", channel);
       return NULL;
     }
 

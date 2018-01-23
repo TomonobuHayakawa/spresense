@@ -44,7 +44,7 @@
 #include <errno.h>
 
 #include <nuttx/board.h>
-#include <nuttx/pwm.h>
+#include <nuttx/drivers/pwm.h>
 
 #include "cxd56_pwm.h"
 
@@ -73,7 +73,7 @@ static int pwm_initialize(uint32_t channel)
   pwm = cxd56_pwminitialize(channel);
   if (!pwm)
     {
-      adbg("Failed to get the CXD56 PWM%d lower half\n", channel);
+      pwmerr("Failed to get the CXD56 PWM%d lower half\n", channel);
       return -ENODEV;
     }
 
@@ -83,7 +83,7 @@ static int pwm_initialize(uint32_t channel)
   ret = pwm_register(devname, pwm);
   if (ret < 0)
     {
-      adbg("pwm_register(%s) failed: %d\n", devname, ret);
+      pwmerr("pwm_register(%s) failed: %d\n", devname, ret);
       return ret;
     }
 

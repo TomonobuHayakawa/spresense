@@ -1054,6 +1054,34 @@ endmenu
 
 endif # CXD56_AUDIO
 
+config CXD56_PWM0
+	bool "PWM0"
+	default n
+	select PWM
+	---help---
+		Enable PWM channel 0
+
+config CXD56_PWM1
+	bool "PWM1"
+	default n
+	select PWM
+	---help---
+		Enable PWM channel 1
+
+config CXD56_PWM2
+	bool "PWM2"
+	default n
+	select PWM
+	---help---
+		Enable PWM channel 2
+
+config CXD56_PWM3
+	bool "PWM3"
+	default n
+	select PWM
+	---help---
+		Enable PWM channel 3
+
 config CXD56_GPIO_IRQ
 	bool "GPIO interrupt support"
 	default n
