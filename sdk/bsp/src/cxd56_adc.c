@@ -65,29 +65,6 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-/* Debug ********************************************************************/
-/* Non-standard debug that may be enabled just for testing ADC */
-
-#ifndef CONFIG_DEBUG
-#  undef CONFIG_DEBUG_ADC
-#endif
-
-#ifdef CONFIG_DEBUG_ADC
-#  define adcdbg              dbg
-#  define adclldbg            lldbg
-#  ifdef CONFIG_DEBUG_VERBOSE
-#    define adcvdbg           vdbg
-#    define adcllvdbg         llvdbg
-#  else
-#    define adcvdbg(x...)
-#    define adcllvdbg(x...)
-#  endif
-#else
-#  define adcdbg(x...)
-#  define adclldbg(x...)
-#  define adcvdbg(x...)
-#  define adcllvdbg(x...)
-#endif
 
 #ifndef CONFIG_CXD56_HPADC0_FSIZE
 #  define CONFIG_CXD56_HPADC0_FSIZE 64
@@ -314,7 +291,7 @@ static int set_ofstgain(FAR struct cxd56adc_dev_s *priv)
       ret = seq_ioctl(priv->seq, 0, SCUIOC_SETOGADJUST, 0);
       if (ret < 0)
         {
-          adcdbg("SETOGADJUST failed. %d\n", ret);
+          aerr("SETOGADJUST failed. %d\n", ret);
           return ret;
         }
     }
@@ -324,7 +301,7 @@ static int set_ofstgain(FAR struct cxd56adc_dev_s *priv)
       ret = seq_ioctl(priv->seq, 0, SCUIOC_CLROGADJUST, 0);
       if (ret < 0)
         {
-          adcdbg("CLROGADJUST failed. %d\n", ret);
+          aerr("CLROGADJUST failed. %d\n", ret);
           return ret;
         }
     }
@@ -644,11 +621,11 @@ static int cxd56_adc_open(FAR struct file *filep)
   ret = seq_ioctl(priv->seq, 0, SCUIOC_SETFIFO, priv->fsize);
   if (ret < 0)
     {
-      adcdbg("SETFIFO failed. %d\n", ret);
+      aerr("SETFIFO failed. %d\n", ret);
       return ret;
     }
 
-  adcvdbg("open ch%d freq%d scufifo%d\n", priv->ch, priv->freq, priv->fsize);
+  ainfo("open ch%d freq%d scufifo%d\n", priv->ch, priv->freq, priv->fsize);
 
   return OK;
 }
@@ -743,7 +720,7 @@ static int cxd56_adc_ioctl(FAR struct file *filep, int cmd,
             }
           else
             {
-              adcdbg("Unrecognized cmd: %d\n", cmd);
+              aerr("Unrecognized cmd: %d\n", cmd);
               ret = -EINVAL;
             }
         }
@@ -900,7 +877,7 @@ int cxd56_adcinitialize(void)
   ret = register_driver("/dev/lpadc0", &g_adcops, 0666, &g_lpadc0priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver(lpadc0): %d\n", ret);
+      aerr("Failed to register driver(lpadc0): %d\n", ret);
       return ret;
     }
 #endif
@@ -908,7 +885,7 @@ int cxd56_adcinitialize(void)
   ret = register_driver("/dev/lpadc1", &g_adcops, 0666, &g_lpadc1priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver(lpadc1): %d\n", ret);
+      aerr("Failed to register driver(lpadc1): %d\n", ret);
       return ret;
     }
 #endif
@@ -916,7 +893,7 @@ int cxd56_adcinitialize(void)
   ret = register_driver("/dev/lpadc2", &g_adcops, 0666, &g_lpadc2priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver(lpadc2): %d\n", ret);
+      aerr("Failed to register driver(lpadc2): %d\n", ret);
       return ret;
     }
 #endif
@@ -924,7 +901,7 @@ int cxd56_adcinitialize(void)
   ret = register_driver("/dev/lpadc3", &g_adcops, 0666, &g_lpadc3priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver(lpadc3): %d\n", ret);
+      aerr("Failed to register driver(lpadc3): %d\n", ret);
       return ret;
     }
 #endif
@@ -932,7 +909,7 @@ int cxd56_adcinitialize(void)
   ret = register_driver("/dev/hpadc0", &g_adcops, 0666, &g_hpadc0priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver(hpadc0): %d\n", ret);
+      aerr("Failed to register driver(hpadc0): %d\n", ret);
       return ret;
     }
 #endif
@@ -940,7 +917,7 @@ int cxd56_adcinitialize(void)
   ret = register_driver("/dev/hpadc1", &g_adcops, 0666, &g_hpadc1priv);
   if (ret < 0)
     {
-      sndbg("Failed to register driver(hpadc1): %d\n", ret);
+      aerr("Failed to register driver(hpadc1): %d\n", ret);
       return ret;
     }
 #endif

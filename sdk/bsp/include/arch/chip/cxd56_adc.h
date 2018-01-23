@@ -50,7 +50,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <nuttx/fs/ioctl.h>
+#include <nuttx/analog/ioctl.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -60,6 +60,8 @@
  * @defgroup adc_ioctl IOCTL commands
  * @{
  */
+
+#define ANIOC_USER                 (AN_FIRST + AN_NCMDS)
 
 /**
  * Start sampling
