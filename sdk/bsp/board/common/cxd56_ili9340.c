@@ -1,8 +1,7 @@
 /****************************************************************************
  * configs/cxd56xx/src/cxd56_ili9340.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Tetsuro Itabashi <Tetsuro.x.Itabashi@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

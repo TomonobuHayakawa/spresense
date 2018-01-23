@@ -1,8 +1,7 @@
 /****************************************************************************
  * configs/cxd56xx/src/cxd56_lpm013m091a.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Tetsuro Itabashi <Tetsuro.x.Itabashi@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,7 +36,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -50,9 +49,7 @@
 #include <nuttx/board.h>
 #include <nuttx/spi/spi.h>
 #include <nuttx/lcd/lcd.h>
-#if defined(CONFIG_LCD_LPM013M091A)
 #include <nuttx/lcd/lpm013m091a.h>
-#endif
 #include "cxd56_gpio.h"
 #include "cxd56_spi.h"
 #include "cxd56_pinconfig.h"
@@ -63,26 +60,6 @@
 /****************************************************************************
  * Private Type Definition
  ****************************************************************************/
-/* Define CONFIG_DEBUG_LCD to enable detailed LCD debug output.
- * Verbose debug must also be enabled.
- */
-
-#ifndef CONFIG_DEBUG
-#  undef CONFIG_DEBUG_VERBOSE
-#  undef CONFIG_DEBUG_GRAPHICS
-#  undef CONFIG_DEBUG_LCD
-#endif
-
-#ifndef CONFIG_DEBUG_VERBOSE
-#  undef CONFIG_DEBUG_LCD
-#endif
-
-#ifdef CONFIG_DEBUG_LCD
-#  define lcddbg(format, ...)  vdbg(format, ##__VA_ARGS__)
-#else
-#  define lcddbg(x...)
-#endif
-
 
 /****************************************************************************
  * Private Function Protototypes
@@ -159,17 +136,17 @@ extern int lpm013m091a_register(FAR const char *devpath, FAR struct lpm013m091a_
 
 int board_lcd_initialize(void)
 {
-  lcddbg("Initializing lcd\n");
+  lcdinfo("Initializing lcd\n");
 
   if (g_lcd == NULL)
     {
       /* globally initialize spi bus for peripherals */
 
-      lcddbg("initialize spi %d.\n", DISPLAY_SPI);
+      lcdinfo("initialize spi %d.\n", DISPLAY_SPI);
       FAR struct spi_dev_s *spi = cxd56_spibus_initialize(DISPLAY_SPI);
       if (!spi)
         {
-          lcddbg("ERROR: Failed to initialize spi bus.\n");
+          lcderr("ERROR: Failed to initialize spi bus.\n");
           return -ENODEV;
         }
 
@@ -196,15 +173,15 @@ FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
   int ret;
   FAR struct fb_vtable_s *dev;
 
-  dbg("Initializing lcd\n");
+  lcdinfo("Initializing lcd\n");
 
   /* globally initialize spi bus for peripherals */
 
-  dbg("initialize spi %d.\n", DISPLAY_SPI);
+  lcdinfo("initialize spi %d.\n", DISPLAY_SPI);
   FAR struct spi_dev_s *spi = cxd56_spibus_initialize(DISPLAY_SPI);
   if (!spi)
     {
-      dbg("ERROR: Failed to initialize spi bus.\n");
+      lcderr("ERROR: Failed to initialize spi bus.\n");
       return NULL;
     }
 
@@ -219,7 +196,7 @@ FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
   ret = lpm013m091a_register("/dev/lcd0", &g_lpm013m091a);
   if (ret < 0)
     {
-      dbg("Error registering lpm013m091a\n");
+      lcderr("Error registering lpm013m091a\n");
     }
 
   return dev;

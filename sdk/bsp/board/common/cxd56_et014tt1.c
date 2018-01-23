@@ -1,9 +1,7 @@
 /****************************************************************************
  * configs/cxd56xx/src/cxd56_et014tt1.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Kei Yamamoto <Kei.x.Yamamoto@sony.com>
- *           Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,7 +36,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -52,9 +50,7 @@
 #include <nuttx/board.h>
 #include <nuttx/spi/spi.h>
 #include <arch/board/board.h>
-#if defined(CONFIG_EINK_ET014TT1)
 #include "cxd56_et014tt1.h"
-#endif
 #include "cxd56_gpio.h"
 #include "cxd56_spi.h"
 #include "cxd56_pinconfig.h"
@@ -93,15 +89,15 @@ FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
   int ret;
   FAR struct fb_vtable_s *dev
 
-  dbg("Initializing lcd\n");
+  lcdinfo("Initializing lcd\n");
 
   /* globally initialize spi bus for peripherals */
 
-  dbg("initialize spi %d.\n", DISPLAY_SPI);
+  lcdinfo("initialize spi %d.\n", DISPLAY_SPI);
   FAR struct spi_dev_s *spi = cxd56_spibus_initialize(DISPLAY_SPI);
   if (!spi)
     {
-      dbg("ERROR: Failed to initialize spi bus.\n");
+      lcderr("ERROR: Failed to initialize spi bus.\n");
       return NULL;
     }
 
@@ -118,13 +114,13 @@ FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
   ret = EPD_HAL_Init();
   if (ret < 0)
     {
-      dbg("Error EPD_HAL_Init\n");
+      lcderr("Error EPD_HAL_Init\n");
     }
 
   ret = et014tt1_register("/dev/lcd0");
   if (ret < 0)
     {
-      dbg("Error et014tt1_register\n");
+      lcderr("Error et014tt1_register\n");
     }
 
   return dev;
