@@ -7,8 +7,7 @@
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *           Librae <librae8226@gmail.com>
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Tetsuro Itabashi <Tetsuro.x.Itabashi@sony.com>
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -77,16 +76,6 @@
 #define ILI9340_YSTRIDE       (ILI9340_YRES << 1)
 
 #define ILI9340_FBSIZE        (ILI9340_XSTRIDE*ILI9340_YRES)
-
-/* Debug */
-
-#ifdef CONFIG_DEBUG_LCD
-#  define lcddbg(format, ...)  dbg(format, ##__VA_ARGS__)
-#  define lcdvdbg(format, ...) vdbg(format, ##__VA_ARGS__)
-#else
-#  define lcddbg(x...)
-#  define lcdvdbg(x...)
-#endif
 
 /****************************************************************************
  * Private Function Protototypes
@@ -207,7 +196,7 @@ int ili9340_putrun(fb_coord_t row, fb_coord_t col,
 int ili9340_getrun(fb_coord_t row, fb_coord_t col, FAR uint8_t * buffer,
                        size_t npixels)
 {
-  lcddbg("getrun is not supported for now.\n");
+  lcderr("getrun is not supported for now.\n");
   return OK;
 }
 #endif
@@ -218,7 +207,7 @@ int ili9340_getvideoinfo(FAR struct lcd_dev_s *dev,
                              FAR struct fb_videoinfo_s *vinfo)
 {
   DEBUGASSERT(dev && vinfo);
-  lcdvdbg("fmt: %d xres: %d yres: %d nplanes: %d\n",
+  lcdinfo("fmt: %d xres: %d yres: %d nplanes: %d\n",
           g_videoinfo.fmt, g_videoinfo.xres, g_videoinfo.yres,
           g_videoinfo.nplanes);
   memcpy(vinfo, &g_videoinfo, sizeof(struct fb_videoinfo_s));
@@ -229,7 +218,7 @@ int ili9340_getplaneinfo(FAR struct lcd_dev_s *dev, unsigned int planeno,
                              FAR struct lcd_planeinfo_s *pinfo)
 {
   DEBUGASSERT(pinfo && planeno == 0);
-  lcdvdbg("planeno: %d bpp: %d\n", planeno, g_planeinfo.bpp);
+  lcdinfo("planeno: %d bpp: %d\n", planeno, g_planeinfo.bpp);
   memcpy(pinfo, &g_planeinfo, sizeof(struct lcd_planeinfo_s));
   return OK;
 }
@@ -240,7 +229,7 @@ int ili9340_getpower(FAR struct lcd_dev_s *dev)
 {
   FAR struct ili9340_dev_s *lcd = (FAR struct ili9340_dev_s *)dev;
   DEBUGASSERT(lcd);
-  lcddbg("%d\n", lcd->power);
+  lcdinfo("%d\n", lcd->power);
   return lcd->power;
 }
 
@@ -248,7 +237,7 @@ int ili9340_setpower(FAR struct lcd_dev_s *dev, int power)
 {
   FAR struct ili9340_dev_s *lcd = (FAR struct ili9340_dev_s *)dev;
 
-  lcddbg("%d\n", power);
+  lcdinfo("%d\n", power);
   lcd->power = power;
 
   if (power > 0)
@@ -267,7 +256,7 @@ int ili9340_getcontrast(FAR struct lcd_dev_s *dev)
 {
   struct ili9340_dev_s *mlcd = (struct ili9340_dev_s *)dev;
   DEBUGASSERT(mlcd);
-  lcddbg("contrast: %d\n", mlcd->contrast);
+  lcdinfo("contrast: %d\n", mlcd->contrast);
   return mlcd->contrast;
 }
 
@@ -275,7 +264,7 @@ int ili9340_setcontrast(FAR struct lcd_dev_s *dev, unsigned int contrast)
 {
   struct ili9340_dev_s *mlcd = (struct ili9340_dev_s *)dev;
   DEBUGASSERT(mlcd);
-  lcddbg("contrast: %d\n", contrast);
+  lcdinfo("contrast: %d\n", contrast);
 
   mlcd->contrast = contrast;
   return OK;

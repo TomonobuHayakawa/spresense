@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_ili9340_base.c
+ * drivers/lcd/ili9340_base.c
  *
  * Device driver base for ILI9340 LCD.
  *
@@ -34,7 +34,7 @@
  *
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -44,7 +44,7 @@
 #include <debug.h>
 #include <nuttx/arch.h>
 
-#include "cxd56_ili9340_base.h"
+#include "ili9340_base.h"
 
 /****************************************************************************
  * Private Data

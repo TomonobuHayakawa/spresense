@@ -3,8 +3,7 @@
  *
  * Device driver base for ILI9340 LCD.
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Tetsuro Itabashi <Tetsuro.x.Itabashi@sony.com>
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,7 +37,7 @@
 #ifndef __DRIVERS_LCD_ILI9340_BASE_H
 #define __DRIVERS_LCD_ILI9340_BASE_H
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>

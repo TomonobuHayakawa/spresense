@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_ili9340_fb.c
+ * drivers/lcd/ili9340_fb.c
  *
  * Driver for ILI9340 LCD as a character device using frame buffer.
  *
@@ -54,7 +54,7 @@
 #include <nuttx/lcd/lcd.h>
 #include <nuttx/lcd/ili9340.h>
 
-#include "cxd56_ili9340_base.h"
+#include "ili9340_base.h"
 
 /****************************************************************************
  * Pre-processor Definitions

@@ -133,8 +133,6 @@ endif
 
 ifeq ($(CONFIG_LCD_ILI9340),y)
 CSRCS += cxd56_ili9340.c
-CSRCS += cxd56_ili9340_base.c
-CSRCS += cxd56_ili9340_fb.c
 endif
 
 include $(SDKDIR)/bsp/scripts/Board.mk

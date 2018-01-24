@@ -48,6 +48,10 @@ CFLAGS += $(shell $(INCDIR) $(INCDIROPT) "$(CC)" $(TOPDIR)$(DELIM)arch$(DELIM)ar
 CFLAGS += $(shell $(INCDIR) $(INCDIROPT) "$(CC)" $(TOPDIR)$(DELIM)sched)
 endif
 
+ifeq ($(CONFIG_LCD_ILI9340),y)
+CSRCS += ili9340.c ili9340_base.c ili9340_fb.c
+endif
+
 DEPPATH += --dep-path lcd
 VPATH += :lcd
 CFLAGS += $(shell $(INCDIR) $(INCDIROPT) "$(CC)" $(SDKDIR)$(DELIM)drivers$(DELIM)lcd)
