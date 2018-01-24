@@ -672,46 +672,46 @@ typedef enum
 typedef enum
 {
   /** I2S1 */
-  AS_I2S1,
+  AS_I2S_ID_1,
   /** I2S2 */
-  AS_I2S2,
-  AS_I2S_NUM
+  AS_I2S_ID_2,
+  AS_I2S_ID_NUM
 } asI2sId;
 
 /** Select I2S SRC bypass mode */
 typedef enum
 {
   /** disable */
-  AS_I2S_BYPASS_MODE_DISABLE,
+  AS_I2S_BP_MODE_DISABLE,
   /** enable */
-  AS_I2S_BYPASS_MODE_ENABLE,
-  AS_I2S_BYPASS_MODE_NUM
+  AS_I2S_BP_MODE_ENABLE,
+  AS_I2S_BP_MODE_NUM
 } asBypassModeId;
 
 /** Select output device ID */
 typedef enum
 {
   /** output device none */
-  AS_OUT_OFF,
+  AS_OUT_DEV_OFF,
   /** output device speaker */
-  AS_OUT_SP,
+  AS_OUT_DEV_SP,
   /** output device i2s */
-  AS_OUT_I2S,
-  AS_OUT_NUM
+  AS_OUT_DEV_I2S,
+  AS_OUT_DEV_NUM
 } asOutDeviceId;
 
 /** Select DNC mode */
 typedef enum
 {
   /** DNC off */
-  AS_DNC_MODE_OFF,
+  AS_DNC_OFF,
   /** DNC mode A */
-  AS_DNC_MODE_A,
+  AS_DNC_A,
   /** DNC mode B */
-  AS_DNC_MODE_B,
+  AS_DNC_B,
   /** DNC mode C */
-  AS_DNC_MODE_C,
-  AS_DNC_MODE_NUM
+  AS_DNC_C,
+  AS_DNC_NUM
 } asDncMode;
 
 /** Select sampling data format */
@@ -1399,8 +1399,8 @@ extern "C" {
  *
  * @retval E_AS return code
  */
-E_AS AS_PowerOnBaseBand(uint32_t rate[AS_I2S_NUM],
-                        asBypassModeId bypass_mode_en[AS_I2S_NUM]);
+E_AS AS_PowerOnBaseBand(uint32_t rate[AS_I2S_ID_NUM],
+                        asBypassModeId bypass_mode_en[AS_I2S_ID_NUM]);
 
 /**
  * @brief Power off BaseBand driver
@@ -1568,15 +1568,15 @@ E_AS AS_SetMicGain(int32_t micGain[AS_MIC_CHANNEL_MAX]);
 
 E_AS setMicChSel(uint8_t micNum, asSampFmt format);
 E_AS chkMicGainParam(int16_t micGain[AS_MIC_CHANNEL_MAX]);
-E_AS chkI2sParam(uint32_t rate[AS_I2S_NUM],
-                 asBypassModeId bypass_mode_en[AS_I2S_NUM]);
+E_AS chkI2sParam(uint32_t rate[AS_I2S_ID_NUM],
+                 asBypassModeId bypass_mode_en[AS_I2S_ID_NUM]);
 void outputDeviceUpdate(void);
 bool chkPowerOnBaseBand(void);
 bool chkEnableBaseBandInput(void);
 bool chkEnableBaseBandOutput(void);
 E_AS AS_SetOutputSelect(asOutDeviceId devid);
-E_AS AS_SetI2sParam(uint32_t rate[AS_I2S_NUM],
-                    asBypassModeId bypass_mode_en[AS_I2S_NUM]);
+E_AS AS_SetI2sParam(uint32_t rate[AS_I2S_ID_NUM],
+                    asBypassModeId bypass_mode_en[AS_I2S_ID_NUM]);
 AsClkModeId GetClkMode(void);
 
 uint32_t write_bca_reg(BCA_REG_ID regId, uint32_t data);

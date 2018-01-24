@@ -516,7 +516,7 @@ E_AS asAca_PowerOffMicBiasA()
 
 void asAca_SetOutputDevice(asOutDeviceId outDevId)
 {
-  if (outDevId == AS_OUT_SP)
+  if (outDevId == AS_OUT_DEV_SP)
     {
       enableAcaPulcoEpOut();
     }

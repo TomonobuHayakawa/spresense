@@ -51,8 +51,8 @@ enum bbPowerId
 
 struct BaseBandConfigInit_s
 {
-    uint32_t       rate[AS_I2S_NUM];             /* I2S data rate.       */
-    asBypassModeId bypass_mode_en[AS_I2S_NUM];   /* I2S SRC bypass mode. */
+    uint32_t       rate[AS_I2S_ID_NUM];          /* I2S data rate.       */
+    asBypassModeId bypass_mode_en[AS_I2S_ID_NUM];/* I2S SRC bypass mode. */
     int32_t        mic_gain[AS_MIC_CHANNEL_MAX]; /* MIC gain.            */
     asOutDeviceId  output_device_sel;            /* Output device ID.    */
     uint8_t        format;                       /* Data format.         */

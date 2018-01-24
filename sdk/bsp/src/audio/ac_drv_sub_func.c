@@ -225,11 +225,11 @@ E_AS setI2sMode(asSrcSelId srcId, FAR asSrcParam *pSrc)
 
   switch (pSrc->bypassEn)
     {
-      case AS_I2S_BYPASS_MODE_DISABLE:
+      case AS_I2S_BP_MODE_DISABLE:
         write_ac_reg(acRegBypass, 0);
         break;
 
-      case AS_I2S_BYPASS_MODE_ENABLE:
+      case AS_I2S_BP_MODE_ENABLE:
         write_ac_reg(acRegBypass, 1);
         break;
 

@@ -72,7 +72,7 @@ asAcaPulcoInParam   sAcaPulcoInParam;
 asAcaPulcoOutParam  sAcaPulcoOutParam;
 asSerDesParam       sSdesParam;
 asI2sParam          sI2sParam;
-static asSrcParam   sSrcParam[AS_I2S_NUM];
+static asSrcParam   sSrcParam[AS_I2S_ID_NUM];
 asSrcSelId          gSrcId;
 
 BaseBandConfigTbl  bb_config_tbl =
@@ -288,8 +288,8 @@ BaseBandConfigAddTbl  bb_config_add_tbl = {0};
 
 void AS_AudioIntHandler(void);
 
-E_AS AS_PowerOnBaseBand(uint32_t rate[AS_I2S_NUM],
-                        asBypassModeId bypass_mode_en[AS_I2S_NUM])
+E_AS AS_PowerOnBaseBand(uint32_t rate[AS_I2S_ID_NUM],
+                        asBypassModeId bypass_mode_en[AS_I2S_ID_NUM])
 {
   E_AS rtCode = E_AS_OK;
   if (poweron_common)
@@ -456,14 +456,14 @@ E_AS AS_BaseBandEnable_output(asOutDeviceId devid)
       return E_AS_OUT_POWER_ON_CHK_ERR;
     }
 
-  if (devid != AS_OUT_OFF)
+  if (devid != AS_OUT_DEV_OFF)
     {
       board_aca_power_control(CXD5247_AVDD, true);
     }
   bb_config_add_tbl.output_device_sel = devid;
   bb_config_add_tbl.sp_offon = 0;
 
-  if (devid == AS_OUT_SP)
+  if (devid == AS_OUT_DEV_SP)
     {
 #ifndef CONFIG_CXD56_AUDIO_ANALOG_NONE
       rtCode = EnableAcaPulcoOutput();
@@ -482,7 +482,7 @@ E_AS AS_BaseBandEnable_output(asOutDeviceId devid)
       return rtCode;
     }
 
-  if (devid == AS_OUT_I2S)
+  if (devid == AS_OUT_DEV_I2S)
     {
       setAcOutputI2S();
     }
@@ -702,13 +702,13 @@ E_AS AS_SetOutputSelect(asOutDeviceId devid)
     {
       return E_AS_OUTSEL_POWER_ON_CHK_ERR;
     }
-  if (devid >= AS_OUT_NUM)
+  if (devid >= AS_OUT_DEV_NUM)
     {
       return E_AS_OUT_DEVICE_SEL_PARAM;
     }
-  if (devid == AS_OUT_OFF)
+  if (devid == AS_OUT_DEV_OFF)
     {
-      if(bb_config_add_tbl.output_device_sel != AS_OUT_OFF)
+      if(bb_config_add_tbl.output_device_sel != AS_OUT_DEV_OFF)
         {
           rtCode = AS_MuteVolume(AS_VOLUME_MASTER);
           D_ASSERT(rtCode == E_AS_OK);
@@ -722,15 +722,15 @@ E_AS AS_SetOutputSelect(asOutDeviceId devid)
       board_aca_power_control(CXD5247_AVDD, true);
     }
   bb_config_add_tbl.output_device_sel = devid;
-  if (devid == AS_OUT_I2S)
+  if (devid == AS_OUT_DEV_I2S)
     {
       setAcOutputI2S();
     }
   return rtCode;
 }
 
-E_AS AS_SetI2sParam(uint32_t rate[AS_I2S_NUM],
-                    asBypassModeId bypass_mode_en[AS_I2S_NUM])
+E_AS AS_SetI2sParam(uint32_t rate[AS_I2S_ID_NUM],
+                    asBypassModeId bypass_mode_en[AS_I2S_ID_NUM])
 {
   if (!poweron_common)
     {
@@ -854,8 +854,8 @@ E_AS chkMicGainParam(int16_t micGain[AS_MIC_CHANNEL_MAX])
   return rtCode;
 }
 
-E_AS chkI2sParam(uint32_t rate[AS_I2S_NUM],
-                 asBypassModeId bypass_mode_en[AS_I2S_NUM])
+E_AS chkI2sParam(uint32_t rate[AS_I2S_ID_NUM],
+                 asBypassModeId bypass_mode_en[AS_I2S_ID_NUM])
 {
   E_AS rtCode = E_AS_OK;
 
@@ -868,7 +868,7 @@ E_AS chkI2sParam(uint32_t rate[AS_I2S_NUM],
         }
     }
 
-  for (uint8_t i2s_cnt = 0; i2s_cnt < AS_I2S_NUM; i2s_cnt++)
+  for (uint8_t i2s_cnt = 0; i2s_cnt < AS_I2S_ID_NUM; i2s_cnt++)
     {
       if((i2s_cnt == 0) &&
          (bb_config_tblp->i2s_data_path == AS_I2S_DATA_PATH_NONE))
@@ -880,7 +880,7 @@ E_AS chkI2sParam(uint32_t rate[AS_I2S_NUM],
         {
           break;
         }
-      if (bypass_mode_en[i2s_cnt] == AS_I2S_BYPASS_MODE_ENABLE)
+      if (bypass_mode_en[i2s_cnt] == AS_I2S_BP_MODE_ENABLE)
         {
           if (i2s_cnt == 0)
             {
@@ -1222,18 +1222,18 @@ E_AS GetAcaPulcoOutParam(void)
 {
   switch (bb_config_add_tbl.output_device_sel)
     {
-      case AS_OUT_OFF:
+      case AS_OUT_DEV_OFF:
         sAcaPulcoOutParam.outDev = AS_ACA_OUT_OFF;
         break;
 
-      case AS_OUT_SP:
+      case AS_OUT_DEV_SP:
 
         /* Speaker will be enabled when volume setting is unmuted. */
 
         sAcaPulcoOutParam.outDev = AS_ACA_OUT_OFF;
         break;
 
-      case AS_OUT_I2S:
+      case AS_OUT_DEV_I2S:
         sAcaPulcoOutParam.outDev = AS_ACA_OUT_OFF;
         break;
 
@@ -1348,22 +1348,22 @@ E_AS GetSdesParam(void)
   return E_AS_OK;
 }
 
-E_AS GetI2sParam(uint32_t rate[AS_I2S_NUM],
-                 asBypassModeId bypassEn[AS_I2S_NUM])
+E_AS GetI2sParam(uint32_t rate[AS_I2S_ID_NUM],
+                 asBypassModeId bypassEn[AS_I2S_ID_NUM])
 {
   uint8_t srcCnt = 0;
   uint8_t srcCntMax = 0;
-  uint8_t i2_device[AS_I2S_NUM] = {0};
-  uint8_t i2s_format[AS_I2S_NUM] = {0};
-  const audioIoI2sSel i2sSel[AS_I2S_NUM] =
+  uint8_t i2_device[AS_I2S_ID_NUM] = {0};
+  uint8_t i2s_format[AS_I2S_ID_NUM] = {0};
+  const audioIoI2sSel i2sSel[AS_I2S_ID_NUM] =
     {
       AUDIO_IO_I2S_SEL_I2S0, AUDIO_IO_I2S_SEL_I2S1
     };
-  const E_AS i2s_device_err[AS_I2S_NUM] =
+  const E_AS i2s_device_err[AS_I2S_ID_NUM] =
     {
       E_AS_I2S_DEVICE_1_PARAM, E_AS_I2S_DEVICE_2_PARAM
     };
-  const E_AS i2s_format_err[AS_I2S_NUM] =
+  const E_AS i2s_format_err[AS_I2S_ID_NUM] =
     {
       E_AS_I2S_FORMAT_1_PARAM, E_AS_I2S_FORMAT_2_PARAM
     };

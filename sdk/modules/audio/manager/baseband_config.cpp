@@ -94,11 +94,21 @@ uint32_t BasebandConfig::setMicGain(AudioCommand &cmd)
 /*--------------------------------------------------------------------------*/
 uint32_t BasebandConfig::initI2SParam(AudioCommand &cmd)
 {
-  if (cmd.init_i2s_param.i2s_id >= AS_I2S_NUM)
+  uint8_t i2s_id;
+
+  switch (cmd.init_i2s_param.i2s_id)
     {
-      return AS_ECODE_COMMAND_PARAM_I2S_ID;
+      case AS_I2S1:
+        i2s_id = AS_I2S_ID_1;
+        break;
+
+      case AS_I2S2:
+        i2s_id = AS_I2S_ID_2;
+        break;
+
+      default:
+        return AS_ECODE_COMMAND_PARAM_I2S_ID;
     }
-  uint8_t i2s_id = cmd.init_i2s_param.i2s_id;
 
   if (cmd.init_i2s_param.rate > 192000)
     {
@@ -109,9 +119,11 @@ uint32_t BasebandConfig::initI2SParam(AudioCommand &cmd)
   switch (cmd.init_i2s_param.bypass_mode_en)
     {
       case AS_I2S_BYPASS_MODE_DISABLE:
+        m_bb_config_init_tbl.bypass_mode_en[i2s_id] = AS_I2S_BP_MODE_DISABLE;
+        break;
+
       case AS_I2S_BYPASS_MODE_ENABLE:
-        m_bb_config_init_tbl.bypass_mode_en[i2s_id] =
-          (asBypassModeId)cmd.init_i2s_param.bypass_mode_en;
+        m_bb_config_init_tbl.bypass_mode_en[i2s_id] = AS_I2S_BP_MODE_ENABLE;
         break;
 
       default:
@@ -156,15 +168,15 @@ uint32_t BasebandConfig::initOutputSelect(AudioCommand &cmd)
   switch (cmd.init_output_select_param.output_device_sel)
     {
       case AS_OUT_OFF:
-        m_bb_config_init_tbl.output_device_sel = AS_OUT_OFF;
+        m_bb_config_init_tbl.output_device_sel = AS_OUT_DEV_OFF;
         break;
 
       case AS_OUT_SP:
-        m_bb_config_init_tbl.output_device_sel = AS_OUT_SP;
+        m_bb_config_init_tbl.output_device_sel = AS_OUT_DEV_SP;
         break;
 
       case AS_OUT_I2S:
-        m_bb_config_init_tbl.output_device_sel = AS_OUT_I2S;
+        m_bb_config_init_tbl.output_device_sel = AS_OUT_DEV_I2S;
         break;
 
       default:
@@ -581,8 +593,8 @@ void BasebandConfig::clearBasebandInitConfig()
 {
   m_bb_config_init_tbl.rate[0]           = 48000;
   m_bb_config_init_tbl.rate[1]           = 48000;
-  m_bb_config_init_tbl.bypass_mode_en[0] = AS_I2S_BYPASS_MODE_DISABLE;
-  m_bb_config_init_tbl.bypass_mode_en[1] = AS_I2S_BYPASS_MODE_DISABLE;
+  m_bb_config_init_tbl.bypass_mode_en[0] = AS_I2S_BP_MODE_DISABLE;
+  m_bb_config_init_tbl.bypass_mode_en[1] = AS_I2S_BP_MODE_DISABLE;
   m_bb_config_init_tbl.mic_gain[0]       = 0;
   m_bb_config_init_tbl.mic_gain[1]       = 0;
   m_bb_config_init_tbl.mic_gain[2]       = 0;
@@ -591,7 +603,7 @@ void BasebandConfig::clearBasebandInitConfig()
   m_bb_config_init_tbl.mic_gain[5]       = 0;
   m_bb_config_init_tbl.mic_gain[6]       = 0;
   m_bb_config_init_tbl.mic_gain[7]       = 0;
-  m_bb_config_init_tbl.output_device_sel = AS_OUT_OFF;
+  m_bb_config_init_tbl.output_device_sel = AS_OUT_DEV_OFF;
   m_bb_config_init_tbl.format            = AS_SAMPLING_FMT_24;
   m_bb_config_init_tbl.cs_vol            = -830;
   m_bb_config_init_tbl.cs_en             = 0;

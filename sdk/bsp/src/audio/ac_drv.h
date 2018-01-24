@@ -378,8 +378,8 @@ E_AS asAc_EnableSer(void);
 void asAc_PowerOffAudioCodec(void);
 void asAc_PowerOffAudioCodecInput(void);
 E_AS asAc_PowerOffAudioCodecOutput(void);
-E_AS PowerOnAudioCodec(uint32_t rate[AS_I2S_NUM],
-                       asBypassModeId bypass_mode_en[AS_I2S_NUM]);
+E_AS PowerOnAudioCodec(uint32_t rate[AS_I2S_ID_NUM],
+                       asBypassModeId bypass_mode_en[AS_I2S_ID_NUM]);
 E_AS EnableAudioCodecInput(int32_t micgain[8]);
 E_AS EnableAudioCodecOutput(void);
 

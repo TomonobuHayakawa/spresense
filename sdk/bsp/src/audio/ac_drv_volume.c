@@ -166,7 +166,7 @@ E_AS AS_SetVolume(FAR asCodecVol *pCodecVol)
     {
       return E_AS_CODEC_VOL_NULL;
     }
-  if (bb_config_add_tbl.output_device_sel == AS_OUT_OFF)
+  if (bb_config_add_tbl.output_device_sel == AS_OUT_DEV_OFF)
     {
       return E_AS_SETVOL_OUTDEV_ERR;
     }
@@ -245,7 +245,7 @@ E_AS AS_MuteVolume(asCodecVolSelId volId)
     {
       return E_AS_CODEC_VOL_ID_PARAM;
     }
-  if (bb_config_add_tbl.output_device_sel == AS_OUT_OFF)
+  if (bb_config_add_tbl.output_device_sel == AS_OUT_DEV_OFF)
     {
       return E_AS_MUTE_OUTDEV_ERR;
     }
@@ -267,7 +267,7 @@ E_AS AS_UnMuteVolume(asCodecVolSelId volId)
     {
       return E_AS_CODEC_VOL_ID_PARAM;
     }
-  if (bb_config_add_tbl.output_device_sel == AS_OUT_OFF)
+  if (bb_config_add_tbl.output_device_sel == AS_OUT_DEV_OFF)
     {
       return E_AS_UNMUTE_OUTDEV_ERR;
     }
@@ -311,7 +311,7 @@ E_AS AS_SetBeepParam(uint32_t beepFreq, int32_t beepVol)
     {
       return E_AS_SETBEEP_POWER_ON_OUT_CHK_ERR;
     }
-  if (bb_config_add_tbl.output_device_sel == AS_OUT_OFF)
+  if (bb_config_add_tbl.output_device_sel == AS_OUT_DEV_OFF)
     {
       return E_AS_SETBEEP_OUTDEV_ERR;
     }
@@ -364,7 +364,7 @@ E_AS AS_BeepDisable(void)
     {
       return E_AS_BEEPDIS_POWER_ON_OUT_CHK_ERR;
     }
-  if (bb_config_add_tbl.output_device_sel == AS_OUT_OFF)
+  if (bb_config_add_tbl.output_device_sel == AS_OUT_DEV_OFF)
     {
       return E_AS_BEEPDIS_OUTDEV_ERR;
     }
@@ -384,7 +384,7 @@ E_AS AS_BeepEnable(void)
     {
       return E_AS_BEEPENA_POWER_ON_OUT_CHK_ERR;
     }
-  if (bb_config_add_tbl.output_device_sel == AS_OUT_OFF)
+  if (bb_config_add_tbl.output_device_sel == AS_OUT_DEV_OFF)
     {
       return E_AS_BEEPENA_OUTDEV_ERR;
     }
@@ -423,7 +423,7 @@ uint32_t convBeepFreqToVal(uint32_t beepFreq)
 
 void outputDeviceUpdate(void)
 {
-  if (bb_config_add_tbl.output_device_sel == AS_OUT_OFF)
+  if (bb_config_add_tbl.output_device_sel == AS_OUT_DEV_OFF)
     {
       return;
     }
@@ -434,7 +434,7 @@ void outputDeviceUpdate(void)
         {
           bb_config_add_tbl.sp_offon = 1;
 #ifndef CONFIG_CXD56_AUDIO_ANALOG_NONE
-          AS_AcaControl(AS_ACA_SET_OUTPUT_DEVICE, (uint32_t)AS_OUT_SP);
+          AS_AcaControl(AS_ACA_SET_OUTPUT_DEVICE, (uint32_t)AS_OUT_DEV_SP);
 #endif
         }
     }
@@ -444,7 +444,7 @@ void outputDeviceUpdate(void)
         {
           bb_config_add_tbl.sp_offon = 0;
 #ifndef CONFIG_CXD56_AUDIO_ANALOG_NONE
-          AS_AcaControl(AS_ACA_SET_OUTPUT_DEVICE, (uint32_t)AS_OUT_OFF);
+          AS_AcaControl(AS_ACA_SET_OUTPUT_DEVICE, (uint32_t)AS_OUT_DEV_OFF);
 #endif
         }
     }

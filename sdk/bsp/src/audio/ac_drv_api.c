@@ -945,7 +945,7 @@ E_AS asAc_PowerOffAudioCodecOutput()
   E_AS rtCode = E_AS_OK;
   asCodecVol codecVol;
 
-  if (bb_config_add_tbl.output_device_sel != AS_OUT_OFF)
+  if (bb_config_add_tbl.output_device_sel != AS_OUT_DEV_OFF)
     {
       codecVol.input1_db = AS_VOLUME_MUTE;
       codecVol.input2_db = AS_VOLUME_MUTE;
@@ -978,8 +978,8 @@ void asAc_AhbmasterEnable()
   write_ac_reg(RI_MCK_AHBMSTR_EN, 1);
 }
 
-E_AS PowerOnAudioCodec(uint32_t rate[AS_I2S_NUM],
-                       asBypassModeId bypass_mode_en[AS_I2S_NUM])
+E_AS PowerOnAudioCodec(uint32_t rate[AS_I2S_ID_NUM],
+                       asBypassModeId bypass_mode_en[AS_I2S_ID_NUM])
 {
   E_AS rtCode = E_AS_OK;
 

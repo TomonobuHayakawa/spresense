@@ -82,7 +82,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <arch/chip/cxd56_audio.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -99,6 +98,47 @@
 #define AS_AC_CODEC_VOL_DAC      -20
 
 /** @} */
+
+/* ---------------------------------*/
+
+/** @name Fix values of audio parameter */
+/** @{ */
+
+/**  Mic channel max */
+
+#define AS_MIC_CHANNEL_MAX        8
+
+
+/** Keep setting for #InitMicGainParam.mic_gain */
+
+#define AS_MICGAIN_HOLD           215
+
+/** Keep setting for #SetVolumeParam.input1_db,
+ *                   #SetVolumeParam.input2_db,
+ *                   #SetVolumeParam.master_db
+ */
+
+#define AS_VOLUME_HOLD            255
+
+/** Mute setting for above parameters */
+
+#define AS_VOLUME_MUTE            -1025
+
+/** Keep setting for #SetBeepParam.beep_vol*/
+
+#define AS_BEEP_VOL_HOLD          255
+
+/** Keep setting for #SetBeepParam.beep_freq */
+
+#define AS_BEEP_FREQ_HOLD         0
+
+/** Mute setting for above parameters */
+
+#define AS_MICGAIN_MUTE           -7855
+
+/** @} */
+
+/* ---------------------------------*/
 
 /** @name Reslt Code Packet length */
 /** @{ */
@@ -676,17 +716,29 @@ typedef struct
 
 /** InitI2SParam Command (#AUDCMD_INITI2SPARAM) parameter */
 
+typedef enum
+{
+  AS_I2S1,
+  AS_I2S2
+} AsI2sId;
+
+typedef enum
+{
+  AS_I2S_BYPASS_MODE_DISABLE,
+  AS_I2S_BYPASS_MODE_ENABLE
+} AsI2SBypassMode;
+
 typedef struct
 {
   /*! \brief [in] Select I2S ID
-   * Use #asI2sId enum type
+   * Use #AsI2sId enum type
    */
 
   uint8_t  i2s_id;
 
   /*! \brief [in] Select I2S Bypass mode disable/enable
    *
-   *  Use #asBypassModeId enum type
+   *  Use #AsBypassModeId enum type
    */
 
   uint8_t  bypass_mode_en;
@@ -699,11 +751,26 @@ typedef struct
 
 /** InitOutputSelect Command (#AUDCMD_INITOUTPUTSELECT) parameter */
 
+typedef enum
+{
+  /*! Output device none */
+
+  AS_OUT_OFF,
+
+  /*! Output device speaker */
+
+  AS_OUT_SP,
+
+  /*! Output device i2s */
+
+  AS_OUT_I2S
+} AsOutDevice;
+
 typedef struct
 {
   /*! \brief [in] Select CXD5247 output devices
    *
-   * Use #asOutDeviceId enum type
+   * Use #AsOutDeviceId enum type
    */
 
   uint8_t  output_device_sel;
@@ -714,11 +781,18 @@ typedef struct
 /** (__not supported__) InitDNCParam Command (#AUDCMD_INITDNCPARAM) parameter
  */
 
+typedef enum
+{
+  AS_DNC_MODE_A,
+  AS_DNC_MODE_B,
+  AS_DNC_MODE_C
+} AsDncMode;
+
 typedef struct
 {
   /*! \brief [in] Select DNC mode
    *
-   * Use #asDncMode enum type
+   * Use #AsDncModeId enum type
    */
 
   uint8_t  mode;
@@ -779,7 +853,7 @@ typedef struct
 {
   /*! \brief [in] Select Master Volume Mute/UnMute
    *
-   * Use #asVolumeMute enum type.
+   * Use #AsVolumeMute enum type.
    */
 
   uint8_t  master_mute;
@@ -1470,7 +1544,7 @@ typedef enum
 
   AS_VOLUMEMUTE_MUTE,
   AS_VOLUMEMUTE_NUM
-} asVolumeMute;
+} AsVolumeMute;
 
 /** Select beep mode */
 

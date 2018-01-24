@@ -202,8 +202,8 @@ E_AS GetAcaPulcoInParam(int32_t micgain[AS_MIC_CHANNEL_MAX]);
 E_AS GetAcaPulcoSmstrParam(FAR asSmstrParam *pAcaPulcoSmstrParam);
 E_AS GetAcaPulcoOutParam(void);
 E_AS GetSdesParam(void);
-E_AS GetI2sParam(uint32_t rate[AS_I2S_NUM],
-                 asBypassModeId bypassEn[AS_I2S_NUM]);
+E_AS GetI2sParam(uint32_t rate[AS_I2S_ID_NUM],
+                 asBypassModeId bypassEn[AS_I2S_ID_NUM]);
 void asBca_SetSmstrParam(void);
 E_AS asBca_SetSrcParam(void);
 E_AS asBca_SetDncParam(asDncSelId dncId);

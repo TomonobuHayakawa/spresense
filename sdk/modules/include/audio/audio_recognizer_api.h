@@ -56,7 +56,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <arch/chip/cxd56_audio.h>
 
 /****************************************************************************
  * Pre-processor Definitions
