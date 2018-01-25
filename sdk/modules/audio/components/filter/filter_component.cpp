@@ -49,7 +49,7 @@ uint32_t AS_filter_activate(FilterComponentType type,
             if (sp_src_instance == NULL)
               {
                 FILTER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-                return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE;
+                return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
               }
           }
 
@@ -63,7 +63,7 @@ uint32_t AS_filter_activate(FilterComponentType type,
             if (sp_mfe_instance == NULL)
               {
                 FILTER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-                return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE;
+                return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
               }
           }
 
@@ -73,7 +73,7 @@ uint32_t AS_filter_activate(FilterComponentType type,
             if (sp_mpp_instance == NULL)
               {
                 FILTER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-                return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE;
+                return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
               }
           }
 
@@ -89,7 +89,7 @@ uint32_t AS_filter_activate(FilterComponentType type,
             if (sp_mfe_instance == NULL)
               {
                 FILTER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-                return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE;
+                return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
               }
           }
 
@@ -99,7 +99,7 @@ uint32_t AS_filter_activate(FilterComponentType type,
             if (sp_mpp_instance == NULL)
               {
                 FILTER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-                return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE;
+                return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
               }
           }
         {
@@ -112,7 +112,7 @@ uint32_t AS_filter_activate(FilterComponentType type,
         }
 #endif
       default:
-        return AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE;
+        return AS_ECODE_COMMAND_PARAM_CODEC_TYPE;
     }
 }
 
@@ -184,7 +184,7 @@ uint32_t AS_filter_init(FilterComponentParam param, uint32_t *dsp_inf)
         return sp_mpp_instance->init_apu(param.init_xloud_param, dsp_inf);
 #endif
       default:
-        return AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE;
+        return AS_ECODE_COMMAND_PARAM_CODEC_TYPE;
     }
 }
 

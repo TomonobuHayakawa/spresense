@@ -94,7 +94,7 @@ uint32_t AS_decode_activate(AudioCodec param,
   if (p_instance == NULL)
     {
       DECODER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE;
+      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
     }
 
   /* Reply pointer of self instance, which is used for API call. */
@@ -104,7 +104,7 @@ uint32_t AS_decode_activate(AudioCodec param,
   if (*p_instance == NULL)
     {
       DECODER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-      return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE;
+      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
     }
 
   return ((DecoderComponent*)*p_instance)->activate(param, dsp_inf);
@@ -203,7 +203,7 @@ uint32_t DecoderComponent::init_apu(const InitDecCompParam& param,
 
   if (p_apu_cmd == NULL)
     {
-      return AS_RESPONSE_CODE_DECODER_LIB_INITIALIZE_ERROR;
+      return AS_ECODE_DECODER_LIB_INITIALIZE_ERROR;
     }
 
   memset(p_apu_cmd, 0x00, sizeof(Apu::Wien2ApuCmd));
@@ -421,7 +421,7 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
 
       default:
         DECODER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE;
+        return AS_ECODE_COMMAND_PARAM_CODEC_TYPE;
     }
 
 #ifdef CONFIG_CPUFREQ_RELEASE_LOCK
@@ -447,7 +447,7 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
   if (m_dsp_handler == NULL)
     {
       DECODER_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
-      return AS_RESPONSE_CODE_DSP_LOAD_ERROR;
+      return AS_ECODE_DSP_LOAD_ERROR;
     }
 
   if (!dsp_boot_check(m_apu_mid, decoder_dsp_version, dsp_inf))
@@ -459,7 +459,7 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
           DECODER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
         }
 
-      return AS_RESPONSE_CODE_DSP_VERSION_ERROR;
+      return AS_ECODE_DSP_VERSION_ERROR;
     }
 
   DECODER_INF(AS_ATTENTION_SUB_CODE_DSP_LOAD_DONE);
@@ -468,7 +468,7 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
   memset(&m_debug_log_info, 0, sizeof(m_debug_log_info));
 #endif
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/

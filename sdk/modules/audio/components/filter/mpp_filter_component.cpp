@@ -109,7 +109,7 @@ uint32_t MPPComponent::activate_apu(MPPComponent *p_component,
                                        (void *)this)))
     {
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
-      return AS_RESPONSE_CODE_DSP_LOAD_ERROR;
+      return AS_ECODE_DSP_LOAD_ERROR;
     }
 
   /* wait for DSP boot up... */
@@ -122,12 +122,12 @@ uint32_t MPPComponent::activate_apu(MPPComponent *p_component,
           FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
         }
 
-      return AS_RESPONSE_CODE_DSP_VERSION_ERROR;
+      return AS_ECODE_DSP_VERSION_ERROR;
     }
 
   FILTER_INF(AS_ATTENTION_SUB_CODE_DSP_LOAD_DONE);
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/

@@ -92,7 +92,7 @@ uint32_t ComponentCommon::dsp_init_check(MsgQueId dsp_dtq, uint32_t *dsp_inf)
       if (rst.internal_result.res_src == Apu::FromLib)
         {
           *dsp_inf = rst.internal_result.value;
-          return AS_RESPONSE_CODE_DECODER_LIB_INITIALIZE_ERROR;
+          return AS_ECODE_DECODER_LIB_INITIALIZE_ERROR;
         }
       else
         {
@@ -100,7 +100,7 @@ uint32_t ComponentCommon::dsp_init_check(MsgQueId dsp_dtq, uint32_t *dsp_inf)
         }
     }
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/

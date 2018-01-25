@@ -164,7 +164,7 @@ uint32_t EncoderComponent::activate_apu(AudioCodec param, uint32_t *dsp_inf)
 
       default:
           ENCODER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-          return AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE;
+          return AS_ECODE_COMMAND_PARAM_CODEC_TYPE;
     }
 
   /* load DSP */
@@ -172,7 +172,7 @@ uint32_t EncoderComponent::activate_apu(AudioCodec param, uint32_t *dsp_inf)
   if ((m_dsp_handler = DD_Load(filename, enc_dsp_done_callback, (void *)this)) == NULL)
     {
       ENCODER_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
-      return AS_RESPONSE_CODE_DSP_LOAD_ERROR;
+      return AS_ECODE_DSP_LOAD_ERROR;
     }
 
   if (!dsp_boot_check(m_apu_dtq, encoder_dsp_version, dsp_inf))
@@ -184,7 +184,7 @@ uint32_t EncoderComponent::activate_apu(AudioCodec param, uint32_t *dsp_inf)
           ENCODER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
         }
 
-      return AS_RESPONSE_CODE_DSP_VERSION_ERROR;
+      return AS_ECODE_DSP_VERSION_ERROR;
     }
 
   ENCODER_INF(AS_ATTENTION_SUB_CODE_DSP_LOAD_DONE);
@@ -193,7 +193,7 @@ uint32_t EncoderComponent::activate_apu(AudioCodec param, uint32_t *dsp_inf)
   memset(&m_debug_log_info, 0, sizeof(m_debug_log_info));
 #endif
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -231,7 +231,7 @@ uint32_t EncoderComponent::init_apu(const InitEncParam& param, uint32_t *dsp_inf
 
   if (p_apu_cmd == NULL)
     {
-      return AS_RESPONSE_CODE_ENCODER_LIB_INITIALIZE_ERROR;
+      return AS_ECODE_ENCODER_LIB_INITIALIZE_ERROR;
     }
 
   memset(p_apu_cmd, 0x00, sizeof(Apu::Wien2ApuCmd));

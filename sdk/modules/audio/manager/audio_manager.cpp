@@ -838,7 +838,7 @@ void AudioManager::illegal(AudioCommand &cmd)
 {
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_STATE_VIOLATION);
+                    AS_ECODE_STATE_VIOLATION);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -898,7 +898,7 @@ void AudioManager::initAttentions(AudioCommand &cmd)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_MANAGER,
-                        AS_RESPONSE_CODE_COMMAND_PARAM_CALLBACK);
+                        AS_ECODE_COMMAND_PARAM_CALLBACK);
     }
 }
 
@@ -947,15 +947,15 @@ void AudioManager::powerOff(AudioCommand &cmd)
       return;
     }
 
-      uint8_t rst = AS_RESPONSE_CODE_OK;
-      rst = bbConfig.deactivate(BB_POWER_BOTH);
-      if (rst != AS_RESPONSE_CODE_OK)
-        {
-          sendErrRespResult(cmd.header.sub_code,
-                            AS_MODULE_ID_AUDIO_DRIVER,
-                            rst);
-          return;
-        }
+  uint8_t rst = AS_ECODE_OK;
+  rst = bbConfig.deactivate(BB_POWER_BOTH);
+  if (rst != AS_ECODE_OK)
+    {
+      sendErrRespResult(cmd.header.sub_code,
+                        AS_MODULE_ID_AUDIO_DRIVER,
+                        rst);
+      return;
+    }
 
       m_State    = AS_MNG_STATUS_POWEROFF;
       m_SubState = AS_MNG_SUB_STATUS_NONE;
@@ -992,7 +992,7 @@ void AudioManager::soundFx(AudioCommand &cmd)
       default:
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
   }
 
@@ -1008,7 +1008,7 @@ void AudioManager::soundFx(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_EFFECTOR_ENABLE */
 }
 
@@ -1031,7 +1031,7 @@ void AudioManager::mfe(AudioCommand &cmd)
           {
             sendErrRespResult(cmd.header.sub_code,
                               AS_MODULE_ID_AUDIO_MANAGER,
-                              AS_RESPONSE_CODE_COMMAND_PARAM_CONFIG_TABLE);
+                              AS_ECODE_COMMAND_PARAM_CONFIG_TABLE);
             return;
           }
         msg_type = MSG_AUD_SEF_CMD_INIT;
@@ -1047,7 +1047,7 @@ void AudioManager::mfe(AudioCommand &cmd)
           {
             sendErrRespResult(cmd.header.sub_code,
                               AS_MODULE_ID_AUDIO_MANAGER,
-                              AS_RESPONSE_CODE_COMMAND_PARAM_CONFIG_TABLE);
+                              AS_ECODE_COMMAND_PARAM_CONFIG_TABLE);
             return;
           }
         msg_type = MSG_AUD_SEF_CMD_DEBUG;
@@ -1056,7 +1056,7 @@ void AudioManager::mfe(AudioCommand &cmd)
       default:
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
 
@@ -1072,7 +1072,7 @@ void AudioManager::mfe(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_EFFECTOR_ENABLE */
 }
 
@@ -1096,7 +1096,7 @@ void AudioManager::mpp(AudioCommand &cmd)
           {
             sendErrRespResult(cmd.header.sub_code,
                               AS_MODULE_ID_AUDIO_MANAGER,
-                              AS_RESPONSE_CODE_COMMAND_PARAM_CONFIG_TABLE);
+                              AS_ECODE_COMMAND_PARAM_CONFIG_TABLE);
             return;
           }
         if (AS_MPP_EAX_DISABLE != cmd.init_mpp_param.eax_mode &&
@@ -1104,7 +1104,7 @@ void AudioManager::mpp(AudioCommand &cmd)
           {
             sendErrRespResult(cmd.header.sub_code,
                               AS_MODULE_ID_AUDIO_MANAGER,
-                              AS_RESPONSE_CODE_COMMAND_PARAM_CONFIG_TABLE);
+                              AS_ECODE_COMMAND_PARAM_CONFIG_TABLE);
             return;
           }
         msg_type = MSG_AUD_SEF_CMD_INIT;
@@ -1142,7 +1142,7 @@ void AudioManager::mpp(AudioCommand &cmd)
       default:
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
 
@@ -1157,7 +1157,7 @@ void AudioManager::mpp(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_EFFECTOR_ENABLE */
 }
 
@@ -1209,7 +1209,7 @@ void AudioManager::player(AudioCommand &cmd)
       default:
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
 
@@ -1225,7 +1225,7 @@ void AudioManager::player(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_PLAYER_ENABLE */
 }
 
@@ -1277,7 +1277,7 @@ void AudioManager::subPlayer(AudioCommand &cmd)
       default:
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
 
@@ -1293,7 +1293,7 @@ void AudioManager::subPlayer(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_PLAYER_ENABLE */
 }
 
@@ -1336,7 +1336,7 @@ void AudioManager::recorder(AudioCommand &cmd)
       default:
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
 
@@ -1352,7 +1352,7 @@ void AudioManager::recorder(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_RECORDER_ENABLE */
 }
 
@@ -1415,7 +1415,7 @@ void AudioManager::setRdyOnAct(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_EFFECTOR_ENABLE */
 }
 
@@ -1464,7 +1464,7 @@ void AudioManager::setRdyOnPlay(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_PLAYER_ENABLE */
 }
 
@@ -1493,7 +1493,7 @@ void AudioManager::setRdyOnRecorder(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_RECORDER_ENABLE */
 }
 
@@ -1535,10 +1535,10 @@ void AudioManager::setActive(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
 
   rst = bbConfig.setActiveBaseband(BB_POWER_BOTH);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_DRIVER,
@@ -1554,7 +1554,7 @@ void AudioManager::setActive(AudioCommand &cmd)
         {
           MemMgrLite::Manager::destroyStaticPools();
           rst = bbConfig.deactivate(BB_POWER_BOTH);
-          if (rst != AS_RESPONSE_CODE_OK)
+          if (rst != AS_ECODE_OK)
             {
               sendErrRespResult(cmd.header.sub_code,
                                 AS_MODULE_ID_AUDIO_DRIVER,
@@ -1563,7 +1563,7 @@ void AudioManager::setActive(AudioCommand &cmd)
             }
           sendErrRespResult(cmd.header.sub_code,
                             AS_MODULE_ID_AUDIO_MANAGER,
-                            AS_RESPONSE_CODE_COMMAND_PARAM_WITH_MFE);
+                            AS_ECODE_COMMAND_PARAM_WITH_MFE);
           return;
         }
       else
@@ -1591,7 +1591,7 @@ void AudioManager::setActive(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_EFFECTOR_ENABLE */
 }
 
@@ -1608,7 +1608,7 @@ uint32_t AudioManager::setPlayerStatusParamCheck(uint8_t  input_dev,
 
       default:
         MANAGER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DEVICE;
+        return AS_ECODE_COMMAND_PARAM_INPUT_DEVICE;
     }
 
   switch (output_dev)
@@ -1619,14 +1619,14 @@ uint32_t AudioManager::setPlayerStatusParamCheck(uint8_t  input_dev,
 
       default:
         MANAGER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DEVICE;
+        return AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE;
     }
 
   if (input_handler == NULL)
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_HANDLER;
+      return AS_ECODE_COMMAND_PARAM_INPUT_HANDLER;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 #endif /* AS_FEATURE_PLAYER_ENABLE */
 
@@ -1647,7 +1647,7 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_MANAGER,
-                        AS_RESPONSE_CODE_COMMAND_PARAM_ACTIVE_PLAYER);
+                        AS_ECODE_COMMAND_PARAM_ACTIVE_PLAYER);
       return;
     }
 
@@ -1659,7 +1659,7 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
         setPlayerStatusParamCheck(cmd.set_player_sts_param.input_device,
                                   cmd.set_player_sts_param.output_device,
                                   cmd.set_player_sts_param.ram_handler);
-      if (check_param != AS_RESPONSE_CODE_OK)
+      if (check_param != AS_ECODE_OK)
         {
           sendErrRespResult(cmd.header.sub_code,
                             AS_MODULE_ID_AUDIO_MANAGER,
@@ -1674,7 +1674,7 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
         setPlayerStatusParamCheck(cmd.set_player_sts_param.input_device_sub,
                                   cmd.set_player_sts_param.output_device_sub,
                                   cmd.set_player_sts_param.ram_handler_sub);
-      if (check_param != AS_RESPONSE_CODE_OK)
+      if (check_param != AS_ECODE_OK)
         {
           sendErrRespResult(cmd.header.sub_code,
                             AS_MODULE_ID_AUDIO_MANAGER,
@@ -1683,10 +1683,10 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
         }
     }
 
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
 
   rst = bbConfig.setActiveBaseband(BB_POWER_OUTPUT);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_DRIVER,
@@ -1735,7 +1735,7 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_PLAYER_ENABLE */
 }
 
@@ -1763,7 +1763,7 @@ void AudioManager::setRecorder(AudioCommand &cmd)
         MANAGER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DEVICE);
+                          AS_ECODE_COMMAND_PARAM_INPUT_DEVICE);
         return;
     }
 
@@ -1777,14 +1777,14 @@ void AudioManager::setRecorder(AudioCommand &cmd)
         MANAGER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DEVICE);
+                          AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE);
         return;
     }
 
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
 
   rst = bbConfig.setActiveBaseband(BB_POWER_INPUT);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_DRIVER,
@@ -1804,7 +1804,7 @@ void AudioManager::setRecorder(AudioCommand &cmd)
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_RECORDER_ENABLE */
 }
 
@@ -1829,7 +1829,7 @@ void AudioManager::voiceCommand(AudioCommand &cmd)
           {
             sendErrRespResult(cmd.header.sub_code,
                               AS_MODULE_ID_AUDIO_MANAGER,
-                              AS_RESPONSE_CODE_STATE_VIOLATION);
+                              AS_ECODE_STATE_VIOLATION);
             return;
           }
         else
@@ -1838,7 +1838,7 @@ void AudioManager::voiceCommand(AudioCommand &cmd)
               {
                 sendErrRespResult(cmd.header.sub_code,
                                   AS_MODULE_ID_AUDIO_MANAGER,
-                                  AS_RESPONSE_CODE_COMMAND_PARAM_CALLBACK);
+                                  AS_ECODE_COMMAND_PARAM_CALLBACK);
                 return;
               }
             m_findCommandCBFunc =
@@ -1876,7 +1876,7 @@ void AudioManager::voiceCommand(AudioCommand &cmd)
             {
               sendErrRespResult(cmd.header.sub_code,
                                 AS_MODULE_ID_AUDIO_MANAGER,
-                                AS_RESPONSE_CODE_STATE_VIOLATION);
+                                AS_ECODE_STATE_VIOLATION);
               return;
             }
 
@@ -1895,14 +1895,14 @@ void AudioManager::voiceCommand(AudioCommand &cmd)
         {
           sendErrRespResult(cmd.header.sub_code,
                             AS_MODULE_ID_AUDIO_MANAGER,
-                            AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                            AS_ECODE_COMMAND_CODE_ERROR);
         }
         break;
     }
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_RECOGNIZER_ENABLE */
 }
 
@@ -1912,7 +1912,7 @@ void AudioManager::illegalCmplt(const AudioMngCmdCmpltResult &cmd)
 {
   sendErrRespResult(cmd.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_STATE_VIOLATION);
+                    AS_ECODE_STATE_VIOLATION);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1920,7 +1920,7 @@ void AudioManager::cmpltOnReady(const AudioMngCmdCmpltResult &cmd)
 {
   uint8_t result_code = AUDRLT_ERRORRESPONSE;
 
-  if (cmd.result != AS_RESPONSE_CODE_OK)
+  if (cmd.result != AS_ECODE_OK)
     {
       switch (cmd.command_code)
         {
@@ -2006,7 +2006,7 @@ void AudioManager::cmpltOnReady(const AudioMngCmdCmpltResult &cmd)
       default:
         sendErrRespResult(cmd.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
   sendResult(result_code);
@@ -2017,7 +2017,7 @@ void AudioManager::cmpltOnSoundFx(const AudioMngCmdCmpltResult &cmd)
 {
   uint8_t result_code = AUDRLT_ERRORRESPONSE;
 
-  if (cmd.result != AS_RESPONSE_CODE_OK)
+  if (cmd.result != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.sub_code, cmd.module_id, cmd.result);
       return;
@@ -2097,7 +2097,7 @@ void AudioManager::cmpltOnSoundFx(const AudioMngCmdCmpltResult &cmd)
       default:
         sendErrRespResult(cmd.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
 
@@ -2108,7 +2108,7 @@ void AudioManager::cmpltOnSoundFx(const AudioMngCmdCmpltResult &cmd)
 void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
 {
 #ifdef AS_FEATURE_PLAYER_ENABLE
-  if (cmd.result != AS_RESPONSE_CODE_OK)
+  if (cmd.result != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.sub_code,
                         cmd.module_id,
@@ -2183,7 +2183,7 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
       default:
         sendErrRespResult(cmd.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
 
@@ -2191,7 +2191,7 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
 #else
   sendErrRespResult(cmd.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_PLAYER_ENABLE */
 }
 
@@ -2199,7 +2199,7 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
 void AudioManager::cmpltOnRecorder(const AudioMngCmdCmpltResult &cmd)
 {
 #ifdef AS_FEATURE_RECORDER_ENABLE
-  if (cmd.result != AS_RESPONSE_CODE_OK)
+  if (cmd.result != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.sub_code,
                         cmd.module_id,
@@ -2245,7 +2245,7 @@ void AudioManager::cmpltOnRecorder(const AudioMngCmdCmpltResult &cmd)
       default:
         sendErrRespResult(cmd.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
 
@@ -2253,7 +2253,7 @@ void AudioManager::cmpltOnRecorder(const AudioMngCmdCmpltResult &cmd)
 #else
   sendErrRespResult(cmd.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT);
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
 #endif /* AS_FEATURE_RECORDER_ENABLE */
 }
 
@@ -2262,7 +2262,7 @@ void AudioManager::cmpltOnPowerOff(const AudioMngCmdCmpltResult &cmd)
 {
   uint8_t result_code = AUDRLT_ERRORRESPONSE;
 
-  if (cmd.result != AS_RESPONSE_CODE_OK)
+  if (cmd.result != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.sub_code, cmd.module_id, cmd.result);
       return;
@@ -2279,7 +2279,7 @@ void AudioManager::cmpltOnPowerOff(const AudioMngCmdCmpltResult &cmd)
       default:
         sendErrRespResult(cmd.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                          AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
   sendResult(result_code);
@@ -2355,13 +2355,13 @@ void AudioManager::sendErrRespResult(uint8_t  sub_code,
 /*--------------------------------------------------------------------------*/
 bool AudioManager::deactivatePlayer()
 {
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
 
-      rst = bbConfig.deactivate(BB_POWER_OUTPUT);
-      if (rst != AS_RESPONSE_CODE_OK)
-        {
-          return false;
-        }
+  rst = bbConfig.deactivate(BB_POWER_OUTPUT);
+  if (rst != AS_ECODE_OK)
+    {
+      return false;
+    }
 
       m_State    = AS_MNG_STATUS_READY;
       m_SubState = AS_MNG_SUB_STATUS_NONE;
@@ -2371,10 +2371,10 @@ bool AudioManager::deactivatePlayer()
 /*--------------------------------------------------------------------------*/
 bool AudioManager::deactivateRecorder()
 {
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
 
   rst = bbConfig.deactivate(BB_POWER_INPUT);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return false;
     }
@@ -2388,10 +2388,10 @@ bool AudioManager::deactivateRecorder()
 /*--------------------------------------------------------------------------*/
 bool AudioManager::deactivateSoundFx()
 {
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
 
   rst = bbConfig.deactivate(BB_POWER_OUTPUT);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return false;
     }
@@ -2405,10 +2405,10 @@ bool AudioManager::deactivateSoundFx()
 /*--------------------------------------------------------------------------*/
 bool AudioManager::deactivateOutputMix()
 {
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
 
   rst = bbConfig.deactivate(BB_POWER_OUTPUT);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return false;
     }
@@ -2490,7 +2490,7 @@ void AudioManager::initMicGain(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.initMicGain(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITMICGAINCMPLT, cmd.header.sub_code);
     }
@@ -2511,7 +2511,7 @@ void AudioManager::setMicGain(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.setMicGain(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITMICGAINCMPLT, cmd.header.sub_code);
     }
@@ -2532,7 +2532,7 @@ void AudioManager::initI2SParam(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.initI2SParam(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITI2SPARAMCMPLT, cmd.header.sub_code);
     }
@@ -2553,7 +2553,7 @@ void AudioManager::setI2SParam(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.setI2SParam(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITI2SPARAMCMPLT, cmd.header.sub_code);
     }
@@ -2574,7 +2574,7 @@ void AudioManager::initDEQParam(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.initDEQParam(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITDEQPARAMCMPLT, cmd.header.sub_code);
     }
@@ -2595,7 +2595,7 @@ void AudioManager::initOutputSelect(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.initOutputSelect(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITOUTPUTSELECTCMPLT, cmd.header.sub_code);
     }
@@ -2616,7 +2616,7 @@ void AudioManager::setOutputSelect(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.setOutputSelect(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITOUTPUTSELECTCMPLT, cmd.header.sub_code);
     }
@@ -2637,7 +2637,7 @@ void AudioManager::initDNCParam(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.initDNCParam(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITDNCPARAMCMPLT, cmd.header.sub_code);
     }
@@ -2658,7 +2658,7 @@ void AudioManager::initClearStereo(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.initClearStereo(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITCLEARSTEREOCMPLT, cmd.header.sub_code);
     }
@@ -2679,7 +2679,7 @@ void AudioManager::setClearStereo(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.setClearStereo(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_INITCLEARSTEREOCMPLT, cmd.header.sub_code);
     }
@@ -2700,7 +2700,7 @@ void AudioManager::setVolume(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.setVolume(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_SETVOLUMECMPLT, cmd.header.sub_code);
     }
@@ -2721,7 +2721,7 @@ void AudioManager::setVolumeMute(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.setVolumeMute(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_SETVOLUMEMUTECMPLT, cmd.header.sub_code);
     }
@@ -2742,7 +2742,7 @@ void AudioManager::setBeep(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.setBeep(cmd);
-  if (rst == AS_RESPONSE_CODE_OK)
+  if (rst == AS_ECODE_OK)
     {
       sendResult(AUDRLT_SETBEEPCMPLT, cmd.header.sub_code);
     }
@@ -2784,14 +2784,14 @@ bool AudioManager::packetCheck(uint8_t      length,
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_MANAGER,
-                        AS_RESPONSE_CODE_PACKET_LENGTH_ERROR);
+                        AS_ECODE_PACKET_LENGTH_ERROR);
       return false;
     }
   if (command_code != cmd.header.command_code)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_MANAGER,
-                        AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                        AS_ECODE_COMMAND_CODE_ERROR);
       return false;
     }
   return true;

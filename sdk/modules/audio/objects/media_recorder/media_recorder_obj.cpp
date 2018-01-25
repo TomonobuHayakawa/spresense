@@ -223,11 +223,11 @@ uint32_t VoiceRecorderObjectTask::loadCodec(AudioCodec codec,
                                             int32_t sampling_rate,
                                             uint32_t* dsp_inf)
 {
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
   if ((codec == AudCodecMP3) || (codec == AudCodecOPUS))
     {
       rst = AS_encode_activate(codec,s_apu_dtq,s_apu_pool_id,dsp_inf);
-      if(rst != AS_RESPONSE_CODE_OK)
+      if(rst != AS_ECODE_OK)
         {
           return rst;
         }
@@ -237,7 +237,7 @@ uint32_t VoiceRecorderObjectTask::loadCodec(AudioCodec codec,
       if (sampling_rate != AS_INITREC_SAMPLING_48K)
         {
           rst = AS_filter_activate(SRCOnly,s_apu_dtq,s_apu_pool_id,dsp_inf);
-          if (rst != AS_RESPONSE_CODE_OK)
+          if (rst != AS_ECODE_OK)
             {
               return rst;
             }
@@ -246,12 +246,12 @@ uint32_t VoiceRecorderObjectTask::loadCodec(AudioCodec codec,
   else
     {
       MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE;
+      return AS_ECODE_COMMAND_PARAM_CODEC_TYPE;
     }
 
   m_codec_type = codec;
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -470,7 +470,7 @@ void VoiceRecorderObjectTask::illegal(MsgPacket *msg)
 {
   AudioCommand cmd = msg->moveParam<AudioCommand>();
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_STATE_VIOLATION);
+  sendAudioCmdCmplt(cmd, AS_ECODE_STATE_VIOLATION);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -485,12 +485,12 @@ void VoiceRecorderObjectTask::activate(MsgPacket *msg)
 
   if (!checkAndSetMemPool())
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_CHECK_MEMORY_POOL_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_CHECK_MEMORY_POOL_ERROR);
       return;
     }
 
   rst = isValidActivateParam(cmd);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       sendAudioCmdCmplt(cmd, rst);
       return;
@@ -505,13 +505,13 @@ void VoiceRecorderObjectTask::activate(MsgPacket *msg)
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DEVICE);
+        sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE);
         return;
     }
 
   m_state = RecorderStateReady;
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -523,25 +523,25 @@ void VoiceRecorderObjectTask::deactivate(MsgPacket *msg)
 
   if (!(cmd.header.command_code == AUDCMD_SETREADYSTATUS))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_CODE_ERROR);
       return;
     }
 
   if (!delInputDeviceHdlr())
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_CLEAR_AUDIO_DATA_PATH_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_CLEAR_AUDIO_DATA_PATH_ERROR);
       return;
     }
 
   if (!unloadCodec())
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_DSP_UNLOAD_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_DSP_UNLOAD_ERROR);
       return;
     }
 
   m_state = RecorderStateInactive;
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -561,12 +561,12 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
 
   if (!(cmd.header.command_code == AUDCMD_INITREC))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_CODE_ERROR);
       return;
     }
 
   rst = isValidInitParam(cmd);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       sendAudioCmdCmplt(cmd, rst);
       return;
@@ -585,12 +585,12 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
         {
           /* TODO:電源状態を見ないで、毎回落としている。*/
 
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_DSP_UNLOAD_ERROR);
+          sendAudioCmdCmplt(cmd, AS_ECODE_DSP_UNLOAD_ERROR);
           return;
         }
       if (!delInputDeviceHdlr())
         {
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_CLEAR_AUDIO_DATA_PATH_ERROR);
+          sendAudioCmdCmplt(cmd, AS_ECODE_CLEAR_AUDIO_DATA_PATH_ERROR);
           return;
         }
 
@@ -599,7 +599,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
                       (cmd.init_recorder_param.codec_type),
                       cmd.init_recorder_param.sampling_rate,
                       &dsp_inf);
-      if (rst != AS_RESPONSE_CODE_OK)
+      if (rst != AS_ECODE_OK)
         {
           sendAudioCmdCmplt(cmd, rst, dsp_inf);
           return;
@@ -607,7 +607,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
 
       if (!getInputDeviceHdlr())
         {
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR);
+          sendAudioCmdCmplt(cmd, AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
           return;
         }
     }
@@ -619,7 +619,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
         {
           if (!unloadCodec())
             {
-              sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_DSP_UNLOAD_ERROR);
+              sendAudioCmdCmplt(cmd, AS_ECODE_DSP_UNLOAD_ERROR);
               return;
             }
           m_codec_type =
@@ -628,7 +628,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
       if (!delInputDeviceHdlr())
         {
           sendAudioCmdCmplt(cmd,
-                            AS_RESPONSE_CODE_CLEAR_AUDIO_DATA_PATH_ERROR);
+                            AS_ECODE_CLEAR_AUDIO_DATA_PATH_ERROR);
           return;
         }
 
@@ -642,7 +642,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
                           (cmd.init_recorder_param.codec_type),
                           cmd.init_recorder_param.sampling_rate,
                           &dsp_inf);
-          if (rst != AS_RESPONSE_CODE_OK)
+          if (rst != AS_ECODE_OK)
             {
               sendAudioCmdCmplt(cmd, rst, dsp_inf);
               return;
@@ -650,13 +650,13 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
         }
       if (!getInputDeviceHdlr())
         {
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR);
+          sendAudioCmdCmplt(cmd, AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
           return;
         }
     }
   m_sampling_rate = cmd.init_recorder_param.sampling_rate;
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -669,7 +669,7 @@ void VoiceRecorderObjectTask::startOnReady(MsgPacket *msg)
   MEDIA_RECORDER_DBG("START:\n");
 
   if (!m_external_cmd_que.push(cmd)) {
-    sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+    sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
     return;
   }
 
@@ -704,7 +704,7 @@ void VoiceRecorderObjectTask::stopOnRec(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
 
@@ -727,7 +727,7 @@ void VoiceRecorderObjectTask::stopOnOverflow(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
     }
 
   m_state = RecorderStateStopping;
@@ -740,7 +740,7 @@ void VoiceRecorderObjectTask::stopOnWait(MsgPacket *msg)
 
   MEDIA_RECORDER_DBG("STOP:\n");
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 
   m_state = RecorderStateReady;
 }
@@ -888,7 +888,7 @@ void VoiceRecorderObjectTask::recSinkDoneOnReady(MsgPacket *msg)
 {
   CaptureComponentParam cap_comp_param;
   bool result = true;
-  uint32_t apu_result = AS_RESPONSE_CODE_OK;
+  uint32_t apu_result = AS_ECODE_OK;
   uint32_t dsp_inf = 0;
   bool rec_sink_result = msg->moveParam<bool>();
 
@@ -906,7 +906,7 @@ void VoiceRecorderObjectTask::recSinkDoneOnReady(MsgPacket *msg)
   if (!rec_sink_result)
     {
       sendAudioCmdCmplt(ext_cmd,
-                        AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DEVICE);
+                        AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE);
       return;
     }
 
@@ -920,7 +920,7 @@ void VoiceRecorderObjectTask::recSinkDoneOnReady(MsgPacket *msg)
        (m_codec_type != AudCodecMP3)      &&
        (m_codec_type != AudCodecOPUS)))
     {
-      sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE);
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_COMMAND_PARAM_CODEC_TYPE);
       return;
     }
 
@@ -953,10 +953,10 @@ void VoiceRecorderObjectTask::recSinkDoneOnReady(MsgPacket *msg)
             {
               D_ASSERT(0);
               sendAudioCmdCmplt(ext_cmd,
-                                AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+                                AS_ECODE_QUEUE_OPERATION_ERROR);
               return;
             }
-          if (apu_result != AS_RESPONSE_CODE_OK)
+          if (apu_result != AS_ECODE_OK)
             {
               sendAudioCmdCmplt(ext_cmd, apu_result, dsp_inf);
               return;
@@ -982,10 +982,10 @@ void VoiceRecorderObjectTask::recSinkDoneOnReady(MsgPacket *msg)
       if (!result)
         {
           D_ASSERT(0);
-          sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+          sendAudioCmdCmplt(ext_cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
           return;
         }
-      if (apu_result != AS_RESPONSE_CODE_OK)
+      if (apu_result != AS_ECODE_OK)
         {
           sendAudioCmdCmplt(ext_cmd, apu_result, dsp_inf);
           return;
@@ -997,12 +997,12 @@ void VoiceRecorderObjectTask::recSinkDoneOnReady(MsgPacket *msg)
   if (startCapture())
     {
       m_state = RecorderStateRecording;
-      sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_OK);
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
       return;
     }
   else
     {
-      sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_DMAC_READ_ERROR);
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_DMAC_READ_ERROR);
     }
 }
 
@@ -1042,7 +1042,7 @@ void VoiceRecorderObjectTask::recSinkDoneOnStop(MsgPacket *msg)
       MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
     }
 
-  sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
   m_state = RecorderStateReady;
 }
 
@@ -1293,7 +1293,7 @@ uint32_t VoiceRecorderObjectTask::isValidActivateParam(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DEVICE;
+        return AS_ECODE_COMMAND_PARAM_INPUT_DEVICE;
     }
 
   switch (cmd.set_recorder_status_param.output_device)
@@ -1304,16 +1304,16 @@ uint32_t VoiceRecorderObjectTask::isValidActivateParam(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DEVICE;
+        return AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
 uint32_t VoiceRecorderObjectTask::isValidInitParam(
   const AudioCommand& cmd)
 {
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
   switch(cmd.init_recorder_param.codec_type)
     {
       case AS_INITREC_MP3:
@@ -1330,7 +1330,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParam(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE;
+        return AS_ECODE_COMMAND_PARAM_CODEC_TYPE;
     }
   return rst;
 }
@@ -1344,7 +1344,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
       case AS_INITREC_CHNL_MONO:
         if (m_input_device == CaptureDeviceI2S)
           {
-            return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DEVICE;
+            return AS_ECODE_COMMAND_PARAM_INPUT_DEVICE;
           }
         break;
 
@@ -1353,7 +1353,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_CHANNEL_NUMBER;
+        return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
     }
   switch(cmd.init_recorder_param.bit_length)
     {
@@ -1362,7 +1362,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_BIT_LENGTH;
+        return AS_ECODE_COMMAND_PARAM_BIT_LENGTH;
     }
   switch(cmd.init_recorder_param.sampling_rate)
     {
@@ -1376,7 +1376,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
                   {
                     MEDIA_RECORDER_ERR(
                       AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-                    return AS_RESPONSE_CODE_COMMAND_PARAM_CHANNEL_NUMBER;
+                    return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
                   }
                 break;
 
@@ -1397,7 +1397,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
 
               default:
                 MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-                return AS_RESPONSE_CODE_COMMAND_PARAM_BIT_RATE;
+                return AS_ECODE_COMMAND_PARAM_BIT_RATE;
             }
         }
         break;
@@ -1424,15 +1424,15 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
 
               default:
                 MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-                return AS_RESPONSE_CODE_COMMAND_PARAM_BIT_RATE;
+                return AS_ECODE_COMMAND_PARAM_BIT_RATE;
             }
         }
         break;
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_SAMPLING_RATE;
+        return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1444,7 +1444,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamWAV(
       case AS_INITREC_CHNL_MONO:
         if (m_input_device == CaptureDeviceI2S)
           {
-            return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_HANDLER;
+            return AS_ECODE_COMMAND_PARAM_INPUT_HANDLER;
           }
           break;
 
@@ -1454,7 +1454,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamWAV(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_CHANNEL_NUMBER;
+        return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
     }
   switch(cmd.init_recorder_param.bit_length)
     {
@@ -1469,11 +1469,11 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamWAV(
               break;
             }
           MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-          return AS_RESPONSE_CODE_COMMAND_PARAM_BIT_LENGTH;
+          return AS_ECODE_COMMAND_PARAM_BIT_LENGTH;
         }
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_BIT_LENGTH;
+        return AS_ECODE_COMMAND_PARAM_BIT_LENGTH;
     }
   switch(cmd.init_recorder_param.sampling_rate)
     {
@@ -1489,13 +1489,13 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamWAV(
               break;
             }
           MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-          return AS_RESPONSE_CODE_COMMAND_PARAM_SAMPLING_RATE;
+          return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
         }
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_SAMPLING_RATE;
+        return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1507,7 +1507,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
       case AS_INITREC_CHNL_MONO:
         if (m_input_device == CaptureDeviceI2S)
           {
-            return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DEVICE;
+            return AS_ECODE_COMMAND_PARAM_INPUT_DEVICE;
           }
         break;
 
@@ -1516,7 +1516,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_CHANNEL_NUMBER;
+        return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
     }
   switch(cmd.init_recorder_param.bit_length)
     {
@@ -1525,7 +1525,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_BIT_LENGTH;
+        return AS_ECODE_COMMAND_PARAM_BIT_LENGTH;
     }
   switch(cmd.init_recorder_param.sampling_rate)
     {
@@ -1535,7 +1535,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_SAMPLING_RATE;
+        return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
     }
   switch(cmd.init_recorder_param.bitrate)
     {
@@ -1545,15 +1545,15 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
 
       default:
         MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_BIT_RATE;
+        return AS_ECODE_COMMAND_PARAM_BIT_RATE;
     }
   if (cmd.init_recorder_param.computational_complexity >
       AS_INITREC_COMPLEXITY_10)
     {
       MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_RESPONSE_CODE_COMMAND_PARAM_COMPLEXITY;
+      return AS_ECODE_COMMAND_PARAM_COMPLEXITY;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/

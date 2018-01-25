@@ -102,7 +102,7 @@ uint32_t SRCComponent::activate_apu(SRCComponent *p_component,
                                        (void *)this)))
     {
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
-      return AS_RESPONSE_CODE_DSP_LOAD_ERROR;
+      return AS_ECODE_DSP_LOAD_ERROR;
     }
 
   /* wait for DSP boot up */
@@ -115,7 +115,7 @@ uint32_t SRCComponent::activate_apu(SRCComponent *p_component,
           FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
         }
 
-      return AS_RESPONSE_CODE_DSP_VERSION_ERROR;
+      return AS_ECODE_DSP_VERSION_ERROR;
     }
 
   FILTER_INF(AS_ATTENTION_SUB_CODE_DSP_LOAD_DONE);
@@ -124,7 +124,7 @@ uint32_t SRCComponent::activate_apu(SRCComponent *p_component,
   memset(&m_debug_log_info, 0, sizeof(m_debug_log_info));
 #endif
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -165,7 +165,7 @@ uint32_t SRCComponent::init_apu(InitSRCParam param, uint32_t *dsp_inf)
 
   if (p_apu_cmd == NULL)
     {
-      return AS_RESPONSE_CODE_FILTER_LIB_INITIALIZE_ERROR;
+      return AS_ECODE_FILTER_LIB_INITIALIZE_ERROR;
     }
 
   p_apu_cmd->header.core_id      = DSP_CORE_OF_SRC;

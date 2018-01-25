@@ -352,231 +352,231 @@
 
 /*! \brief Response OK */
 
-#define AS_RESPONSE_CODE_OK                              0x00
+#define AS_ECODE_OK                              0x00
 
 /*! \brief State Violation */
 
-#define AS_RESPONSE_CODE_STATE_VIOLATION                 0x01
+#define AS_ECODE_STATE_VIOLATION                 0x01
 
 /*! \brief Packet Length Error */
 
-#define AS_RESPONSE_CODE_PACKET_LENGTH_ERROR             0x02
+#define AS_ECODE_PACKET_LENGTH_ERROR             0x02
 
 /*! \brief Command Code Error */
 
-#define AS_RESPONSE_CODE_COMMAND_CODE_ERROR              0x03
+#define AS_ECODE_COMMAND_CODE_ERROR              0x03
 
 /*! \brief Not Suppot Command */
 
-#define AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT              0x04
+#define AS_ECODE_COMMAND_NOT_SUPPOT              0x04
 
 /*! \brief Audio PowerOn Error */
 
-#define AS_RESPONSE_CODE_AUDIO_POWER_ON_ERROR            0x05
+#define AS_ECODE_AUDIO_POWER_ON_ERROR            0x05
 
 /*! \brief Audio PowerOff Error */
 
-#define AS_RESPONSE_CODE_AUDIO_POWER_OFF_ERROR           0x06
+#define AS_ECODE_AUDIO_POWER_OFF_ERROR           0x06
 
 /*! \brief DSP Load Error */
 
-#define AS_RESPONSE_CODE_DSP_LOAD_ERROR                  0x07
+#define AS_ECODE_DSP_LOAD_ERROR                  0x07
 
 /*! \brief DSP Unload Error */
 
-#define AS_RESPONSE_CODE_DSP_UNLOAD_ERROR                0x08
+#define AS_ECODE_DSP_UNLOAD_ERROR                0x08
 
 /*! \brief DSP Version Error */
 
-#define AS_RESPONSE_CODE_DSP_VERSION_ERROR               0x09
+#define AS_ECODE_DSP_VERSION_ERROR               0x09
 
 /*! \brief Set Audio Data Path Error */
 
-#define AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR       0x0A
+#define AS_ECODE_SET_AUDIO_DATA_PATH_ERROR       0x0A
 
 /*! \brief Clear Audio Data Path Error */
 
-#define AS_RESPONSE_CODE_CLEAR_AUDIO_DATA_PATH_ERROR     0x0B
+#define AS_ECODE_CLEAR_AUDIO_DATA_PATH_ERROR     0x0B
 
 /*! \brief Not Audio Data Path */
 
-#define AS_RESPONSE_CODE_NOT_AUDIO_DATA_PATH             0x0C
+#define AS_ECODE_NOT_AUDIO_DATA_PATH             0x0C
 
 /*! \brief Decoder Library Initialize Error */
 
-#define AS_RESPONSE_CODE_DECODER_LIB_INITIALIZE_ERROR    0x0D
+#define AS_ECODE_DECODER_LIB_INITIALIZE_ERROR    0x0D
 
 /*! \brief Encoder Library Initialize Error */
 
-#define AS_RESPONSE_CODE_ENCODER_LIB_INITIALIZE_ERROR    0x0E
+#define AS_ECODE_ENCODER_LIB_INITIALIZE_ERROR    0x0E
 
 /*! \brief Filter Library Initialize Error */
 
-#define AS_RESPONSE_CODE_FILTER_LIB_INITIALIZE_ERROR     0x0F
+#define AS_ECODE_FILTER_LIB_INITIALIZE_ERROR     0x0F
 
 /*! \brief Dump Initialize Error */
 
-#define AS_RESPONSE_CODE_DUMP_INITIALIZE_ERROR           0x10
+#define AS_ECODE_DUMP_INITIALIZE_ERROR           0x10
 
 /*! \brief Parameter Codec Type Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE        0x11
+#define AS_ECODE_COMMAND_PARAM_CODEC_TYPE        0x11
 
 /*! \brief Parameter Area Insufficient Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_AREA_INSUFFICIENT 0x12
+#define AS_ECODE_COMMAND_PARAM_AREA_INSUFFICIENT 0x12
 
 /*! \brief Parameter Channel Number Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_CHANNEL_NUMBER    0x13
+#define AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER    0x13
 
 /*! \brief Parameter Sampling Rate Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_SAMPLING_RATE     0x14
+#define AS_ECODE_COMMAND_PARAM_SAMPLING_RATE     0x14
 
 /*! \brief Parameter Bit Rate Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_BIT_RATE          0x15
+#define AS_ECODE_COMMAND_PARAM_BIT_RATE          0x15
 
 /*! \brief Parameter Bit Length Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_BIT_LENGTH        0x16
+#define AS_ECODE_COMMAND_PARAM_BIT_LENGTH        0x16
 
 /*! \brief Parameter Complexity Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_COMPLEXITY        0x17
+#define AS_ECODE_COMMAND_PARAM_COMPLEXITY        0x17
 
 /*! \brief Parameter Active Player Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_ACTIVE_PLAYER     0x18
+#define AS_ECODE_COMMAND_PARAM_ACTIVE_PLAYER     0x18
 
 /*! \brief Parameter Input Device Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DEVICE      0x19
+#define AS_ECODE_COMMAND_PARAM_INPUT_DEVICE      0x19
 
 /*! \brief ParameterOutput Device Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DEVICE     0x1A
+#define AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE     0x1A
 
 /*! \brief Parameter Input Handler Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_HANDLER     0x1B
+#define AS_ECODE_COMMAND_PARAM_INPUT_HANDLER     0x1B
 
 /*! \brief Parameter Output Handler Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_HANDLER    0x1C
+#define AS_ECODE_COMMAND_PARAM_OUTPUT_HANDLER    0x1C
 
 /*! \brief Parameter Callback Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_CALLBACK          0x1D
+#define AS_ECODE_COMMAND_PARAM_CALLBACK          0x1D
 
 /*! \brief Parameter Function Enable Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_FUNCTION_ENABLE   0x1E
+#define AS_ECODE_COMMAND_PARAM_FUNCTION_ENABLE   0x1E
 
 /*! \brief Parameter Config Table Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_CONFIG_TABLE      0x1F
+#define AS_ECODE_COMMAND_PARAM_CONFIG_TABLE      0x1F
 
 /*! \brief Parameter With MFE Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_WITH_MFE          0x20
+#define AS_ECODE_COMMAND_PARAM_WITH_MFE          0x20
 
 /*! \brief Parameter With MPP Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_WITH_MPP          0x21
+#define AS_ECODE_COMMAND_PARAM_WITH_MPP          0x21
 
 /*! \brief Parameter Output Data Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE       0x22
+#define AS_ECODE_COMMAND_PARAM_OUTPUT_DATE       0x22
 
 /*! \brief Parameter Select MIC Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_SELECT_MIC        0x23
+#define AS_ECODE_COMMAND_PARAM_SELECT_MIC        0x23
 
 /*! \brief Parameter MIC Gain Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_MIC_GAIN          0x24
+#define AS_ECODE_COMMAND_PARAM_MIC_GAIN          0x24
 
 /*! \brief Parameter I2S Id Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_I2S_ID            0x25
+#define AS_ECODE_COMMAND_PARAM_I2S_ID            0x25
 
 /*! \brief Parameter Bypass Mode Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_BYPASS_MODE       0x26
+#define AS_ECODE_COMMAND_PARAM_BYPASS_MODE       0x26
 
 /*! \brief Parameter Vollume Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_VOLLUME           0x27
+#define AS_ECODE_COMMAND_PARAM_VOLLUME           0x27
 
 /*! \brief Parameter Input DB Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DB          0x28
+#define AS_ECODE_COMMAND_PARAM_INPUT_DB          0x28
 
 /*! \brief Parameter Master DB Error */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_MASTER_DB         0x29
+#define AS_ECODE_COMMAND_PARAM_MASTER_DB         0x29
 
 /*! \brief Parameter Beep Freq Error  */
 
-#define AS_RESPONSE_CODE_COMMAND_PARAM_BEEP_FREQ         0x2A
+#define AS_ECODE_COMMAND_PARAM_BEEP_FREQ         0x2A
 
 /*! \brief DMAC Initialize Error */
 
-#define AS_RESPONSE_CODE_DMAC_INITIALIZE_ERROR           0x2B
+#define AS_ECODE_DMAC_INITIALIZE_ERROR           0x2B
 
 /*! \brief DMAC Read Error */
 
-#define AS_RESPONSE_CODE_DMAC_READ_ERROR                 0x2C
+#define AS_ECODE_DMAC_READ_ERROR                 0x2C
 
 /*! \brief DMAC Write Error */
 
-#define AS_RESPONSE_CODE_DMAC_WRITE_ERROR                0x2D
+#define AS_ECODE_DMAC_WRITE_ERROR                0x2D
 
 /*! \brief Check Memory Pool Error */
 
-#define AS_RESPONSE_CODE_CHECK_MEMORY_POOL_ERROR         0x2E
+#define AS_ECODE_CHECK_MEMORY_POOL_ERROR         0x2E
 
 /*! \brief SimpleFIFO Underflow */
 
-#define AS_RESPONSE_CODE_SIMPLE_FIFO_UNDERFLOW           0x2F
+#define AS_ECODE_SIMPLE_FIFO_UNDERFLOW           0x2F
 
 /*! \brief Set Mic Gain Error */
 
-#define AS_RESPONSE_CODE_SET_MIC_GAIN_ERROR              0x30
+#define AS_ECODE_SET_MIC_GAIN_ERROR              0x30
 
 /*! \brief Set I2S Param Error */
 
-#define AS_RESPONSE_CODE_SET_I2S_PARAM_ERROR             0x31
+#define AS_ECODE_SET_I2S_PARAM_ERROR             0x31
 
 /*! \brief Set Output Select Error */
 
-#define AS_RESPONSE_CODE_SET_OUTPUT_SELECT_ERROR         0x32
+#define AS_ECODE_SET_OUTPUT_SELECT_ERROR         0x32
 
 /*! \brief Init Clear Stereo Error */
 
-#define AS_RESPONSE_CODE_INIT_CLEAR_STEREO_ERROR         0x33
+#define AS_ECODE_INIT_CLEAR_STEREO_ERROR         0x33
 
 /*! \brief Set Volume Error */
 
-#define AS_RESPONSE_CODE_SET_VOLUME_ERROR                0x34
+#define AS_ECODE_SET_VOLUME_ERROR                0x34
 
 /*! \brief Set Volume Mute Error */
 
-#define AS_RESPONSE_CODE_SET_VOLUME_MUTE_ERROR           0x35
+#define AS_ECODE_SET_VOLUME_MUTE_ERROR           0x35
 
 /*! \brief Set Beep Error */
 
-#define AS_RESPONSE_CODE_SET_BEEP_ERROR                  0x36
+#define AS_ECODE_SET_BEEP_ERROR                  0x36
 
 /*! \brief Internal Queue Operation Error */
 
-#define AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR           0x37
+#define AS_ECODE_QUEUE_OPERATION_ERROR           0x37
 
 /*! \brief Internal Command Code Error */
 
-#define AS_RESPONSE_CODE_INTERNAL_COMMAND_CODE_ERROR     0x38
+#define AS_ECODE_INTERNAL_COMMAND_CODE_ERROR     0x38
 
 /** @} */
 

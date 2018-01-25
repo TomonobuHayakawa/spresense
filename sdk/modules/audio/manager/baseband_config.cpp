@@ -43,10 +43,10 @@ uint32_t BasebandConfig::deactivate(bbPowerId power_id)
 {
   if (E_AS_OK != powerOffBaseBand(power_id))
     {
-      return AS_RESPONSE_CODE_AUDIO_POWER_OFF_ERROR;
+      return AS_ECODE_AUDIO_POWER_OFF_ERROR;
     }
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -55,7 +55,7 @@ uint32_t BasebandConfig::initMicGain(AudioCommand &cmd)
   E_AS rtCode = chkMicGainParam(cmd.init_mic_gain_param.mic_gain);
   if (rtCode != E_AS_OK)
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_MIC_GAIN;
+      return AS_ECODE_COMMAND_PARAM_MIC_GAIN;
     }
 
   for (uint8_t micCh = 0; micCh < AS_MIC_CHANNEL_MAX; micCh++)
@@ -66,14 +66,14 @@ uint32_t BasebandConfig::initMicGain(AudioCommand &cmd)
             cmd.init_mic_gain_param.mic_gain[micCh];
         }
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
 uint32_t BasebandConfig::setMicGain(AudioCommand &cmd)
 {
   uint32_t rst = initMicGain(cmd);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return rst;
     }
@@ -85,10 +85,10 @@ uint32_t BasebandConfig::setMicGain(AudioCommand &cmd)
       checkErrCode(rtCode, E_AS_OK);
       if (rtCode != E_AS_OK)
         {
-          return AS_RESPONSE_CODE_SET_MIC_GAIN_ERROR;
+          return AS_ECODE_SET_MIC_GAIN_ERROR;
         }
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -96,13 +96,13 @@ uint32_t BasebandConfig::initI2SParam(AudioCommand &cmd)
 {
   if (cmd.init_i2s_param.i2s_id >= AS_I2S_NUM)
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_I2S_ID;
+      return AS_ECODE_COMMAND_PARAM_I2S_ID;
     }
   uint8_t i2s_id = cmd.init_i2s_param.i2s_id;
 
   if (cmd.init_i2s_param.rate > 192000)
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_SAMPLING_RATE;
+      return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
     }
   m_bb_config_init_tbl.rate[i2s_id] = cmd.init_i2s_param.rate;
 
@@ -115,23 +115,23 @@ uint32_t BasebandConfig::initI2SParam(AudioCommand &cmd)
         break;
 
       default:
-        return AS_RESPONSE_CODE_COMMAND_PARAM_BYPASS_MODE;
+        return AS_ECODE_COMMAND_PARAM_BYPASS_MODE;
     }
 
   E_AS rtCode = chkI2sParam(&m_bb_config_init_tbl.rate[0],
                             &m_bb_config_init_tbl.bypass_mode_en[0]);
   if (rtCode != E_AS_OK)
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_BYPASS_MODE;
+      return AS_ECODE_COMMAND_PARAM_BYPASS_MODE;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
 uint32_t BasebandConfig::setI2SParam(AudioCommand &cmd)
 {
   uint32_t rst = initI2SParam(cmd);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return rst;
     }
@@ -144,10 +144,10 @@ uint32_t BasebandConfig::setI2SParam(AudioCommand &cmd)
       checkErrCode(rtCode, E_AS_OK);
       if (rtCode != E_AS_OK)
         {
-          return AS_RESPONSE_CODE_SET_I2S_PARAM_ERROR;
+          return AS_ECODE_SET_I2S_PARAM_ERROR;
         }
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -168,16 +168,16 @@ uint32_t BasebandConfig::initOutputSelect(AudioCommand &cmd)
         break;
 
       default:
-        return AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DEVICE;
+        return AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
 uint32_t BasebandConfig::setOutputSelect(AudioCommand &cmd)
 {
   uint32_t rst = initOutputSelect(cmd);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return rst;
     }
@@ -190,10 +190,10 @@ uint32_t BasebandConfig::setOutputSelect(AudioCommand &cmd)
       checkErrCode(rtCode, E_AS_OK);
       if (rtCode != E_AS_OK)
         {
-          return AS_RESPONSE_CODE_SET_OUTPUT_SELECT_ERROR;
+          return AS_ECODE_SET_OUTPUT_SELECT_ERROR;
         }
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -203,7 +203,7 @@ uint32_t BasebandConfig::initDEQParam(AudioCommand &cmd)
    * BasebandConfig::setActiveBaseband() is called.
    */
 
-  return AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT;
+  return AS_ECODE_COMMAND_NOT_SUPPOT;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -213,7 +213,7 @@ uint32_t BasebandConfig::initDNCParam(AudioCommand &cmd)
    * BasebandConfig::setActiveBaseband() is called.
    */
 
-  return AS_RESPONSE_CODE_COMMAND_NOT_SUPPOT;
+  return AS_ECODE_COMMAND_NOT_SUPPOT;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -225,7 +225,7 @@ uint32_t BasebandConfig::initClearStereo(AudioCommand &cmd)
     }
   else
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_FUNCTION_ENABLE;
+      return AS_ECODE_COMMAND_PARAM_FUNCTION_ENABLE;
     }
 
   if (cmd.init_clear_stereo_param.cs_vol == AS_CS_VOL_HOLD)
@@ -240,9 +240,9 @@ uint32_t BasebandConfig::initClearStereo(AudioCommand &cmd)
     }
   else
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_VOLLUME;
+      return AS_ECODE_COMMAND_PARAM_VOLLUME;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -251,7 +251,7 @@ uint32_t BasebandConfig::setClearStereo(AudioCommand &cmd)
   E_AS error_code;
 
   uint32_t rst = initClearStereo(cmd);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return rst;
     }
@@ -265,10 +265,10 @@ uint32_t BasebandConfig::setClearStereo(AudioCommand &cmd)
       checkErrCode(error_code, E_AS_OK);
       if (error_code != E_AS_OK)
         {
-          return AS_RESPONSE_CODE_INIT_CLEAR_STEREO_ERROR;
+          return AS_ECODE_INIT_CLEAR_STEREO_ERROR;
         }
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -276,7 +276,7 @@ uint32_t BasebandConfig::setVolume(AudioCommand &cmd)
 {
   if (!chkEnableBaseBandOutput())
     {
-      return AS_RESPONSE_CODE_NOT_AUDIO_DATA_PATH;
+      return AS_ECODE_NOT_AUDIO_DATA_PATH;
     }
 
   if (!CHECK_RANGE(cmd.set_volume_param.input1_db,
@@ -285,7 +285,7 @@ uint32_t BasebandConfig::setVolume(AudioCommand &cmd)
                    AS_VOLUME_MAX) &&
        (AS_VOLUME_MUTE != cmd.set_volume_param.input1_db))
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DB;
+      return AS_ECODE_COMMAND_PARAM_INPUT_DB;
     }
   if (!CHECK_RANGE(cmd.set_volume_param.input2_db,
                    AS_VOLUME_HOLD,
@@ -293,7 +293,7 @@ uint32_t BasebandConfig::setVolume(AudioCommand &cmd)
                    AS_VOLUME_MAX) &&
        (AS_VOLUME_MUTE != cmd.set_volume_param.input2_db))
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DB;
+      return AS_ECODE_COMMAND_PARAM_INPUT_DB;
     }
   if (!CHECK_RANGE(cmd.set_volume_param.master_db,
                    AS_VOLUME_HOLD,
@@ -301,7 +301,7 @@ uint32_t BasebandConfig::setVolume(AudioCommand &cmd)
                    AS_VOLUME_MAX) &&
       (AS_VOLUME_MUTE != cmd.set_volume_param.master_db))
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_MASTER_DB;
+      return AS_ECODE_COMMAND_PARAM_MASTER_DB;
     }
 
   /* CODEC_DSP volume. */
@@ -316,9 +316,9 @@ uint32_t BasebandConfig::setVolume(AudioCommand &cmd)
   checkErrCode(rtCode, E_AS_OK);
   if (E_AS_OK != rtCode)
     {
-      return AS_RESPONSE_CODE_SET_VOLUME_ERROR;
+      return AS_ECODE_SET_VOLUME_ERROR;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -326,7 +326,7 @@ uint32_t BasebandConfig::setVolumeMute(AudioCommand &cmd)
 {
   if (!chkEnableBaseBandOutput())
     {
-      return AS_RESPONSE_CODE_NOT_AUDIO_DATA_PATH;
+      return AS_ECODE_NOT_AUDIO_DATA_PATH;
     }
 
   E_AS rtCode = E_AS_OK;
@@ -341,7 +341,7 @@ uint32_t BasebandConfig::setVolumeMute(AudioCommand &cmd)
         checkErrCode(rtCode, E_AS_OK);
         if (E_AS_OK != rtCode)
           {
-            return AS_RESPONSE_CODE_SET_VOLUME_MUTE_ERROR;
+            return AS_ECODE_SET_VOLUME_MUTE_ERROR;
           }
         break;
 
@@ -351,12 +351,12 @@ uint32_t BasebandConfig::setVolumeMute(AudioCommand &cmd)
         checkErrCode(rtCode, E_AS_OK);
         if (E_AS_OK != rtCode)
           {
-            return AS_RESPONSE_CODE_SET_VOLUME_MUTE_ERROR;
+            return AS_ECODE_SET_VOLUME_MUTE_ERROR;
           }
         break;
 
       default:
-        return AS_RESPONSE_CODE_COMMAND_PARAM_MASTER_DB;
+        return AS_ECODE_COMMAND_PARAM_MASTER_DB;
     }
 
   switch (cmd.set_volume_mute_param.input1_mute)
@@ -370,7 +370,7 @@ uint32_t BasebandConfig::setVolumeMute(AudioCommand &cmd)
         checkErrCode(rtCode, E_AS_OK);
         if (E_AS_OK != rtCode)
           {
-            return AS_RESPONSE_CODE_SET_VOLUME_MUTE_ERROR;
+            return AS_ECODE_SET_VOLUME_MUTE_ERROR;
           }
         break;
 
@@ -380,12 +380,12 @@ uint32_t BasebandConfig::setVolumeMute(AudioCommand &cmd)
        checkErrCode(rtCode, E_AS_OK);
        if (E_AS_OK != rtCode)
         {
-          return AS_RESPONSE_CODE_SET_VOLUME_MUTE_ERROR;
+          return AS_ECODE_SET_VOLUME_MUTE_ERROR;
         }
         break;
 
       default:
-        return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DB;
+        return AS_ECODE_COMMAND_PARAM_INPUT_DB;
     }
 
   switch (cmd.set_volume_mute_param.input2_mute)
@@ -399,7 +399,7 @@ uint32_t BasebandConfig::setVolumeMute(AudioCommand &cmd)
         checkErrCode(rtCode, E_AS_OK);
         if (E_AS_OK != rtCode)
           {
-            return AS_RESPONSE_CODE_SET_VOLUME_MUTE_ERROR;
+            return AS_ECODE_SET_VOLUME_MUTE_ERROR;
           }
         break;
 
@@ -409,14 +409,14 @@ uint32_t BasebandConfig::setVolumeMute(AudioCommand &cmd)
         checkErrCode(rtCode, E_AS_OK);
         if (E_AS_OK != rtCode)
           {
-            return AS_RESPONSE_CODE_SET_VOLUME_MUTE_ERROR;
+            return AS_ECODE_SET_VOLUME_MUTE_ERROR;
           }
         break;
  
       default:
-        return AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DB;
+        return AS_ECODE_COMMAND_PARAM_INPUT_DB;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -424,12 +424,12 @@ uint32_t BasebandConfig::setBeep(AudioCommand &cmd)
 {
   if (!chkEnableBaseBandOutput())
     {
-      return AS_RESPONSE_CODE_NOT_AUDIO_DATA_PATH;
+      return AS_ECODE_NOT_AUDIO_DATA_PATH;
     }
 
   if (cmd.set_beep_param.beep_en >= AS_BEEPEN_NUM)
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_FUNCTION_ENABLE;
+      return AS_ECODE_COMMAND_PARAM_FUNCTION_ENABLE;
     }
 
   if (!CHECK_RANGE(cmd.set_beep_param.beep_vol,
@@ -437,7 +437,7 @@ uint32_t BasebandConfig::setBeep(AudioCommand &cmd)
                    AS_BEEP_VOL_MIN,
                    AS_BEEP_VOL_MAX))
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_VOLLUME;
+      return AS_ECODE_COMMAND_PARAM_VOLLUME;
     }
 
   if (!CHECK_RANGE(cmd.set_beep_param.beep_freq,
@@ -445,7 +445,7 @@ uint32_t BasebandConfig::setBeep(AudioCommand &cmd)
                    AS_BEEP_FREQ_MIN,
                    AS_BEEP_FREQ_MAX))
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_BEEP_FREQ;
+      return AS_ECODE_COMMAND_PARAM_BEEP_FREQ;
     }
 
   E_AS rtCode = E_AS_OK;
@@ -456,7 +456,7 @@ uint32_t BasebandConfig::setBeep(AudioCommand &cmd)
       checkErrCode(rtCode, E_AS_OK);
       if (E_AS_OK != rtCode)
         {
-          return AS_RESPONSE_CODE_SET_BEEP_ERROR;
+          return AS_ECODE_SET_BEEP_ERROR;
         }
     }
 
@@ -466,7 +466,7 @@ uint32_t BasebandConfig::setBeep(AudioCommand &cmd)
   checkErrCode(rtCode, E_AS_OK);
   if (E_AS_OK != rtCode)
     {
-      return AS_RESPONSE_CODE_SET_BEEP_ERROR;
+      return AS_ECODE_SET_BEEP_ERROR;
     }
 
   if (cmd.set_beep_param.beep_en == AS_BEEPEN_ENABLE)
@@ -476,10 +476,10 @@ uint32_t BasebandConfig::setBeep(AudioCommand &cmd)
       checkErrCode(rtCode, E_AS_OK);
       if (E_AS_OK != rtCode)
         {
-          return AS_RESPONSE_CODE_SET_BEEP_ERROR;
+          return AS_ECODE_SET_BEEP_ERROR;
         }
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -713,9 +713,9 @@ uint32_t BasebandConfig::setActiveBaseband(bbPowerId power_id)
 {
   if (E_AS_OK != powerOnBaseBand(power_id))
     {
-      return AS_RESPONSE_CODE_AUDIO_POWER_ON_ERROR;
+      return AS_ECODE_AUDIO_POWER_ON_ERROR;
     }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/

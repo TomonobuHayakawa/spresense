@@ -515,7 +515,7 @@ SoundEffectObject::MsgProc SoundEffectObject::MsgProcTbl[AUD_SEF_MSG_NUM][SoundF
 void SoundEffectObject::illegal(MsgPacket *msg)
 {
   AudioCommand cmd = msg->moveParam<AudioCommand>();
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_STATE_VIOLATION);
+  sendAudioCmdCmplt(cmd, AS_ECODE_STATE_VIOLATION);
 }
 
 /*--------------------------------------------------------------------*/
@@ -538,13 +538,13 @@ void SoundEffectObject::act(MsgPacket *msg)
   if (AS_INPUT_DEVICE_AMIC1CH_I2S2CH !=
       cmd.set_baseband_status_param.input_device)
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DEVICE);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_INPUT_DEVICE);
       return;
     }
   if (AS_OUTPUT_DEVICE_SP2CH_I2S2CH !=
       cmd.set_baseband_status_param.output_device)
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DEVICE);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE);
       return;
     }
 
@@ -573,7 +573,7 @@ void SoundEffectObject::act(MsgPacket *msg)
                                    CaptureDeviceI2S,
                                    0))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
       return;
     }
 
@@ -582,7 +582,7 @@ void SoundEffectObject::act(MsgPacket *msg)
    || !AS_get_render_comp_handler(&m_i2s_render_comp_handler,
                                   RenderDeviceI2S))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
       return;
     }
 
@@ -593,7 +593,7 @@ void SoundEffectObject::act(MsgPacket *msg)
                         &render_done_callback,
                         static_cast<void*>(this)))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_DMAC_INITIALIZE_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_DMAC_INITIALIZE_ERROR);
       return;
     }
 
@@ -601,14 +601,14 @@ void SoundEffectObject::act(MsgPacket *msg)
   if ((cmd.set_baseband_status_param.with_MFE != AS_SET_BBSTS_WITH_MFE_NONE &&
       cmd.set_baseband_status_param.with_MFE != AS_SET_BBSTS_WITH_MFE_ACTIVE))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_WITH_MFE);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_WITH_MFE);
       return;
     }
 
   if ((cmd.set_baseband_status_param.with_MPP != AS_SET_BBSTS_WITH_MPP_NONE &&
       cmd.set_baseband_status_param.with_MPP != AS_SET_BBSTS_WITH_MPP_ACTIVE))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_WITH_MPP);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_WITH_MPP);
       return;
     }
 
@@ -643,7 +643,7 @@ void SoundEffectObject::act(MsgPacket *msg)
         {
           /* MPPeax Only */
           /* T.B.D. MPP EAX only is nosupport */
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_WITH_MPP);
+          sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_WITH_MPP);
           return;
         }
       else
@@ -651,14 +651,14 @@ void SoundEffectObject::act(MsgPacket *msg)
           D_ASSERT(0); /* code bug */
         }
 
-      uint32_t rst = AS_RESPONSE_CODE_OK;
+      uint32_t rst = AS_ECODE_OK;
       uint32_t dsp_inf = 0;
 
       if ((rst = AS_filter_activate(filter_mode,
                                     s_dsp_dtq,
                                     0,
                                     &dsp_inf))
-          != AS_RESPONSE_CODE_OK)
+          != AS_ECODE_OK)
         {
           sendAudioCmdCmplt(cmd, rst, dsp_inf);
           return;
@@ -667,7 +667,7 @@ void SoundEffectObject::act(MsgPacket *msg)
 
   m_state = SoundFXReadyState;
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
 
 /*--------------------------------------------------------------------*/
@@ -701,7 +701,7 @@ void SoundEffectObject::deact(MsgPacket* msg)
         {
           /* MPPeax Only */
           /* T.B.D. MPP EAX only is nosupport */
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_WITH_MPP);
+          sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_WITH_MPP);
         }
       else
         {
@@ -710,21 +710,21 @@ void SoundEffectObject::deact(MsgPacket* msg)
 
       if (!AS_filter_deactivate(filter_mode))
         {
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_DSP_UNLOAD_ERROR);
+          sendAudioCmdCmplt(cmd, AS_ECODE_DSP_UNLOAD_ERROR);
           return;
         }
     }
 
   m_state = SoundFXBootedState;
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
 
 /*--------------------------------------------------------------------*/
 void SoundEffectObject::init(MsgPacket *msg)
 {
   AudioCommand cmd = msg->moveParam<AudioCommand>();
-  uint32_t result = AS_RESPONSE_CODE_OK;
+  uint32_t result = AS_ECODE_OK;
 
   switch(cmd.header.command_code)
     {
@@ -738,7 +738,7 @@ void SoundEffectObject::init(MsgPacket *msg)
 
       default:
         SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        result = AS_RESPONSE_CODE_COMMAND_CODE_ERROR;
+        result = AS_ECODE_COMMAND_CODE_ERROR;
         break;
     }
 
@@ -761,19 +761,19 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
   /* check fixed parameter */
   if (AS_INPUT_DEVICE_AMIC1CH_I2S2CH != cmd.start_bb_param.input_device)
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DEVICE);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_INPUT_DEVICE);
       return;
     }
 
   if (AS_OUTPUT_DEVICE_SP2CH_I2S2CH != cmd.start_bb_param.output_device)
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DEVICE);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE);
       return;
     }
 
   if (AS_MPP_OUTPUT_I2SIN != cmd.start_bb_param.SP_output_data)
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_OUTPUT_DATE);
       return;
     }
 
@@ -782,7 +782,7 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
     {
       if (m_filter_mode == FILTER_MODE_THROUGH)
         {
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE);
+          sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_OUTPUT_DATE);
           return;
         }
     }
@@ -796,19 +796,19 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
         }
       else
         {
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_SELECT_MIC);
+          sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_SELECT_MIC);
           return;
         }
     }
   else
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_OUTPUT_DATE);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_OUTPUT_DATE);
       return;
     }
 
   m_I2S_output_data = (AsI2sOutputData)cmd.start_bb_param.I2S_output_data;
 
-  uint32_t rst = AS_RESPONSE_CODE_OK;
+  uint32_t rst = AS_ECODE_OK;
   uint32_t dsp_inf = 0;
 
   if (m_filter_mode != FILTER_MODE_THROUGH)
@@ -820,7 +820,7 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
       filter_param.init_mfe_param = m_init_mfe_param;
 
       if ((rst = AS_filter_init(filter_param, &dsp_inf))
-          != AS_RESPONSE_CODE_OK)
+          != AS_ECODE_OK)
         {
           sendAudioCmdCmplt(cmd, rst, dsp_inf);
           return;
@@ -831,7 +831,7 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
       filter_param.init_xloud_param = m_init_xloud_param;
 
       if ((rst = AS_filter_init(filter_param, &dsp_inf))
-          != AS_RESPONSE_CODE_OK)
+          != AS_ECODE_OK)
         {
           sendAudioCmdCmplt(cmd, rst, dsp_inf);
           return;
@@ -850,7 +850,7 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
 
       if (!AS_exec_capture(cap_comp_param))
         {
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_DMAC_READ_ERROR);
+          sendAudioCmdCmplt(cmd, AS_ECODE_DMAC_READ_ERROR);
           return;
         }
 
@@ -861,7 +861,7 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
 
       if (!AS_exec_capture(cap_comp_param))
         {
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_DMAC_READ_ERROR);
+          sendAudioCmdCmplt(cmd, AS_ECODE_DMAC_READ_ERROR);
           return;
         }
     }
@@ -873,7 +873,7 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
 
   m_state = SoundFXRunState;
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
 
 /*--------------------------------------------------------------------*/
@@ -885,7 +885,7 @@ void SoundEffectObject::stopOnActive(MsgPacket* msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
 
@@ -1267,7 +1267,7 @@ void SoundEffectObject::dmaOutDoneCmpltOnStopping(MsgPacket *msg)
         }
 
       m_state = SoundFXReadyState;
-      sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_OK);
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
     }
 }
 
@@ -1315,7 +1315,7 @@ void SoundEffectObject::setParam(MsgPacket *msg)
 
         if (!result)
           {
-            sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+            sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
             return;
           }
         break;
@@ -1331,19 +1331,19 @@ void SoundEffectObject::setParam(MsgPacket *msg)
 
         if (!result)
           {
-            sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+            sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
             return;
           }
         break;
 
       default:
-        sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+        sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_CODE_ERROR);
         return;
     }
 
   /* TODO: This is not synchronous command. */
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
 
 /*--------------------------------------------------------------------*/
@@ -1375,7 +1375,7 @@ void SoundEffectObject::tuning(MsgPacket *msg)
 
         if (!result)
           {
-            sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+            sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
             return;
           }
         break;
@@ -1391,7 +1391,7 @@ void SoundEffectObject::tuning(MsgPacket *msg)
 
               result = AS_filter_tuning(filter_param);
               if (!result) {
-                  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+                  sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
                   return;
               }
               break;
@@ -1424,23 +1424,23 @@ void SoundEffectObject::tuning(MsgPacket *msg)
               if (!result)
                 {
                   sendAudioCmdCmplt(cmd,
-                                    AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+                                    AS_ECODE_QUEUE_OPERATION_ERROR);
                   return;
                 }
               break;
 
             default:
-                sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+                sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_CODE_ERROR);
                 return;
           }
         break;
 
       default:
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_CODE_ERROR);
+          sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_CODE_ERROR);
           return;
     }
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
 
 /*--------------------------------------------------------------------*/
@@ -1458,25 +1458,25 @@ uint32_t SoundEffectObject::initMfe(const AudioCommand& cmd)
   if (AS_MFE_MIC_CH_NUM_1 != cmd.init_mfe_param.mic_channel_num)
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_RESPONSE_CODE_COMMAND_PARAM_CHANNEL_NUMBER;
+      return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
     }
 
   if (cmd.init_mfe_param.input_fs != AS_MFE_INPUT_FS_16K)
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_RESPONSE_CODE_COMMAND_PARAM_SAMPLING_RATE;
+      return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
     }
 
   if (AS_MFE_REF_CH_NUM_DEFAULT != cmd.init_mfe_param.ref_channel_num)
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_RESPONSE_CODE_COMMAND_PARAM_CHANNEL_NUMBER;
+      return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
     }
 
   if (AS_MFE_INPUT_FS_16K != cmd.init_mfe_param.input_fs)
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_RESPONSE_CODE_COMMAND_PARAM_SAMPLING_RATE;
+      return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
     }
 
   m_init_mfe_param.proc_mode = cmd.init_mfe_param.mfe_mode;
@@ -1514,7 +1514,7 @@ uint32_t SoundEffectObject::initMfe(const AudioCommand& cmd)
 
   if (!AS_init_capture(cap_comp_param))
     {
-      return AS_RESPONSE_CODE_DMAC_INITIALIZE_ERROR;
+      return AS_ECODE_DMAC_INITIALIZE_ERROR;
     }
 
   /* Initialize capture component for I2S-in. */
@@ -1529,10 +1529,10 @@ uint32_t SoundEffectObject::initMfe(const AudioCommand& cmd)
 
   if (!AS_init_capture(cap_comp_param))
     {
-      return AS_RESPONSE_CODE_DMAC_INITIALIZE_ERROR;
+      return AS_ECODE_DMAC_INITIALIZE_ERROR;
     }
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -1562,7 +1562,7 @@ uint32_t SoundEffectObject::initMpp(const AudioCommand& cmd)
 
       default:
         SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-        return AS_RESPONSE_CODE_COMMAND_PARAM_SAMPLING_RATE;
+        return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
     }
 
   m_init_xloud_param.mode =
@@ -1586,7 +1586,7 @@ uint32_t SoundEffectObject::initMpp(const AudioCommand& cmd)
 
   SOUNDFX_INF(0);
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/

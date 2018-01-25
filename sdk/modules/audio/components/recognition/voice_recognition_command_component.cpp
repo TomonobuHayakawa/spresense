@@ -179,7 +179,7 @@ uint32_t VoiceCmdComponent::act(uint32_t *dsp_inf)
       == NULL)
     {
       RECOGNITION_CMP_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
-      return AS_RESPONSE_CODE_DSP_LOAD_ERROR;
+      return AS_ECODE_DSP_LOAD_ERROR;
     }
 
   if (!dsp_boot_check(m_dsp_dtq, DSP_VADWUW_VERSION, dsp_inf))
@@ -191,7 +191,7 @@ uint32_t VoiceCmdComponent::act(uint32_t *dsp_inf)
           RECOGNITION_CMP_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
         }
 
-      return AS_RESPONSE_CODE_DSP_VERSION_ERROR;
+      return AS_ECODE_DSP_VERSION_ERROR;
     }
 
   RECOGNITION_CMP_INF(AS_ATTENTION_SUB_CODE_DSP_LOAD_DONE);
@@ -200,7 +200,7 @@ uint32_t VoiceCmdComponent::act(uint32_t *dsp_inf)
   memset(&m_debug_log_info, 0, sizeof(m_debug_log_info));
 #endif
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 bool VoiceCmdComponent::deact()

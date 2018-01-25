@@ -243,11 +243,11 @@ void VoiceRecognitionCommandObject::notify(MsgPacket *msg)
   switch(result_param.type)
     {
       case EventCmpltInit:
-        sendAudioCmdCmplt(AUDCMD_STARTVOICECOMMAND, AS_RESPONSE_CODE_OK);
+        sendAudioCmdCmplt(AUDCMD_STARTVOICECOMMAND, AS_ECODE_OK);
         break;
 
       case EventCmpltFlush:
-        sendAudioCmdCmplt(AUDCMD_STOPVOICECOMMAND, AS_RESPONSE_CODE_OK);
+        sendAudioCmdCmplt(AUDCMD_STOPVOICECOMMAND, AS_ECODE_OK);
         break;
 
       case EventCmpltExec:

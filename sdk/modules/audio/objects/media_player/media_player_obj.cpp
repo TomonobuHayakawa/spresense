@@ -443,7 +443,7 @@ void PlayerObj::illegalEvt(MsgPacket *msg)
 {
   AudioCommand cmd = msg->moveParam<AudioCommand>();
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_STATE_VIOLATION);
+  sendAudioCmdCmplt(cmd, AS_ECODE_STATE_VIOLATION);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -463,7 +463,7 @@ void PlayerObj::activate(MsgPacket *msg)
 
   if (!checkAndSetMemPool())
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_CHECK_MEMORY_POOL_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_CHECK_MEMORY_POOL_ERROR);
       return;
     }
 
@@ -478,7 +478,7 @@ void PlayerObj::activate(MsgPacket *msg)
         break;
 
     default:
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_DEVICE);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_INPUT_DEVICE);
       return;
   }
 
@@ -504,13 +504,13 @@ void PlayerObj::activate(MsgPacket *msg)
 
       if (!m_external_cmd_que.push(cmd))
         {
-          sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+          sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
           return;
         }
     }
   else
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_COMMAND_PARAM_INPUT_HANDLER);
+      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_INPUT_HANDLER);
     }
 }
 
@@ -525,13 +525,13 @@ void PlayerObj::deactivate(MsgPacket *msg)
 
   if (!unloadCodec())
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_DSP_UNLOAD_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_DSP_UNLOAD_ERROR);
       return;
     }
 
   if (!m_external_cmd_que.push(cmd))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
 
@@ -558,9 +558,9 @@ void PlayerObj::init(MsgPacket *msg)
            cmd.init_player_param.sampling_rate);
 
   result = m_input_device_handler->setParam(cmd.init_player_param);
-  if (result == AS_RESPONSE_CODE_OK)
+  if (result == AS_ECODE_OK)
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+      sendAudioCmdCmplt(cmd, AS_ECODE_OK);
     }
   else
     {
@@ -573,16 +573,16 @@ void PlayerObj::playOnReady(MsgPacket *msg)
 {
   AudioCommand cmd = msg->moveParam<AudioCommand>();
   uint32_t dsp_inf = 0;
-  uint32_t rst     = AS_RESPONSE_CODE_OK;
+  uint32_t rst     = AS_ECODE_OK;
 
   MEDIA_PLAYER_DBG("PLAY:\n");
 
-  if ((rst = startPlay(&dsp_inf)) == AS_RESPONSE_CODE_OK)
+  if ((rst = startPlay(&dsp_inf)) == AS_ECODE_OK)
     {
       m_sub_state = SubStatePrePlay;
       m_state = PrePlayParentState;
 
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+      sendAudioCmdCmplt(cmd, AS_ECODE_OK);
     }
   else
     {
@@ -603,7 +603,7 @@ void PlayerObj::stopOnPlay(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
 
@@ -625,7 +625,7 @@ void PlayerObj::stopOnWait(MsgPacket *msg)
 
   MEDIA_PLAYER_DBG("STOP:\n");
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 
   m_state = ReadyState;
 }
@@ -645,7 +645,7 @@ void PlayerObj::stopOnUnderflow(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
 
@@ -665,7 +665,7 @@ void PlayerObj::stopOnPrePlay(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
 
@@ -699,7 +699,7 @@ void PlayerObj::stopOnPrePlayUnderflow(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
-      sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR);
+      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
 
@@ -732,12 +732,12 @@ void PlayerObj::sinkDoneOnBoot(MsgPacket *msg)
   if (OutputMixActDone != done_param.done_type)
     {
       sendAudioCmdCmplt(ext_cmd,
-                        AS_RESPONSE_CODE_INTERNAL_COMMAND_CODE_ERROR);
+                        AS_ECODE_INTERNAL_COMMAND_CODE_ERROR);
       return;
     }
   else
     {
-      sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_OK);
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
       m_outmix_handle = done_param.handle;
       m_state = ReadyState;
     }
@@ -762,12 +762,12 @@ void PlayerObj::sinkDoneOnReady(MsgPacket *msg)
   if (OutputMixDeactDone != done_param.done_type)
     {
       sendAudioCmdCmplt(ext_cmd,
-                        AS_RESPONSE_CODE_INTERNAL_COMMAND_CODE_ERROR);
+                        AS_ECODE_INTERNAL_COMMAND_CODE_ERROR);
       return;
     }
   else
     {
-      sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_OK);
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
       m_state = BootedState;
     }
 }
@@ -839,7 +839,7 @@ void PlayerObj::sinkDoneOnStopping(MsgPacket *msg)
         {
           MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
         }
-      sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_OK);
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
 
       m_state = ReadyState;
     }
@@ -1143,7 +1143,7 @@ void PlayerObj::decDoneOnPrePlayStopping(MsgPacket *msg)
         {
           MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
         }
-      sendAudioCmdCmplt(ext_cmd, AS_RESPONSE_CODE_OK);
+      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
 
       m_sub_state = InvalidSubState;
       m_state = ReadyState;
@@ -1214,7 +1214,7 @@ void PlayerObj::setClkRecovery(MsgPacket *msg)
 
   /* Send result. */
 
-  sendAudioCmdCmplt(cmd, AS_RESPONSE_CODE_OK);
+  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1251,12 +1251,12 @@ uint32_t PlayerObj::loadCodec(AudioCodec codec, uint32_t* dsp_inf)
       case AudCodecOPUS:
         break;
       default:
-        return AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE;
+        return AS_ECODE_COMMAND_PARAM_CODEC_TYPE;
     }
 
   if (m_codec_type != InvalidCodecType)
     {
-      return AS_RESPONSE_CODE_COMMAND_PARAM_CODEC_TYPE;
+      return AS_ECODE_COMMAND_PARAM_CODEC_TYPE;
     }
 
   rst = AS_decode_activate(codec,
@@ -1264,7 +1264,7 @@ uint32_t PlayerObj::loadCodec(AudioCodec codec, uint32_t* dsp_inf)
                            m_apu_pool_id,
                            m_apu_dtq,
                            dsp_inf);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return rst;
     }
@@ -1294,13 +1294,13 @@ bool PlayerObj::unloadCodec(void)
 /*--------------------------------------------------------------------------*/
 uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
 {
-  uint32_t   rst = AS_RESPONSE_CODE_OK;
+  uint32_t   rst = AS_ECODE_OK;
   AudioCodec codec_type_of_next_track;
   InitDecCompParam init_dec_comp_param;
   AsClkModeId      clock_mode;
 
   rst = m_input_device_handler->start();
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return rst;
     }
@@ -1312,11 +1312,11 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
     {
       if(!unloadCodec())
         {
-          return AS_RESPONSE_CODE_DSP_UNLOAD_ERROR;
+          return AS_ECODE_DSP_UNLOAD_ERROR;
         }
 
       rst = loadCodec(codec_type_of_next_track, dsp_inf);
-      if(rst != AS_RESPONSE_CODE_OK)
+      if(rst != AS_ECODE_OK)
         {
           return rst;
         }
@@ -1346,14 +1346,14 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
     }
 
   rst = AS_decode_init(init_dec_comp_param, m_p_dec_instance, dsp_inf);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       return rst;
     }
 
   if (!AS_decode_recv_done(m_p_dec_instance))
     {
-      return AS_RESPONSE_CODE_QUEUE_OPERATION_ERROR;
+      return AS_ECODE_QUEUE_OPERATION_ERROR;
     }
 
   for (int i=0; i < MAX_EXEC_COUNT; i++)
@@ -1365,12 +1365,12 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
 
       if (es_addr == NULL)
         {
-          return  AS_RESPONSE_CODE_SIMPLE_FIFO_UNDERFLOW;
+          return  AS_ECODE_SIMPLE_FIFO_UNDERFLOW;
         }
 
     decode(es_addr, es_size);
   }
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/

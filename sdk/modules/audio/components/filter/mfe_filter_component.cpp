@@ -122,7 +122,7 @@ uint32_t MFEComponent::activate_apu(MFEComponent *p_component,
                                               (void*)this)))
     {
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
-      return AS_RESPONSE_CODE_DSP_LOAD_ERROR;
+      return AS_ECODE_DSP_LOAD_ERROR;
     }
 
   if (sp_mpp_component != NULL)
@@ -141,7 +141,7 @@ uint32_t MFEComponent::activate_apu(MFEComponent *p_component,
           FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
         }
 
-      return AS_RESPONSE_CODE_DSP_VERSION_ERROR;
+      return AS_ECODE_DSP_VERSION_ERROR;
     }
 
   FILTER_INF(AS_ATTENTION_SUB_CODE_DSP_LOAD_DONE);
@@ -150,7 +150,7 @@ uint32_t MFEComponent::activate_apu(MFEComponent *p_component,
   memset(&m_debug_log_info, 0, sizeof(m_debug_log_info));
 #endif
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
