@@ -94,7 +94,7 @@ int GestureClass::open(void)
   if (ret != 0)
     {
       _err("mptask_init_secure() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      return SS_ECODE_DSP_LOAD_ERROR;
     }
 
   ret = mptask_assign(&m_mptask);
@@ -102,7 +102,7 @@ int GestureClass::open(void)
   if (ret != 0)
     {
       _err("mptask_asign() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      return SS_ECODE_DSP_LOAD_ERROR;
     }
 
   /* Queue for communication between Supervisor and Worker create. */
@@ -111,7 +111,7 @@ int GestureClass::open(void)
   if (ret < 0)
     {
       _err("mpmq_init() failure. %d\n", ret);
-      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SS_ECODE_DSP_LOAD_ERROR;
       goto arm_gesture_errout_with_mptask_destroy;
     }
 
@@ -121,7 +121,7 @@ int GestureClass::open(void)
   if (ret != 0)
     {
       _err("mptask_exec() failure. %d\n", ret);
-      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SS_ECODE_DSP_LOAD_ERROR;
       goto arm_gesture_errout_with_mpmq_destory;
     }
 
@@ -131,14 +131,14 @@ int GestureClass::open(void)
   if (id != DSP_BOOTED_CMD_ID)
     {
       _err("boot error! %d\n", id);
-      errout_ret = SENSOR_DSP_BOOT_ERROR;
+      errout_ret = SS_ECODE_DSP_BOOT_ERROR;
       goto arm_gesture_errout_with_mpmq_destory;
     }
   if (msgdata != DSP_ARMGESTURE_VERSION)
     {
       _err("boot error! [dsp version:0x%x] [sensing version:0x%x]\n",
         msgdata, DSP_ARMGESTURE_VERSION);
-      errout_ret = SENSOR_DSP_VERSION_ERROR;
+      errout_ret = SS_ECODE_DSP_VERSION_ERROR;
       goto arm_gesture_errout_with_mpmq_destory;
     }
 
@@ -161,11 +161,11 @@ int GestureClass::open(void)
   if (ret != 0)
     {
       _err("Failed to create receiver_thread_entry, error=%d\n", ret);
-      errout_ret = SENSOR_TASK_CREATE_ERROR;
+      errout_ret = SS_ECODE_TASK_CREATE_ERROR;
     }
   else
     {
-      return SENSOR_OK;
+      return SS_ECODE_OK;
     }
 
 arm_gesture_errout_with_mpmq_destory:
@@ -187,7 +187,7 @@ int GestureClass::close(void)
   if (ret < 0)
     {
       _err("mptask_destroy() failure. %d\n", ret);
-      return SENSOR_DSP_UNLOAD_ERROR;
+      return SS_ECODE_DSP_UNLOAD_ERROR;
     }
 
   _info("Worker exit status = %d\n", wret);
@@ -199,7 +199,7 @@ int GestureClass::close(void)
 
   mpmq_destroy(&m_mq);
   
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -210,7 +210,7 @@ int GestureClass::sendInit(void)
   MemMgrLite::MemHandle mh;
   if (mh.allocSeg(m_cmd_pool_id, sizeof(SensorDspCmd)) != ERR_OK)
     {
-      return SENSOR_MEMHANDLE_ALLOC_ERROR;
+      return SS_ECODE_MEMHANDLE_ALLOC_ERROR;
     }
 
   SensorDspCmd* dsp_cmd = (SensorDspCmd*)mh.getPa();
@@ -233,7 +233,7 @@ int GestureClass::sendInit(void)
   if (ret < 0)
     {
       _err("mpmq_send() failure. %d¥n", ret);
-      return SENSOR_DSP_INIT_ERROR;
+      return SS_ECODE_DSP_INIT_ERROR;
     }
 
   /* Wait for initialized event. */
@@ -246,10 +246,10 @@ int GestureClass::sendInit(void)
     {
       _err("init error! %08x : %d\n",
         id, reinterpret_cast<SensorDspCmd*>(msgdata)->result.exec_result);
-      return SENSOR_DSP_INIT_ERROR;
+      return SS_ECODE_DSP_INIT_ERROR;
     }
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -267,7 +267,7 @@ int GestureClass::write(sensor_command_data_mh_t* command)
   if (exe_mh.cmd.allocSeg(m_cmd_pool_id, sizeof(SensorDspCmd)) != ERR_OK)
     {
       _err("allocSeg() failure.¥n");
-      return SENSOR_MEMHANDLE_ALLOC_ERROR;
+      return SS_ECODE_MEMHANDLE_ALLOC_ERROR;
     }
 
   SensorDspCmd* dsp_cmd = (SensorDspCmd*)exe_mh.cmd.getPa();
@@ -303,7 +303,7 @@ int GestureClass::write(sensor_command_data_mh_t* command)
   if (!m_exe_que.push(exe_mh))
     {
       _err("m_exe_que.push() failure.¥n");
-      return SENSOR_QUEUE_PUSH_ERROR;
+      return SS_ECODE_QUEUE_PUSH_ERROR;
     }
 
   int ret = mpmq_send(&m_mq,
@@ -312,10 +312,10 @@ int GestureClass::write(sensor_command_data_mh_t* command)
   if (ret < 0)
     {
       _err("mpmq_send() failure. %d¥n", ret);
-      return SENSOR_DSP_EXEC_ERROR;
+      return SS_ECODE_DSP_EXEC_ERROR;
     }
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -382,7 +382,7 @@ int GestureClass::setRotation(GestureSetRotation* rotation)
   if (exe_mh.cmd.allocSeg(m_cmd_pool_id, sizeof(SensorDspCmd)) != ERR_OK)
     {
       _err("allocSeg() failure.¥n");
-      return SENSOR_MEMHANDLE_ALLOC_ERROR;
+      return SS_ECODE_MEMHANDLE_ALLOC_ERROR;
     }
 
   SensorDspCmd* dsp_cmd = (SensorDspCmd*)exe_mh.cmd.getPa();
@@ -397,7 +397,7 @@ int GestureClass::setRotation(GestureSetRotation* rotation)
   if (!m_exe_que.push(exe_mh))
     {
       _err("m_exe_que.push() failure.¥n");
-      return SENSOR_QUEUE_PUSH_ERROR;
+      return SS_ECODE_QUEUE_PUSH_ERROR;
     }
 
   int ret = mpmq_send(&m_mq,
@@ -406,10 +406,10 @@ int GestureClass::setRotation(GestureSetRotation* rotation)
   if (ret < 0)
     {
       _err("mpmq_send() failure. %d¥n", ret);
-      return SENSOR_DSP_EXEC_ERROR;
+      return SS_ECODE_DSP_EXEC_ERROR;
     }
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /****************************************************************************

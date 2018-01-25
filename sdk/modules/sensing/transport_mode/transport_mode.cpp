@@ -187,7 +187,7 @@ int TramClass::open(FAR float *likelihood)
   if (ret != 0)
     {
       _err("mptask_init() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      return SS_ECODE_DSP_LOAD_ERROR;
     }
 
   ret = mptask_assign(&m_mptask);
@@ -195,7 +195,7 @@ int TramClass::open(FAR float *likelihood)
   if (ret != 0)
     {
       _err("mptask_asign() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      return SS_ECODE_DSP_LOAD_ERROR;
     }
 
   /* Queue for communication between Supervisor and Worker create. */
@@ -204,7 +204,7 @@ int TramClass::open(FAR float *likelihood)
   if (ret < 0)
     {
       _err("mpmq_init() failure. %d\n", ret);
-      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SS_ECODE_DSP_LOAD_ERROR;
       goto transport_mode_errout_with_mptask_destroy;
     }
 
@@ -214,7 +214,7 @@ int TramClass::open(FAR float *likelihood)
   if (ret != 0)
     {
       _err("mptask_exec() failure. %d\n", ret);
-      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SS_ECODE_DSP_LOAD_ERROR;
       goto transport_mode_errout_with_mpmq_destory;
     }
 
@@ -229,21 +229,21 @@ int TramClass::open(FAR float *likelihood)
   if (id != DSP_BOOTED_CMD_ID)
     {
       _err("boot error! %d\n", id);
-      errout_ret = SENSOR_DSP_BOOT_ERROR;
+      errout_ret = SS_ECODE_DSP_BOOT_ERROR;
       goto transport_mode_errout_with_mpmq_destory;
     }
   if (msgdata != DSP_TRAM_VERSION)
     {
       _err("boot error! [dsp version:0x%x] [sensorutils version:0x%x]\n",
           msgdata, DSP_TRAM_VERSION);
-      errout_ret = SENSOR_DSP_VERSION_ERROR;
+      errout_ret = SS_ECODE_DSP_VERSION_ERROR;
       goto transport_mode_errout_with_mpmq_destory;
     }
 
   /* Send InitEvent and wait response. */
 
   ret = this->sendInit(likelihood);
-  if (ret != SENSOR_OK)
+  if (ret != SS_ECODE_OK)
     {
       errout_ret = ret;
       goto transport_mode_errout_with_mpmq_destory;
@@ -258,11 +258,11 @@ int TramClass::open(FAR float *likelihood)
   if (ret != 0)
     {
       _err("DD_load: Failed to create receiver_thread_entry, error=%d\n", ret);
-      errout_ret = SENSOR_TASK_CREATE_ERROR;
+      errout_ret = SS_ECODE_TASK_CREATE_ERROR;
     }
   else
     {
-      return SENSOR_OK;
+      return SS_ECODE_OK;
     }
 
 transport_mode_errout_with_mpmq_destory:
@@ -284,7 +284,7 @@ int TramClass::close(void)
   if (ret < 0)
     {
       _err("mptask_destroy() failure. %d\n", ret);
-      return SENSOR_DSP_UNLOAD_ERROR;
+      return SS_ECODE_DSP_UNLOAD_ERROR;
     }
 
   _info("Worker exit status = %d\n", wret);
@@ -295,7 +295,7 @@ int TramClass::close(void)
   /* Finalize all of MP objects. */
   mpmq_destroy(&m_mq);
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -305,7 +305,7 @@ int TramClass::start(void)
   
   TramStateTransitionSetState(this, TRAM_STATE_MS);
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -315,7 +315,7 @@ int TramClass::stop(void)
   
   TramStateTransitionSetState(this, TRAM_STATE_UNINITIALIZED);
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -326,7 +326,7 @@ int TramClass::sendInit(float* likelihood)
   MemMgrLite::MemHandle mh;
   if (mh.allocSeg(m_cmd_pool_id, sizeof(SensorDspCmd)) != ERR_OK)
     {
-      return SENSOR_MEMHANDLE_ALLOC_ERROR;
+      return SS_ECODE_MEMHANDLE_ALLOC_ERROR;
     }
 
   SensorDspCmd* dsp_cmd = (SensorDspCmd*)mh.getVa();
@@ -342,7 +342,7 @@ int TramClass::sendInit(float* likelihood)
   if (ret < 0)
     {
       _err("mpmq_send() failure. %d¥n", ret);
-      return SENSOR_DSP_INIT_ERROR;
+      return SS_ECODE_DSP_INIT_ERROR;
     }
 
   /* Wait for initialized event. */
@@ -355,10 +355,10 @@ int TramClass::sendInit(float* likelihood)
     {
       _err("init error! %08x : %d\n",
           id, reinterpret_cast<SensorDspCmd*>(msgdata)->result.exec_result);
-      return SENSOR_DSP_INIT_ERROR;
+      return SS_ECODE_DSP_INIT_ERROR;
     }
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -374,7 +374,7 @@ int TramClass::write(sensor_command_data_mh_t* command)
 
   if (exe_mh.cmd.allocSeg(m_cmd_pool_id, sizeof(SensorDspCmd)) != ERR_OK)
     {
-      return SENSOR_MEMHANDLE_ALLOC_ERROR;
+      return SS_ECODE_MEMHANDLE_ALLOC_ERROR;
     }
 
   SensorDspCmd* dsp_cmd = (SensorDspCmd*)exe_mh.cmd.getVa();
@@ -430,7 +430,7 @@ int TramClass::write(sensor_command_data_mh_t* command)
     {
       /* Cannot save MHandle due to system error. */
 
-      return SENSOR_QUEUE_PUSH_ERROR;
+      return SS_ECODE_QUEUE_PUSH_ERROR;
     }
 
   /* Send sensored data.
@@ -443,10 +443,10 @@ int TramClass::write(sensor_command_data_mh_t* command)
   if (ret < 0)
     {
       _err("mpmq_send() failure. %d¥n", ret);
-      return SENSOR_DSP_EXEC_ERROR;
+      return SS_ECODE_DSP_EXEC_ERROR;
     }
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
@@ -628,11 +628,11 @@ int TramClass::handle_event(TramEvent event)
     {
     case MathFuncEvent:
       ret = (TramStateTransitionSetState(this, TRAM_STATE_CMD) == 0) ?
-              SENSOR_OK : SENSOR_STATE_ERROR;
+              SS_ECODE_OK : SS_ECODE_STATE_ERROR;
       break;
 
     default:
-      ret = SENSOR_PARAM_ERROR;
+      ret = SS_ECODE_PARAM_ERROR;
       break;
     }
 

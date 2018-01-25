@@ -109,7 +109,7 @@ int VoiceDetectionClass::open(void)
   if (ret != 0)
     {
       _err(("mptask_init_secure() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      return SS_ECODE_DSP_LOAD_ERROR;
     }
 
   ret = mptask_assign(&m_mptask);
@@ -117,7 +117,7 @@ int VoiceDetectionClass::open(void)
   if (ret != 0)
     {
       _err(("mptask_asign() failure. %d\n", ret);
-      return SENSOR_DSP_LOAD_ERROR;
+      return SS_ECODE_DSP_LOAD_ERROR;
     }
 
   /* Queue for communication between Supervisor and Worker create. */
@@ -126,7 +126,7 @@ int VoiceDetectionClass::open(void)
   if (ret < 0)
     {
       _err(("mpmq_init() failure. %d\n", ret);
-      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SS_ECODE_DSP_LOAD_ERROR;
       goto voice_detection_errout_with_mptask_destroy;
     }
 
@@ -136,7 +136,7 @@ int VoiceDetectionClass::open(void)
   if (ret != 0)
     {
       _err(("mptask_exec() failure. %d\n", ret);
-      errout_ret = SENSOR_DSP_LOAD_ERROR;
+      errout_ret = SS_ECODE_DSP_LOAD_ERROR;
       goto voice_detection_errout_with_mpmq_destory;
     }
 
@@ -146,7 +146,7 @@ int VoiceDetectionClass::open(void)
   if ((id != DSP_BOOTED_CMD_ID) && (msgdata != 0))
     {
       _err(("boot error! %d\n", ret);
-      errout_ret = SENSOR_DSP_BOOT_ERROR;
+      errout_ret = SS_ECODE_DSP_BOOT_ERROR;
       goto voice_detection_errout_with_mpmq_destory;
     }
 
@@ -169,11 +169,11 @@ int VoiceDetectionClass::open(void)
   if (ret != 0)
     {
       err("Failed to create receiver_thread_entry, error=%d\n", ret);
-      errout_ret = SENSOR_TASK_CREATE_ERROR;
+      errout_ret = SS_ECODE_TASK_CREATE_ERROR;
     }
   else
     {
-      return SENSOR_OK;
+      return SS_ECODE_OK;
     }
 
 voice_detection_errout_with_mpmq_destory:
@@ -195,7 +195,7 @@ int VoiceDetectionClass::close(void)
   if (ret < 0)
   {
     err("mptask_destroy() failure. %d\n", ret);
-    return SENSOR_DSP_UNLOAD_ERROR;
+    return SS_ECODE_DSP_UNLOAD_ERROR;
   }
 
   _info("Worker exit status = %d\n", wret);
@@ -206,7 +206,7 @@ int VoiceDetectionClass::close(void)
   /* Finalize all of MP objects */
   mpmq_destroy(&m_mq);
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -220,7 +220,7 @@ int VoiceDetectionClass::sendInit(void)
 
   if (mh.allocSeg(m_cmd_pool_id, sizeof(Wien2::Apu::Wien2ApuCmd)) != ERR_OK)
     {
-      return SENSOR_MEMHANDLE_ALLOC_ERROR;
+      return SS_ECODE_MEMHANDLE_ALLOC_ERROR;
     }
 
   Wien2::Apu::Wien2ApuCmd* dsp_cmd = (Wien2::Apu::Wien2ApuCmd*)mh.getPa();
@@ -240,7 +240,7 @@ int VoiceDetectionClass::sendInit(void)
   if (ret < 0)
     {
       _err("mpmq_send() failure. %d¥n", ret);
-      return SENSOR_DSP_INIT_ERROR;
+      return SS_ECODE_DSP_INIT_ERROR;
     }
 
   /* Wait for initialized event */
@@ -256,10 +256,10 @@ int VoiceDetectionClass::sendInit(void)
             id,
             reinterpret_cast<Wien2::Apu::Wien2ApuCmd *>
               (msgdata)->result.exec_result);
-      return SENSOR_DSP_INIT_ERROR;
+      return SS_ECODE_DSP_INIT_ERROR;
     }
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -276,7 +276,7 @@ int VoiceDetectionClass::write(FAR sensor_command_data_mh_t *command)
         m_cmd_pool_id,
         sizeof(Wien2::Apu::Wien2ApuCmd)) != ERR_OK)
     {
-      return SENSOR_MEMHANDLE_ALLOC_ERROR;
+      return SS_ECODE_MEMHANDLE_ALLOC_ERROR;
     }
 
   Wien2::Apu::Wien2ApuCmd* dsp_cmd =
@@ -295,7 +295,7 @@ int VoiceDetectionClass::write(FAR sensor_command_data_mh_t *command)
 
   if (!m_exe_que.push(exe_mh))
     {
-      return SENSOR_QUEUE_PUSH_ERROR;
+      return SS_ECODE_QUEUE_PUSH_ERROR;
     }
 
   int ret = mpmq_send(&m_mq,
@@ -305,10 +305,10 @@ int VoiceDetectionClass::write(FAR sensor_command_data_mh_t *command)
   if (ret < 0)
     {
       _err("mpmq_send() failure. %d¥n", ret);
-      return SENSOR_DSP_EXEC_ERROR;
+      return SS_ECODE_DSP_EXEC_ERROR;
     }
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -381,7 +381,7 @@ int VoiceDetectionClass::receive(void)
       this->set_callback(reinterpret_cast<FAR SensorDspCmd *>(msgdata));
     }
 
-  return SENSOR_OK;
+  return SS_ECODE_OK;
 }
 
 /****************************************************************************

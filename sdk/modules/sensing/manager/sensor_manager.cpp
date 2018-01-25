@@ -161,7 +161,7 @@ void SensorManager::register_client(MsgPacket* packet)
           if (client_table[i].status == 0)
             {
               response(reg.header.code,
-                       SENSOR_REQUIRED_SENSOR_NOT_ACTIVE,
+                       SS_ECODE_REQUIRED_SENSOR_NOT_ACTIVE,
                        reg.get_self());
               return;
             }
@@ -174,7 +174,7 @@ void SensorManager::register_client(MsgPacket* packet)
 
     }
 
-  response(reg.header.code, SENSOR_OK, reg.get_self());
+  response(reg.header.code, SS_ECODE_OK, reg.get_self());
 }
 
 /*--------------------------------------------------------------------*/
@@ -187,7 +187,7 @@ void SensorManager::release_client(MsgPacket* packet)
   if (client_table[rel.get_self()].subscribers != 0)
     {
       response(rel.header.code,
-               SENSOR_REQUIRED_SENSOR_STILL_ACTIVE,
+               SS_ECODE_REQUIRED_SENSOR_STILL_ACTIVE,
                rel.get_self());
       return;
     }
@@ -212,7 +212,7 @@ void SensorManager::release_client(MsgPacket* packet)
   power_table[rel.get_self()].callback     = 0x00;
 #endif /* CONFIG_SENSING_MANAGER_POWERCTRL */
 
-  response(rel.header.code, SENSOR_OK, rel.get_self());
+  response(rel.header.code, SS_ECODE_OK, rel.get_self());
 }
 
 /*--------------------------------------------------------------------*/
@@ -230,7 +230,7 @@ void SensorManager::change_subscription(MsgPacket* packet)
           if (client_table[i].status == 0)
             {
               response(chg.header.code,
-                       SENSOR_REQUIRED_SENSOR_NOT_ACTIVE,
+                       SS_ECODE_REQUIRED_SENSOR_NOT_ACTIVE,
                        chg.get_self());
               return;
             }
@@ -252,7 +252,7 @@ void SensorManager::change_subscription(MsgPacket* packet)
         }
     }
 
-  response(chg.header.code, SENSOR_OK, chg.get_self());
+  response(chg.header.code, SS_ECODE_OK, chg.get_self());
 }
 
 /*--------------------------------------------------------------------*/
@@ -263,7 +263,7 @@ void SensorManager::send_data(MsgPacket* packet)
   if (client_table[data.get_self()].status == 0x00)
     {
       response(data.header.code,
-               SENSOR_REQUIRED_SENSOR_NOT_ACTIVE,
+               SS_ECODE_REQUIRED_SENSOR_NOT_ACTIVE,
                data.get_self());
       return;
     }
@@ -276,7 +276,7 @@ void SensorManager::send_data(MsgPacket* packet)
           if (!client_table[i].callback)
             {
               response(data.header.code,
-                       SENSOR_NOTIFICATION_DST_UNDEFINED,
+                       SS_ECODE_NOTIFICATION_DST_UNDEFINED,
                        data.get_self());
               return;
             }
@@ -286,7 +286,7 @@ void SensorManager::send_data(MsgPacket* packet)
         }
     }
 
-  response(data.header.code, SENSOR_OK, data.get_self());
+  response(data.header.code, SS_ECODE_OK, data.get_self());
 }
 
 #ifdef __cplusplus
@@ -298,7 +298,7 @@ void SensorManager::send_data_mh(MsgPacket* packet)
   if (client_table[data.get_self()].status == 0x00)
     {
       response(data.header.code,
-               SENSOR_REQUIRED_SENSOR_NOT_ACTIVE,
+               SS_ECODE_REQUIRED_SENSOR_NOT_ACTIVE,
                data.get_self());
       return;
     }
@@ -311,7 +311,7 @@ void SensorManager::send_data_mh(MsgPacket* packet)
           if (!client_table[i].callback_mh)
             {
               response(data.header.code,
-                       SENSOR_NOTIFICATION_DST_UNDEFINED,
+                       SS_ECODE_NOTIFICATION_DST_UNDEFINED,
                        data.get_self());
               return;
             }
@@ -321,7 +321,7 @@ void SensorManager::send_data_mh(MsgPacket* packet)
         }
     }
 
-  response(data.header.code, SENSOR_OK, data.get_self());
+  response(data.header.code, SS_ECODE_OK, data.get_self());
 }
 #endif /* __cplusplus */
 
@@ -333,7 +333,7 @@ void SensorManager::send_result(MsgPacket* packet)
   if (client_table[res.get_self()].status == 0x00)
     {
       response(res.header.code,
-               SENSOR_REQUIRED_SENSOR_NOT_ACTIVE,
+               SS_ECODE_REQUIRED_SENSOR_NOT_ACTIVE,
                res.get_self());
       return;
     }
@@ -348,7 +348,7 @@ void SensorManager::send_result(MsgPacket* packet)
         }
     }
 
-  response(res.header.code, SENSOR_OK, res.get_self());
+  response(res.header.code, SS_ECODE_OK, res.get_self());
 }
 
 /*--------------------------------------------------------------------*/
@@ -375,7 +375,7 @@ void SensorManager::set_power(MsgPacket* packet)
                   if (!power_table[i].callback)
                     {
                       response(pow.header.code,
-                               SENSOR_NOTIFICATION_DST_UNDEFINED,
+                               SS_ECODE_NOTIFICATION_DST_UNDEFINED,
                                pow.get_self());
                       return;
                     }
@@ -386,7 +386,7 @@ void SensorManager::set_power(MsgPacket* packet)
         }
     }
 
-  response(pow.header.code, SENSOR_OK, pow.get_self());
+  response(pow.header.code, SS_ECODE_OK, pow.get_self());
 }
 
 /*--------------------------------------------------------------------*/
@@ -414,7 +414,7 @@ void SensorManager::clear_power(MsgPacket* packet)
                       if (!power_table[i].callback)
                         {
                           response(pow.header.code,
-                                   SENSOR_NOTIFICATION_DST_UNDEFINED,
+                                   SS_ECODE_NOTIFICATION_DST_UNDEFINED,
                                    pow.get_self());
                           return;
                         }
@@ -426,7 +426,7 @@ void SensorManager::clear_power(MsgPacket* packet)
         }
     }
 
-  response(pow.header.code, SENSOR_OK, pow.get_self());
+  response(pow.header.code, SS_ECODE_OK, pow.get_self());
 }
 #endif /* CONFIG_SENSING_MANAGER_POWERCTRL */
 
