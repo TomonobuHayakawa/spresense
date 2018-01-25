@@ -287,10 +287,25 @@ static bool mfe_done_callback(DspDrvComPrm_t *p_param)
 
   if (packet->init_filter_cmd.filter_type == Apu::MFE)
     {
+      /* 16kHz data for voice recognition
+       *  | MIC-in 48kHz
+       *  | -> SRC 1/3 (16kHz)
+       *  | -> MFE(16kHz data is required)
+       *  | -> here
+       */
+
       return handle_mfe_done_notification(packet);
     }
   else if (packet->init_filter_cmd.filter_type == Apu::SRC)
     {
+      /* 48kHz data for I2S-out
+       *  | MIC-in 48kHz
+       *  | -> SRC 1/3 (16kHz)
+       *  | -> MFE(16kHz data is required)
+       *  | -> SRC x3 (48kHz))
+       *  | -> here
+       */
+
       return handle_mfe_post_notification(packet);
     }
 
@@ -954,6 +969,8 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
           execMfe(param.exec_capture_comp_param.p_pcm,
                   param.exec_capture_comp_param.pcm_sample);
           m_mic_in_sync_cnt++;
+
+          freeMicInBuf();
         }
       else
         {
@@ -1009,6 +1026,8 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
           execMpp(param.exec_capture_comp_param.p_pcm,
                   param.exec_capture_comp_param.pcm_sample);
           m_i2s_in_sync_cnt++;
+
+          freeI2SInBuf();
         }
       else
         {
@@ -1158,13 +1177,15 @@ void SoundEffectObject::filterRstOnActive(MsgPacket *msg)
   if (param.filter_type == Apu::MFE)
     {
       /* MFE処理済データをI2S-out及びvoice recognition objectへ送信。 */
-      freeMicInBuf();
+      freeMfeInBuf();
+
       execI2SOutRender(param);
     }
   else if (param.filter_type == Apu::XLOUD)
     {
       /* xLOUD処理済データをHPへ送信。 */
-      freeI2SInBuf();
+      freeMppInBuf();
+
       execHpSpOutRender(param);
     }
   else
@@ -1185,12 +1206,13 @@ void SoundEffectObject::filterRstOnStopping(MsgPacket *msg)
 
   if (param.filter_type == Apu::MFE)
     {
-      freeMicInBuf();
+      freeMfeInBuf();
       execI2SOutRender(param);
 
-      if (m_mic_in_buf_mh_que.empty())
+      if (m_mic_in_buf_mh_que.empty()
+       && m_mfe_in_buf_mh_que.empty())
         {
-          /* requested command num to DMAC == m_mic_in_buf_mh_que.size() */
+          /* There is no wait for MIC-capture-in or MFE-filter-proc. */
 
           if (!AS_stop_renderer(m_i2s_render_comp_handler,
                                 AS_DMASTOPMODE_NORMAL))
@@ -1206,11 +1228,14 @@ void SoundEffectObject::filterRstOnStopping(MsgPacket *msg)
     }
   else if (param.filter_type == Apu::XLOUD)
     {
-      freeI2SInBuf();
+      freeMppInBuf();
       execHpSpOutRender(param);
 
-      if (m_i2s_in_buf_mh_que.empty())
+      if (m_i2s_in_buf_mh_que.empty()
+       && m_mpp_in_buf_mh_que.empty())
         {
+          /* There is no wait for I2S-capture-in or MPP-filter-proc. */
+
           if (!AS_stop_renderer(m_hp_render_comp_handler,
                                 AS_DMASTOPMODE_NORMAL))
             {
@@ -1646,10 +1671,6 @@ void SoundEffectObject::execMfe(void *p_buffer, int32_t sample)
   param.filter_type = Apu::MFE;
   param.callback = &mfe_done_callback;
 
-  /* TODO: There is more extensibility if separete
-   *       filter queue and mic-in data queue.
-   */
-
   param.exec_mfe_param.input_buffer.p_buffer =
     reinterpret_cast<unsigned long*>(p_buffer);
 
@@ -1666,16 +1687,19 @@ void SoundEffectObject::execMfe(void *p_buffer, int32_t sample)
   param.exec_mfe_param.notification_buffer.size = 0;
 
   AS_filter_exec(param);
+
+  /* Copy MH from MIC-captured data to mfe-in data. */
+
+  if (!m_mfe_in_buf_mh_que.push(m_mic_in_buf_mh_que.top()))
+    {
+      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+    }
 }
 
 /*--------------------------------------------------------------------*/
 void SoundEffectObject::execMpp(void *p_buffer, int32_t sample)
 {
-  /* TODO: There is more extensibility if separete
-   *       filter queue and mic-in data queue.
-   */
-
-  /* First, Send I2S-in data to xLOUD filter component.
+  /* First, Send I2S-in data to xLOUD(MPP) filter component.
    * Next, next request I2S-in caputure command.
    */
 
@@ -1701,6 +1725,13 @@ void SoundEffectObject::execMpp(void *p_buffer, int32_t sample)
   param.exec_xloud_param.output_buffer.size = 0;
 
   AS_filter_exec(param);
+
+  /* Copy MH from I2S-captured data to mpp-in data. */
+
+  if (!m_mpp_in_buf_mh_que.push(m_i2s_in_buf_mh_que.top()))
+    {
+      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+    }
 }
 
 /*--------------------------------------------------------------------*/

@@ -145,6 +145,8 @@ private:
 
   InDataMhQueue  m_mic_in_buf_mh_que;
   InDataMhQueue  m_i2s_in_buf_mh_que;
+  InDataMhQueue  m_mfe_in_buf_mh_que;
+  InDataMhQueue  m_mpp_in_buf_mh_que;
   OutDataMhQueue m_hp_out_buf_mh_que;
   OutDataMhQueue m_i2s_out_buf_mh_que;
   RcgDataMhQueue m_mfe_out_buf_mh_que;
@@ -206,6 +208,26 @@ private:
   bool freeI2SInBuf()
   {
     if (!m_i2s_in_buf_mh_que.pop())
+      {
+        SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
+        return false;
+      }
+    return true;
+  }
+
+  bool freeMfeInBuf()
+  {
+    if (!m_mfe_in_buf_mh_que.pop())
+      {
+        SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
+        return false;
+      }
+    return true;
+  }
+
+  bool freeMppInBuf()
+  {
+    if (!m_mpp_in_buf_mh_que.pop())
       {
         SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
         return false;
