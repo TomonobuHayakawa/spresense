@@ -505,19 +505,9 @@ static void send_renderer(RenderComponentHandler handle,
 static bool check_sample(OutputMixObjInputDataCmd *input)
 {
   bool res = true;
-  if (input->is_es_end == true)
+  if (input->size < DMA_MIN_SAMPLE*BYTE_SIZE_PER_SAMPLE)
     {
-      if (input->size < DMA_MIN_SAMPLE*BYTE_SIZE_PER_SAMPLE)
-        {
-          res = false;
-        }
-    }
-  else
-    {
-      if (input->size < DMA_MIN_SAMPLE*BYTE_SIZE_PER_SAMPLE)
-        {
-          input->size = DMA_MIN_SAMPLE*BYTE_SIZE_PER_SAMPLE;
-        }
+      res = false;
     }
   return res;
 }
