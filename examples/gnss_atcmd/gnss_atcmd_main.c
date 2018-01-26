@@ -194,7 +194,7 @@ FAR static char *reqbuf(uint16_t size)
 #endif
 }
 
-static void freebuf(char *buf)
+static void freebuf(FAR char *buf)
 {
 #ifdef _USE_STATIC_NMEA_BUF
 #else
@@ -202,12 +202,12 @@ static void freebuf(char *buf)
 #endif
 }
 
-static int outnmea(char *buf)
+static int outnmea(FAR char *buf)
 {
   return gnss_atcmd_printf(WRITE_FD, "%s", buf);
 }
 
-static int outbin(char *buf, int32_t len)
+static int outbin(FAR char *buf, uint32_t len)
 {
   return write(WRITE_FD, buf, (size_t)len);
 }
