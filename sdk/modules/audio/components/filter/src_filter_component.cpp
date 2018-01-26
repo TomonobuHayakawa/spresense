@@ -97,10 +97,14 @@ uint32_t SRCComponent::activate_apu(SRCComponent *p_component,
 
   sp_src_component = p_component;
 
-  if (NULL == (m_dsp_handler = DD_Load("SRC",
-                                       src_filter_dsp_done_callback,
-                                       (void *)this)))
+  int ret = DD_Load("SRC",
+                    src_filter_dsp_done_callback,
+                    (void *)this,
+                    &m_dsp_handler);
+  
+  if (ret != DSPDRV_NOERROR)
     {
+      _err("DD_Load() failure. %d\n", ret);
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
       return AS_ECODE_DSP_LOAD_ERROR;
     }
@@ -110,8 +114,12 @@ uint32_t SRCComponent::activate_apu(SRCComponent *p_component,
   if (!dsp_boot_check(m_apu_dtq, DSP_SRC_VERSION, dsp_inf))
     {
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_VERSION_ERROR);
-      if (DD_Unload(m_dsp_handler) != 0)
+
+      ret = DD_Unload(m_dsp_handler);
+
+      if (ret != DSPDRV_NOERROR)
         {
+          _err("DD_UnLoad() failure. %d\n", ret);
           FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
         }
 
@@ -139,8 +147,11 @@ bool SRCComponent::deactivate_apu(void)
     }
 #endif
 
-  if (DD_Unload(m_dsp_handler) != 0)
+  int ret = DD_Unload(m_dsp_handler);
+
+  if (ret != DSPDRV_NOERROR)
     {
+      _err("DD_UnLoad() failure. %d\n", ret);
       FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
       return false;
     }
@@ -316,9 +327,12 @@ void SRCComponent::send_apu(Apu::Wien2ApuCmd *p_cmd)
   com_param.type          = DSP_COM_DATA_TYPE_STRUCT_ADDRESS;
   com_param.data.pParam   = reinterpret_cast<void*>(p_cmd);
 
-  if (0 != DD_SendCommand(m_dsp_handler, &com_param))
+  int ret = DD_SendCommand(m_dsp_handler, &com_param);
+
+  if (ret != DSPDRV_NOERROR)
     {
-      FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_EXEC_ERROR);
+      _err("DD_SendCommand() failure. %d\n", ret);
+      FILTER_ERR(AS_ATTENTION_SUB_CODE_DSP_SEND_ERROR);
       return;
     }
 }

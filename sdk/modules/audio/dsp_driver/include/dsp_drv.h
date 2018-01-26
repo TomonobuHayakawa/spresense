@@ -52,6 +52,17 @@
 #define DSP_COM_DATA_TYPE_STRUCT_ADDRESS  0
 #define DSP_COM_DATA_TYPE_32BIT_VALUE     1
 
+typedef enum {
+  DSPDRV_NOERROR = 0,       /* Dsp driver load success.                */
+  DSPDRV_FILENAME_EMPTY,    /* No file name.                           */
+  DSPDRV_CALLBACK_ERROR,    /* Callback function value type error.     */
+  DSPDRV_INVALID_VALUE,     /* Invalid argument.                       */
+  DSPDRV_CREATE_FAIL,       /* Failed to Create DspDrv Class instance. */
+  DSPDRV_INIT_MPTASK_FAIL,  /* Failed on DspDrv Init mptask sequence.  */
+  DSPDRV_INIT_MPMQ_FAIL,    /* Failed on DspDrv Init mpmq sequence.    */
+  DSPDRV_INIT_PTHREAD_FAIL  /* Failed on DspDrv Init pthread sequence. */
+} dspdrv_errorcode_e;
+
 struct DspDrvComPrm_s
 {
   uint32_t process_mode:4;  /* Mode of process. A use case is a case where
@@ -102,13 +113,15 @@ private:
  * Public Functions
  ****************************************************************************/
 
-extern CODE void *DD_Load(FAR const char  *filename,
-                          DspDoneCallback p_cbfunc,
-                          FAR void        *p_parent_instance);
+extern int DD_Load(FAR const char  *filename,
+                   DspDoneCallback p_cbfunc,
+                   FAR void        *p_parent_instance,
+                   FAR void        **dsp_handler);
 
-extern CODE void *DD_Load_Secure(FAR const char  *filename,
-                                 DspDoneCallback p_cbfunc,
-                                 FAR void        *p_parent_instance);
+extern int DD_Load_Secure(FAR const char  *filename,
+                          DspDoneCallback p_cbfunc,
+                          FAR void        *p_parent_instance,
+                          FAR void        **dsp_handler);
 
 extern int DD_SendCommand(FAR const void           *p_instance,
                           FAR const DspDrvComPrm_t *p_param);

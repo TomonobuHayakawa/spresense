@@ -363,7 +363,13 @@ void DecoderComponent::send_apu(Apu::Wien2ApuCmd *p_cmd)
   com_param.type         = DSP_COM_DATA_TYPE_STRUCT_ADDRESS;
   com_param.data.pParam  = reinterpret_cast<void*>(p_cmd);
 
-  DD_SendCommand(m_dsp_handler, &com_param);
+  int ret = DD_SendCommand(m_dsp_handler, &com_param);
+  if (ret != DSPDRV_NOERROR)
+    {
+      _err("DD_SendCommand() failure. %d\n", ret);
+      ENCODER_ERR(AS_ATTENTION_SUB_CODE_DSP_SEND_ERROR);
+      return;
+    }
 }
 
 /*--------------------------------------------------------------------*/
@@ -438,14 +444,15 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
 
   /* Load DSP */
 
-  m_dsp_handler = DD_Load(filename, cbRcvDspRes, (void*)this);
+  int ret = DD_Load(filename, cbRcvDspRes, (void*)this, &m_dsp_handler);
 
 #ifdef CONFIG_CPUFREQ_RELEASE_LOCK
   up_pm_release_freqlock(&g_decode_hvlock);
 #endif
 
-  if (m_dsp_handler == NULL)
+  if (ret != DSPDRV_NOERROR)
     {
+      _err("DD_Load() failure. %d\n", ret);
       DECODER_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
       return AS_ECODE_DSP_LOAD_ERROR;
     }
@@ -454,8 +461,11 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
     {
       DECODER_ERR(AS_ATTENTION_SUB_CODE_DSP_VERSION_ERROR);
 
-      if (DD_Unload(m_dsp_handler) != 0)
+      ret = DD_Unload(m_dsp_handler);
+
+      if (ret != DSPDRV_NOERROR)
         {
+          _err("DD_UnLoad() failure. %d\n", ret);
           DECODER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
         }
 
@@ -486,8 +496,11 @@ bool DecoderComponent::deactivate(void)
     }
 #endif
 
-  if (DD_Unload(m_dsp_handler) != 0)
+  int ret = DD_Unload(m_dsp_handler);
+
+  if (ret != DSPDRV_NOERROR)
     {
+      _err("DD_UnLoad() failure. %d\n", ret);
       DECODER_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
       result = false;
     }

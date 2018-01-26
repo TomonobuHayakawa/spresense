@@ -152,7 +152,7 @@ int DspDrv::init(FAR const char  *pfilename,
       if (ret < 0)
         {
           err("mptask_init_secure() failure. %d\n", ret);
-          return ret;
+          return DSPDRV_INIT_MPTASK_FAIL;
         }
     }
   else
@@ -169,15 +169,15 @@ int DspDrv::init(FAR const char  *pfilename,
       if (ret < 0)
         {
           err("mptask_init() failure. %d\n", ret);
-          return ret;
+          return DSPDRV_INIT_MPTASK_FAIL;
         }
     }
 
   ret = mptask_assign(&m_mptask);
   if (ret < 0)
     {
-      err("mptask_asign() failure. %d\n", ret);
-      return ret;
+      err("mptask_assign() failure. %d\n", ret);
+      return DSPDRV_INIT_MPTASK_FAIL;
     }
 
   /* Initialize MP message queue with asigned CPU ID,
@@ -188,7 +188,7 @@ int DspDrv::init(FAR const char  *pfilename,
   if (ret < 0)
     {
       err("mpmq_init() failure. %d\n", ret);
-      errout_ret = ret;
+      errout_ret = DSPDRV_INIT_MPMQ_FAIL;
       goto dsp_drv_errout_with_mptask_destroy;
     }
 
@@ -200,7 +200,7 @@ int DspDrv::init(FAR const char  *pfilename,
   if (ret != 0)
     {
       err("pthread_attr_setschedparam() failure. %d\n", ret);
-      errout_ret = ret;
+      errout_ret = DSPDRV_INIT_PTHREAD_FAIL;
       goto dsp_drv_errout_with_mpmq_destory;
     }
 
@@ -211,7 +211,7 @@ int DspDrv::init(FAR const char  *pfilename,
   if (ret != 0)
     {
       err("pthread_create() failure. %d\n", ret);
-      errout_ret = ret;
+      errout_ret = DSPDRV_INIT_PTHREAD_FAIL;
       (void)pthread_attr_destroy(&attr);
       goto dsp_drv_errout_with_mpmq_destory;
     }
@@ -224,7 +224,7 @@ int DspDrv::init(FAR const char  *pfilename,
   if (ret < 0)
     {
       err("mptask_exec() failure. %d\n", ret);
-      errout_ret = ret;
+      errout_ret = DSPDRV_INIT_MPTASK_FAIL;
       ret = pthread_cancel(m_thread_id);
       DEBUGASSERT(ret == 0);
 
@@ -233,7 +233,7 @@ int DspDrv::init(FAR const char  *pfilename,
     }
   else
     {
-      return 0;
+      return DSPDRV_NOERROR;
     }
 
 dsp_drv_errout_with_mpmq_destory:
@@ -259,14 +259,14 @@ int DspDrv::destroy()
   if (ret != 0)
     {
       err("pthread_cancel() failure. %d\n", ret);
-      return ret;
+      return DSPDRV_INIT_PTHREAD_FAIL;
     }
 
   ret = pthread_join(m_thread_id, NULL);
   if (ret != 0)
     {
       err("pthread_join() failure. %d\n", ret);
-      return ret;
+      return DSPDRV_INIT_PTHREAD_FAIL;
     }
 
   /* Destroy worker. */
@@ -275,7 +275,7 @@ int DspDrv::destroy()
   if (ret < 0)
     {
       err("mptask_destroy() failure. %d\n", ret);
-      return ret;
+      return DSPDRV_INIT_MPTASK_FAIL;
     }
 
   /* Finalize all of MP objects. */
@@ -284,10 +284,10 @@ int DspDrv::destroy()
   if (ret < 0)
     {
       err("mpmq_destroy() failure. %d\n", ret);
-      return ret;
+      return DSPDRV_INIT_MPMQ_FAIL;
     }
 
-  return 0;
+  return DSPDRV_NOERROR;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -305,10 +305,10 @@ int DspDrv::send(FAR const DspDrvComPrm_t *p_param)
   if (ret < 0)
     {
       err("mpmq_send() failure. %d\n", ret);
-      return ret;
+      return DSPDRV_INIT_MPMQ_FAIL;
     }
 
-  return 0;
+  return DSPDRV_NOERROR;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -326,7 +326,7 @@ int DspDrv::receive()
       if (command < 0)
         {
           err("mpmq_recieve() failure. command(%d) < 0\n", command);
-          return command;
+          return DSPDRV_INIT_MPMQ_FAIL;
         }
 
       DspDrvComPrm_t param;
@@ -342,24 +342,38 @@ int DspDrv::receive()
         }
     }
 
-  return 0;
+  return DSPDRV_NOERROR;
 }
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-CODE void *DD_Load(FAR const char  *filename,
-                   DspDoneCallback p_cbfunc,
-                   FAR void        *p_parent_instance)
+int DD_Load(FAR const char  *filename,
+            DspDoneCallback p_cbfunc,
+            FAR void        *p_parent_instance,
+            FAR void        **dsp_handler)
 {
-  if (filename == NULL || p_cbfunc == NULL)
+  if (filename == NULL)
     {
-      return NULL;
+      return DSPDRV_FILENAME_EMPTY;
     }
-
+  if (p_cbfunc == NULL)
+    {
+      return DSPDRV_CALLBACK_ERROR;
+    }
+  if (dsp_handler == NULL)
+    {
+      return DSPDRV_INVALID_VALUE;
+    }
   FAR DspDrv *p_instance = new DspDrv;
-  if (p_instance != NULL)
+  *dsp_handler = p_instance;
+
+  if (p_instance == NULL)
+    {
+      return DSPDRV_CREATE_FAIL;
+    }
+  else
     {
       /* Initialize DspDriver. */
 
@@ -367,27 +381,42 @@ CODE void *DD_Load(FAR const char  *filename,
                                  p_cbfunc,
                                  p_parent_instance,
                                  false);
-      if (ret < 0)
+      if (ret != DSPDRV_NOERROR)
         {
           delete ((FAR DspDrv*)p_instance);
-          return NULL;
+          return ret;
         }
     }
-  return (FAR void*)p_instance;
+  return DSPDRV_NOERROR;
 }
 
 /*--------------------------------------------------------------------------*/
-CODE void *DD_Load_Secure(FAR const char  *filename,
-                          DspDoneCallback p_cbfunc,
-                          FAR void        *p_parent_instance)
+int DD_Load_Secure(FAR const char  *filename,
+                   DspDoneCallback p_cbfunc,
+                   FAR void        *p_parent_instance,
+                   FAR void        **dsp_handler)
 {
-  if (filename == NULL || p_cbfunc == NULL)
+  if (filename == NULL)
     {
-      return NULL;
+      return DSPDRV_FILENAME_EMPTY;
+    }
+  if ( p_cbfunc == NULL)
+    {
+      return DSPDRV_CALLBACK_ERROR;
+    }
+  if (dsp_handler == NULL)
+    {
+      return DSPDRV_INVALID_VALUE;
     }
 
   FAR DspDrv *p_instance = new DspDrv;
-  if (p_instance != NULL)
+  *dsp_handler = p_instance;
+
+  if (p_instance == NULL)
+    {
+      return DSPDRV_CREATE_FAIL;
+    }
+  else
     {
       /* Initialize DspDriver. */
 
@@ -395,13 +424,13 @@ CODE void *DD_Load_Secure(FAR const char  *filename,
                                  p_cbfunc,
                                  p_parent_instance,
                                  true);
-      if (ret < 0)
+      if (ret != DSPDRV_NOERROR)
         {
           delete ((FAR DspDrv*)p_instance);
-          return NULL;
+          return ret;
         }
     }
-  return (FAR void*)p_instance;
+  return DSPDRV_NOERROR;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -410,7 +439,7 @@ int DD_SendCommand(FAR const void           *p_instance,
 {
   if (p_instance == NULL || p_param == NULL)
     {
-      return -1;
+      return DSPDRV_INVALID_VALUE;
     }
 
   int ret = ((FAR DspDrv*)p_instance)->send(p_param);
@@ -423,11 +452,11 @@ int DD_Unload(FAR const void *p_instance)
 {
   if (p_instance == NULL)
     {
-      return -1;
+      return DSPDRV_INVALID_VALUE;
     }
 
   int ret = ((FAR DspDrv*)p_instance)->destroy();
-  if (ret == 0)
+  if (ret == DSPDRV_NOERROR)
     {
       delete ((FAR DspDrv*)p_instance);
     }

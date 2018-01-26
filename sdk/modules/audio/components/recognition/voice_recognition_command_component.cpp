@@ -173,11 +173,14 @@ uint32_t VoiceCmdComponent::act(uint32_t *dsp_inf)
 
   /* DSP Load */
 
-  if ((m_dsp_handler = DD_Load_Secure("VADWUW",
-                                      voiceCmdCmpDspDoneCallback,
-                                      (void *)this))
-      == NULL)
+  int ret =  DD_Load_Secure("VADWUW",
+                            voiceCmdCmpDspDoneCallback,
+                            (void *)this,
+                            &m_dsp_handler);
+
+  if (ret != DSPDRV_NOERROR)
     {
+      _err("DD_Load_Secure() failure. %d\n", ret);
       RECOGNITION_CMP_ERR(AS_ATTENTION_SUB_CODE_DSP_LOAD_ERROR);
       return AS_ECODE_DSP_LOAD_ERROR;
     }
@@ -186,8 +189,11 @@ uint32_t VoiceCmdComponent::act(uint32_t *dsp_inf)
     {
       RECOGNITION_CMP_ERR(AS_ATTENTION_SUB_CODE_DSP_VERSION_ERROR);
 
-      if (DD_Unload(m_dsp_handler) != 0)
+      ret = DD_Unload(m_dsp_handler);
+
+      if (ret != DSPDRV_NOERROR)
         {
+          _err("DD_UnLoad() failure. %d\n", ret);
           RECOGNITION_CMP_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
         }
 
@@ -214,8 +220,11 @@ bool VoiceCmdComponent::deact()
     }
 #endif
 
-  if (m_dsp_handler != NULL && DD_Unload(m_dsp_handler) != 0)
+  int ret = DD_Unload(m_dsp_handler);
+
+  if (m_dsp_handler != NULL && ret != DSPDRV_NOERROR)
     {
+      _err("DD_UnLoad() failure. %d\n", ret);
       RECOGNITION_CMP_ERR(AS_ATTENTION_SUB_CODE_DSP_UNLOAD_ERROR);
       return -1;
     }
@@ -333,9 +342,13 @@ void VoiceCmdComponent::sendApu(Apu::Wien2ApuCmd *p_cmd)
   com_param.type         = DSP_COM_DATA_TYPE_STRUCT_ADDRESS;
   com_param.data.pParam  = reinterpret_cast<void*>(p_cmd);
 
-  if (0 != DD_SendCommand(m_dsp_handler, &com_param))
+  int ret = DD_SendCommand(m_dsp_handler, &com_param);
+
+  if (ret != DSPDRV_NOERROR)
     {
-      F_ASSERT(0);
+      _err("DD_SendCommand() failure. %d\n", ret);
+      ENCODER_ERR(AS_ATTENTION_SUB_CODE_DSP_SEND_ERROR);
+      return;
     }
 }
 
