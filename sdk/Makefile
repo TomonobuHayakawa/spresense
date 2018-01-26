@@ -9,8 +9,19 @@
 
 NUTTXDIR ?= ../nuttx
 
-SDKDIR := $(shell pwd | sed -e 's/ /\\ /g')
-TOPDIR := $(shell pwd | sed -e 's/ /\\ /g')/$(NUTTXDIR)
+# Setup for Windows vs Linux/Cygwin/OSX environments
+
+ifeq ("$(shell uname -o)","Cygwin")
+    WINTOOL = y
+endif
+
+ifeq ($(WINTOOL),y)
+  SDKDIR := $(shell pwd | cygpath -m -f - | sed -e 's/ /\\ /g')
+  TOPDIR := $(shell pwd | cygpath -m -f - | sed -e 's/ /\\ /g')/$(NUTTXDIR)
+else
+  SDKDIR := $(shell pwd | sed -e 's/ /\\ /g')
+  TOPDIR := $(shell pwd | sed -e 's/ /\\ /g')/$(NUTTXDIR)
+endif
 
 -include $(TOPDIR)/.config
 -include $(SDKDIR)/.config

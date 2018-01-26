@@ -138,9 +138,13 @@ if [ -f "${SDKDIR}"/sdk_version ]; then
     VERSION="-`cat ${SDKDIR}/sdk_version`"
 fi
 
-# Create the export directory
+# Check whether the environment is Cygwin and create the export directory
 
-TMPDIR=`mktemp -d`
+if [ $(uname -o) = "Cygwin" ]; then
+  TMPDIR=`mktemp -d | cygpath -m -f -`
+else
+  TMPDIR=`mktemp -d`
+fi
 OUTPUTDIR="sdk-export${VERSION}"
 EXPORTDIR="${TMPDIR}/${OUTPUTDIR}"
 EXPORTNXDIR="${EXPORTDIR}/nuttx"
