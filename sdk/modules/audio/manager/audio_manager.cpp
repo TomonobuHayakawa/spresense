@@ -1367,7 +1367,7 @@ void AudioManager::setThroughStatus(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.setActiveBaseband(BB_POWER_BOTH);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_DRIVER,
@@ -1508,7 +1508,7 @@ void AudioManager::setRdyOnThrough(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.deactivate(BB_POWER_BOTH);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_DRIVER,
@@ -2764,7 +2764,7 @@ void AudioManager::setThroughPath(AudioCommand &cmd)
     }
 
   uint32_t rst = bbConfig.setThroughPath(cmd);
-  if (rst != AS_RESPONSE_CODE_OK)
+  if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_DRIVER,

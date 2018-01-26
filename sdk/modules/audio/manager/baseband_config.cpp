@@ -523,7 +523,7 @@ uint32_t BasebandConfig::setThroughPath(AudioCommand &cmd)
 {
   if (!chkEnableBaseBandInput() || !chkEnableBaseBandOutput())
     {
-      return AS_RESPONSE_CODE_NOT_AUDIO_DATA_PATH;
+      return AS_ECODE_NOT_AUDIO_DATA_PATH;
     }
 
   if (cmd.set_through_path.path1.en && cmd.set_through_path.path2.en)
@@ -531,7 +531,7 @@ uint32_t BasebandConfig::setThroughPath(AudioCommand &cmd)
       if ((cmd.set_through_path.path1.in == cmd.set_through_path.path2.in) ||
           (cmd.set_through_path.path1.out == cmd.set_through_path.path2.out))
         {
-          return AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR;
+          return AS_ECODE_SET_AUDIO_DATA_PATH_ERROR;
         }
     }
 
@@ -553,7 +553,7 @@ uint32_t BasebandConfig::setThroughPath(AudioCommand &cmd)
       checkErrCode(rtCode, E_AS_OK);
       if (E_AS_OK != rtCode)
         {
-          return AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR;
+          return AS_ECODE_SET_AUDIO_DATA_PATH_ERROR;
         }
 
     }
@@ -569,11 +569,11 @@ uint32_t BasebandConfig::setThroughPath(AudioCommand &cmd)
       checkErrCode(rtCode, E_AS_OK);
       if (E_AS_OK != rtCode)
         {
-          return AS_RESPONSE_CODE_SET_AUDIO_DATA_PATH_ERROR;
+          return AS_ECODE_SET_AUDIO_DATA_PATH_ERROR;
         }
     }
 
-  return AS_RESPONSE_CODE_OK;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
