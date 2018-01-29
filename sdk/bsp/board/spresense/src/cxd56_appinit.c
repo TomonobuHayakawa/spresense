@@ -106,7 +106,7 @@
 #  include "cxd56_farapi.h"
 #endif
 
-#ifdef CONFIG_LIB_ASMP
+#ifdef CONFIG_ASMP
 #  include <asmp/asmp.h>
 #endif
 
