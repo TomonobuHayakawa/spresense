@@ -228,7 +228,7 @@ int AS_AudioManagerEntry(void)
 }
 
 /*--------------------------------------------------------------------------*/
-void AS_ActivateAudioSubSystem(AudioSubSystemIDs ids)
+int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids)
 {
   s_selfMid    = (MsgQueId)ids.mng;
   s_appMid     = (MsgQueId)ids.app;
@@ -247,17 +247,19 @@ void AS_ActivateAudioSubSystem(AudioSubSystemIDs ids)
   if (s_amng_pid < 0)
     {
       _err("ERROR AS_ActivateAudioSubSystem failed\n");
-      return;
+      return AS_ERR_CODE_TASK_CREATE;
     }
+
+  return AS_ERR_CODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
-void AS_DeactivateAudioSubSystem(void)
+int AS_DeactivateAudioSubSystem(void)
 {
   if (s_amng_pid < 0)
     {
       MANAGER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-      return;
+      return AS_ERR_CODE_ILLEGAL_STATE;
     }
 
   task_delete(s_amng_pid);
@@ -267,6 +269,8 @@ void AS_DeactivateAudioSubSystem(void)
       delete s_mng;
       s_mng = NULL;
     }
+
+  return AS_ERR_CODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/

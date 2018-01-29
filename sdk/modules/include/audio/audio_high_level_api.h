@@ -1683,6 +1683,23 @@ typedef enum
   AS_MODULE_ID_NUM,
 } AsModuleId;
 
+/** Audio Manager error code */
+
+typedef enum
+{
+  /*! \brief success */
+  
+  AS_ERR_CODE_OK = 0,
+  
+  /*! \brief fail to create task */
+  
+  AS_ERR_CODE_TASK_CREATE = -1,
+  
+  /*! \brief illegal state */
+  
+  AS_ERR_CODE_ILLEGAL_STATE = -2
+} AsErrorCode_e;
+
 /** Select volume mute/unmute */
 
 typedef enum
@@ -2006,18 +2023,18 @@ void AS_ReceiveAudioResult(AudioResult* packet);
  *
  * @param[in] ids: AudioSubSystemIDs* Message Queue ID of Audio Module
  *
- * @retval none
+ * @retval int
  */
 
-void AS_ActivateAudioSubSystem(AudioSubSystemIDs ids);
+int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids);
 
 /**
  * @brief Deactivate AudioSubSystem
  *
- * @retval none
+ * @retval int
  */
 
-void AS_DeactivateAudioSubSystem(void);
+int AS_DeactivateAudioSubSystem(void);
 
 #ifdef __cplusplus
 }

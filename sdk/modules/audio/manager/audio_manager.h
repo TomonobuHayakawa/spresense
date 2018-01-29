@@ -66,7 +66,6 @@ int cxd56_audio_bb_unregister(FAR const char *devpath);
 
 #endif /* __ASSEMBLY__ */
 
-
 __WIEN2_BEGIN_NAMESPACE
 
 /*--------------------------------------------------------------------*/
