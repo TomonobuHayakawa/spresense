@@ -1,8 +1,7 @@
 /****************************************************************************
  * modules/audio/dma_controller/audio_bb_drv.h
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
+ *   Copyright (C) 2016, 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -101,10 +100,6 @@ E_AS_BB AS_AudioDrvDmaStop(AudioDrvDmaStopParam*);
 E_AS_BB AS_AudioDrvDmaGetInfo(asDmacSelId, AudioDrvDmaInfo*);
 E_AS_BB AS_AudioDrvDmaStart(asDmacSelId);
 E_AS_BB AS_AudioDrvDmaNofifyCmplt(asDmacSelId, E_AS_DMA_INT);
-E_AS_BB AS_AudioDrvDmaRegsitIntCb(asDmacSelId, AS_DmaIntCb);
-
-void enable_audio_int(void);
-void disable_audio_int(void);
 
 E_AS dmaDrvTaskActive(asDmacSelId dmacId);
 E_AS dmaDrvTaskDeactive(asDmacSelId dmacId);

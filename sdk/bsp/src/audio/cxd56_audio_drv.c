@@ -1618,3 +1618,8 @@ AsClkModeId GetClkMode(void)
 {
   return bb_config_tblp->clk_mode;
 }
+
+AsDmaDataFormat GetDmaDataFormat(void)
+{
+  return bb_config_tblp->dma_data_format;
+}

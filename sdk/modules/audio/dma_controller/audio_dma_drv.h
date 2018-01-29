@@ -1,8 +1,7 @@
 /****************************************************************************
  * modules/audio/dma_controller/audio_dma_drv.h
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
+ *   Copyright (C) 2016, 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,7 +37,6 @@
 
 #include "dma_controller/audio_dma_drv_api.h"
 #include "dma_controller/audio_bb_drv.h"
-#include "memutils/message/Message.h"
 #include "memutils/s_stl/queue.h"
 #include "memutils/s_stl/s_stl_config.h"
 #include "dma_controller/level_ctrl.h"
@@ -184,7 +182,6 @@ private:
   bool stopOnRun(void*);
   bool getInfo(void*);
   void dmaErrCb(E_AS_BB);
-  void debugMonitor(asDmacSelId);
   void allocDmaBuffer(asDmacSelId);
   void freeDmaBuffer(asDmacSelId);
   void fadeControl(void);

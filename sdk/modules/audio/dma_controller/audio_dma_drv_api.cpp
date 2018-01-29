@@ -1,8 +1,7 @@
 /****************************************************************************
  * modules/audio/dma_controller/audio_dma_drv_api.cpp
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
+ *   Copyright (C) 2016, 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -51,239 +50,17 @@ static E_AS initDmac(asInitDmacParam *pInitDmacParam)
   E_AS_BB rtCodeBB = E_AS_BB_DMA_OK;
   uint32_t dma_err;
   AudioDrvDmaInitParam param;
-  uint8_t chNum;
 
-  BCA_REG_ID micChSel[AS_MIC_CHANNEL_MAX] = {
-      BCA_Mic_In_ch1_sel,
-      BCA_Mic_In_ch2_sel,
-      BCA_Mic_In_ch3_sel,
-      BCA_Mic_In_ch4_sel,
-      BCA_Mic_In_ch5_sel,
-      BCA_Mic_In_ch6_sel,
-      BCA_Mic_In_ch7_sel,
-      BCA_Mic_In_ch8_sel
-  };
-
-  asDmacAcInSelId micSelId[AS_MIC_CHANNEL_MAX] = {
-      AS_DMAC_AC_IN_SEL_MIC1L,
-      AS_DMAC_AC_IN_SEL_MIC1R,
-      AS_DMAC_AC_IN_SEL_MIC2L,
-      AS_DMAC_AC_IN_SEL_MIC2R,
-      AS_DMAC_AC_IN_SEL_MIC3L,
-      AS_DMAC_AC_IN_SEL_MIC3R,
-      AS_DMAC_AC_IN_SEL_MIC4L,
-      AS_DMAC_AC_IN_SEL_MIC4R
-  };
-
-  switch (bb_config_tblp->clk_mode)
+  rtCode = asDmac_InitDriver(pInitDmacParam->dmacId,
+                             pInitDmacParam->format,
+                             &param.ch_num);
+  if (rtCode != E_AS_OK)
     {
-      case AS_CLK_MODE_NORMAL:
-          write_bca_reg(BCA_I2s_ensel, 0);
-          break;
-
-      case AS_CLK_MODE_HIRES:
-          write_bca_reg(BCA_I2s_ensel, 1);
-          break;
-
-      default:
-          DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-          return E_AS_CLK_MODE_PARAM;
+      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
+      return rtCode;
     }
 
   _info("dma(%d:%d)\n", pInitDmacParam->dmacId, pInitDmacParam->format);
-
-  switch (pInitDmacParam->dmacId)
-    {
-      case AS_DMAC_SEL_AC_IN:
-          param.ch_num = bb_config_add_tbl.mic_dma_channel;
-          _info("ch_num(%d)\n", param.ch_num);
-          D_ASSERT(param.ch_num <= AS_MIC_CHANNEL_MAX);
-
-          rtCode = setMicChSel(param.ch_num, pInitDmacParam->format);
-
-          if (rtCode != E_AS_OK)
-            {
-              DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-              return rtCode;
-            }
-
-          switch (pInitDmacParam->format)
-            {
-              case AS_SAMPLING_FMT_24:
-                  write_bca_reg(BCA_Mic_In_bitwt, 0);
-
-                  for (chNum = 0; chNum<AS_MIC_CHANNEL_MAX; chNum++)
-                    {
-                      if (param.ch_num > chNum)
-                        {
-                          write_bca_reg(micChSel[chNum],
-                                        micSelId[chNum]);
-                        }
-                      else
-                        {
-                          write_bca_reg(micChSel[chNum],
-                                        AS_DMAC_AC_IN_SEL_UNUSE);
-                        }
-                    }
-                  break;
-
-              case AS_SAMPLING_FMT_16:
-                  write_bca_reg(BCA_Mic_In_bitwt, 1);
-
-                  for (chNum = 0; chNum<(AS_MIC_CHANNEL_MAX / 2); chNum++)
-                    {
-                      if(param.ch_num > (chNum * 2))
-                        {
-                          write_bca_reg(micChSel[chNum],
-                                        micSelId[chNum]);
-                        }
-                      else
-                        {
-                          write_bca_reg(micChSel[chNum],
-                                        AS_DMAC_AC_IN_SEL_UNUSE);
-                        }
-                    }
-
-                  for (chNum = (AS_MIC_CHANNEL_MAX / 2);
-                       chNum < AS_MIC_CHANNEL_MAX;
-                       chNum++)
-                    {
-                      write_bca_reg(micChSel[chNum],
-                                    AS_DMAC_AC_IN_SEL_UNUSE);
-                    }
-                  break;
-
-              default:
-                  DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-                  return E_AS_DMAC_SAMPLING_FMT_PARAM;
-            }
-
-          write_bca_reg(BCA_Clk_En_ahbmstr_mic_en, 1);
-          write_bca_reg(BCA_Mic_In_start_adr, 0x00000000);
-          write_bca_reg(BCA_Mic_In_sample_no, 0);
-          break;
-
-      case AS_DMAC_SEL_I2S_IN:
-          /* BUS IF (I2s_In) */
-          param.ch_num = 2;
-
-          switch (pInitDmacParam->format)
-            {
-              case AS_SAMPLING_FMT_24:
-                  write_bca_reg(BCA_I2s1_In_bitwt, 0);
-                  write_bca_reg(BCA_I2s1_In_ch2_sel,
-                                AS_DMAC_I2S_IN_SEL_SRC1R);
-                  write_bca_reg(BCA_I2s1_In_ch1_sel,
-                                AS_DMAC_I2S_IN_SEL_SRC1L);
-                  break;
-
-              case AS_SAMPLING_FMT_16:
-                  write_bca_reg(BCA_I2s1_In_bitwt, 1);
-                  write_bca_reg(BCA_I2s1_In_ch2_sel,
-                                AS_DMAC_I2S_IN_SEL_UNUSE);
-                  write_bca_reg(BCA_I2s1_In_ch1_sel,
-                                AS_DMAC_I2S_IN_SEL_SRC1L);
-                  break;
-
-              default:
-                  DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-                  return E_AS_DMAC_SAMPLING_FMT_PARAM;
-            }
-          write_bca_reg(BCA_Clk_En_ahbmstr_I2s1_en, 1);
-          write_bca_reg(BCA_I2s1_In_start_adr, 0x00000000);
-          write_bca_reg(BCA_I2s1_In_sample_no, 0);
-          break;
-
-      case AS_DMAC_SEL_I2S_OUT:
-          /* BUS IF (I2s_Out) */
-          param.ch_num = 2;
-
-          write_bca_reg(BCA_I2s1_Out_sd1_l_sel, AS_DMAC_I2S_OUT_SEL_SD1L);
-          write_bca_reg(BCA_I2s1_Out_sd1_r_sel, AS_DMAC_I2S_OUT_SEL_SD1R);
-
-          switch (pInitDmacParam->format)
-            {
-              case AS_SAMPLING_FMT_24:
-                  write_bca_reg(BCA_I2s1_Out_bitwt, 0);
-                  break;
-
-              case AS_SAMPLING_FMT_16:
-                  write_bca_reg(BCA_I2s1_Out_bitwt, 1);
-                  break;
-
-              default:
-                  DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-                  return E_AS_DMAC_SAMPLING_FMT_PARAM;
-            }
-
-          write_bca_reg(BCA_Clk_En_ahbmstr_I2s1_en, 1);
-          write_bca_reg(BCA_I2s1_Out_start_adr, 0x00000000);
-          write_bca_reg(BCA_I2s1_Out_sample_no, 0);
-          break;
-
-      case AS_DMAC_SEL_I2S2_IN:
-          /* BUS IF (I2s2_In) */
-          param.ch_num = 2;
-
-          switch (pInitDmacParam->format)
-            {
-              case AS_SAMPLING_FMT_24:
-                  write_bca_reg(BCA_I2s2_In_bitwt, 0);
-                  write_bca_reg(BCA_I2s2_In_ch2_sel,
-                                AS_DMAC_I2S_IN_SEL_SRC1R);
-                  write_bca_reg(BCA_I2s2_In_ch1_sel,
-                                AS_DMAC_I2S_IN_SEL_SRC1L);
-                  break;
-
-              case AS_SAMPLING_FMT_16:
-                  write_bca_reg(BCA_I2s2_In_bitwt, 1);
-                  write_bca_reg(BCA_I2s2_In_ch2_sel,
-                                AS_DMAC_I2S_IN_SEL_UNUSE);
-                  write_bca_reg(BCA_I2s2_In_ch1_sel,
-                                AS_DMAC_I2S_IN_SEL_SRC1L);
-                  break;
-
-              default:
-                  DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-                  return E_AS_DMAC_SAMPLING_FMT_PARAM;
-            }
-
-          write_bca_reg(BCA_Clk_En_ahbmstr_I2s2_en, 1);
-          write_bca_reg(BCA_I2s2_In_start_adr, 0x00000000);
-          write_bca_reg(BCA_I2s2_In_sample_no, 0);
-          break;
-
-      case AS_DMAC_SEL_I2S2_OUT:
-          /* BUS IF (I2s2_Out) */
-          param.ch_num = 2;
-
-          write_bca_reg(BCA_I2s2_Out_sd1_l_sel, AS_DMAC_I2S_OUT_SEL_SD1L);
-          write_bca_reg(BCA_I2s2_Out_sd1_r_sel, AS_DMAC_I2S_OUT_SEL_SD1R);
-
-          switch (pInitDmacParam->format)
-            {
-              case AS_SAMPLING_FMT_24:
-                  write_bca_reg(BCA_I2s2_Out_bitwt, 0);
-                  break;
-
-              case AS_SAMPLING_FMT_16:
-                  write_bca_reg(BCA_I2s2_Out_bitwt, 1);
-                  break;
-
-              default:
-                  DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-                  return E_AS_DMAC_SAMPLING_FMT_PARAM;
-            }
-
-          write_bca_reg(BCA_Clk_En_ahbmstr_I2s2_en, 1);
-          write_bca_reg(BCA_I2s2_Out_start_adr, 0x00000000);
-          write_bca_reg(BCA_I2s2_Out_sample_no, 0);
-          break;
-
-      default:
-          DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-          return E_AS_DMAC_ID_PARAM;
-    }
 
   clearDmacDoneIntStatus(pInitDmacParam->dmacId);
   clearDmacErrIntStatus(pInitDmacParam->dmacId);
@@ -311,8 +88,6 @@ static E_AS initDmac(asInitDmacParam *pInitDmacParam)
 
   getDmacErrorStatus(pInitDmacParam->dmacId, &dma_err);
   F_ASSERT(dma_err == 0);
-
-  write_bca_reg(BCA_Int_m_hresp_err, 0);
 
   param.dmac_id      = pInitDmacParam->dmacId;
   param.p_error_func = pInitDmacParam->p_error_func;
@@ -697,10 +472,7 @@ E_AS AS_RegistDmaIntCb(asDmacSelId dmacId, AS_DmaIntCb p_dmaIntCb)
       return E_AS_GETREADYCMD_RESULT_NULL;
     }
 
-  if (E_AS_BB_DMA_OK != AS_AudioDrvDmaRegsitIntCb(dmacId, p_dmaIntCb))
-    {
-      return E_AS_DMAC_ID_PARAM;
-    }
+  rtCode = asDmac_RegsitIntCb(dmacId, p_dmaIntCb);
 
   return rtCode;
 }

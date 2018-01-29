@@ -1,8 +1,7 @@
 /****************************************************************************
  * modules/audio/dma_controller/audio_dma_drv_api.h
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
+ *   Copyright (C) 2016, 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -61,34 +60,6 @@ extern "C" {
       tmp_value++;                        \
     }                                     \
 }
-
-
-typedef enum
-{
-  AS_DMAC_AC_IN_SEL_MIC1L = 0,
-  AS_DMAC_AC_IN_SEL_MIC1R = 1,
-  AS_DMAC_AC_IN_SEL_MIC2L = 2,
-  AS_DMAC_AC_IN_SEL_MIC2R = 3,
-  AS_DMAC_AC_IN_SEL_MIC3L = 4,
-  AS_DMAC_AC_IN_SEL_MIC3R = 5,
-  AS_DMAC_AC_IN_SEL_MIC4L = 6,
-  AS_DMAC_AC_IN_SEL_MIC4R = 7,
-  AS_DMAC_AC_IN_SEL_UNUSE = 8
-} asDmacAcInSelId;
-
-typedef enum
-{
-  AS_DMAC_I2S_IN_SEL_SRC1L = 0,
-  AS_DMAC_I2S_IN_SEL_SRC1R = 1,
-  AS_DMAC_I2S_IN_SEL_UNUSE
-} asDmacI2sInSelId;
-
-typedef enum
-{
-  AS_DMAC_I2S_OUT_SEL_SD1L  = 0,
-  AS_DMAC_I2S_OUT_SEL_SD1R  = 1,
-  AS_DMAC_I2S_OUT_SEL_UNUSE
-} asDmacI2sOutSelId;
 
 typedef enum
 {
@@ -241,18 +212,6 @@ E_AS AS_StopDmac(asDmacSelId dmacId, asDmacStopMode stopMode);
  * @retval E_AS return code
  */
 E_AS AS_GetReadyCmdNumDmac(asDmacSelId dmacId, uint32_t *pResult);
-
-
-/** DMAC interrupt notify code */
-typedef enum
-{
-  E_AS_DMA_INT_CMPLT,  /* nomal end */
-  E_AS_DMA_INT_ERR,    /* illegal end */
-  E_AS_DMA_INT_ERR_BUS /* bus error */
-} E_AS_DMA_INT;
-
-/** DMAC transfer error callback function */
-typedef void (* AS_DmaIntCb)(asDmacSelId dmacId, E_AS_DMA_INT code);
 
 /**
  * @brief Regist DMA callback from interrupt handler

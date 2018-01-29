@@ -1,8 +1,7 @@
 /****************************************************************************
  * modules/audio/dma_controller/audio_dma_drv.cpp
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
+ *   Copyright (C) 2016, 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,19 +32,16 @@
  *
  ****************************************************************************/
 
+#include <nuttx/kmalloc.h>
+#include <debug.h>
+#include <arch/chip/cxd56_audio.h>
+
 #include "memutils/os_utils/chateau_osal.h"
+#include "memutils/common_utils/common_attention.h"
+#include "audio/audio_high_level_api.h"
+#include "debug/dbg_log.h"
 #include "audio_dma_drv.h"
 #include "audio_dma_buffer.h"
-#include "common/audio_message_types.h"
-
-#include <arch/chip/cxd56_audio.h>
-#include "memutils/common_utils/common_attention.h"
-#include "memutils/message/Message.h"
-#include <debug.h>
-#include "debug/dbg_log.h"
-#include <nuttx/kmalloc.h>
-
-#include "audio/audio_high_level_api.h"
 
 /* Currently, a timing to start fade is when set setting of previous frame.
  * Because, the volume will going down about 6db/ms, therefore after about
@@ -118,7 +114,7 @@ static E_AS syncDmacTrg(asDmacSelId dmacId, bool nointr)
 
       Chateau_UnlockInterrupt(&context);
 
-      if (bb_config_tblp->clk_mode == AS_CLK_MODE_HIRES)
+      if (GetClkMode() == AS_CLK_MODE_HIRES)
         {
           wait_err_count = wait_err_cnt_hires;
         }
@@ -443,7 +439,7 @@ bool AsDmaDrv::init(void *p_param)
       return false;
     }
 
-  enable_audio_int();
+  asDmac_EnableInt();
 
   Chateau_EnableInterrupt(AUDMIC_IRQn);
   Chateau_EnableInterrupt(AUDI2S1_IRQn);
@@ -559,12 +555,7 @@ bool AsDmaDrv::runDma(void *p_param)
   uint32_t size1_cnt = 0;
   uint32_t size2_cnt = 0;
 
-  if (bb_config_tblp == NULL)
-    {
-      F_ASSERT(0);
-    }
-
-  if ((bb_config_tblp->dma_data_format == AS_DMA_DATA_FORMAT_RL)
+  if ((GetDmaDataFormat() == AS_DMA_DATA_FORMAT_RL)
    && (m_dma_byte_len == AS_DMAC_BYTE_WT_16BIT))
     {
       switch (m_dmac_id)
@@ -745,12 +736,7 @@ void AsDmaDrv::dmaCmplt(void)
                                 (void *)dmaParam.addr_dest);
     }
 
-  if (bb_config_tblp == NULL)
-    {
-      F_ASSERT(0);
-    }
-
-  if ((bb_config_tblp->dma_data_format == AS_DMA_DATA_FORMAT_RL)
+  if ((GetDmaDataFormat() == AS_DMA_DATA_FORMAT_RL)
    && (m_dma_byte_len == AS_DMAC_BYTE_WT_16BIT) )
     {
       switch (m_dmac_id)
@@ -1011,51 +997,6 @@ bool AsDmaDrv::getInfo(void *p_param)
 }
 
 /*--------------------------------------------------------------------*/
-void AsDmaDrv::debugMonitor(asDmacSelId dmac_id)
-{
-  switch (dmac_id)
-    {
-      case AS_DMAC_SEL_AC_IN:
-          _info("dmac_id(%d): start(%d),error(%d),monbuf(%d)\n", dmac_id,
-              read_bca_reg(BCA_Mic_In_start),
-              read_bca_reg(BCA_Mic_In_error_setting),
-              read_bca_reg(BCA_Mic_In_monbuf));
-          break;
-
-      case AS_DMAC_SEL_I2S_IN:
-          _info("dmac_id(%d): start(%d),error(%d),monbuf(%d)\n", dmac_id,
-              read_bca_reg(BCA_I2s1_In_Mon_start),
-              read_bca_reg(BCA_I2s1_In_Mon_error_setting),
-              read_bca_reg(BCA_I2s1_In_Mon_monbuf));
-          break;
-
-      case AS_DMAC_SEL_I2S2_IN:
-          _info("dmac_id(%d): start(%d),error(%d),monbuf(%d)\n", dmac_id,
-              read_bca_reg(BCA_I2s2_In_Mon_start),
-              read_bca_reg(BCA_I2s2_In_Mon_error_setting),
-              read_bca_reg(BCA_I2s2_In_Mon_monbuf));
-          break;
-
-      case AS_DMAC_SEL_I2S_OUT:
-          _info("dmac_id(%d): start(%d),error(%d),monbuf(%d)\n", dmac_id,
-              read_bca_reg(BCA_I2s1_Out_Mon_start),
-              read_bca_reg(BCA_I2s1_Out_Mon_error_setting),
-              read_bca_reg(BCA_I2s1_Out_Mon_monbuf));
-          break;
-
-      case AS_DMAC_SEL_I2S2_OUT:
-          _info("dmac_id(%d): start(%d),error(%d),monbuf(%d)\n", dmac_id,
-              read_bca_reg(BCA_I2s2_Out_Mon_start),
-              read_bca_reg(BCA_I2s2_Out_Mon_error_setting),
-              read_bca_reg(BCA_I2s2_Out_Mon_monbuf));
-          break;
-
-      default:
-          _info("Error: dmac_id(%d)\n", dmac_id);
-    }
-}
-
-/*--------------------------------------------------------------------*/
 void AsDmaDrv::allocDmaBuffer(asDmacSelId dmac_id)
 {
   if(dmac_id == AS_DMAC_SEL_AC_IN)
@@ -1167,4 +1108,3 @@ void AsDmaDrv::volumeCtrl(bool validity, bool is_last_frame)
 
   m_level_ctrl.exec(cmd, false);
 }
-

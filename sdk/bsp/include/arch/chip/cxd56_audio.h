@@ -1,8 +1,7 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/cxd56_audio.h
+ * bsp/include/arch/chip/cxd56_audio.h
  *
  *   Copyright (C) 2016, 2017 Sony Corporation
- *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,8 +36,8 @@
  * @{
  */
 
-#ifndef __SDK_BSP_INCLUDE_ARCH_CHIP_CXD56_AUDIO_H
-#define __SDK_BSP_INCLUDE_ARCH_CHIP_CXD56_AUDIO_H
+#ifndef __BSP_INCLUDE_ARCH_CHIP_CXD56_AUDIO_H
+#define __BSP_INCLUDE_ARCH_CHIP_CXD56_AUDIO_H
 
 /* API Documents creater with Doxgen */
 
@@ -1164,6 +1163,45 @@ typedef enum
           (((val) == (hold)) || \
           (((min) <= ((int32_t)val)) && ((val) <= (max))))
 
+/** DMAC interrupt notify code */
+typedef enum
+{
+  E_AS_DMA_INT_CMPLT,  /* nomal end */
+  E_AS_DMA_INT_ERR,    /* illegal end */
+  E_AS_DMA_INT_ERR_BUS /* bus error */
+} E_AS_DMA_INT;
+
+/** DMAC transfer error callback function */
+typedef void (* AS_DmaIntCb)(asDmacSelId dmacId, E_AS_DMA_INT code);
+
+  
+typedef enum
+{
+  AS_DMAC_AC_IN_SEL_MIC1L = 0,
+  AS_DMAC_AC_IN_SEL_MIC1R = 1,
+  AS_DMAC_AC_IN_SEL_MIC2L = 2,
+  AS_DMAC_AC_IN_SEL_MIC2R = 3,
+  AS_DMAC_AC_IN_SEL_MIC3L = 4,
+  AS_DMAC_AC_IN_SEL_MIC3R = 5,
+  AS_DMAC_AC_IN_SEL_MIC4L = 6,
+  AS_DMAC_AC_IN_SEL_MIC4R = 7,
+  AS_DMAC_AC_IN_SEL_UNUSE = 8
+} asDmacAcInSelId;
+
+typedef enum
+{
+  AS_DMAC_I2S_IN_SEL_SRC1L = 0,
+  AS_DMAC_I2S_IN_SEL_SRC1R = 1,
+  AS_DMAC_I2S_IN_SEL_UNUSE
+} asDmacI2sInSelId;
+
+typedef enum
+{
+  AS_DMAC_I2S_OUT_SEL_SD1L  = 0,
+  AS_DMAC_I2S_OUT_SEL_SD1R  = 1,
+  AS_DMAC_I2S_OUT_SEL_UNUSE
+} asDmacI2sOutSelId;
+
 /****************************************************************************
  * Public Types
  ***************************************************************************/
@@ -1578,6 +1616,7 @@ E_AS AS_SetOutputSelect(asOutDeviceId devid);
 E_AS AS_SetI2sParam(uint32_t rate[AS_I2S_ID_NUM],
                     asBypassModeId bypass_mode_en[AS_I2S_ID_NUM]);
 AsClkModeId GetClkMode(void);
+AsDmaDataFormat GetDmaDataFormat(void);
 
 uint32_t write_bca_reg(BCA_REG_ID regId, uint32_t data);
 uint32_t write_bca_reg_mask(BCA_REG_ID regId);
@@ -1640,11 +1679,19 @@ E_AS asAc_SetDsrRate(uint32_t rate);
 int cxd56_audio_bb_register(FAR const char *devpath);
 int cxd56_audio_bb_unregister(FAR const char *devpath);
 
+/* audio_dma */
+
+E_AS asDmac_InitDriver(asDmacSelId dmac_id, asSampFmt format, uint8_t *p_ch_num);
+E_AS asDmac_RegsitIntCb(asDmacSelId, AS_DmaIntCb);
+void asDmac_MonitorStatus(asDmacSelId);
+void asDmac_EnableInt(void);
+void asDmac_DisableInt(void);
+
 #ifdef __cplusplus
 } /* end of extern "C" */
 #endif /* __cplusplus */
 
-#endif /* __SDK_BSP_INCLUDE_ARCH_CHIP_CXD56_AUDIO_H */
+#endif /* __BSP_INCLUDE_ARCH_CHIP_CXD56_AUDIO_H */
 /**
  * @}
  */

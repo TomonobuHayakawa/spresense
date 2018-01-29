@@ -1,8 +1,7 @@
 ############################################################################
-# arch/arm/src/cxd56xx/audio/Make.defs
+# bsp/src/audio/Make.defs
 #
-#   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
-#   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
+#   Copyright (C) 2016, 2017 Sony Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -42,6 +41,7 @@ CHIP_CSRCS += ac_drv_api.c ac_drv_sub_func.c  ac_reg_map.c  ac_drv_reg.c  ac_drv
 CHIP_CSRCS += aca_drv_api.c
 CHIP_CSRCS += bca_drv_sub_func.c bca_drv_api.c bca_drv_reg.c bca_reg_map.c
 CHIP_CSRCS += audio_io_config.c
+CHIP_CSRCS += audio_dma.c
 
 CFLAGS += -std=gnu99
 CFLAGS += -D_POSIX
