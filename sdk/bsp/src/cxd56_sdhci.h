@@ -82,8 +82,9 @@ extern "C"
 #define CXD56_SDHCI_ADSADDR_OFFSET    (0x0058) /* ADMA System Address Register */
 #define CXD56_SDHCI_HOSTVER_OFFSET    (0x00fc) /* Host Controller Version */
 #define CXD56_SDHCI_VENDSPEC_OFFSET   (0x0110) /* Vender Specific Control */
-#define CXD56_SDHCI_OTHERIOLL_OFFSET (0x021C) /* IO Pin Control       */
-#define CXD56_SDHCI_USERDEF2CTL_OFFSET (0x0274) /* Host Controller Version */
+#define CXD56_SDHCI_OTHERIOLL_OFFSET  (0x021C) /* IO Pin Control       */
+#define CXD56_SDHCI_USERDEF1CTL_OFFSET (0x0270) /* User Define1 Control Register */
+#define CXD56_SDHCI_USERDEF2CTL_OFFSET (0x0274) /* User Define2 Control Register */
 
 /* Register Addresses ***************************************************************/
 #define CXD56_SDHCI_BASE              CXD56_SDIO_BASE
@@ -111,6 +112,7 @@ extern "C"
 #define CXD56_SDHCI_HOSTVER           (CXD56_SDHCI_BASE+CXD56_SDHCI_HOSTVER_OFFSET)
 #define CXD56_SDHCI_VENDSPEC          (CXD56_SDHCI_BASE+CXD56_SDHCI_VENDSPEC_OFFSET)
 #define CXD56_SDHCI_OTHERIOLL         (CXD56_SDHCI_BASE+CXD56_SDHCI_OTHERIOLL_OFFSET)
+#define CXD56_SDHCI_USERDEF1CTL       (CXD56_SDHCI_BASE+CXD56_SDHCI_USERDEF1CTL_OFFSET)
 #define CXD56_SDHCI_USERDEF2CTL       (CXD56_SDHCI_BASE+CXD56_SDHCI_USERDEF2CTL_OFFSET)
 
 /* Register Bit Definitions *********************************************************/
@@ -336,13 +338,40 @@ extern "C"
 #define SDHCI_VENDOR_INTSTVAL_MASK       (0xff << SDHCI_VENDOR_INTSTVAL_SHIFT)
                                                   /* Bits 24-31: Reserved */
 
-/* Host Controller Version */
+/* User Define1 Control Register */
 
-#define SDHCI_HOSTVER_SVN_SHIFT          (0)       /* Bits 0-7: Specification Version Number */
-#define SDHCI_HOSTVER_SVN_MASK           (0xff << SDHCI_HOSTVER_SVN_SHIFT)
-#define SDHCI_HOSTVER_VVN_SHIFT          (8)       /* Bits 8-15: Vendor Version Number */
-#define SDHCI_HOSTVER_VVN_MASK           (0xff << SDHCI_HOSTVER_VVN_SHIFT)
-                                                  /* Bits 16-31: Reserved */
+#define SDHCI_UDEF1_SDCLKI_SEL           (1 << 0)
+#define SDHCI_UDEF1_SDCLKI_SEL_EXT       (1 << 0)
+#define SDHCI_UDEF1_SDCLKI_SEL_INT       (0 << 0)
+#define SDHCI_UDEF1_SDCLK_SEL            (1 << 1)
+#define SDHCI_UDEF1_SDCLK_SEL_EXT        (1 << 1)
+#define SDHCI_UDEF1_SDCLK_SEL_INT        (0 << 1)
+#define SDHCI_UDEF1_TAP_SEL_SHIFT        (4)
+#define SDHCI_UDEF1_TAP_SEL_MASK         (0x1f << SDHCI_UDEF1_TAP_SEL_SHIFT)
+#define SDHCI_UDEF1_TAP_SEL              (1 << 12)
+#define SDHCI_UDEF1_TAP_SEL_SW           (1 << 12)
+#define SDHCI_UDEF1_TAP_SEL_HW           (0 << 12)
+#define SDHCI_UDEF1_DAT_DLY_BUF          (1 << 24)
+#define SDHCI_UDEF1_DAT_DLY_BUF_ON       (1 << 24)
+#define SDHCI_UDEF1_DAT_DLY_BUF_OFF      (0 << 24)
+
+/* User Define2 Control Register */
+
+#define SDHCI_UDEF2_CLK_DLY_SHIFT        (0)
+#define SDHCI_UDEF2_CLK_DLY_MASK         (0x7 << SDHCI_UDEF2_CLK_DLY_SHIFT)
+#define SDHCI_UDEF2_CMD_EDGE_DET_ON      (1 << 4)
+#define SDHCI_UDEF2_CMD_EDGE_DET_OFF     (0 << 4)
+#define SDHCI_UDEF2_DAT_DIR_ACT_HI       (0x0 << 8)
+#define SDHCI_UDEF2_DAT_DIR_ACT_LOW      (0x7 << 8)
+#define SDHCI_UDEF2_TTCLK_DIV1           (1 << 16)
+#define SDHCI_UDEF2_TTCLK_DIV2           (0 << 16)
+#define SDHCI_UDEF2_CLKI_SEL             (1 << 20)
+#define SDHCI_UDEF2_CLKI_SEL_EXT         (1 << 20)
+#define SDHCI_UDEF2_CLKI_SEL_INT         (0 << 20)
+#define SDHCI_UDEF2_CMD_SEL              (1 << 24)
+#define SDHCI_UDEF2_CMD_SEL_CLKI         (1 << 24)
+#define SDHCI_UDEF2_CMD_SEL_INT          (0 << 24)
+#define SDHCI_UDEF2_FORCE_1p8V_EN        (1 << 31)
 
 /************************************************************************************
  * Public Types

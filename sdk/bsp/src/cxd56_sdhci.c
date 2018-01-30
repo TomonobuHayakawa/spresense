@@ -74,7 +74,7 @@
 
 /* Configuration ************************************************************/
 
-#ifndef CONFIG_SDIO_DMA
+#ifndef CONFIG_CXD56_SDIO_DMA
 #  warning "Large Non-DMA transfer may result in RX overrun failures"
 #endif
 
@@ -129,7 +129,7 @@
 
 #define SDHCI_CARDSTATETIMEOUT   (50)
 #define SDHCI_CMDTIMEOUT         (100000)
-#define SDHCI_LONGTIMEOUT        (0x7fffffff)
+#define SDHCI_LONGTIMEOUT        (1000000)
 
 #define SDHCI_WAIT_POWERON      MSEC2TICK(252)
 #define SDHCI_WAIT_POWEROFF     MSEC2TICK(300)
@@ -164,11 +164,12 @@
 #endif
 
 /* DMA */
+
 #define CXD56_SDHCI_BUF_SIZE      (2048)
 #define SDHCI_MAX_BLOCK_COUNT     (0xffffffff)
 #define SDHCI_MAX_ADMA_TRANS_SIZE (0xffff+1)
 #ifndef CONFIG_CXD56_SDIO_MAX_LEN_ADMA_DSCR
-#   define CXD56_SDIO_MAX_LEN_ADMA_DSCR (16)
+#  define CXD56_SDIO_MAX_LEN_ADMA_DSCR (16)
 #else
 #  define CXD56_SDIO_MAX_LEN_ADMA_DSCR (CONFIG_CXD56_SDIO_MAX_LEN_ADMA_DSCR)
 #endif
@@ -188,12 +189,8 @@
 #define CXD56_SDHCI_ADSADDR_H (CXD56_SDHCI_ADSADDR+0x4)
 
 /* Card Common Control Registers (CCCR) */
-#define SDIO_CCCR_START         0x00000
+
 #define SDIO_CCCR_SIZE          0x100
-#define SDIO_CCCR_FN_ENABLE     0x02
-#define SDIO_CCCR_FN_READY      0x03
-#define SDIO_CCCR_INT_ENABLE    0x04
-#define SDIO_CCCR_IRQ_PENDING   0x05
 
 #define SDIO_CMD5253_READ       (0<<31)
 #define SDIO_CMD5253_WRITE      (1<<31)
@@ -205,17 +202,17 @@
 
 #define CMD52_RESP_OK(resp)     (0 == (resp&0xCB00))
 
-#define SDIO_CCCR_BUS_WIDTH     0x7
-#define SDIO_CCCR_CISPTR        0x9
-
 /* For Function Basic Registers */
+
 #define SDIO_FBR_START          0x100
 
 /* Card Information Structure (CIS) */
+
 #define SDIO_CIS_START          0x1000
 #define SDIO_CIS_END            (SDIO_CIS_START+0x17000-0x10)
 
 /* CIS tuple codes (based on PC Card 16) */
+
 #define SDIO_CISTPL_NULL        0x00
 #define SDIO_CISTPL_VERS_1      0x15
 #define SDIO_CISTPL_MANFID      0x20
@@ -224,8 +221,8 @@
 #define SDIO_CISTPL_END         0xff
 
 /* CISTPL_FUNCID codes */
-#define TPLFID_FUNC_SDIO        0x0c
 
+#define TPLFID_FUNC_SDIO        0x0c
 
 #define SDIO_THREAD_DEFPRIO     50
 #define SDIO_THREAD_STACKSIZE   1024
@@ -244,7 +241,9 @@
  * Private Types
  ****************************************************************************/
 
+#ifdef CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION
 /* Structure describing a single SDIO card slot. */
+
 struct sdio_softc_s
 {
   int func_num;               /* number of I/O functions (SDIO) */
@@ -255,6 +254,7 @@ struct sdio_softc_s
 };
 
 /* Structure describing either an SDIO device I/O function. */
+
 struct sdio_function_s
 {
   /* common members */
@@ -263,6 +263,7 @@ struct sdio_function_s
   int number;                 /* I/O function number or -1, 0 for func0,1 for func1... */
   struct sdio_cis_s cis;        /* decoded CIS */
 };
+#endif /* CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION */
 
 /* This structure defines the state of the CXD56xx SDIO interface */
 
@@ -281,7 +282,7 @@ struct cxd56_sdiodev_s
 
   /* Callback support */
 
-  uint8_t            cdstatus;   /* Card status */
+  sdio_statset_t     cdstatus;   /* Card status */
   sdio_eventset_t    cbevents;   /* Set of events to be cause callbacks */
   worker_t           callback;   /* Registered callback function */
   void              *cbarg;      /* Registered callback argument */
@@ -306,8 +307,9 @@ struct cxd56_sdiodev_s
   /* Parameters */
 
   uint16_t blocksize;
-
+#ifdef CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION
   struct sdio_softc_s sc;           /* Structure describing a single SDIO card slot. */
+#endif /* CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION */
 };
 
 /* Register logging support */
@@ -383,7 +385,7 @@ static void cxd56_endtransfer(struct cxd56_sdiodev_s *priv, sdio_eventset_t wkup
 
 /* Interrupt Handling *******************************************************/
 
-static int  cxd56_interrupt(int irq, void *context);
+static int cxd56_interrupt(int irq, FAR void *context, FAR void *arg);
 
 /* SDIO interface methods ***************************************************/
 
@@ -396,7 +398,8 @@ static int cxd56_sdio_lock(FAR struct sdio_dev_s *dev, bool lock);
 /* Initialization/setup */
 
 static void cxd56_sdio_sdhci_reset(FAR struct sdio_dev_s *dev);
-static uint8_t cxd56_sdio_status(FAR struct sdio_dev_s *dev);
+static sdio_capset_t cxd56_sdio_capabilities(FAR struct sdio_dev_s *dev);
+static sdio_statset_t cxd56_sdio_status(FAR struct sdio_dev_s *dev);
 static void cxd56_sdio_widebus(FAR struct sdio_dev_s *dev, bool enable);
 static void cxd56_sdio_frequency(uint32_t frequency);
 static void cxd56_sdio_clock(FAR struct sdio_dev_s *dev,
@@ -437,13 +440,14 @@ static int  cxd56_sdio_registercallback(FAR struct sdio_dev_s *dev,
 /* DMA */
 
 #ifdef CONFIG_SDIO_DMA
-static bool cxd56_sdio_dmasupported(FAR struct sdio_dev_s *dev);
 static int  cxd56_sdio_admasetup(FAR const uint8_t *buffer, size_t buflen);
 static int  cxd56_sdio_dmarecvsetup(FAR struct sdio_dev_s *dev,
               FAR uint8_t *buffer, size_t buflen);
 static int  cxd56_sdio_dmasendsetup(FAR struct sdio_dev_s *dev,
               FAR const uint8_t *buffer, size_t buflen);
 #endif
+
+#ifdef CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION
 static int cxd56_sdio_enable_cardint(void);
 static int cxd56_sdio_register_irq(FAR struct sdio_dev_s *dev, int func_num,
                                    FAR sdio_irqhandler_t * handler);
@@ -460,6 +464,7 @@ static int cxd56_sdio_write(FAR struct sdio_dev_s *dev, int func_num, uint32_t a
 static int cxd56_sdhci_irq_handler(FAR struct sdio_dev_s *dev);
 static int cxd56_sdio_get_cis(FAR struct sdio_dev_s *dev, int func_num,
                               FAR struct sdio_cis_s * cis);
+#endif /* CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION */
 
 /* Initialization/uninitialization/reset ************************************/
 
@@ -477,6 +482,7 @@ struct cxd56_sdiodev_s g_sdhcdev =
       .lock             = cxd56_sdio_lock,
 #endif
       .reset            = cxd56_sdio_sdhci_reset,
+      .capabilities     = cxd56_sdio_capabilities,
       .status           = cxd56_sdio_status,
       .widebus          = cxd56_sdio_widebus,
       .clock            = cxd56_sdio_clock,
@@ -499,10 +505,10 @@ struct cxd56_sdiodev_s g_sdhcdev =
       .callbackenable   = cxd56_sdio_callbackenable,
       .registercallback = cxd56_sdio_registercallback,
 #ifdef CONFIG_SDIO_DMA
-      .dmasupported     = cxd56_sdio_dmasupported,
       .dmarecvsetup     = cxd56_sdio_dmarecvsetup,
       .dmasendsetup     = cxd56_sdio_dmasendsetup,
 #endif
+#ifdef CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION
       .register_irq     = cxd56_sdio_register_irq,
       .function_disable = cxd56_sdio_function_disable,
       .function_enable  = cxd56_sdio_function_enable,
@@ -511,6 +517,7 @@ struct cxd56_sdiodev_s g_sdhcdev =
       .read             = cxd56_sdio_read,
       .write            = cxd56_sdio_write,
       .get_cis          = cxd56_sdio_get_cis,
+#endif /* CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION */
     },
 };
 
@@ -521,6 +528,7 @@ static struct cxd56_sdhcregs_s g_sampleregs[DEBUG_NSAMPLES];
 #endif
 
 /* DMA */
+
 #ifdef CONFIG_SDIO_DMA
 static FAR uint32_t cxd56_sdhci_adma_dscr[CXD56_SDIO_MAX_LEN_ADMA_DSCR*2];
 #endif
@@ -528,44 +536,6 @@ static FAR uint32_t cxd56_sdhci_adma_dscr[CXD56_SDIO_MAX_LEN_ADMA_DSCR*2];
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-
-static void cxd56_sdhci_debug_regs(void)
-{
-#if 0
-  uint32_t addr;
-  addr = CXD56_SDHCI_DSADDR;
-  printf("SDHC Registers: \n");
-
-  for (;addr<(0x20+CXD56_SDHCI_DSADDR); addr+=4)
-    {
-      printf("ADDR[%08x]: %08x\n", addr, getreg32(addr));
-    }
-  addr += 0x04;
-  for (;addr<(0x60+CXD56_SDHCI_DSADDR); addr+=4)
-    {
-      printf("ADDR[%08x]: %08x\n", addr, getreg32(addr));
-    }
-/*
-  for (;addr<(0x124+CXD56_SDHCI_DSADDR); addr+=4)
-    {
-      printf("ADDR[%08x]: %08x\n", addr, getreg32(addr));
-    }
-  addr = CXD56_SDHCI_DSADDR + 0x140;
-  for (;addr<(0x164+CXD56_SDHCI_DSADDR); addr+=4)
-    {
-      printf("ADDR[%08x]: %08x\n", addr, getreg32(addr));
-    }
-  addr = CXD56_SDHCI_DSADDR + 0x200;
-  for (;addr<=(0x284+CXD56_SDHCI_DSADDR); addr+=4)
-    {
-      printf("ADDR[%08x]: %08x\n", addr, getreg32(addr));
-    }
-*/
-#else
-  return;
-#endif
-}
-
 
 /****************************************************************************
  * Low-level Helpers
@@ -742,26 +712,26 @@ static void cxd56_sample(struct cxd56_sdiodev_s *priv, int index)
 static void cxd56_dumpsample(struct cxd56_sdiodev_s *priv,
                                struct cxd56_sdhcregs_s *regs, const char *msg)
 {
-  fdbg("SDHC Registers: %s\n", msg);
-  fdbg("   DSADDR[%08x]: %08x\n", CXD56_SDHCI_DSADDR,    regs->dsaddr);
-  fdbg("  BLKATTR[%08x]: %08x\n", CXD56_SDHCI_BLKATTR,   regs->blkattr);
-  fdbg("   CMDARG[%08x]: %08x\n", CXD56_SDHCI_CMDARG,    regs->cmdarg);
-  fdbg("  COMMAND[%08x]: %08x\n", CXD56_SDHCI_XFERTYP,   regs->xferty);
-  fdbg("  CMDRSP0[%08x]: %08x\n", CXD56_SDHCI_CMDRSP0,   regs->cmdrsp0);
-  fdbg("  CMDRSP1[%08x]: %08x\n", CXD56_SDHCI_CMDRSP1,   regs->cmdrsp1);
-  fdbg("  CMDRSP2[%08x]: %08x\n", CXD56_SDHCI_CMDRSP2,   regs->cmdrsp2);
-  fdbg("  CMDRSP3[%08x]: %08x\n", CXD56_SDHCI_CMDRSP3,   regs->cmdrsp3);
-  fdbg("  PRSSTAT[%08x]: %08x\n", CXD56_SDHCI_PRSSTAT,   regs->prsstat);
-  fdbg("   PROCTL[%08x]: %08x\n", CXD56_SDHCI_PROCTL,    regs->proctl);
-  fdbg("  HOSTCTL[%08x]: %08x\n", CXD56_SDHCI_SYSCTL,    regs->sysctl);
-  fdbg("  IRQSTAT[%08x]: %08x\n", CXD56_SDHCI_IRQSTAT,   regs->irqstat);
-  fdbg("IRQSTATEN[%08x]: %08x\n", CXD56_SDHCI_IRQSTATEN, regs->irqstaten);
-  fdbg(" IRQSIGEN[%08x]: %08x\n", CXD56_SDHCI_IRQSIGEN,  regs->irqsigen);
-  fdbg("  AC12ERR[%08x]: %08x\n", CXD56_SDHCI_AC12ERR,   regs->ac12err);
-  fdbg(" HTCAPBLT[%08x]: %08x\n", CXD56_SDHCI_HTCAPBLT,  regs->htcapblt);
-  fdbg("   ADMAES[%08x]: %08x\n", CXD56_SDHCI_ADMAES,    regs->admaes);
-  fdbg("  ADSADDR[%08x]: %08x\n", CXD56_SDHCI_ADSADDR,   regs->adsaddr);
-  fdbg("  HOSTVER[%08x]: %08x\n", CXD56_SDHCI_HOSTVER,   regs->hostver);
+  mcinfo("SDHC Registers: %s\n", msg);
+  mcinfo("   DSADDR[%08x]: %08x\n", CXD56_SDHCI_DSADDR,    regs->dsaddr);
+  mcinfo("  BLKATTR[%08x]: %08x\n", CXD56_SDHCI_BLKATTR,   regs->blkattr);
+  mcinfo("   CMDARG[%08x]: %08x\n", CXD56_SDHCI_CMDARG,    regs->cmdarg);
+  mcinfo("  COMMAND[%08x]: %08x\n", CXD56_SDHCI_XFERTYP,   regs->xferty);
+  mcinfo("  CMDRSP0[%08x]: %08x\n", CXD56_SDHCI_CMDRSP0,   regs->cmdrsp0);
+  mcinfo("  CMDRSP1[%08x]: %08x\n", CXD56_SDHCI_CMDRSP1,   regs->cmdrsp1);
+  mcinfo("  CMDRSP2[%08x]: %08x\n", CXD56_SDHCI_CMDRSP2,   regs->cmdrsp2);
+  mcinfo("  CMDRSP3[%08x]: %08x\n", CXD56_SDHCI_CMDRSP3,   regs->cmdrsp3);
+  mcinfo("  PRSSTAT[%08x]: %08x\n", CXD56_SDHCI_PRSSTAT,   regs->prsstat);
+  mcinfo("   PROCTL[%08x]: %08x\n", CXD56_SDHCI_PROCTL,    regs->proctl);
+  mcinfo("  HOSTCTL[%08x]: %08x\n", CXD56_SDHCI_SYSCTL,    regs->sysctl);
+  mcinfo("  IRQSTAT[%08x]: %08x\n", CXD56_SDHCI_IRQSTAT,   regs->irqstat);
+  mcinfo("IRQSTATEN[%08x]: %08x\n", CXD56_SDHCI_IRQSTATEN, regs->irqstaten);
+  mcinfo(" IRQSIGEN[%08x]: %08x\n", CXD56_SDHCI_IRQSIGEN,  regs->irqsigen);
+  mcinfo("  AC12ERR[%08x]: %08x\n", CXD56_SDHCI_AC12ERR,   regs->ac12err);
+  mcinfo(" HTCAPBLT[%08x]: %08x\n", CXD56_SDHCI_HTCAPBLT,  regs->htcapblt);
+  mcinfo("   ADMAES[%08x]: %08x\n", CXD56_SDHCI_ADMAES,    regs->admaes);
+  mcinfo("  ADSADDR[%08x]: %08x\n", CXD56_SDHCI_ADSADDR,   regs->adsaddr);
+  mcinfo("  HOSTVER[%08x]: %08x\n", CXD56_SDHCI_HOSTVER,   regs->hostver);
 }
 #endif
 
@@ -893,7 +863,7 @@ static void cxd56_transmit(struct cxd56_sdiodev_s *priv)
       return;
     }
 
-  fllvdbg("Entry: remaining: %d IRQSTAT: %08x\n",
+  mcinfo("Entry: remaining: %d IRQSTAT: %08x\n",
           priv->remaining, getreg32(CXD56_SDHCI_IRQSTAT));
 
   while (priv->remaining > 0 &&
@@ -942,7 +912,7 @@ static void cxd56_transmit(struct cxd56_sdiodev_s *priv)
         }
     }
 
-  fllvdbg("Exit: remaining: %d IRQSTAT: %08x\n",
+  mcinfo("Exit: remaining: %d IRQSTAT: %08x\n",
           priv->remaining, getreg32(CXD56_SDHCI_IRQSTAT));
 }
 
@@ -962,18 +932,11 @@ static void cxd56_transmit(struct cxd56_sdiodev_s *priv)
 
 static void cxd56_receive(struct cxd56_sdiodev_s *priv)
 {
-  //unsigned int watermark;
   union
     {
       uint32_t w;
       uint8_t  b[4];
     } data;
-
-  /* Set the Read Watermark Level to 1:  BRR will be set when the number of
-   * queued words is greater than or equal to 1.
-   */
-
-  //  putreg32(1 << SDHCI_WML_RD_SHIFT, CXD56_SDHCI_WML);
 
   /* Loop while there is space to store the data, waiting for buffer read
    * ready (BRR)
@@ -984,7 +947,7 @@ static void cxd56_receive(struct cxd56_sdiodev_s *priv)
       return;
     }
 
-  fllvdbg("Entry: remaining: %d IRQSTAT: %08x\n",
+  mcinfo("Entry: remaining: %d IRQSTAT: %08x\n",
           priv->remaining, getreg32(CXD56_SDHCI_IRQSTAT));
 
   while (priv->remaining > 0 &&
@@ -1027,12 +990,6 @@ static void cxd56_receive(struct cxd56_sdiodev_s *priv)
         }
     }
 
-  /*fllvdbg("Exit: remaining: %d IRQSTAT: %08x WML: %08x\n",
-          priv->remaining, getreg32(CXD56_SDHCI_IRQSTAT),
-          getreg32(CXD56_SDHCI_WML));*/
-  /* The original driver not defined CXD56_SDHCI_WML, compiling will
-   * fail after enable file system verbose message so I disabled this message
-   */
 }
 
 /****************************************************************************
@@ -1072,7 +1029,7 @@ static void cxd56_eventtimeout(int argc, uint32_t arg)
       /* Wake up any waiting threads */
 
       cxd56_endwait(priv, SDIOWAIT_TIMEOUT);
-      flldbg("Timeout: remaining: %d\n", priv->remaining);
+      mcwarn("Timeout: remaining: %d\n", priv->remaining);
     }
 }
 
@@ -1206,7 +1163,7 @@ static void cxd56_endtransfer(struct cxd56_sdiodev_s *priv, sdio_eventset_t wkup
  *
  ****************************************************************************/
 
-static int cxd56_interrupt(int irq, void *context)
+static int cxd56_interrupt(int irq, FAR void *context, FAR void *arg)
 {
   struct cxd56_sdiodev_s *priv = &g_sdhcdev;
   uint32_t enabled;
@@ -1221,7 +1178,7 @@ static int cxd56_interrupt(int irq, void *context)
 
   regval  = getreg32(CXD56_SDHCI_IRQSIGEN);
   enabled = getreg32(CXD56_SDHCI_IRQSTAT) & regval;
-  fllvdbg("IRQSTAT: %08x IRQSIGEN %08x enabled: %08x\n",
+  mcinfo("IRQSTAT: %08x IRQSIGEN %08x enabled: %08x\n",
           getreg32(CXD56_SDHCI_IRQSTAT), regval, enabled);
 
   /* Disable card interrupts to clear the card interrupt to the host system. */
@@ -1276,7 +1233,7 @@ static int cxd56_interrupt(int irq, void *context)
         {
           /* Terminate the transfer with an error */
 
-          flldbg("ERROR: Data block CRC failure, remaining: %d\n", priv->remaining);
+          mcerr("ERROR: Data block CRC failure, remaining: %d\n", priv->remaining);
           cxd56_endtransfer(priv, SDIOWAIT_TRANSFERDONE | SDIOWAIT_ERROR);
         }
 
@@ -1286,11 +1243,12 @@ static int cxd56_interrupt(int irq, void *context)
         {
           /* Terminate the transfer with an error */
 
-          flldbg("ERROR: Data timeout, remaining: %d\n", priv->remaining);
+          mcerr("ERROR: Data timeout, remaining: %d\n", priv->remaining);
           cxd56_endtransfer(priv, SDIOWAIT_TRANSFERDONE | SDIOWAIT_TIMEOUT);
         }
     }
 
+#ifdef CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION
   if (enabled & SDHCI_INT_CINT)
     {
       /* Handle card interrupt events */
@@ -1300,6 +1258,7 @@ static int cxd56_interrupt(int irq, void *context)
       work_cancel(HPWORK, &priv->cbwork);
       (void)work_queue(HPWORK, &priv->cbwork, (worker_t)cxd56_sdhci_irq_handler, &priv->dev, 0);
     }
+#endif /* CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION */
 
   /* Handle wait events *****************************************************/
 
@@ -1420,8 +1379,9 @@ static void cxd56_sdio_sdhci_reset(FAR struct sdio_dev_s *dev)
    * interrupts.
    */
 
-  putreg32(SDHCI_INT_ALL, CXD56_SDHCI_IRQSTATEN);
-  fvdbg("SYSCTL: %08x PRSSTAT: %08x IRQSTATEN: %08x\n",
+  putreg32(SDHCI_INT_ALL & (~SDHCI_INT_CINT), CXD56_SDHCI_IRQSTATEN);
+
+  mcinfo("SYSCTL: %08x PRSSTAT: %08x IRQSTATEN: %08x\n",
         getreg32(CXD56_SDHCI_SYSCTL), getreg32(CXD56_SDHCI_PRSSTAT),
         getreg32(CXD56_SDHCI_IRQSTATEN));
 
@@ -1454,6 +1414,41 @@ static void cxd56_sdio_sdhci_reset(FAR struct sdio_dev_s *dev)
 }
 
 /****************************************************************************
+ * Name: cxd56_sdio_capabilities
+ *
+ * Description:
+ *   Get capabilities (and limitations) of the SDIO driver (optional)
+ *
+ * Input Parameters:
+ *   dev   - Device-specific state data
+ *
+ * Returned Value:
+ *   Returns a bitset of status values (see SDIO_CAPS_* defines)
+ *
+ ****************************************************************************/
+
+static sdio_capset_t cxd56_sdio_capabilities(FAR struct sdio_dev_s *dev)
+{
+  sdio_capset_t caps = 0;
+
+#ifdef CONFIG_CXD56_SDIO_WIDTH_D1_ONLY
+  caps |= SDIO_CAPS_1BIT_ONLY;
+#endif
+#ifdef CONFIG_CXD56_SDIO_DMA
+  caps |= SDIO_CAPS_DMASUPPORTED;
+#endif
+#ifndef CONFIG_CXD56_SDIO_DMA
+  /* In case of non-DMA, add below capability to change the write single
+   * sequence with sending CMD24. If not, write is not completed.
+   */
+
+  caps |= SDIO_CAPS_DMABEFOREWRITE;
+#endif
+
+  return caps;
+}
+
+/****************************************************************************
  * Name: cxd56_sdio_status
  *
  * Description:
@@ -1467,7 +1462,7 @@ static void cxd56_sdio_sdhci_reset(FAR struct sdio_dev_s *dev)
  *
  ****************************************************************************/
 
-static uint8_t cxd56_sdio_status(FAR struct sdio_dev_s *dev)
+static sdio_statset_t cxd56_sdio_status(FAR struct sdio_dev_s *dev)
 {
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)dev;
   return priv->cdstatus;
@@ -1571,7 +1566,7 @@ static void cxd56_sdio_clock(FAR struct sdio_dev_s *dev, enum sdio_clock_e rate)
   regval  = getreg32(CXD56_SDHCI_SYSCTL);
   regval &= ~SDHCI_SYSCTL_SDCLKEN;
   putreg32(regval, CXD56_SDHCI_SYSCTL);
-  fvdbg("SYSCTRL: %08x\n", getreg32(CXD56_SDHCI_SYSCTL));
+  mcinfo("SYSCTRL: %08x\n", getreg32(CXD56_SDHCI_SYSCTL));
 
   /* sel_ttclk bit[16] */
   if (cxd56_get_sdio_baseclock() < 48*1000*1000)
@@ -1612,7 +1607,7 @@ static void cxd56_sdio_clock(FAR struct sdio_dev_s *dev, enum sdio_clock_e rate)
         regval &= ~(SDHCI_SYSCTL_SDCLKFS_MASK | SDHCI_SYSCTL_SDCLKFSUP_MASK);
         putreg32(regval, CXD56_SDHCI_SYSCTL);
         cxd56_sdio_frequency(CONFIG_CXD56_IDMODE_FREQ);
-        fvdbg("SYSCTRL: %08x\n", getreg32(CXD56_SDHCI_SYSCTL));
+        mcinfo("SYSCTRL: %08x\n", getreg32(CXD56_SDHCI_SYSCTL));
         return;
       }
 
@@ -1625,7 +1620,7 @@ static void cxd56_sdio_clock(FAR struct sdio_dev_s *dev, enum sdio_clock_e rate)
       break;
 
     case CLOCK_SD_TRANSFER_1BIT :  /* SD normal operation clocking (narrow 1-bit mode) */
-#ifndef CONFIG_SDIO_WIDTH_D1_ONLY
+#ifndef CONFIG_CXD56_SDIO_WIDTH_D1_ONLY
       frequency = CONFIG_CXD56_SD1BIT_FREQ;
       break;
 #endif
@@ -1652,7 +1647,7 @@ static void cxd56_sdio_clock(FAR struct sdio_dev_s *dev, enum sdio_clock_e rate)
       putreg32(regval | SDHCI_SYSCTL_SDCLKEN, CXD56_SDHCI_SYSCTL);
     }
   while((getreg32(CXD56_SDHCI_SYSCTL) & SDHCI_SYSCTL_SDCLKEN) == 0);
-  fvdbg("SYSCTRL: %08x\n", getreg32(CXD56_SDHCI_SYSCTL));
+  mcinfo("SYSCTRL: %08x\n", getreg32(CXD56_SDHCI_SYSCTL));
 }
 
 /****************************************************************************
@@ -1674,7 +1669,7 @@ static int cxd56_sdio_attach(FAR struct sdio_dev_s *dev)
   int ret;
 
   /* Attach the SDIO interrupt handler */
-  ret = irq_attach(CXD56_IRQ_SDIO, cxd56_interrupt);
+  ret = irq_attach(CXD56_IRQ_SDIO, cxd56_interrupt, NULL);
   if (ret == OK)
     {
       /* Disable all interrupts at the SDIO controller and clear all pending
@@ -1834,8 +1829,7 @@ static int cxd56_sdio_sendcmd(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32_t
 
   /* Other bits? What about CMDTYP? */
 
-  fvdbg("cmd: %08x arg: %08x regval: %08x\n", cmd, arg, regval);
-  //  printf("cmd: %08x arg: %08x regval: %08x\n", cmd, arg, regval);
+  mcinfo("cmd: %08x arg: %08x regval: %08x\n", cmd, arg, regval);
 
   /* The Command Inhibit (CIHB) bit is set in the PRSSTAT bit immediately
    * after the transfer type register is written.  This bit is cleared when
@@ -1851,7 +1845,7 @@ static int cxd56_sdio_sendcmd(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32_t
     {
       if (--timeout <= 0)
         {
-          fdbg("ERROR: Timeout cmd: %08x PRSSTAT: %08x\n",
+          mcerr("ERROR: Timeout cmd: %08x PRSSTAT: %08x\n",
                cmd, getreg32(CXD56_SDHCI_PRSSTAT));
 
           return -EBUSY;
@@ -1865,7 +1859,7 @@ static int cxd56_sdio_sendcmd(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32_t
         {
           if (--timeout <= 0)
             {
-              fdbg("ERROR: Timeout cmd data: %08x PRSSTAT: %08x\n",
+              mcerr("ERROR: Timeout cmd data: %08x PRSSTAT: %08x\n",
                    cmd, getreg32(CXD56_SDHCI_PRSSTAT));
 
               return -EBUSY;
@@ -1885,13 +1879,10 @@ static int cxd56_sdio_sendcmd(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32_t
       priv->dmasend_cmd = cmd;
     }
   else
+#endif
     {
       putreg32(regval, CXD56_SDHCI_XFERTYP);
     }
-#else
-  putreg32(regval, CXD56_SDHCI_XFERTYP);
-#endif
-  cxd56_sdhci_debug_regs();
 
   return OK;
 }
@@ -1918,9 +1909,6 @@ static void cxd56_blocksetup(FAR struct sdio_dev_s *dev, unsigned int blocklen,
   uint32_t regval;
 
   DEBUGASSERT(dev != NULL && nblocks > 0 && nblocks < 65535);
-  /* the data of any size can be transferred in ADMA2.
-   * remove the block size is a multiple of 8.
-   */
   DEBUGASSERT(blocklen < 65535);
 
   priv->blocksize = blocklen;
@@ -2133,7 +2121,7 @@ static int cxd56_sdio_waitresponse(FAR struct sdio_dev_s *dev, uint32_t cmd)
   uint32_t errors;
   int32_t  timeout = SDHCI_CMDTIMEOUT;
   int      ret = OK;
-  uint32_t m_delay = 10;
+
 #ifdef CONFIG_SDIO_DMA
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)dev;
 
@@ -2142,6 +2130,7 @@ static int cxd56_sdio_waitresponse(FAR struct sdio_dev_s *dev, uint32_t cmd)
       return OK;
     }
 #endif
+
   switch (cmd & MMCSD_RESPONSE_MASK)
     {
     case MMCSD_NO_RESPONSE:
@@ -2176,23 +2165,22 @@ static int cxd56_sdio_waitresponse(FAR struct sdio_dev_s *dev, uint32_t cmd)
 
   while ((getreg32(CXD56_SDHCI_IRQSTAT) & SDHCI_INT_CC) == 0)
     {
-      timeout -= m_delay;
+      timeout -= 1;
       if (timeout <= 0)
         {
-          fdbg("ERROR: Timeout cmd: %08x IRQSTAT: %08x\n",
+          mcerr("ERROR: Timeout cmd: %08x IRQSTAT: %08x\n",
                cmd, getreg32(CXD56_SDHCI_IRQSTAT));
           putreg32(0,CXD56_SDHCI_IRQSIGEN);
 
           return -ETIMEDOUT;
         }
-      /* If used up_mdelay, the impact on SDIO transmission performance is very large */
     }
 
   /* Check for hardware detected errors */
 
   if ((getreg32(CXD56_SDHCI_IRQSTAT) & errors) != 0)
     {
-      fdbg("ERROR: cmd: %08x errors: %08x IRQSTAT: %08x\n",
+      mcerr("ERROR: cmd: %08x errors: %08x IRQSTAT: %08x\n",
            cmd, errors, getreg32(CXD56_SDHCI_IRQSTAT));
       ret = -EIO;
     }
@@ -2278,7 +2266,7 @@ static int cxd56_sdio_recvshortcrc(FAR struct sdio_dev_s *dev, uint32_t cmd,
 #ifdef CONFIG_DEBUG
   if (!rshort)
     {
-      fdbg("ERROR: rshort=NULL\n");
+      mcerr("ERROR: rshort=NULL\n");
       ret = -EINVAL;
     }
 
@@ -2288,7 +2276,7 @@ static int cxd56_sdio_recvshortcrc(FAR struct sdio_dev_s *dev, uint32_t cmd,
            (cmd & MMCSD_RESPONSE_MASK) != MMCSD_R1B_RESPONSE &&
            (cmd & MMCSD_RESPONSE_MASK) != MMCSD_R6_RESPONSE)
     {
-      fdbg("ERROR: Wrong response CMD=%08x\n", cmd);
+      mcerr("ERROR: Wrong response CMD=%08x\n", cmd);
       ret = -EINVAL;
     }
   else
@@ -2299,12 +2287,12 @@ static int cxd56_sdio_recvshortcrc(FAR struct sdio_dev_s *dev, uint32_t cmd,
       regval = getreg32(CXD56_SDHCI_IRQSTAT);
       if ((regval & SDHCI_INT_CTOE) != 0)
         {
-          fdbg("ERROR: Command timeout: %08x\n", regval);
+          mcerr("ERROR: Command timeout: %08x\n", regval);
           ret = -ETIMEDOUT;
         }
       else if ((regval & SDHCI_INT_CCE) != 0)
         {
-          fdbg("ERROR: CRC failure: %08x\n", regval);
+          mcerr("ERROR: CRC failure: %08x\n", regval);
           ret = -EIO;
         }
     }
@@ -2345,7 +2333,7 @@ static int cxd56_sdio_recvlong(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32_
 
   if ((cmd & MMCSD_RESPONSE_MASK) != MMCSD_R2_RESPONSE)
     {
-      fdbg("ERROR: Wrong response CMD=%08x\n", cmd);
+      mcerr("ERROR: Wrong response CMD=%08x\n", cmd);
       ret = -EINVAL;
     }
   else
@@ -2356,12 +2344,12 @@ static int cxd56_sdio_recvlong(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32_
       regval = getreg32(CXD56_SDHCI_IRQSTAT);
       if (regval & SDHCI_INT_CTOE)
         {
-          fdbg("ERROR: Timeout IRQSTAT: %08x\n", regval);
+          mcerr("ERROR: Timeout IRQSTAT: %08x\n", regval);
           ret = -ETIMEDOUT;
         }
       else if (regval & SDHCI_INT_CCE)
         {
-          fdbg("ERROR: CRC fail IRQSTAT: %08x\n", regval);
+          mcerr("ERROR: CRC fail IRQSTAT: %08x\n", regval);
           ret = -EIO;
         }
     }
@@ -2434,7 +2422,7 @@ static int cxd56_sdio_recvshort(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32
       (cmd & MMCSD_RESPONSE_MASK) != MMCSD_R5_RESPONSE &&
       (cmd & MMCSD_RESPONSE_MASK) != MMCSD_R7_RESPONSE)
     {
-      fdbg("ERROR: Wrong response CMD=%08x\n", cmd);
+      mcerr("ERROR: Wrong response CMD=%08x\n", cmd);
       ret = -EINVAL;
     }
   else
@@ -2447,7 +2435,7 @@ static int cxd56_sdio_recvshort(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32
       regval = getreg32(CXD56_SDHCI_IRQSTAT);
       if (regval & SDHCI_INT_CTOE)
         {
-          fdbg("ERROR: Timeout IRQSTAT: %08x\n", regval);
+          mcerr("ERROR: Timeout IRQSTAT: %08x\n", regval);
           ret = -ETIMEDOUT;
         }
     }
@@ -2574,7 +2562,7 @@ static sdio_eventset_t cxd56_sdio_eventwait(FAR struct sdio_dev_s *dev,
                        1, (uint32_t)priv);
       if (ret != OK)
         {
-          fdbg("ERROR: wd_start failed: %d\n", ret);
+          mcerr("ERROR: wd_start failed: %d\n", ret);
         }
     }
 
@@ -2584,7 +2572,7 @@ static sdio_eventset_t cxd56_sdio_eventwait(FAR struct sdio_dev_s *dev,
    * may have already occurred before this function was called!
    */
 
-  for (; ;)
+  for (; ; )
     {
       /* Wait for an event in event set to occur.  If this the event has already
        * occurred, then the semaphore will already have been incremented and
@@ -2614,7 +2602,6 @@ static sdio_eventset_t cxd56_sdio_eventwait(FAR struct sdio_dev_s *dev,
             }
           break;
         }
-      /* If used up_mdelay, the impact on SDIO transmission performance is very large */
     }
 
 
@@ -2656,7 +2643,7 @@ static void cxd56_sdio_callbackenable(FAR struct sdio_dev_s *dev,
 {
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)dev;
 
-  fvdbg("eventset: %02x\n", eventset);
+  mcinfo("eventset: %02x\n", eventset);
   DEBUGASSERT(priv != NULL);
 
   priv->cbevents = eventset;
@@ -2692,7 +2679,7 @@ static int cxd56_sdio_registercallback(FAR struct sdio_dev_s *dev,
 
   /* Disable callbacks and register this callback and is argument */
 
-  fvdbg("Register %p(%p)\n", callback, arg);
+  mcinfo("Register %p(%p)\n", callback, arg);
   DEBUGASSERT(priv != NULL);
 
   priv->cbevents = 0;
@@ -2700,27 +2687,6 @@ static int cxd56_sdio_registercallback(FAR struct sdio_dev_s *dev,
   priv->callback = callback;
   return OK;
 }
-
-/****************************************************************************
- * Name: cxd56_sdio_dmasupported
- *
- * Description:
- *   Return true if the hardware can support DMA
- *
- * Input Parameters:
- *   dev - An instance of the SDIO device interface
- *
- * Returned Value:
- *   true if DMA is supported.
- *
- ****************************************************************************/
-
-#ifdef CONFIG_SDIO_DMA
-static bool cxd56_sdio_dmasupported(FAR struct sdio_dev_s *dev)
-{
-  return true;
-}
-#endif
 
 /****************************************************************************
  * Name: cxd56_sdio_admasetup
@@ -2949,6 +2915,32 @@ static int cxd56_sdio_dmasendsetup(FAR struct sdio_dev_s *dev,
 /****************************************************************************
  * Initialization/uninitialization/reset
  ****************************************************************************/
+static inline void cxd56_sdio_poweron(void *arg)
+{
+  uint32_t regval;
+
+  /* Power ON for SDCARD */
+
+  regval = getreg32(CXD56_SDHCI_PROCTL);
+  regval |= 0xf << 8;
+  putreg32(regval, CXD56_SDHCI_PROCTL);
+
+  board_sdcard_enable();
+}
+
+static inline void cxd56_sdio_poweroff(void *arg)
+{
+  uint32_t regval;
+
+  board_sdcard_disable();
+
+  /* Power OFF for SDCARD */
+
+  regval = getreg32(CXD56_SDHCI_PROCTL);
+  regval &= ~(0x1 << 8);
+  putreg32(regval, CXD56_SDHCI_PROCTL);
+}
+
 /****************************************************************************
  * Name: cxd56_sdio_callback
  *
@@ -2966,13 +2958,12 @@ static void cxd56_sdio_callback(void *arg)
 {
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)arg;
   uint32_t delay = 0;
-  uint32_t regval;
   irqstate_t flags;
 
   /* Is a callback registered? */
 
   DEBUGASSERT(priv != NULL);
-  fvdbg("Callback %p(%p) cbevents: %02x cdstatus: %02x\n",
+  mcinfo("Callback %p(%p) cbevents: %02x cdstatus: %02x\n",
         priv->callback, priv->cbarg, priv->cbevents, priv->cdstatus);
 
   flags = enter_critical_section();
@@ -2988,30 +2979,13 @@ static void cxd56_sdio_callback(void *arg)
             {
               /* No... return without performing the callback */
 
+              leave_critical_section(flags);
               return;
             }
-#ifdef SYSEVA_SP_SDCHOST
-          /* Disable levelshifter */
-          cxd56_gpio_write(PIN_UART2_RXD, 0); // SDIO_VLTEN  (GP_UART2_RXD)  1:Enable / 0:Disable
-#endif
           /* Power ON for SDCARD */
-          regval = getreg32(CXD56_SDHCI_PROCTL);
-          regval |= 0xf << 8;
-          putreg32(regval, CXD56_SDHCI_PROCTL);
-#ifdef SYSEVA_SP_SDCHOST
-          /* Disable levelshifter */
-          /* Set 3.3V */
-          cxd56_gpio_write(PIN_UART2_TXD, 0); // SDIO_VLTSEL (GP_UART2_TXD)  L:3.3V / H:1.8V
-          up_mdelay(100);
-          /* Enable levelshifter */
-          cxd56_gpio_write(PIN_UART2_RXD, 1); // SDIO_VLTEN  (GP_UART2_RXD)  1:Enable / 0:Disable
-          up_mdelay(100);
-          /* Power ON */
-          cxd56_gpio_write(PIN_UART2_RTS, 1); // SDIO_CRDPWR (GP_UART2_RTS)  H:3.3V ON / L
-          up_mdelay(500);
-#endif
-          delay = SDHCI_WAIT_POWERON;
+          cxd56_sdio_poweron(priv);
           putreg32(SDHCI_INT_CINS, CXD56_SDHCI_IRQSTAT);
+          delay = SDHCI_WAIT_POWERON;
         }
       else
         {
@@ -3021,25 +2995,13 @@ static void cxd56_sdio_callback(void *arg)
             {
               /* No... return without performing the callback */
 
+              leave_critical_section(flags);
               return;
             }
-#ifdef SYSEVA_SP_SDCHOST
           /* Power OFF for SDCARD */
-          /* Disable levelshifter */
-          cxd56_gpio_write(PIN_UART2_RXD, 1); // SDIO_VLTEN  (GP_UART2_RXD)  1:Enable / 0:Disable
-          up_mdelay(100);
-          /* Set 3.3V */
-          cxd56_gpio_write(PIN_UART2_TXD, 0); // SDIO_VLTSEL (GP_UART2_TXD)  L:3.3V / H:1.8V
-          up_mdelay(100);
-          /* Power OFF */
-          cxd56_gpio_write(PIN_UART2_RTS, 1); // SDIO_CRDPWR (GP_UART2_RTS)  H:3.3V ON / L
-          up_mdelay(500);
-#endif
-          regval = getreg32(CXD56_SDHCI_PROCTL);
-          regval &= ~(0x1 << 8);
-          putreg32(regval, CXD56_SDHCI_PROCTL);
-          delay = SDHCI_WAIT_POWEROFF;
+          cxd56_sdio_poweroff(arg);
           putreg32(SDHCI_INT_CRM | SDHCI_INT_CINT, CXD56_SDHCI_IRQSTAT);
+          delay = SDHCI_WAIT_POWEROFF;
         }
 
       /* Perform the callback, disabling further callbacks.  Of course, the
@@ -3058,7 +3020,7 @@ static void cxd56_sdio_callback(void *arg)
         {
           /* Yes.. queue it */
           work_cancel(HPWORK, &priv->cbwork);//
-          fvdbg("Queuing callback to %p(%p)\n", priv->callback, priv->cbarg);
+          mcinfo("Queuing callback to %p(%p)\n", priv->callback, priv->cbarg);
           (void)work_queue(HPWORK, &priv->cbwork, (worker_t)priv->callback, priv->cbarg, delay);
         }
       else
@@ -3066,12 +3028,13 @@ static void cxd56_sdio_callback(void *arg)
           /* No.. then just call the callback here */
 
           up_mdelay(delay);
-          fvdbg("Callback to %p(%p)\n", priv->callback, priv->cbarg);
+          mcinfo("Callback to %p(%p)\n", priv->callback, priv->cbarg);
           priv->callback(priv->cbarg);
         }
     }
 }
 
+#ifdef CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION
 static void cxd56_sdio_takesem(FAR struct cxd56_sdiodev_s *priv)
 {
   /* Take the semaphore, giving exclusive access to the driver (perhaps
@@ -3166,7 +3129,7 @@ static int cxd56_sdio_sendcmdpoll(FAR struct cxd56_sdiodev_s *priv, uint32_t cmd
       ret = cxd56_sdio_waitresponse(&priv->dev, cmd);
       if (ret != OK)
         {
-          fdbg("ERROR: Wait for response to cmd: %08x failed: %d\n", cmd, ret);
+          mcerr("ERROR: Wait for response to cmd: %08x failed: %d\n", cmd, ret);
         }
     }
 
@@ -3198,18 +3161,18 @@ static uint32_t cxd56_sdio_readb_internal(FAR struct sdio_function_s * sf, uint3
       cxd56_sdio_recvshort(&priv->dev, SDIO_ACMD52, &response);
       if (ret != OK)
         {
-          fdbg("ERROR: Addr:0x%x, recv R5 error\n", addr);
+          mcerr("ERROR: Addr:0x%x, recv R5 error\n", addr);
           goto READB_ERR;
         }
     }
   else
     {
-      fdbg("ERROR: Send cmd52 addr:0x%x error\n", addr);
+      mcerr("ERROR: Send cmd52 addr:0x%x error\n", addr);
       goto READB_ERR;
     }
   if ((!CMD52_RESP_OK(response)) || (response == 0xffffffff))
     {
-      fdbg("ERROR: Fail resp %u\n", response);
+      mcerr("ERROR: Fail resp %u\n", response);
       goto READB_ERR;
     }
   if (rdata)
@@ -3248,18 +3211,18 @@ static uint32_t cxd56_sdio_writeb_internal(FAR struct sdio_function_s * sf, uint
       cxd56_sdio_recvshort(&priv->dev, SDIO_ACMD52, &response);
       if (ret != OK)
         {
-          fdbg("ERROR: Addr:0x%x, recv R5 error\n", addr);
+          mcerr("ERROR: Addr:0x%x, recv R5 error\n", addr);
           goto WRITEB_ERR;
         }
     }
   else
     {
-      fdbg("ERROR: Send cmd52 addr:0x%x error\n", addr);
+      mcerr("ERROR: Send cmd52 addr:0x%x error\n", addr);
       goto WRITEB_ERR;
     }
   if ((!CMD52_RESP_OK(response)) || (response == 0xffffffff))
     {
-      fdbg("ERROR: Fail resp %u\n", response);
+      mcerr("ERROR: Fail resp %u\n", response);
       goto WRITEB_ERR;
     }
   if (rdata)
@@ -3292,22 +3255,22 @@ static int cxd56_sdio_changeclock(FAR struct cxd56_sdiodev_s *priv)
     }
   else
     {
-      fdbg("ERROR: Send cmd52, getclock error\n");
+      mcerr("ERROR: Send cmd52, getclock error\n");
       return ret;
     }
 #if 0
-    fvdbg("Force 400Khz SDIO clock\n");
+    mcinfo("Force 400Khz SDIO clock\n");
     if (TRUE || (response & 0x40) != 0)
 #else
     if ((response & 0x40) != 0)
 #endif
     {
-      fvdbg("Set clock to 400KHz\n");
+      mcinfo("Set clock to 400KHz\n");
       cxd56_sdio_clock(&priv->dev, CLOCK_IDMODE);
     }
   else
     {
-      fvdbg("Set clock to 25MHz\n");
+      mcinfo("Set clock to 25MHz\n");
       cxd56_sdio_clock(&priv->dev, CLOCK_SD_TRANSFER_4BIT);
     }
   return ret;
@@ -3329,7 +3292,7 @@ static FAR struct sdio_function_s *cxd56_sdio_function_alloc(FAR struct sdio_sof
   sf = (FAR struct sdio_function_s *)kmm_malloc(sizeof(struct sdio_function_s));
   if (!sf)
     {
-      fdbg("ERROR: Failed\n");
+      mcerr("ERROR: Failed\n");
       return NULL;
     }
   memset(sf, 0, sizeof(struct sdio_function_s));
@@ -3361,11 +3324,11 @@ static uint32_t cxd56_sdio_read_cis(FAR struct sdio_function_s * sf, FAR struct 
   uint8_t response = 0;
   uint32_t addr;
 
-  fvdbg("I/O func's num:%d\n", sf->number);
+  mcinfo("I/O func's num:%d\n", sf->number);
 
   DEBUGASSERT(sf && cis);
   sf0 = sf->sc->fn[0];
-  addr = SDIO_CCCR_CISPTR + (sf->number * SDIO_CCCR_SIZE);
+  addr = SDIO_CCCR_CCP + (sf->number * SDIO_CCCR_SIZE);
   for(i=0; i<3; i++)
   {
     ret = cxd56_sdio_readb_internal(sf0, (addr+i), &response);
@@ -3376,7 +3339,7 @@ static uint32_t cxd56_sdio_read_cis(FAR struct sdio_function_s * sf, FAR struct 
   }
   if ((cisptr < SDIO_CIS_START) || (cisptr >= SDIO_CIS_END))
     {
-      fdbg("ERROR: Bad cis ptr %#x\n", cisptr);
+      mcerr("ERROR: Bad cis ptr %#x\n", cisptr);
       return 1;
     }
   for(;;)
@@ -3401,7 +3364,7 @@ static uint32_t cxd56_sdio_read_cis(FAR struct sdio_function_s * sf, FAR struct 
         }
       if (tpllen == 0)
         {
-          fdbg("ERROR: Cis error reg %d tpl %#x len %d\n", cisptr, tplcode, tpllen);
+          mcerr("ERROR: Cis error reg %d tpl %#x len %d\n", cisptr, tplcode, tpllen);
           break;
         }
 
@@ -3410,7 +3373,7 @@ static uint32_t cxd56_sdio_read_cis(FAR struct sdio_function_s * sf, FAR struct 
           case SDIO_CISTPL_FUNCID:
             if (tpllen < 2)
               {
-                fdbg("ERROR: Bad funcid length\n");
+                mcerr("ERROR: Bad funcid length\n");
                 cisptr += tpllen;
                 break;
               }
@@ -3421,12 +3384,12 @@ static uint32_t cxd56_sdio_read_cis(FAR struct sdio_function_s * sf, FAR struct 
               }
             cis->function = response;
             cisptr += tpllen;
-            fvdbg("get funcid 0x%x, len %d\n", cis->function, tpllen);
+            mcinfo("get funcid 0x%x, len %d\n", cis->function, tpllen);
           break;
           case SDIO_CISTPL_MANFID:
             if (tpllen < 4)
               {
-                fdbg("ERROR: Bad manfid length\n");
+                mcerr("ERROR: Bad manfid length\n");
                 cisptr += tpllen;
                 break;
               }
@@ -3454,13 +3417,13 @@ static uint32_t cxd56_sdio_read_cis(FAR struct sdio_function_s * sf, FAR struct 
                 return ret;
               }
             cis->product = response << 8;
-            fvdbg("manufacturer/product ID: %x:%x, len %d\n",
+            mcinfo("manufacturer/product ID: %x:%x, len %d\n",
                    cis->manufacturer,
                    cis->product,
                    tpllen);
           break;
           default:
-          fvdbg("unknown tuple code %#x, length %d\n", tplcode, tpllen);
+          mcinfo("unknown tuple code %#x, length %d\n", tplcode, tpllen);
           cisptr += tpllen;
           break;
         }
@@ -3507,7 +3470,7 @@ static int cxd56_sdhci_irq_handler(FAR struct sdio_dev_s *dev)
 
   sc = &priv->sc;
   sf0 = priv->sc.fn[0];
-  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_IRQ_PENDING, &response);
+  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_INTPEND, &response);
   for (i=1; i<8; i++)
     {
       if (response & (1<<i))
@@ -3552,13 +3515,13 @@ static int cxd56_sdio_register_irq(FAR struct sdio_dev_s *dev, int func_num,
 
   if (NULL != sf->irq_callback)
     {
-      fdbg("ERROR: Already registered a sdio callback, fn number: %d\n",
+      mcerr("ERROR: Already registered a sdio callback, fn number: %d\n",
                  sf->number);
       return -EBUSY;
     }
   cxd56_sdio_takesem(priv);
   /* enable irq in device side */
-  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_INT_ENABLE, &reg);
+  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_INTEN, &reg);
   if (ret)
     {
       goto REG_IRQ_FAIL;
@@ -3569,10 +3532,10 @@ static int cxd56_sdio_register_irq(FAR struct sdio_dev_s *dev, int func_num,
   regorg = reg;
   reg |= ((1 << sf->number) | (1 << 0));
 
-  ret = cxd56_sdio_writeb_internal(sf0, SDIO_CCCR_INT_ENABLE, reg, NULL);
+  ret = cxd56_sdio_writeb_internal(sf0, SDIO_CCCR_INTEN, reg, NULL);
   if (ret)
     {
-      cxd56_sdio_writeb_internal(sf0, SDIO_CCCR_INT_ENABLE, regorg, NULL);
+      cxd56_sdio_writeb_internal(sf0, SDIO_CCCR_INTEN, regorg, NULL);
       goto REG_IRQ_FAIL;
     }
   sem_post(&priv->sc.sem);
@@ -3580,7 +3543,7 @@ static int cxd56_sdio_register_irq(FAR struct sdio_dev_s *dev, int func_num,
 
 REG_IRQ_FAIL:
   sf->irq_callback = NULL;
-  fdbg("ERROR: Ret: %d\n", ret);
+  mcerr("ERROR: Ret: %d\n", ret);
   sem_post(&priv->sc.sem);
   return ret;
 }
@@ -3633,7 +3596,7 @@ static int cxd56_sdio_func_ready(FAR struct sdio_function_s * sf)
 
   sc = sf->sc;
   sf0 = sc->fn[0];
-  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_FN_READY, &rv);
+  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_IORDY, &rv);
   if (0 == ret)
     {
       return (rv & (1 << sf->number)) != 0;
@@ -3663,17 +3626,17 @@ static int cxd56_sdio_function_disable(FAR struct sdio_dev_s *dev, int func_num)
 
   sf = priv->sc.fn[func_num];
   sf0 = priv->sc.fn[0];
-  fvdbg("I/O func's num:%d\n", sf->number);
+  mcinfo("I/O func's num:%d\n", sf->number);
 
   cxd56_sdio_takesem(priv);
-  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_FN_ENABLE, &rv);
+  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_IOEN, &rv);
   if (ret)
     {
       goto FUNC_DIS_ERR;
     }
 
   rv &= ~(1 << sf->number);
-  ret = cxd56_sdio_writeb_internal(sf0, SDIO_CCCR_FN_ENABLE, rv, NULL);
+  ret = cxd56_sdio_writeb_internal(sf0, SDIO_CCCR_IOEN, rv, NULL);
   if (ret)
     {
       goto FUNC_DIS_ERR;
@@ -3681,7 +3644,7 @@ static int cxd56_sdio_function_disable(FAR struct sdio_dev_s *dev, int func_num)
   sem_post(&priv->sc.sem);
   return 0;
 FUNC_DIS_ERR:
-  fdbg("ERROR: Io fail ret %u\n", ret);
+  mcerr("ERROR: Io fail ret %u\n", ret);
   sem_post(&priv->sc.sem);
   return ret;
 }
@@ -3709,20 +3672,20 @@ static int cxd56_sdio_function_enable(FAR struct sdio_dev_s *dev, int func_num)
 
   sf = priv->sc.fn[func_num];
   sf0 = priv->sc.fn[0];
-  fvdbg("I/O func's num:%d\n", sf->number);
+  mcinfo("I/O func's num:%d\n", sf->number);
   if (sf->number == 0)
     {
       return 0;
     }
   cxd56_sdio_takesem(priv);
-  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_FN_ENABLE, &rv);
+  ret = cxd56_sdio_readb_internal(sf0, SDIO_CCCR_IOEN, &rv);
   if (ret)
     {
       goto FUNC_EN_ERR;
     }
   rv |= (1 << sf->number);
   /* according to sdio_rw_direct(), set NULL to rdata */
-  ret = cxd56_sdio_writeb_internal(sf0, SDIO_CCCR_FN_ENABLE, rv, NULL);
+  ret = cxd56_sdio_writeb_internal(sf0, SDIO_CCCR_IOEN, rv, NULL);
   if (ret)
     {
       goto FUNC_EN_ERR;
@@ -3741,7 +3704,7 @@ static int cxd56_sdio_function_enable(FAR struct sdio_dev_s *dev, int func_num)
       return 0;
     }
 FUNC_EN_ERR:
-  fdbg("ERROR: Io fail ret %u\n", ret);
+  mcerr("ERROR: Io fail ret %u\n", ret);
   sem_post(&priv->sc.sem);
   return -EIO;
 }
@@ -3829,7 +3792,7 @@ static int cxd56_sdio_write(FAR struct sdio_dev_s *dev, int func_num, uint32_t a
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)dev;
 
   sf = priv->sc.fn[func_num];
-  printf("sf->number = %d\n", sf->number);
+  mcinfo("sf->number = %d\n", sf->number);
   /* Do the bulk of the transfer using block mode (if supported). */
   cxd56_sdio_takesem(priv);
   if (size >= SDIO_BLOCK_SIZE)
@@ -3847,7 +3810,7 @@ static int cxd56_sdio_write(FAR struct sdio_dev_s *dev, int func_num, uint32_t a
               ret = cxd56_sdio_dmasendsetup(&priv->dev, data, size);
               if (ret != OK)
                 {
-                  fdbg("ERROR: SDIO_DMASENDSETUP: error %d\n", ret);
+                  mcerr("ERROR: SDIO_DMASENDSETUP: error %d\n", ret);
                   goto WRITE_ERR;
                 }
             }
@@ -3860,13 +3823,13 @@ static int cxd56_sdio_write(FAR struct sdio_dev_s *dev, int func_num, uint32_t a
           ret = cxd56_sdio_sendcmdpoll(priv, SDIO_ACMD53 | MMCSD_MULTIBLOCK | MMCSD_WRDATAXFR, cmd53arg);
           if (ret != OK)
             {
-              fdbg("ERROR: Send cmd53 error\n");
+              mcerr("ERROR: Send cmd53 error\n");
               goto WRITE_ERR;
             }
           wkupevent = cxd56_sdio_eventwait(&priv->dev, SDIO_BLOCK_TIMEOUT * blocks);
           if ((wkupevent & (SDIOWAIT_TIMEOUT | SDIOWAIT_ERROR)) != 0)
             {
-              fdbg("ERROR: Sdio write time out %x\n", wkupevent);
+              mcerr("ERROR: Sdio write time out %x\n", wkupevent);
               goto WRITE_TIME_OUT;
             }
           remainder -= size;
@@ -3887,7 +3850,7 @@ static int cxd56_sdio_write(FAR struct sdio_dev_s *dev, int func_num, uint32_t a
           ret = cxd56_sdio_dmasendsetup(&priv->dev, data, size);
           if (ret != OK)
             {
-              fdbg("ERROR: SDIO_DMASENDSETUP: error %d\n", ret);
+              mcerr("ERROR: SDIO_DMASENDSETUP: error %d\n", ret);
               goto WRITE_ERR;
             }
         }
@@ -3900,13 +3863,13 @@ static int cxd56_sdio_write(FAR struct sdio_dev_s *dev, int func_num, uint32_t a
       ret = cxd56_sdio_sendcmdpoll(priv, SDIO_ACMD53 | MMCSD_WRDATAXFR, cmd53arg);
       if (ret != OK)
         {
-          fdbg("ERROR: Send cmd53 error\n");
+          mcerr("ERROR: Send cmd53 error\n");
           goto WRITE_ERR;
         }
       wkupevent = cxd56_sdio_eventwait(&priv->dev, SDIO_BLOCK_TIMEOUT);
       if ((wkupevent & (SDIOWAIT_TIMEOUT | SDIOWAIT_ERROR)) != 0)
         {
-          fdbg("ERROR: Sdio write time out %x\n", wkupevent);
+          mcerr("ERROR: Sdio write time out %x\n", wkupevent);
           goto WRITE_TIME_OUT;
         }
       remainder -= size;
@@ -3950,7 +3913,7 @@ static int cxd56_sdio_read(FAR struct sdio_dev_s *dev, int func_num, uint32_t ad
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)dev;
 
   sf = priv->sc.fn[func_num];
-  printf("sf->number = %d\n", sf->number);
+  mcinfo("sf->number = %d\n", sf->number);
   /* Do the bulk of the transfer using block mode (if supported). */
   cxd56_sdio_takesem(priv);
   if (size >= SDIO_BLOCK_SIZE)
@@ -3968,7 +3931,7 @@ static int cxd56_sdio_read(FAR struct sdio_dev_s *dev, int func_num, uint32_t ad
               ret = cxd56_sdio_dmarecvsetup(&priv->dev, data, size);
               if (ret != OK)
                 {
-                  fdbg("ERROR: SDIO_DMASENDSETUP: error %d\n", ret);
+                  mcerr("ERROR: SDIO_DMASENDSETUP: error %d\n", ret);
                   goto READ_ERR;
                 }
             }
@@ -3981,13 +3944,13 @@ static int cxd56_sdio_read(FAR struct sdio_dev_s *dev, int func_num, uint32_t ad
           ret = cxd56_sdio_sendcmdpoll(priv, SDIO_ACMD53 | MMCSD_MULTIBLOCK | MMCSD_RDDATAXFR, cmd53arg);
           if (ret != OK)
             {
-              fdbg("ERROR: Send cmd53 error\n");
+              mcerr("ERROR: Send cmd53 error\n");
               goto READ_ERR;
             }
           wkupevent = cxd56_sdio_eventwait(&priv->dev, SDIO_BLOCK_TIMEOUT * blocks);
           if ((wkupevent & (SDIOWAIT_TIMEOUT | SDIOWAIT_ERROR)) != 0)
             {
-              fdbg("ERROR: Sdio read time out %x\n", wkupevent);
+              mcerr("ERROR: Sdio read time out %x\n", wkupevent);
               goto READ_TIME_OUT;
             }
           remainder -= size;
@@ -4008,7 +3971,7 @@ static int cxd56_sdio_read(FAR struct sdio_dev_s *dev, int func_num, uint32_t ad
           ret = cxd56_sdio_dmarecvsetup(&priv->dev, data, size);
           if (ret != OK)
             {
-              fdbg("ERROR: SDIO_DMASENDSETUP: error %d\n", ret);
+              mcerr("ERROR: SDIO_DMASENDSETUP: error %d\n", ret);
               goto READ_ERR;
             }
         }
@@ -4021,13 +3984,13 @@ static int cxd56_sdio_read(FAR struct sdio_dev_s *dev, int func_num, uint32_t ad
       ret = cxd56_sdio_sendcmdpoll(priv, SDIO_ACMD53 | MMCSD_RDDATAXFR, cmd53arg);
       if (ret != OK)
         {
-          fdbg("ERROR: Send cmd53 error\n");
+          mcerr("ERROR: Send cmd53 error\n");
           goto READ_ERR;
         }
       wkupevent = cxd56_sdio_eventwait(&priv->dev, SDIO_BLOCK_TIMEOUT);
       if ((wkupevent & (SDIOWAIT_TIMEOUT | SDIOWAIT_ERROR)) != 0)
         {
-          fdbg("ERROR: Sdio read time out %x\n", wkupevent);
+          mcerr("ERROR: Sdio read time out %x\n", wkupevent);
           goto READ_TIME_OUT;
         }
       remainder -= size;
@@ -4094,17 +4057,17 @@ static int cxd56_sdio_initialize(struct cxd56_sdiodev_s *priv)
       ret = cxd56_sdio_recvshort(&priv->dev, SDIO_CMD5, &response);
       if (ret != OK)
         {
-          fdbg("ERROR: Recv R4 error\n");
+          mcerr("ERROR: Recv R4 error\n");
           return ret;
         }
     }
   else
     {
-      fdbg("ERROR: Send cmd5 error\n");
+      mcerr("ERROR: Send cmd5 error\n");
       return ret;
     }
-  fvdbg("response = 0x%x, card has %d function\n", response, (response >> 28) & 7);
-  fvdbg("send cmd5 again to set card ready\n");
+  mcinfo("response = 0x%x, card has %d function\n", response, (response >> 28) & 7);
+  mcinfo("send cmd5 again to set card ready\n");
   if (response != 0xffffffff)
     {
       do
@@ -4118,10 +4081,10 @@ static int cxd56_sdio_initialize(struct cxd56_sdiodev_s *priv)
         }
       while ((response == 0xffffffff) ||
                 ((response & 0x80000000) == 0));
-      fvdbg("response = 0x%x, card is ready(MSB=1)\n", response);
+      mcinfo("response = 0x%x, card is ready(MSB=1)\n", response);
       priv->sc.func_num = SDIO_OCR_NUM_FUNCTIONS(response) + 1;
     }
-  fvdbg("send CMD3 to enter standby state\n");
+  mcinfo("send CMD3 to enter standby state\n");
   cxd56_sdio_sendcmdpoll(priv, SD_CMD3, 0);
   ret = cxd56_sdio_recvshortcrc(&priv->dev, SD_CMD3, &response);
   if (ret != OK)
@@ -4129,20 +4092,20 @@ static int cxd56_sdio_initialize(struct cxd56_sdiodev_s *priv)
       return ret;
     }
 
-  fvdbg("RCA: 0x%x\n", (response >> 16));
+  mcinfo("RCA: 0x%x\n", (response >> 16));
   if (response & 0xffff)
     {
-      fdbg("ERROR: CMD3 resp error: 0x%x\n", (response & 0xffff));
+      mcerr("ERROR: CMD3 resp error: 0x%x\n", (response & 0xffff));
       if (response & 0x8000)
-        fdbg("ERROR: CRC error on previous command\n");
+        mcerr("ERROR: CRC error on previous command\n");
     }
 
   cxd56_sdio_sendcmdpoll(priv, MMCSD_CMD7S, response & 0xffff0000);
-  fvdbg("send cmd7(RCA:%x, %x) OK\n", (response >> 16), response & 0xffff0000);
+  mcinfo("send cmd7(RCA:%x, %x) OK\n", (response >> 16), response & 0xffff0000);
   ret = cxd56_sdio_recvshortcrc(&priv->dev, MMCSD_CMD7S, &response);
   if (ret != OK)
     {
-      fdbg("ERROR: mmcsd_recvR1 for CMD7 failed: %d\n", ret);
+      mcerr("ERROR: mmcsd_recvR1 for CMD7 failed: %d\n", ret);
       return ret;
     }
 
@@ -4154,17 +4117,17 @@ static int cxd56_sdio_initialize(struct cxd56_sdiodev_s *priv)
       ret = cxd56_sdio_recvshort(&priv->dev, SDIO_ACMD52, &response);
       if (ret != OK)
         {
-          fdbg("ERROR: Addr:0x7, recv R5 error\n");
+          mcerr("ERROR: Addr:0x7, recv R5 error\n");
           return ret;
         }
-      fvdbg("Bus interface ctrl (@0x7):0x%x\n", response);
+      mcinfo("Bus interface ctrl (@0x7):0x%x\n", response);
       // 0x80: CD disable = 1, we should set it be true before issue CMD53
       cxd56_sdio_sendcmdpoll(priv, SDIO_ACMD52, 0x7<<9 | (response & 0xFF) | 0x80);
-      fvdbg("set CD disable = 1\n");
+      mcinfo("set CD disable = 1\n");
     }
   else
     {
-      fdbg("ERROR: Send cmd52 addr:0x7 error\n");
+      mcerr("ERROR: Send cmd52 addr:0x7 error\n");
       return ret;
     }
 
@@ -4174,12 +4137,12 @@ static int cxd56_sdio_initialize(struct cxd56_sdiodev_s *priv)
       cxd56_sdio_recvshort(&priv->dev, SDIO_ACMD52, &response);
       if (ret != OK)
         {
-          fdbg("ERROR: Addr:0x8, recv R5 error\n");
+          mcerr("ERROR: Addr:0x8, recv R5 error\n");
           return ret;
         }
-      fvdbg("Card capability(@0x8):0x%x\n", response);
+      mcinfo("Card capability(@0x8):0x%x\n", response);
 
-      fvdbg("It's a %s card\n", (response & 0x40)? "low speed": "full speed");
+      mcinfo("It's a %s card\n", (response & 0x40)? "low speed": "full speed");
       if ((response & 0x40) == 0)
         {
           priv->sc.full_speed = true;
@@ -4187,17 +4150,19 @@ static int cxd56_sdio_initialize(struct cxd56_sdiodev_s *priv)
     }
   else
     {
-      fdbg("ERROR: Send cmd52 addr:0x8 error\n");
+      mcerr("ERROR: Send cmd52 addr:0x8 error\n");
       return ret;
     }
 
-  fvdbg("func_num = %d\n", priv->sc.func_num);
+  mcinfo("func_num = %d\n", priv->sc.func_num);
   for (i = 0; i < priv->sc.func_num; i++)
     {
       fn = cxd56_sdio_function_alloc(&priv->sc);
       if (!fn)
-        goto SDIO_INIT_ERR;
-        fn->number = i;
+        {
+          goto SDIO_INIT_ERR;
+        }
+      fn->number = i;
 
       priv->sc.fn[i] = fn;
     }
@@ -4207,7 +4172,7 @@ static int cxd56_sdio_initialize(struct cxd56_sdiodev_s *priv)
       fn = priv->sc.fn[i];
       if (cxd56_sdio_read_cis(fn, &fn->cis) != 0)
         {
-          fdbg("ERROR: Can't read CIS\n");
+          mcerr("ERROR: Can't read CIS\n");
           goto SDIO_INIT_CIS_ERR;
         }
     }
@@ -4217,19 +4182,19 @@ static int cxd56_sdio_initialize(struct cxd56_sdiodev_s *priv)
       uint8_t bus_ctrl;
 
       /* enable 4-bits bus */
-      cxd56_sdio_readb_internal(priv->sc.fn[0], SDIO_CCCR_BUS_WIDTH, &bus_ctrl);
+      cxd56_sdio_readb_internal(priv->sc.fn[0], SDIO_CCCR_BUS_IF, &bus_ctrl);
       bus_ctrl = (bus_ctrl & ~0x3) | 0x2;
-      cxd56_sdio_writeb_internal(priv->sc.fn[0], SDIO_CCCR_BUS_WIDTH, bus_ctrl, &bus_ctrl);
+      cxd56_sdio_writeb_internal(priv->sc.fn[0], SDIO_CCCR_BUS_IF, bus_ctrl, &bus_ctrl);
 
       if ((bus_ctrl & 0x3) == 2)
         {
-          fvdbg("Set card to 4-bits mode\n");
+          mcinfo("Set card to 4-bits mode\n");
           cxd56_sdio_widebus(&priv->dev, true);
-          fvdbg("Set controller to 4-bits mode\n");
+          mcinfo("Set controller to 4-bits mode\n");
         }
       else
         {
-          fvdbg("Failed to enter 4-bits mode\n");
+          mcinfo("Failed to enter 4-bits mode\n");
         }
     }
 
@@ -4241,6 +4206,7 @@ SDIO_INIT_ERR:
 SDIO_INIT_CIS_ERR:
   return -EIO;
 }
+#endif /* CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION */
 
 /****************************************************************************
  * Public Functions
@@ -4273,63 +4239,15 @@ FAR struct sdio_dev_s *cxd56_sdhci_initialize(int slotno)
   DEBUGASSERT(slotno == 0);
 
   /* Initalize the pins */
-#ifdef SYSEVA_SP_SDCHOST
-  /* for IO Power */
-  CXD56_PIN_CONFIGS(PINCONFS_UART2_GPIO);
-  cxd56_gpio_config(PIN_UART2_TXD,PINCONF_INPUT_DISABLE);
-  cxd56_gpio_config(PIN_UART2_RXD,PINCONF_INPUT_DISABLE);
-  cxd56_gpio_config(PIN_UART2_RTS,PINCONF_INPUT_DISABLE);
-#endif
-  /* for SDIO */
-  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_SDCARD);
-#ifndef CONFIG_CXD56_SDIO_DISABLE_CD_WP
-  CXD56_PIN_CONFIGS(PINCONFS_SDIOB_SDCARD);
-#endif
-  //CXD56_PIN_CONFIGS(PINCONFS_SDIOB_GPIO);
-  CXD56_PIN_CONFIGS(PINCONFS_SDIOC_SDIO);
-  CXD56_PIN_CONFIGS(PINCONFS_SDIOD_SDIO);
-  up_mdelay(100);
 
-  /* Power OFF for SDCARD */
-#ifdef SYSEVA_SP_SDCHOST
-  /* Disable levelshifter */
-  cxd56_gpio_write(PIN_UART2_RXD, 0); // SDIO_VLTEN  (GP_UART2_RXD)  1:Enable / 0:Disable
-  up_mdelay(100);
-  /* Set 3.3V */
-  cxd56_gpio_write(PIN_UART2_TXD, 0); // SDIO_VLTSEL (GP_UART2_TXD)  L:3.3V / H:1.8V
-  up_mdelay(100);
-  /* Power OFF */
-  cxd56_gpio_write(PIN_UART2_RTS, 0); // SDIO_CRDPWR (GP_UART2_RTS)  H:3.3V ON / L
-#endif
+  board_sdcard_initialize();
 
-#ifndef CONFIG_CXD56_SDIO_DISABLE_CD_WP
-  /* SDIO_WP */
-  if (PINCONF_GET_MODE(PIN_SDIO_WP) == PINCONF_MODE0)
-    {
-      /* Write Enable */
-      putreg32(getreg32(CXD56_TOPREG_IOFIX_APP) & ~(0x1 << 1) , CXD56_TOPREG_IOFIX_APP);
-    }
-  /* SDIO_CD */
-  if ((PINCONF_GET_MODE(PIN_SDIO_CD) == PINCONF_MODE0) && PINCONF_INPUT_ENABLED(PIN_SDIO_CD))
-    {
-      /* Detect Card */
-      if (cxd56_gpio_read(PIN_SDIO_CD))
-        {
-          putreg32(getreg32(CXD56_TOPREG_IOFIX_APP) | 0x00000001 , CXD56_TOPREG_IOFIX_APP);
-        }
-    }
-#else
-  /* CD pin disable */
-  regval = getreg32(CXD56_TOPREG_IOFIX_APP);
-  regval &= ~(0x1UL);
-  putreg32(regval, CXD56_TOPREG_IOFIX_APP);
-#endif
-
-  /* Enable clocking to the SDHC module.  Clocking is still diabled in
+  /* Enable clocking to the SDHC module.  Clocking is still disabled in
    * the SYSCTRL register.
    */
 
   cxd56_sdio_clock_enable();
+
   //putreg32(getreg32(CXD56_SDHCI_BASE+0x230) >> 3 ,CXD56_SDHCI_BASE+0x230);
   putreg32(getreg32(CXD56_SDHCI_SYSCTL) | SDHCI_SYSCTL_ICLKEN, CXD56_SDHCI_SYSCTL);
 
@@ -4337,9 +4255,9 @@ FAR struct sdio_dev_s *cxd56_sdhci_initialize(int slotno)
   regval = getreg32(CXD56_SDHCI_VENDSPEC);
   putreg32(regval | 0x00000040, CXD56_SDHCI_VENDSPEC);
 
-  /* sel_sdclki bit[20] */
-  regval = getreg32(CXD56_SDHCI_USERDEF2CTL);
-  putreg32(regval | (0x1 << 20), CXD56_SDHCI_USERDEF2CTL);
+  /* Configure the pins */
+
+  board_sdcard_configuraton();
 
   /* Software reset */
   regval = getreg32(CXD56_SDHCI_SYSCTL);
@@ -4350,14 +4268,19 @@ FAR struct sdio_dev_s *cxd56_sdhci_initialize(int slotno)
 
   cxd56_sdio_sdhci_reset(&(priv->dev));
 
+#ifdef CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION
   /* Power ON for SDIO */
+
   regval = getreg32(CXD56_SDHCI_PROCTL);
   regval |= 0xf << 8;
   putreg32(regval, CXD56_SDHCI_PROCTL);
 
   up_mdelay(25);
+
   /* SD clock enable */
+
   cxd56_sdio_clock(&(priv->dev), CLOCK_IDMODE);
+#endif /* CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION */
 
 #ifdef CONFIG_SDIO_DMA
   for(i=0;i<sizeof(cxd56_sdhci_adma_dscr) / sizeof(cxd56_sdhci_adma_dscr[0]);i++)
@@ -4375,7 +4298,9 @@ FAR struct sdio_dev_s *cxd56_sdhci_initialize(int slotno)
 
 #endif
 
+#ifdef CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION
   cxd56_sdio_initialize(priv);
+#endif /* CONFIG_CXD56_SDIO_ENABLE_MULTIFUNCTION */
 
   /* In addition to the system clock, the SDHC module needs a clock for the
    * base for the external card clock.  There are four possible sources for
@@ -4409,7 +4334,7 @@ FAR struct sdio_dev_s *cxd56_sdhci_initialize(int slotno)
 void cxd56_sdhci_mediachange(FAR struct sdio_dev_s *dev)
 {
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)dev;
-  uint8_t cdstatus;
+  sdio_statset_t cdstatus;
   irqstate_t flags;
   uint8_t mediachange = 0;
   uint32_t timeout = SDHCI_CARDSTATETIMEOUT;
@@ -4440,7 +4365,7 @@ void cxd56_sdhci_mediachange(FAR struct sdio_dev_s *dev)
       priv->cdstatus &= ~SDIO_STATUS_PRESENT;
     }
 
-  fvdbg("cdstatus OLD: %02x NEW: %02x\n", cdstatus, priv->cdstatus);
+  mcinfo("cdstatus OLD: %02x NEW: %02x\n", cdstatus, priv->cdstatus);
 
   /* Perform any requested callback if the status has changed */
 
@@ -4492,7 +4417,7 @@ void cxd56_sdhci_wrprotect(FAR struct sdio_dev_s *dev, bool wrprotect)
       priv->cdstatus &= ~SDIO_STATUS_WRPROTECTED;
     }
 
-  fvdbg("cdstatus: %02x\n", priv->cdstatus);
+  mcinfo("cdstatus: %02x\n", priv->cdstatus);
   leave_critical_section(flags);
 }
 #endif /* CONFIG_CXD56_SDIO */

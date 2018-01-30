@@ -74,9 +74,26 @@ config CXD56_EMMC
 config CXD56_SDIO
 	bool "SDIO"
 	default n
-	depends on CXD56_FCBGA
+	select ARCH_HAVE_SDIO
 
-if CXD56_SDIO
+menu "SDIO Configuration"
+	depends on CXD56_SDIO
+
+config CXD56_SDIO_DMA
+	bool "Support DMA data transfers"
+	default y
+	select SDIO_DMA
+	---help---
+		Support DMA data transfers.
+		Enable SD card DMA data transfers.  This is marginally optional.
+		For most usages, SD accesses will cause data overruns if used without
+		DMA.
+
+config CXD56_SDIO_WIDTH_D1_ONLY
+	bool "Use D1 only"
+	default n
+	---help---
+		Select 1-bit transfer mode.  Default: 4-bit transfer mode.
 
 config CXD56_SDIO_DISABLE_CD_WP
 	bool "Disable the CD and WP pin for SDIO"
@@ -85,7 +102,13 @@ config CXD56_SDIO_DISABLE_CD_WP
 		Disable the CD and WP pin for Embedded SDIO.If the CD pin is not disable,
 		the SDIO initialization will be failed.
 
-endif # CXD56_SDIO
+config CXD56_SDIO_ENABLE_MULTIFUNCTION
+	bool "Enable SDIO multi-function"
+	default n
+	---help---
+		Support multi-function with SDIO interfaced peripheral other than SD Card.
+
+endmenu # SDIO Configuration
 
 config CXD56_SCU
 	bool "Sensor Control Unit Support"
