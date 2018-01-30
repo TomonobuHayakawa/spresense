@@ -96,6 +96,19 @@ int cxd56_geofenceinitialize(FAR const char *devpath);
 #endif
 
 /****************************************************************************
+ * Name: cxd56_alt1160initialize
+ *
+ * Description:
+ *   Called to configure an SPI and to register ALT1160
+ *   for the spresense board.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_MODEM_ALT_1160
+int cxd56_alt1160initialize(FAR const char *devpath, FAR struct spi_dev_s* spi);
+#endif
+
+/****************************************************************************
  * Name: cxd56_lpm013m091a_initialize
  *
  * Description:

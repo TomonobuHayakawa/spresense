@@ -48,6 +48,10 @@
 #  include <nuttx/irq.h>
 #endif
 
+#if defined(CONFIG_MODEM_ALT_1160) && defined(CONFIG_CXD56_GPIO_IRQ)
+#  include <nuttx/irq.h>
+#endif
+
 #if defined(CONFIG_BOARDCTL_IOCTL) && defined(CONFIG_USBDEV)
 #  include <arch/chip/usbdev.h>
 #endif
@@ -217,9 +221,35 @@ enum board_power_device {
 
   POWER_AUDIO_AVDD      = PMIC_GPO(0),
   POWER_AUDIO_MUTE      = PMIC_GPO(6),
+  POWER_LTE             = PMIC_NONE,
   POWER_IMAGE_SENSOR    = PMIC_GPO(4) | PMIC_GPO(5) | PMIC_GPO(7),
 
 };
+
+/* Alt1160 modem gpio definitions *******************************************/
+
+#if defined(CONFIG_MODEM_ALT_1160) && defined(CONFIG_CXD56_GPIO_IRQ)
+
+/* definitions of gpio pin number */
+
+#  define ALT1160_GPIO_MODEM_WAKEUP            (0)
+#  define ALT1160_GPIO_MASTER_REQ              (1)
+#  define ALT1160_GPIO_SLAVE_REQ               (2)
+
+/* definitions of gpio interrupt polarity */
+
+#  define ALT1160_GPIOINT_LEVEL_HIGH           (0)
+#  define ALT1160_GPIOINT_LEVEL_LOW            (1)
+#  define ALT1160_GPIOINT_EDGE_RISE            (2)
+#  define ALT1160_GPIOINT_EDGE_FALL            (3)
+#  define ALT1160_GPIOINT_EDGE_BOTH            (4)
+
+/* definitions of gpio interrupt noise filter */
+
+#  define ALT1160_GPIOINT_NOISE_FILTER_ENABLE  (0)
+#  define ALT1160_GPIOINT_NOISE_FILTER_DISABLE (1)
+
+#endif
 
 /* CXD5247 power control definitions *******************************************/
 
@@ -370,6 +400,61 @@ int board_external_amp_mute_control(bool en);
  ****************************************************************************/
 
 bool board_external_amp_mute_monitor(void);
+
+#if defined(CONFIG_MODEM_ALT_1160) && defined(CONFIG_CXD56_GPIO_IRQ)
+
+/****************************************************************************
+ * Name: board_alt1160_power_control
+ *
+ * Description:
+ *   Power on/off the alt1160 device on the board.
+ *
+ ****************************************************************************/
+
+void board_alt1160_power_control(bool en);
+
+/****************************************************************************
+ * Name: board_alt1160_gpio_write
+ *
+ * Description:
+ *   Write GPIO pin.
+ *
+ ****************************************************************************/
+
+void board_alt1160_gpio_write(uint32_t pin, bool value);
+
+/****************************************************************************
+ * Name: board_alt1160_gpio_read
+ *
+ * Description:
+ *   Read GPIO pin.
+ *
+ ****************************************************************************/
+
+bool board_alt1160_gpio_read(uint32_t pin);
+
+/****************************************************************************
+ * Name: board_alt1160_gpio_irq
+ *
+ * Description:
+ *   Register GPIO irq.
+ *
+ ****************************************************************************/
+
+void board_alt1160_gpio_irq(uint32_t pin, uint32_t polarity,
+                            uint32_t noise_filter, xcpt_t irqhandler);
+
+/****************************************************************************
+ * Name: board_alt1160_gpio_int_control
+ *
+ * Description:
+ *   Enable or disable GPIO interrupt.
+ *
+ ****************************************************************************/
+
+void board_alt1160_gpio_int_control(uint32_t pin, bool en);
+
+#endif
 
 /****************************************************************************
  * Name: board_sdcard_initialize

@@ -52,6 +52,7 @@
 
 #include "chip.h"
 #include "spresense.h"
+#include "cxd56_spi.h"
 #include "cxd56_i2c.h"
 #include "cxd56_sysctl.h"
 #include "cxd56_powermgr.h"
@@ -264,6 +265,9 @@ int board_app_initialize(uintptr_t arg)
 #ifdef CONFIG_CXD56_I2C2
   FAR struct i2c_master_s *i2c2;
 #endif
+#ifdef CONFIG_CXD56_SPI5
+  FAR struct spi_dev_s *spi5;
+#endif
 #ifdef CONFIG_CXD56_SDIO
   FAR struct sdio_dev_s *sdhci0;
   struct stat stat_sdio;
@@ -305,6 +309,19 @@ int board_app_initialize(uintptr_t arg)
 
 #ifdef CONFIG_CXD56_SCU
   scu_initialize();
+#endif
+
+#ifdef CONFIG_CXD56_SPI5
+  /* globally initialize spi bus for peripherals */
+  spi5 = cxd56_spibus_initialize(5);
+  if (!spi5)
+  {
+    _err("ERROR: Failed to initialize spi bus.\n");
+    return -ENODEV;
+  }
+#ifdef HAVE_SPITOOL
+  cxd56_spi_register(spi5, 5);
+#endif
 #endif
 
 #ifdef CONFIG_FS_PROCFS
@@ -351,6 +368,14 @@ int board_app_initialize(uintptr_t arg)
   if (ret < 0)
     {
       _err("ERROR: Failed to initialze geofence. \n");
+    }
+#endif
+
+#ifdef CONFIG_MODEM_ALT_1160
+  ret = cxd56_alt1160initialize("/dev/alt1160", spi5);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialize Alt1160.\n");
     }
 #endif
 
