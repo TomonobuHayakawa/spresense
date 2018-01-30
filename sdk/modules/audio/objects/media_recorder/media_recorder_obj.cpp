@@ -234,7 +234,7 @@ uint32_t VoiceRecorderObjectTask::loadCodec(AudioCodec codec,
     }
   else if (codec == AudCodecXAVCLPCM)
     {
-      if (sampling_rate != AS_INITREC_SAMPLING_48K)
+      if (sampling_rate != AS_SAMPLINGRATE_48000)
         {
           rst = AS_filter_activate(SRCOnly,s_apu_dtq,s_apu_pool_id,dsp_inf);
           if (rst != AS_ECODE_OK)
@@ -265,7 +265,7 @@ bool VoiceRecorderObjectTask::unloadCodec(void)
         }
     }
   else if ((m_codec_type == AudCodecXAVCLPCM) &&
-    (m_sampling_rate != AS_INITREC_SAMPLING_48K))
+    (m_sampling_rate != AS_SAMPLINGRATE_48000))
     {
       if(!AS_filter_deactivate(SRCOnly))
         {
@@ -540,7 +540,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
 
   m_channel_num   = cmd.init_recorder_param.channel_number;
   m_pcm_bit_width =
-    ((cmd.init_recorder_param.bit_length == AS_INITREC_BITLENGTH_16) ?
+    ((cmd.init_recorder_param.bit_length == AS_BITLENGTH_16) ?
       AudPcm16Bit : AudPcm24Bit);
   m_pcm_byte_len  = ((m_pcm_bit_width == AudPcm16Bit) ? 2 : 4);
   m_bit_rate      = cmd.init_recorder_param.bitrate;
@@ -580,8 +580,8 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
   else
     {
       if (m_codec_type == AudCodecXAVCLPCM &&
-          (m_sampling_rate == AS_INITREC_SAMPLING_16K &&
-           cmd.init_recorder_param.sampling_rate == AS_INITREC_SAMPLING_48K))
+          (m_sampling_rate == AS_SAMPLINGRATE_16000 &&
+           cmd.init_recorder_param.sampling_rate == AS_SAMPLINGRATE_48000))
         {
           if (!unloadCodec())
             {
@@ -599,9 +599,9 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
         }
 
       if (m_codec_type == AudCodecXAVCLPCM &&
-          (m_sampling_rate == AS_INITREC_SAMPLING_48K &&
+          (m_sampling_rate == AS_SAMPLINGRATE_48000 &&
             cmd.init_recorder_param.sampling_rate ==
-              AS_INITREC_SAMPLING_16K))
+              AS_SAMPLINGRATE_16000))
         {
           uint32_t dsp_inf = 0;
           rst = loadCodec(static_cast<AudioCodec>
@@ -682,7 +682,7 @@ void VoiceRecorderObjectTask::startOnReady(MsgPacket *msg)
       filter_param.init_src_param.input_pcm_byte_length  = m_pcm_byte_len;
       filter_param.init_src_param.output_pcm_byte_length = m_pcm_byte_len;
       filter_param.callback                              = src_done_callback;
-      if (m_sampling_rate != AS_INITREC_SAMPLING_48K)
+      if (m_sampling_rate != AS_SAMPLINGRATE_48000)
         {
           apu_result = AS_filter_init(filter_param, &dsp_inf);
           result = AS_filter_recv_done();
@@ -807,7 +807,7 @@ void VoiceRecorderObjectTask::filterDoneOnRec(MsgPacket *msg)
 {
   SrcFilterCompCmpltParam filter_result =
     msg->moveParam<SrcFilterCompCmpltParam>();
-  if (m_sampling_rate != AS_INITREC_SAMPLING_48K)
+  if (m_sampling_rate != AS_SAMPLINGRATE_48000)
     {
       AS_filter_recv_done();
     }
@@ -824,7 +824,7 @@ void VoiceRecorderObjectTask::filterDoneOnStop(MsgPacket *msg)
 {
   SrcFilterCompCmpltParam filter_result =
     msg->moveParam<SrcFilterCompCmpltParam>();
-  if (m_sampling_rate != AS_INITREC_SAMPLING_48K)
+  if (m_sampling_rate != AS_SAMPLINGRATE_48000)
     {
       AS_filter_recv_done();
     }
@@ -877,7 +877,7 @@ void VoiceRecorderObjectTask::filterDoneOnOverflow(MsgPacket *msg)
 {
   SrcFilterCompCmpltParam filter_result =
     msg->moveParam<SrcFilterCompCmpltParam>();
-  if (m_sampling_rate != AS_INITREC_SAMPLING_48K)
+  if (m_sampling_rate != AS_SAMPLINGRATE_48000)
     {
       AS_filter_recv_done();
     }
@@ -1114,7 +1114,7 @@ void VoiceRecorderObjectTask::execEnc(void* p_pcm, uint32_t pcm_size)
 {
   if (m_codec_type == AudCodecXAVCLPCM)
     {
-      if (m_sampling_rate != AS_INITREC_SAMPLING_48K)
+      if (m_sampling_rate != AS_SAMPLINGRATE_48000)
         {
           FilterComponentParam param;
           param.filter_type = Apu::SRC;
@@ -1173,7 +1173,7 @@ void VoiceRecorderObjectTask::stopEnc(void)
 {
   if (m_codec_type == AudCodecXAVCLPCM)
     {
-      if (m_sampling_rate != AS_INITREC_SAMPLING_48K)
+      if (m_sampling_rate != AS_SAMPLINGRATE_48000)
         {
           FilterComponentParam param;
           param.filter_type = Apu::SRC;
@@ -1290,15 +1290,15 @@ uint32_t VoiceRecorderObjectTask::isValidInitParam(
   uint32_t rst = AS_ECODE_OK;
   switch(cmd.init_recorder_param.codec_type)
     {
-      case AS_INITREC_MP3:
+      case AS_CODECTYPE_MP3:
         rst = isValidInitParamMP3(cmd);
         break;
 
-      case AS_INITREC_WAV:
+      case AS_CODECTYPE_WAV:
         rst = isValidInitParamWAV(cmd);
         break;
 
-      case AS_INITREC_OPUS:
+      case AS_CODECTYPE_OPUS:
         rst = isValidInitParamOPUS(cmd);
         break;
 
@@ -1315,14 +1315,14 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
 {
   switch(cmd.init_recorder_param.channel_number)
     {
-      case AS_INITREC_CHNL_MONO:
+      case AS_CHANNEL_MONO:
         if (m_input_device == CaptureDeviceI2S)
           {
             return AS_ECODE_COMMAND_PARAM_INPUT_DEVICE;
           }
         break;
 
-      case AS_INITREC_CHNL_STEREO:
+      case AS_CHANNEL_STEREO:
         break;
 
       default:
@@ -1331,7 +1331,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
     }
   switch(cmd.init_recorder_param.bit_length)
     {
-      case AS_INITREC_BITLENGTH_16:
+      case AS_BITLENGTH_16:
         break;
 
       default:
@@ -1340,13 +1340,13 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
     }
   switch(cmd.init_recorder_param.sampling_rate)
     {
-      case AS_INITREC_SAMPLING_16K:
+      case AS_SAMPLINGRATE_16000:
         {
           switch(cmd.init_recorder_param.bitrate)
             {
-              case AS_INITREC_BITRATE_8KBPS:
+              case AS_BITRATE_8000:
                 if (cmd.init_recorder_param.channel_number ==
-                    AS_INITREC_CHNL_STEREO)
+                    AS_CHANNEL_STEREO)
                   {
                     MEDIA_RECORDER_ERR(
                       AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
@@ -1354,19 +1354,19 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
                   }
                 break;
 
-              case AS_INITREC_BITRATE_16KBPS:
-              case AS_INITREC_BITRATE_24KBPS:
-              case AS_INITREC_BITRATE_32KBPS:
-              case AS_INITREC_BITRATE_40KBPS:
-              case AS_INITREC_BITRATE_48KBPS:
-              case AS_INITREC_BITRATE_56KBPS:
-              case AS_INITREC_BITRATE_64KBPS:
-              case AS_INITREC_BITRATE_80KBPS:
-              case AS_INITREC_BITRATE_96KBPS:
-              case AS_INITREC_BITRATE_112KBPS:
-              case AS_INITREC_BITRATE_128KBPS:
-              case AS_INITREC_BITRATE_144KBPS:
-              case AS_INITREC_BITRATE_160KBPS:
+              case AS_BITRATE_16000:
+              case AS_BITRATE_24000:
+              case AS_BITRATE_32000:
+              case AS_BITRATE_40000:
+              case AS_BITRATE_48000:
+              case AS_BITRATE_56000:
+              case AS_BITRATE_64000:
+              case AS_BITRATE_80000:
+              case AS_BITRATE_96000:
+              case AS_BITRATE_112000:
+              case AS_BITRATE_128000:
+              case AS_BITRATE_144000:
+              case AS_BITRATE_160000:
                 break;
 
               default:
@@ -1376,24 +1376,24 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
         }
         break;
 
-      case AS_INITREC_SAMPLING_48K:
+      case AS_SAMPLINGRATE_48000:
         {
           switch(cmd.init_recorder_param.bitrate)
             {
-              case AS_INITREC_BITRATE_32KBPS:
-              case AS_INITREC_BITRATE_40KBPS:
-              case AS_INITREC_BITRATE_48KBPS:
-              case AS_INITREC_BITRATE_56KBPS:
-              case AS_INITREC_BITRATE_64KBPS:
-              case AS_INITREC_BITRATE_80KBPS:
-              case AS_INITREC_BITRATE_96KBPS:
-              case AS_INITREC_BITRATE_112KBPS:
-              case AS_INITREC_BITRATE_128KBPS:
-              case AS_INITREC_BITRATE_160KBPS:
-              case AS_INITREC_BITRATE_192KBPS:
-              case AS_INITREC_BITRATE_224KBPS:
-              case AS_INITREC_BITRATE_256KBPS:
-              case AS_INITREC_BITRATE_320KBPS:
+              case AS_BITRATE_32000:
+              case AS_BITRATE_40000:
+              case AS_BITRATE_48000:
+              case AS_BITRATE_56000:
+              case AS_BITRATE_64000:
+              case AS_BITRATE_80000:
+              case AS_BITRATE_96000:
+              case AS_BITRATE_112000:
+              case AS_BITRATE_128000:
+              case AS_BITRATE_160000:
+              case AS_BITRATE_192000:
+              case AS_BITRATE_224000:
+              case AS_BITRATE_256000:
+              case AS_BITRATE_320000:
                 break;
 
               default:
@@ -1415,15 +1415,15 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamWAV(
 {
   switch(cmd.init_recorder_param.channel_number)
     {
-      case AS_INITREC_CHNL_MONO:
+      case AS_CHANNEL_MONO:
         if (m_input_device == CaptureDeviceI2S)
           {
             return AS_ECODE_COMMAND_PARAM_INPUT_HANDLER;
           }
           break;
 
-      case AS_INITREC_CHNL_STEREO:
-      case AS_INITREC_CHNL_4CH:
+      case AS_CHANNEL_STEREO:
+      case AS_CHANNEL_4CH:
           break;
 
       default:
@@ -1432,10 +1432,10 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamWAV(
     }
   switch(cmd.init_recorder_param.bit_length)
     {
-      case AS_INITREC_BITLENGTH_16:
+      case AS_BITLENGTH_16:
         break;
 
-      case AS_INITREC_BITLENGTH_24:
+      case AS_BITLENGTH_24:
         {
           AsClkModeId clock_mode = GetClkMode();
           if (AS_CLK_MODE_HIRES == clock_mode)
@@ -1451,11 +1451,11 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamWAV(
     }
   switch(cmd.init_recorder_param.sampling_rate)
     {
-      case AS_INITREC_SAMPLING_16K:
-      case AS_INITREC_SAMPLING_48K:
+      case AS_SAMPLINGRATE_16000:
+      case AS_SAMPLINGRATE_48000:
         break;
 
-      case AS_INITREC_SAMPLING_192K:
+      case AS_SAMPLINGRATE_192000:
         {
           AsClkModeId clock_mode = GetClkMode();
           if (AS_CLK_MODE_HIRES == clock_mode)
@@ -1478,14 +1478,14 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
 {
   switch(cmd.init_recorder_param.channel_number)
     {
-      case AS_INITREC_CHNL_MONO:
+      case AS_CHANNEL_MONO:
         if (m_input_device == CaptureDeviceI2S)
           {
             return AS_ECODE_COMMAND_PARAM_INPUT_DEVICE;
           }
         break;
 
-      case AS_INITREC_CHNL_STEREO:
+      case AS_CHANNEL_STEREO:
         break;
 
       default:
@@ -1494,7 +1494,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
     }
   switch(cmd.init_recorder_param.bit_length)
     {
-      case AS_INITREC_BITLENGTH_16:
+      case AS_BITLENGTH_16:
         break;
 
       default:
@@ -1503,8 +1503,8 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
     }
   switch(cmd.init_recorder_param.sampling_rate)
     {
-      case AS_INITREC_SAMPLING_8K:
-      case AS_INITREC_SAMPLING_16K:
+      case AS_SAMPLINGRATE_8000:
+      case AS_SAMPLINGRATE_16000:
         break;
 
       default:
@@ -1513,8 +1513,8 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
     }
   switch(cmd.init_recorder_param.bitrate)
     {
-      case AS_INITREC_BITRATE_8KBPS:
-      case AS_INITREC_BITRATE_16KBPS:
+      case AS_BITRATE_8000:
+      case AS_BITRATE_16000:
         break;
 
       default:

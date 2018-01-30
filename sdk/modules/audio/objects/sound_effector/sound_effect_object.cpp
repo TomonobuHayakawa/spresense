@@ -1480,25 +1480,25 @@ uint32_t SoundEffectObject::initMfe(const AudioCommand& cmd)
               cmd.init_mfe_param.include_echocancel,
               cmd.init_mfe_param.mfe_mode);
 
-  if (AS_MFE_MIC_CH_NUM_1 != cmd.init_mfe_param.mic_channel_num)
+  if (AS_CHANNEL_MONO != cmd.init_mfe_param.mic_channel_num)
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
       return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
     }
 
-  if (cmd.init_mfe_param.input_fs != AS_MFE_INPUT_FS_16K)
+  if (cmd.init_mfe_param.input_fs != AS_SAMPLINGRATE_16000)
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
       return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
     }
 
-  if (AS_MFE_REF_CH_NUM_DEFAULT != cmd.init_mfe_param.ref_channel_num)
+  if (AS_CHANNEL_STEREO != cmd.init_mfe_param.ref_channel_num)
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
       return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
     }
 
-  if (AS_MFE_INPUT_FS_16K != cmd.init_mfe_param.input_fs)
+  if (AS_SAMPLINGRATE_16000 != cmd.init_mfe_param.input_fs)
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
       return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
@@ -1579,10 +1579,10 @@ uint32_t SoundEffectObject::initMpp(const AudioCommand& cmd)
 
   switch (cmd.init_mpp_param.output_fs)
     {
-      case AS_MPP_OUTPUT_FS_48K:
+      case AS_SAMPLINGRATE_48000:
         /* fixed value */
         m_init_xloud_param.input_sampling_rate =
-          AudioFs2ApuValue[AudFs_48000];
+          cmd.init_mpp_param.output_fs;
         break;
 
       default:

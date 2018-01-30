@@ -47,10 +47,10 @@ struct Track
   char author[64];
   char album[64];
 
-  AsInitPlayerChannelNumberIndex channel_number;  /* Channel number. */
-  AsInitPlayerBitLength          bit_length;      /* Bit length.     */
-  AsInitPlayerSamplingRateIndex  sampling_rate;   /* Sampling rate.  */
-  AsInitPlayerCodecType          codec_type;      /* Codec type.     */
+  uint8_t   channel_number;  /* Channel number. */
+  uint8_t   bit_length;      /* Bit length.     */
+  uint32_t  sampling_rate;   /* Sampling rate.  */
+  uint8_t   codec_type;      /* Codec type.     */
 };
 
 class Playlist

@@ -79,7 +79,7 @@ bool RamAACLCDataSource::init(const InitInputDataManagerParam &param)
     }
   setInitParam(param);
 
-  if (m_codec_type == AS_INITPLAYER_AAC)
+  if (m_codec_type == AS_CODECTYPE_AAC)
     {
       int32_t err_detail = 0;
 
@@ -112,7 +112,7 @@ InputDataManagerObject::GetEsResult
       return EsEnd;
     }
 
-  if (m_codec_type == AS_INITPLAYER_AAC)
+  if (m_codec_type == AS_CODECTYPE_AAC)
     {
       uint32_t max_es_buf_size = *es_size;
       InputDataManagerObject::GetEsResult ret = EsExist;
@@ -189,7 +189,7 @@ InputDataManagerObject::GetEsResult
 
 bool RamAACLCDataSource::finish()
 {
-  if (m_codec_type == AS_INITPLAYER_AAC)
+  if (m_codec_type == AS_CODECTYPE_AAC)
     {
       AdtsParserErrorDetail err_detail;
 
@@ -208,7 +208,7 @@ bool RamAACLCDataSource::finish()
 
 bool RamAACLCDataSource::getSamplingRate(FAR uint32_t *p_sampling_rate)
 {
-  if (m_codec_type == AS_INITPLAYER_AAC)
+  if (m_codec_type == AS_CODECTYPE_AAC)
     {
       AdtsParserErrorDetail err_detail;
 

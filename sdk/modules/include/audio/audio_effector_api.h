@@ -231,36 +231,6 @@ typedef enum
 
 /* InitMFE */
 
-/** Select MFE sampling frequency */
-
-typedef enum
-{
-  /*! \brief 16kHz */
-
-  AS_MFE_INPUT_FS_16K = 16000
-} AsMfeInputFsId;
-
-/** Select MFE MIC numbers */
-
-typedef enum
-{
-  /*! \brief Mic number: 1 (default) */
-
-  AS_MFE_MIC_CH_NUM_1 = 1,
-
-  /*! \brief Mic number: 4 (__not supported__) */
-
-  AS_MFE_MIC_CH_NUM_4 = 4
-} AsMfeMicChNum;
-
-/** Select MFE SP numbers */
-
-typedef enum
-{
-  /*! \brief 2SPs */
-  AS_MFE_REF_CH_NUM_DEFAULT = 2
-} AsMfeRefChNum;
-
 /** Select MFE mode */
 
 typedef enum
@@ -314,26 +284,6 @@ typedef enum
   AS_MPP_MODE_XLOUD_ONLY = 0,
   AS_MPP_MODE_NUM
 } AsMppModeId;
-
-/** Select MPP output sampling rate */
-
-typedef enum
-{
-  /*! \brief 48k sampling */
-
-  AS_MPP_OUTPUT_FS_48K = 0,
-  AS_MPP_OUTPUT_FS_NUM
-} AsMppOutputFsId;
-
-/** Select MPP output channel numbers */
-
-typedef enum
-{
-  /*! \brief 2ch */
-
-  AS_MPP_OUTPUT_CH_DEFAULT = 2,
-  AS_MPP_OUTPUT_CH_NUM = 1
-} AsMppOutputChNum;
 
 /** Select MPP coefficient table */
 
@@ -588,7 +538,7 @@ typedef struct
    * Use #AsMppOutputFsId enum type
    */
 
-  uint8_t  output_fs;
+  uint16_t  output_fs;
 
   /*! \brief [in] Select MPP output channel numbers
    *
@@ -596,10 +546,6 @@ typedef struct
    */
 
   uint8_t  output_channel_num;
-
-  /*! \brief [in] reserved */
-
-  uint8_t  reserved1;
 
   /*! \brief [in] Select MPP mode
    *
@@ -610,7 +556,7 @@ typedef struct
 
   /*! \brief [in] reserved */
 
-  uint8_t  reserved2;
+  uint8_t  reserved1;
 
   /*! \brief [in] Select EAX mode
    *

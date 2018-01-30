@@ -157,18 +157,18 @@ public:
             {
               switch (m_es_sampling_rate)
                 {
-                  case AS_INITPLAYER_INPUT_FS_48000:
+                  case AS_SAMPLINGRATE_48000:
                     size = 1152 * TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_44100:
+                  case AS_SAMPLINGRATE_44100:
                     /* Sample size fluctuates but chooses a smaller value. */
 
                     size = 1253 * TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_32000:
+                  case AS_SAMPLINGRATE_32000:
                     size = 1728 * TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_16000:
+                  case AS_SAMPLINGRATE_16000:
                     size = 1728 * TwoChannels * AudSrc16BitLen;
                     break;
                   default:
@@ -180,18 +180,18 @@ public:
             {
               switch (m_es_sampling_rate)
                 {
-                  case AS_INITPLAYER_INPUT_FS_48000:
+                  case AS_SAMPLINGRATE_48000:
                     size = 640 * TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_44100:
+                  case AS_SAMPLINGRATE_44100:
                     /* Sample size fluctuates but chooses a smaller value. */
 
                     size = 696 * TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_32000:
+                  case AS_SAMPLINGRATE_32000:
                     size = 960* TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_16000:
+                  case AS_SAMPLINGRATE_16000:
                     size = 1920 * TwoChannels * AudSrc16BitLen;
                     break;
                   default:
@@ -203,18 +203,18 @@ public:
             {
               switch (m_es_sampling_rate)
                 {
-                  case AS_INITPLAYER_INPUT_FS_48000:
+                  case AS_SAMPLINGRATE_48000:
                     size = 1024 * TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_44100:
+                  case AS_SAMPLINGRATE_44100:
                     /* Sample size fluctuates but chooses a smaller value. */
 
                     size = 1114 * TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_32000:
+                  case AS_SAMPLINGRATE_32000:
                     size = 1536 * TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_24000:
+                  case AS_SAMPLINGRATE_24000:
                     size = 2048 * TwoChannels * AudSrc16BitLen;
                     break;
                   default:
@@ -226,10 +226,10 @@ public:
             {
               switch (m_es_sampling_rate)
                 {
-                  case AS_INITPLAYER_INPUT_FS_16000:
+                  case AS_SAMPLINGRATE_16000:
                     size = 960 * TwoChannels * AudSrc16BitLen;
                     break;
-                  case AS_INITPLAYER_INPUT_FS_8000:
+                  case AS_SAMPLINGRATE_8000:
                     size = 960 * TwoChannels * AudSrc16BitLen;
                     break;
                   default:

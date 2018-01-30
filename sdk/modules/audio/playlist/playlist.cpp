@@ -839,11 +839,11 @@ bool Playlist::parseTrackInfo(FAR Track *track,
   int ch_num = atoi(strtok(NULL, ","));
   if (ch_num == 1)
     {
-      track->channel_number = AS_INITPLAYER_CHNL_MONO;
+      track->channel_number = AS_CHANNEL_MONO;
     }
   else if (ch_num == 2)
     {
-      track->channel_number = AS_INITPLAYER_CHNL_STEREO;
+      track->channel_number = AS_CHANNEL_STEREO;
     }
   else
     {
@@ -855,11 +855,11 @@ bool Playlist::parseTrackInfo(FAR Track *track,
   int length = atoi(strtok(NULL, ","));
   if (length == 16)
     {
-      track->bit_length = AS_INITPLAYER_BITLENGTH_16;
+      track->bit_length = AS_BITLENGTH_16;
     }
   else if (length == 24)
     {
-      track->bit_length = AS_INITPLAYER_BITLENGTH_24;
+      track->bit_length = AS_BITLENGTH_24;
     }
   else
     {
@@ -871,43 +871,43 @@ bool Playlist::parseTrackInfo(FAR Track *track,
   int rate = atoi(strtok(NULL, ","));
   if (rate == 8000)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_8000;
+      track->sampling_rate = AS_SAMPLINGRATE_8000;
     }
   else if (rate == 16000)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_16000;
+      track->sampling_rate = AS_SAMPLINGRATE_16000;
     }
   else if (rate == 24000)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_24000;
+      track->sampling_rate = AS_SAMPLINGRATE_24000;
     }
   else if (rate == 32000)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_32000;
+      track->sampling_rate = AS_SAMPLINGRATE_32000;
     }
   else if (rate == 44100)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_44100;
+      track->sampling_rate = AS_SAMPLINGRATE_44100;
     }
   else if (rate == 48000)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_48000;
+      track->sampling_rate = AS_SAMPLINGRATE_48000;
     }
   else if (rate == 64000)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_64000;
+      track->sampling_rate = AS_SAMPLINGRATE_64000;
     }
   else if (rate == 88200)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_88200;
+      track->sampling_rate = AS_SAMPLINGRATE_88200;
     }
   else if (rate == 96000)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_96000;
+      track->sampling_rate = AS_SAMPLINGRATE_96000;
     }
   else if (rate == 192000)
     {
-      track->sampling_rate = AS_INITPLAYER_INPUT_FS_192000;
+      track->sampling_rate = AS_SAMPLINGRATE_192000;
     }
   else
     {
@@ -921,22 +921,22 @@ bool Playlist::parseTrackInfo(FAR Track *track,
   if ((strncmp(codec, "wav", sizeof(codec)) == 0) ||
       (strncmp(codec, "WAV", sizeof(codec)) == 0))
     {
-      track->codec_type = AS_INITPLAYER_WAV;
+      track->codec_type = AS_CODECTYPE_WAV;
     }
   else if ((strncmp(codec, "mp3", sizeof(codec)) == 0) ||
            (strncmp(codec, "MP3", sizeof(codec)) == 0))
     {
-      track->codec_type = AS_INITPLAYER_MP3;
+      track->codec_type = AS_CODECTYPE_MP3;
     }
   else if ((strncmp(codec, "aac", sizeof(codec)) == 0) ||
            (strncmp(codec, "AAC", sizeof(codec)) == 0))
     {
-      track->codec_type = AS_INITPLAYER_AAC;
+      track->codec_type = AS_CODECTYPE_AAC;
     }
   else if ((strncmp(codec, "opus", sizeof(codec)) == 0) ||
            (strncmp(codec, "OPUS", sizeof(codec)) == 0))
     {
-      track->codec_type = AS_INITPLAYER_OPUS;
+      track->codec_type = AS_CODECTYPE_OPUS;
     }
   else
     {

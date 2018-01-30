@@ -138,6 +138,223 @@
 
 /** @} */
 
+/** @name Codec type */
+/** @{ */
+
+/** MP3 */
+
+#define AS_CODECTYPE_MP3    0
+
+/** WAV */
+
+#define AS_CODECTYPE_WAV    1
+
+/** AAC */
+
+#define AS_CODECTYPE_AAC    2
+
+/** OPUS */
+
+#define AS_CODECTYPE_OPUS   3
+
+/** MEDIA Packet */
+
+#define AS_CODECTYPE_MEDIA  4
+
+/** @} */
+
+/** @name Bit length */
+/** @{ */
+
+/** 16bit */
+
+#define AS_BITLENGTH_16  16
+
+/** 24bit */
+
+#define AS_BITLENGTH_24  24
+
+/** @} */
+
+/** @name Channel number */
+/** @{ */
+
+/** MONO (1ch) */
+
+#define AS_CHANNEL_MONO    1
+
+/** STEREO (2ch) */
+
+#define AS_CHANNEL_STEREO  2
+
+/** 4ch */
+
+#define AS_CHANNEL_4CH     4
+
+/** 6ch */
+
+#define AS_CHANNEL_6CH     6
+
+/** 8ch */
+
+#define AS_CHANNEL_8CH     8
+
+/** @} */
+
+/** @name Sampling rate */
+/** @{ */
+
+/** 8kHz */
+
+#define AS_SAMPLINGRATE_8000    8000
+
+/** 11.025kHz */
+
+#define AS_SAMPLINGRATE_11025   11025
+
+/** 12kHz */
+
+#define AS_SAMPLINGRATE_12000   12000
+
+/** 16kHz */
+
+#define AS_SAMPLINGRATE_16000   16000
+
+/** 22.05kHz */
+
+#define AS_SAMPLINGRATE_22050   22050
+
+/** 24kHz */
+
+#define AS_SAMPLINGRATE_24000   24000
+
+/** 32kHz */
+
+#define AS_SAMPLINGRATE_32000   32000
+
+/** 44.1kHz */
+
+#define AS_SAMPLINGRATE_44100   44100
+
+/** 48kHz */
+
+#define AS_SAMPLINGRATE_48000   48000
+
+/** 64kHz */
+
+#define AS_SAMPLINGRATE_64000   64000
+
+/** 88.2kHz */
+
+#define AS_SAMPLINGRATE_88200   88200
+
+/** 96kHz */
+
+#define AS_SAMPLINGRATE_96000   96000
+
+/** 128kHz */
+
+#define AS_SAMPLINGRATE_128000  128000
+
+/** 176.4kHz */
+
+#define AS_SAMPLINGRATE_176400  176400
+
+/** 192kHz */
+
+#define AS_SAMPLINGRATE_192000  192000
+
+/** @} */
+
+/** @name Bit rate */
+/** @{ */
+
+/** 8kbps */
+
+#define AS_BITRATE_8000    8000
+
+/** 16kbps */
+
+#define AS_BITRATE_16000   16000
+
+/** 24kbps */
+
+#define AS_BITRATE_24000   24000
+
+/** 32kbps */
+
+#define AS_BITRATE_32000   32000
+
+/** 40kbps */
+
+#define AS_BITRATE_40000   40000
+
+/** 48kbps */
+
+#define AS_BITRATE_48000   48000
+
+/** 56kbps */
+
+#define AS_BITRATE_56000   56000
+
+/** 64kbps */
+
+#define AS_BITRATE_64000   64000
+
+/** 80kbps */
+
+#define AS_BITRATE_80000   80000
+
+/** 96kbps */
+
+#define AS_BITRATE_96000   96000
+
+/** 112kbps */
+
+#define AS_BITRATE_112000  112000
+
+/** 128kbps */
+
+#define AS_BITRATE_128000  128000
+
+/** 144kbps */
+
+#define AS_BITRATE_144000  144000
+
+/** 160kbps */
+
+#define AS_BITRATE_160000  160000
+
+/** 192kbps */
+
+#define AS_BITRATE_192000  192000
+
+/** 224kbps */
+
+#define AS_BITRATE_224000  224000
+
+/** 256kbps */
+
+#define AS_BITRATE_256000  256000
+
+/** 320kbps */
+
+#define AS_BITRATE_320000  320000
+
+/** 384kbps */
+
+#define AS_BITRATE_384000  384000
+
+/** 448kbps */
+
+#define AS_BITRATE_448000  448000
+
+/** 510kbps */
+
+#define AS_BITRATE_510000  510000
+
+/** @} */
+
 /* ---------------------------------*/
 
 /** @name Reslt Code Packet length */
@@ -927,60 +1144,6 @@ typedef enum
   AS_SOUNDEFFECT_NUM
 } AsEnableSoundEffectFunc;
 
-/** Select InitSoundEffect  codec type */
-
-typedef enum
-{
-  /*! \brief MP3 */
-
-  AS_INITSOUNDEFFECT_MP3 = 0,
-
-  /*! \brief WAV */
-
-  AS_INITSOUNDEFFECT_WAV,
-  AS_INITSOUNDEFFECT_CODECTYPE_NUM
-} AsInitSoundEffectCodecType;
-
-/** Select InitSoundEffect input bit-length */
-
-typedef enum
-{
-  /*! \brief 16bit */
-
-  AS_INITSOUNDEFFECT_BITLENGTH_16 = 16,
-
-  /*! \brief 24bit */
-
-  AS_INITSOUNDEFFECT_BITLENGTH_24 = 24
-} AsInitSoundEffectBitLength;
-
-/** Select InitSoundEffect input channel number */
-
-typedef enum
-{
-  /*! \brief MONO (1ch) */
-
-  AS_INITSOUNDEFFECT_CHNL_MONO = 1,
-
-  /*! \brief STEREO (2ch) */
-
-  AS_INITSOUNDEFFECT_CHNL_STEREO = 2
-} AsInitSoundEffectChannelNumberIndex;
-
-/** Select InitSoundEffect input sampling rate */
-
-typedef enum
-{
-  AS_INITSOUNDEFFECT_INPUT_FS_16000 = 16000,
-  AS_INITSOUNDEFFECT_INPUT_FS_32000 = 32000,
-  AS_INITSOUNDEFFECT_INPUT_FS_44100 = 44100,
-  AS_INITSOUNDEFFECT_INPUT_FS_48000 = 48000,
-  AS_INITSOUNDEFFECT_INPUT_FS_64000 = 64000,
-  AS_INITSOUNDEFFECT_INPUT_FS_88200 = 88200,
-  AS_INITSOUNDEFFECT_INPUT_FS_96000 = 96000,
-  AS_INITSOUNDEFFECT_INPUT_FS_192000 = 192000
-} AsInitSoundEffectSamplingRateIndex;
-
 /** playback mode of effect sound */
 
 typedef enum
@@ -1230,18 +1393,6 @@ typedef struct
 
     AsClkRecoveryParam clk_recovery_param;
 #endif
-
-    /*! \brief [in] for InitSoundEffect
-     * (header.command_code==#AUDCMD_INITSOUNDEFFECT)
-     */
-
-    AsInitSoundEffectParam init_sound_effect_param;
-
-    /*! \brief [in] for StartSoundEffect
-     * (header.command_code==#AUDCMD_STARTSOUNDEFFECT)
-     */
-
-    AsStartSoundEffectParam start_sound_effect_param;
 #ifdef AS_FEATURE_RECORDER_ENABLE
 
     /*! \brief [in] for SetRecorderStatus

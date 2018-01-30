@@ -1326,7 +1326,7 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
   init_dec_comp_param.input_sampling_rate =
       m_input_device_handler->getSamplingRate();
   init_dec_comp_param.channel_num         =
-      ((m_input_device_handler->getChannelNum() == AS_INITPLAYER_CHNL_STEREO) ?
+      ((m_input_device_handler->getChannelNum() == AS_CHANNEL_STEREO) ?
       (TwoChannels) : (MonoChannels));
   init_dec_comp_param.frame_sample_num    =
       m_input_device_handler->getSampleNumPerFrame();

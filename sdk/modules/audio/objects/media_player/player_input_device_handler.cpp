@@ -114,25 +114,25 @@ uint32_t InputHandlerOfRAM::setParam(const AsInitPlayerParam& param)
   switch (param.codec_type)
     {
 #ifdef CONFIG_AUDIOUTILS_PLAYER_CODEC_MP3
-      case AS_INITPLAYER_MP3:
+      case AS_CODECTYPE_MP3:
         m_p_es_source_hdl = &m_ram_mp3_es_source;
         break;
 #endif
 #ifdef CONFIG_AUDIOUTILS_PLAYER_CODEC_PCM
-      case AS_INITPLAYER_WAV:
+      case AS_CODECTYPE_WAV:
         m_p_es_source_hdl = &m_raw_wav_es_source;
         break;
 #endif
 #ifdef CONFIG_AUDIOUTILS_PLAYER_CODEC_AAC
-      case AS_INITPLAYER_AAC:
+      case AS_CODECTYPE_AAC:
         m_p_es_source_hdl = &m_ram_aaclc_es_source;
         break;
-      case AS_INITPLAYER_MEDIA:
+      case AS_CODECTYPE_MEDIA:
         m_p_es_source_hdl = &m_ram_aaclc_es_source;
         break;
 #endif
 #ifdef CONFIG_AUDIOUTILS_PLAYER_CODEC_OPUS
-      case AS_INITPLAYER_OPUS:
+      case AS_CODECTYPE_OPUS:
         m_p_es_source_hdl = &m_ram_opus_es_source;
         break;
 #endif
@@ -142,7 +142,7 @@ uint32_t InputHandlerOfRAM::setParam(const AsInitPlayerParam& param)
     }
 
   m_init_player_api_codec_type = param.codec_type;
-  if (param.codec_type != AS_INITPLAYER_MEDIA)
+  if (param.codec_type != AS_CODECTYPE_MEDIA)
     {
       m_codec_type = static_cast<AudioCodec>(param.codec_type);
     }
@@ -154,8 +154,8 @@ uint32_t InputHandlerOfRAM::setParam(const AsInitPlayerParam& param)
 
   switch (param.channel_number)
     {
-      case AS_INITPLAYER_CHNL_MONO:
-      case AS_INITPLAYER_CHNL_STEREO:
+      case AS_CHANNEL_MONO:
+      case AS_CHANNEL_STEREO:
         break;
       default:
         MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
@@ -165,16 +165,16 @@ uint32_t InputHandlerOfRAM::setParam(const AsInitPlayerParam& param)
 
   switch (param.sampling_rate)
     {
-      case AS_INITPLAYER_INPUT_FS_8000:
-      case AS_INITPLAYER_INPUT_FS_16000:
-      case AS_INITPLAYER_INPUT_FS_24000:
-      case AS_INITPLAYER_INPUT_FS_32000:
-      case AS_INITPLAYER_INPUT_FS_44100:
-      case AS_INITPLAYER_INPUT_FS_48000:
-      case AS_INITPLAYER_INPUT_FS_64000:
-      case AS_INITPLAYER_INPUT_FS_88200:
-      case AS_INITPLAYER_INPUT_FS_96000:
-      case AS_INITPLAYER_INPUT_FS_192000:
+      case AS_SAMPLINGRATE_8000:
+      case AS_SAMPLINGRATE_16000:
+      case AS_SAMPLINGRATE_24000:
+      case AS_SAMPLINGRATE_32000:
+      case AS_SAMPLINGRATE_44100:
+      case AS_SAMPLINGRATE_48000:
+      case AS_SAMPLINGRATE_64000:
+      case AS_SAMPLINGRATE_88200:
+      case AS_SAMPLINGRATE_96000:
+      case AS_SAMPLINGRATE_192000:
         break;
       default:
         MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
@@ -184,8 +184,8 @@ uint32_t InputHandlerOfRAM::setParam(const AsInitPlayerParam& param)
 
   switch (param.bit_length)
     {
-      case AS_INITPLAYER_BITLENGTH_16:
-      case AS_INITPLAYER_BITLENGTH_24:
+      case AS_BITLENGTH_16:
+      case AS_BITLENGTH_24:
         break;
       default:
         MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);

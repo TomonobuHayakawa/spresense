@@ -142,11 +142,6 @@ private:
   MicInMhQueue m_mic_in_buf_mh_que;
   MicInMhQueue m_cnv_in_buf_mh_que;
 
-  static AudioCodec asCodecTypeDef2AudioCodecDef[AS_INITREC_CODECTYPE_NUM];
-  static int32_t chNumDef2Value[AS_INITREC_CHNL_NUM];
-  static AudioPcmBitWidth bitLenDef2WienDef[AS_INITREC_BITLENGTH_NUM];
-  static int32_t samplingRateDef2Value[AS_INITREC_SAMPLING_NUM];
-
   void run();
   void parse(MsgPacket *);
 
