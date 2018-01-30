@@ -100,7 +100,7 @@
 #  include "cxd56_farapi.h"
 #endif
 
-#ifdef CONFIG_LIB_ASMP
+#ifdef CONFIG_ASMP
 #  include <asmp/asmp.h>
 #endif
 
@@ -653,7 +653,7 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#ifdef CONFIG_LIB_ASMP
+#ifdef CONFIG_ASMP
   asmp_initialize();
 #endif
 
