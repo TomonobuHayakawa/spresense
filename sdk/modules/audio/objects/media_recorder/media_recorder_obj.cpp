@@ -812,7 +812,7 @@ void VoiceRecorderObjectTask::filterDoneOnRec(MsgPacket *msg)
       AS_filter_recv_done();
     }
 
-  freeMicInBuf();
+  freeCnvInBuf();
 
   writeToDataSinker(m_output_buf_mh_que.top(),
                    filter_result.exec_src_param.output_buffer.size);
@@ -833,7 +833,7 @@ void VoiceRecorderObjectTask::filterDoneOnStop(MsgPacket *msg)
     {
       if (m_codec_type == AudCodecXAVCLPCM)
         {
-          freeMicInBuf();
+          freeCnvInBuf();
 
           writeToDataSinker(m_output_buf_mh_que.top(),
                            filter_result.exec_src_param.output_buffer.size);
@@ -886,7 +886,7 @@ void VoiceRecorderObjectTask::filterDoneOnOverflow(MsgPacket *msg)
     {
       if (m_codec_type == AudCodecXAVCLPCM)
         {
-          freeMicInBuf();
+          freeCnvInBuf();
 
           writeToDataSinker(m_output_buf_mh_que.top(),
                            filter_result.exec_src_param.output_buffer.size);
@@ -928,7 +928,7 @@ void VoiceRecorderObjectTask::encDoneOnRec(MsgPacket *msg)
   EncCmpltParam enc_result = msg->moveParam<EncCmpltParam>();
   AS_encode_recv_done();
 
-  freeMicInBuf();
+  freeCnvInBuf();
 
   writeToDataSinker(m_output_buf_mh_que.top(),
                    enc_result.exec_enc_cmplt.output_buffer.size);
@@ -943,7 +943,7 @@ void VoiceRecorderObjectTask::encDoneOnStop(MsgPacket *msg)
 
   if (enc_result.event_type == Apu::ExecEvent)
     {
-      freeMicInBuf();
+      freeCnvInBuf();
 
       writeToDataSinker(m_output_buf_mh_que.top(),
                        enc_result.exec_enc_cmplt.output_buffer.size);
@@ -989,7 +989,7 @@ void VoiceRecorderObjectTask::encDoneOnOverflow(MsgPacket *msg)
 
   if (enc_result.event_type == Apu::ExecEvent)
     {
-      freeMicInBuf();
+      freeCnvInBuf();
 
       writeToDataSinker(m_output_buf_mh_que.top(),
                        enc_result.exec_enc_cmplt.output_buffer.size);
@@ -1049,6 +1049,8 @@ void VoiceRecorderObjectTask::captureDoneOnRec(MsgPacket *msg)
   execEnc(capture_result.exec_capture_comp_param.p_pcm,
           capture_result.exec_capture_comp_param.pcm_sample *
           m_pcm_byte_len * m_channel_num);
+
+  freeMicInBuf();
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1070,6 +1072,8 @@ void VoiceRecorderObjectTask::captureDoneOnStop(MsgPacket *msg)
   execEnc(capture_result.exec_capture_comp_param.p_pcm,
           capture_result.exec_capture_comp_param.pcm_sample *
           m_pcm_byte_len * m_channel_num);
+
+  freeMicInBuf();
 
   if (capture_result.end_flag)
     {
@@ -1124,6 +1128,8 @@ void VoiceRecorderObjectTask::execEnc(void* p_pcm, uint32_t pcm_size)
           param.exec_src_param.output_buffer.size     =
             m_max_output_pcm_size;
           AS_filter_exec(param);
+
+          m_cnv_in_buf_mh_que.push(m_mic_in_buf_mh_que.top());
         }
       else
         {
@@ -1157,6 +1163,8 @@ void VoiceRecorderObjectTask::execEnc(void* p_pcm, uint32_t pcm_size)
         reinterpret_cast<unsigned long *>(getOutputBufAddr());
       param.output_buffer.size     = m_max_output_pcm_size;
       AS_encode_exec(param);
+
+      m_cnv_in_buf_mh_que.push(m_mic_in_buf_mh_que.top());
     }
 }
 

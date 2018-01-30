@@ -140,6 +140,7 @@ private:
 
   typedef s_std::Queue<mic_in_data_s, CAPTURE_PCM_BUF_QUE_SIZE> MicInMhQueue;
   MicInMhQueue m_mic_in_buf_mh_que;
+  MicInMhQueue m_cnv_in_buf_mh_que;
 
   static AudioCodec asCodecTypeDef2AudioCodecDef[AS_INITREC_CODECTYPE_NUM];
   static int32_t chNumDef2Value[AS_INITREC_CHNL_NUM];
@@ -186,6 +187,16 @@ private:
   bool freeMicInBuf()
     {
       if (!m_mic_in_buf_mh_que.pop())
+        {
+          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
+          return false;
+        }
+
+      return true;
+    }
+  bool freeCnvInBuf()
+    {
+      if (!m_cnv_in_buf_mh_que.pop())
         {
           MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
           return false;
