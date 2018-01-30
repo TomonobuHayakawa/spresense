@@ -214,7 +214,7 @@ enum board_power_device {
 
   POWER_AUDIO_DVDD      = PMIC_LSW(2),
   POWER_FLASH           = PMIC_LSW(3),
-  POWER_TCXO            = PMIC_LSW(3),
+  POWER_TCXO            = PMIC_LSW(4),
   POWER_LNA             = PMIC_LSW(4),
 
   /* GPO */
@@ -356,6 +356,16 @@ int board_xtal_power_control(bool en);
  ****************************************************************************/
 
 bool board_xtal_power_monitor(void);
+
+/****************************************************************************
+ * Name: board_lna_power_control
+ *
+ * Description:
+ *   Power on/off the LNA device on the board.
+ *
+ ****************************************************************************/
+
+int board_lna_power_control(bool en);
 
 /****************************************************************************
  * Name: board_aca_power_control

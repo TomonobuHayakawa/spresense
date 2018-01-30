@@ -82,10 +82,10 @@ int cxd56_gnssext_control_lna(bool en)
 {
   int ret;
 
-  ret = board_power_control(POWER_LNA, en);
+  ret = board_lna_power_control(en);
   if (ret)
     {
-      _err("ERROR: Failed to power %s LNA. %d\n", en ? "on" : "off", ret);
+      snerr("ERROR: Failed to power %s LNA. %d\n", en ? "on" : "off", ret);
       return -ENODEV;
     }
 

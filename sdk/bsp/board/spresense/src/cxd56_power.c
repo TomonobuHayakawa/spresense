@@ -68,6 +68,9 @@
  * Private Data
  ****************************************************************************/
 
+static sem_t g_ltsem = SEM_INITIALIZER(1);
+static bool g_used_lna = true;
+static bool g_used_tcxo = true;
 #ifdef CONFIG_BOARDCTL_RESET
 static struct pm_cpu_freqlock_s g_hv_lock =
   PM_CPUFREQLOCK_INIT(PM_CPUFREQLOCK_TAG('B','P',0), PM_CPUFREQLOCK_FLAG_HV);
@@ -222,18 +225,36 @@ int board_xtal_power_control(bool en)
 {
   int ret = 0;
 
+  /* Get exclusive access to the lna / tcxo power control */
+
+  sem_wait(&g_ltsem);
+
   if (en)
     {
       /* power on */
 
       board_power_control(POWER_TCXO, true);
+
+      /* set used flag */
+
+      g_used_tcxo = true;
     }
   else
     {
       /* power off */
 
-      board_power_control(POWER_TCXO, false);
+      if (!g_used_lna)
+        {
+          board_power_control(POWER_TCXO, false);
+        }
+
+      /* unset used flag */
+
+      g_used_tcxo = false;
     }
+
+  sem_post(&g_ltsem);
+
   return ret;
 }
 
@@ -248,6 +269,51 @@ int board_xtal_power_control(bool en)
 bool board_xtal_power_monitor(void)
 {
   return board_power_monitor(POWER_TCXO);
+}
+
+/****************************************************************************
+ * Name: board_lna_power_control
+ *
+ * Description:
+ *   Power on/off the LNA device on the board.
+ *
+ ****************************************************************************/
+
+int board_lna_power_control(bool en)
+{
+  int ret = 0;
+
+  /* Get exclusive access to the lna / tcxo power control */
+
+  sem_wait(&g_ltsem);
+
+  if (en)
+    {
+      /* power on */
+
+      board_power_control(POWER_LNA, true);
+
+      /* set used flag */
+
+      g_used_lna = true;
+    }
+  else
+    {
+      /* power off */
+
+      if (!g_used_tcxo)
+        {
+          board_power_control(POWER_LNA, false);
+        }
+
+      /* unset used flag */
+
+      g_used_lna = false;
+    }
+
+  sem_post(&g_ltsem);
+
+  return ret;
 }
 
 /****************************************************************************
