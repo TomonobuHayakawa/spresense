@@ -384,9 +384,9 @@ static bool app_init_mfe(void)
   command.header.packet_length = LENGTH_INITMFE;
   command.header.command_code  = AUDCMD_INITMFE;
   command.header.sub_code      = 0;
-  command.init_mfe_param.input_fs           = AS_MFE_INPUT_FS_16K;
-  command.init_mfe_param.ref_channel_num    = AS_MFE_REF_CH_NUM_DEFAULT;
-  command.init_mfe_param.mic_channel_num    = AS_MFE_MIC_CH_NUM_1;
+  command.init_mfe_param.input_fs           = AS_SAMPLINGRATE_16000;
+  command.init_mfe_param.ref_channel_num    = AS_CHANNEL_STEREO;
+  command.init_mfe_param.mic_channel_num    = AS_CHANNEL_MONO;
   command.init_mfe_param.enable_echocancel  = AS_ENABLE_ECHOCANCEL;
   command.init_mfe_param.include_echocancel = AS_INCLUDE_ECHOCANCEL;
   command.init_mfe_param.mfe_mode           = AS_MFE_MODE_SPEAKING;
@@ -404,8 +404,8 @@ static bool app_init_mpp(void)
   command.header.packet_length = LENGTH_INITMPP;
   command.header.command_code  = AUDCMD_INITMPP;
   command.header.sub_code      = 0;
-  command.init_mpp_param.output_fs          = AS_MPP_OUTPUT_FS_48K;
-  command.init_mpp_param.output_channel_num = AS_MPP_OUTPUT_CH_DEFAULT;
+  command.init_mpp_param.output_fs          = AS_SAMPLINGRATE_48000;
+  command.init_mpp_param.output_channel_num = AS_CHANNEL_STEREO;
   command.init_mpp_param.mpp_mode           = AS_MPP_MODE_XLOUD_ONLY;
   command.init_mpp_param.xloud_mode         = AS_MPP_XLOUD_MODE_DISABLE;
   command.init_mpp_param.coef_mode          = AS_MPP_COEF_SPEAKER;

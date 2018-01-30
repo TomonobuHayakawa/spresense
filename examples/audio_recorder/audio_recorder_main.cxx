@@ -224,7 +224,7 @@ static bool app_open_output_file(void)
   clock_gettime(CLOCK_REALTIME, &cur_sec);
   cur_time = gmtime(&cur_sec.tv_sec);
 
-  if (s_recorder_info.file.codec_type == AS_INITREC_MP3)
+  if (s_recorder_info.file.codec_type == AS_CODECTYPE_MP3)
     {
       snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.mp3",
         CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
@@ -235,7 +235,7 @@ static bool app_open_output_file(void)
         cur_time->tm_min,
         cur_time->tm_sec);
     }
-  else if (s_recorder_info.file.codec_type == AS_INITREC_WAV)
+  else if (s_recorder_info.file.codec_type == AS_CODECTYPE_WAV)
     {
       snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.wav",
         CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
@@ -266,7 +266,7 @@ static bool app_open_output_file(void)
     }
   printf("Record data to %s.\n", &fname[0]);
 
-  if (s_recorder_info.file.codec_type == AS_INITREC_WAV)
+  if (s_recorder_info.file.codec_type == AS_CODECTYPE_WAV)
     {
       if (!app_write_wav_header())
       {
@@ -516,13 +516,13 @@ static bool app_set_recording_param(codec_type_e codec_type,
   switch(codec_type)
     {
       case CODEC_TYPE_MP3:
-        s_recorder_info.file.codec_type = AS_INITREC_MP3;
+        s_recorder_info.file.codec_type = AS_CODECTYPE_MP3;
         break;
       case CODEC_TYPE_WAV:
-        s_recorder_info.file.codec_type = AS_INITREC_WAV;
+        s_recorder_info.file.codec_type = AS_CODECTYPE_WAV;
         break;
       case CODEC_TYPE_OPUS:
-        s_recorder_info.file.codec_type = AS_INITREC_OPUS;
+        s_recorder_info.file.codec_type = AS_CODECTYPE_OPUS;
         break;
       default:
         printf("Error: Invalid codec type(%d)\n", codec_type);
@@ -532,13 +532,13 @@ static bool app_set_recording_param(codec_type_e codec_type,
   switch(sampling_rate)
     {
       case SAMPLING_RATE_8K:
-        s_recorder_info.file.sampling_rate = AS_INITREC_SAMPLING_8K;
+        s_recorder_info.file.sampling_rate = AS_SAMPLINGRATE_8000;
         break;
       case SAMPLING_RATE_16K:
-        s_recorder_info.file.sampling_rate = AS_INITREC_SAMPLING_16K;
+        s_recorder_info.file.sampling_rate = AS_SAMPLINGRATE_16000;
         break;
       case SAMPLING_RATE_48K:
-        s_recorder_info.file.sampling_rate = AS_INITREC_SAMPLING_48K;
+        s_recorder_info.file.sampling_rate = AS_SAMPLINGRATE_48000;
         break;
       default:
         printf("Error: Invalid sampling rate(%d)\n", sampling_rate);
@@ -548,10 +548,10 @@ static bool app_set_recording_param(codec_type_e codec_type,
   switch(ch_type)
     {
       case CHAN_TYPE_MONO:
-        s_recorder_info.file.channel_number = AS_INITREC_CHNL_MONO;
+        s_recorder_info.file.channel_number = AS_CHANNEL_MONO;
         break;
       case CHAN_TYPE_STEREO:
-        s_recorder_info.file.channel_number = AS_INITREC_CHNL_STEREO;
+        s_recorder_info.file.channel_number = AS_CHANNEL_STEREO;
         break;
       default:
         printf("Error: Invalid channel type(%d)\n", ch_type);
@@ -597,19 +597,19 @@ static void app_init_recorder_wav(AudioCommand* command)
   s_recorder_info.wav_header.bit        = 2 * 8;
   s_recorder_info.wav_header.data_size  = 0;
 
-  command->init_recorder_param.codec_type = AS_INITREC_WAV;
+  command->init_recorder_param.codec_type = AS_CODECTYPE_WAV;
 }
 
 static void app_init_recorder_mp3(AudioCommand* command)
 {
-  command->init_recorder_param.codec_type = AS_INITREC_MP3;
-  command->init_recorder_param.bitrate    = AS_INITREC_BITRATE_96KBPS;
+  command->init_recorder_param.codec_type = AS_CODECTYPE_MP3;
+  command->init_recorder_param.bitrate    = AS_BITRATE_96000;
 }
 
 static void app_init_recorder_opus(AudioCommand* command)
 {
-  command->init_recorder_param.codec_type = AS_INITREC_OPUS;
-  command->init_recorder_param.bitrate    = AS_INITREC_BITRATE_8KBPS;
+  command->init_recorder_param.codec_type = AS_CODECTYPE_OPUS;
+  command->init_recorder_param.bitrate    = AS_BITRATE_8000;
   command->init_recorder_param.computational_complexity = AS_INITREC_COMPLEXITY_0;
 }
 
@@ -631,17 +631,17 @@ static bool app_init_recorder(codec_type_e codec_type,
   command.header.sub_code      = 0x00;
   command.init_recorder_param.sampling_rate  = s_recorder_info.file.sampling_rate;
   command.init_recorder_param.channel_number = s_recorder_info.file.channel_number;
-  command.init_recorder_param.bit_length     = AS_INITREC_BITLENGTH_16;
+  command.init_recorder_param.bit_length     = AS_BITLENGTH_16;
 
   switch (s_recorder_info.file.codec_type)
     {
-      case AS_INITREC_WAV:
+      case AS_CODECTYPE_WAV:
         app_init_recorder_wav(&command);
         break;
-      case AS_INITREC_MP3:
+      case AS_CODECTYPE_MP3:
         app_init_recorder_mp3(&command);
         break;
-      case AS_INITREC_OPUS:
+      case AS_CODECTYPE_OPUS:
         app_init_recorder_opus(&command);
         break;
       default:
@@ -702,7 +702,7 @@ static bool app_stop_recorder(void)
       occupied_simple_fifo_size = CMN_SimpleFifoGetOccupiedSize(&s_recorder_info.fifo.handle);
     }
 
-  if (s_recorder_info.file.codec_type == AS_INITREC_WAV)
+  if (s_recorder_info.file.codec_type == AS_CODECTYPE_WAV)
     {
       app_update_wav_file_size();
       if (!app_write_wav_header())

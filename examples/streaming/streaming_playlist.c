@@ -157,7 +157,7 @@ int app_streaming_playlist_getTrack(TrackInfo *track)
 
   /* codec */
   idx_tail = strstr(idx_top,".");
-  track->codec_type = (strstr( idx_top, "mp3") == NULL) ? AS_INITPLAYER_WAV : AS_INITPLAYER_MP3;
+  track->codec_type = (strstr( idx_top, "mp3") == NULL) ? AS_CODECTYPE_WAV : AS_CODECTYPE_MP3;
 
   /* title */
   idx_top  = idx_tail + 1;

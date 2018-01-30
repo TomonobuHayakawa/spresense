@@ -335,10 +335,10 @@ static int audioInitPlayer(void)
   command.header.command_code   = AUDCMD_INITPLAYER;
   command.header.sub_code       = 0;
 
-  command.init_player_param.codec_type     = AS_INITPLAYER_MP3;
-  command.init_player_param.bit_length     = AS_INITPLAYER_BITLENGTH_16;
-  command.init_player_param.channel_number = AS_INITPLAYER_CHNL_STEREO;
-  command.init_player_param.sampling_rate  = AS_INITPLAYER_INPUT_FS_44100;
+  command.init_player_param.codec_type     = AS_CODECTYPE_MP3;
+  command.init_player_param.bit_length     = AS_BITLENGTH_16;
+  command.init_player_param.channel_number = AS_CHANNEL_STEREO;
+  command.init_player_param.sampling_rate  = AS_SAMPLINGRATE_44100;
 
   AS_SendAudioCommand(&command);
 

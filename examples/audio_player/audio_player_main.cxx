@@ -594,7 +594,7 @@ static int app_init_player(uint8_t codec_type,
     command.header.command_code  = AUDCMD_INITPLAYER;
     command.header.sub_code      = 0x00;
     command.init_player_param.codec_type     = codec_type;
-    command.init_player_param.bit_length     = AS_INITPLAYER_BITLENGTH_16;
+    command.init_player_param.bit_length     = AS_BITLENGTH_16;
     command.init_player_param.channel_number = channel_number;
     command.init_player_param.sampling_rate  = sampling_rate;
     AS_SendAudioCommand(&command);
