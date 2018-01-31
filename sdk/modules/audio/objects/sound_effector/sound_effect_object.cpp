@@ -967,7 +967,8 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
         {
           /* TODO: 名前をPre-に隠蔽。Front-end 処理としての認識でよい */
           execMfe(param.exec_capture_comp_param.p_pcm,
-                  param.exec_capture_comp_param.pcm_sample);
+                  param.exec_capture_comp_param.pcm_sample,
+                  param.end_flag);
           m_mic_in_sync_cnt++;
 
           freeMicInBuf();
@@ -1005,7 +1006,7 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
           /* stop process */
           if (m_state.get() != SoundFXRunState)
             {
-              if (!m_mic_in_buf_mh_que.empty())
+              if (!param.end_flag)
                 { /* DMAへの導入コマンド数 = m_mic_in_buf_mh_que.size()のため */
                   return;
                 }
@@ -1024,7 +1025,8 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
       if((m_filter_mode & FILTER_MODE_MFE) != 0)
         {
           execMpp(param.exec_capture_comp_param.p_pcm,
-                  param.exec_capture_comp_param.pcm_sample);
+                  param.exec_capture_comp_param.pcm_sample,
+                  param.end_flag);
           m_i2s_in_sync_cnt++;
 
           freeI2SInBuf();
@@ -1062,7 +1064,7 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
           /* stop process */
           if (m_state.get() != SoundFXRunState)
             {
-              if (!m_i2s_in_buf_mh_que.empty())
+              if (!param.end_flag)
                 {
                   return;
                 }
@@ -1206,11 +1208,9 @@ void SoundEffectObject::filterRstOnStopping(MsgPacket *msg)
 
   if (param.filter_type == Apu::MFE)
     {
-      freeMfeInBuf();
       execI2SOutRender(param);
 
-      if (m_mic_in_buf_mh_que.empty()
-       && m_mfe_in_buf_mh_que.empty())
+      if (m_mfe_in_buf_mh_que.top().is_end)
         {
           /* There is no wait for MIC-capture-in or MFE-filter-proc. */
 
@@ -1225,14 +1225,14 @@ void SoundEffectObject::filterRstOnStopping(MsgPacket *msg)
 
           AS_filter_stop(stopParam);
         }
+
+      freeMfeInBuf();
     }
   else if (param.filter_type == Apu::XLOUD)
     {
-      freeMppInBuf();
       execHpSpOutRender(param);
 
-      if (m_i2s_in_buf_mh_que.empty()
-       && m_mpp_in_buf_mh_que.empty())
+      if (m_mpp_in_buf_mh_que.top().is_end)
         {
           /* There is no wait for I2S-capture-in or MPP-filter-proc. */
 
@@ -1247,6 +1247,8 @@ void SoundEffectObject::filterRstOnStopping(MsgPacket *msg)
 
           AS_filter_stop(stopParam);
         }
+
+      freeMppInBuf();
     }
 }
 
@@ -1658,7 +1660,7 @@ void SoundEffectObject::execHpSpOutRender(FilterComponentParam& param)
 }
 
 /*--------------------------------------------------------------------*/
-void SoundEffectObject::execMfe(void *p_buffer, int32_t sample)
+void SoundEffectObject::execMfe(void *p_buffer, int32_t sample, bool is_end)
 {
   if(m_mic_in_buf_mh_que.empty())
     {
@@ -1690,14 +1692,17 @@ void SoundEffectObject::execMfe(void *p_buffer, int32_t sample)
 
   /* Copy MH from MIC-captured data to mfe-in data. */
 
-  if (!m_mfe_in_buf_mh_que.push(m_mic_in_buf_mh_que.top()))
+  SoundFxBufParam micin = m_mic_in_buf_mh_que.top();
+  micin.is_end = is_end;
+
+  if (!m_mfe_in_buf_mh_que.push(micin))
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
     }
 }
 
 /*--------------------------------------------------------------------*/
-void SoundEffectObject::execMpp(void *p_buffer, int32_t sample)
+void SoundEffectObject::execMpp(void *p_buffer, int32_t sample, bool is_end)
 {
   /* First, Send I2S-in data to xLOUD(MPP) filter component.
    * Next, next request I2S-in caputure command.
@@ -1728,7 +1733,10 @@ void SoundEffectObject::execMpp(void *p_buffer, int32_t sample)
 
   /* Copy MH from I2S-captured data to mpp-in data. */
 
-  if (!m_mpp_in_buf_mh_que.push(m_i2s_in_buf_mh_que.top()))
+  SoundFxBufParam i2sin = m_i2s_in_buf_mh_que.top();
+  i2sin.is_end = is_end;
+
+  if (!m_mpp_in_buf_mh_que.push(i2sin))
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
     }
@@ -1751,6 +1759,7 @@ void* SoundEffectObject::allocMicInBuf()
 
   data.mh = mh;
   data.sample = MAX_CAPTURE_SAMPLE_NUM;
+  data.is_end = false;
 
   if (!m_mic_in_buf_mh_que.push(data))
     {
@@ -1776,6 +1785,7 @@ void* SoundEffectObject::allocI2SInBuf()
 
   data.mh = mh;
   data.sample = MAX_CAPTURE_SAMPLE_NUM;
+  data.is_end = false;
 
   if (!m_i2s_in_buf_mh_que.push(data))
     {
@@ -1801,6 +1811,7 @@ void* SoundEffectObject::allocHpOutBuf()
 
   data.mh = mh;
   data.sample = MAX_CAPTURE_SAMPLE_NUM;
+  data.is_end = false;
 
   if (!m_hp_out_buf_mh_que.push(data))
     {
@@ -1826,6 +1837,7 @@ void* SoundEffectObject::allocI2SOutBuf()
 
   data.mh = mh;
   data.sample = MAX_CAPTURE_SAMPLE_NUM;
+  data.is_end = false;
 
   if (!m_i2s_out_buf_mh_que.push(data))
     {
@@ -1851,6 +1863,7 @@ void* SoundEffectObject::allocMfeOutBuf()
 
   data.mh = mh;
   data.sample = MFE_OUT_SAMPLE_NUM;
+  data.is_end = false;
 
   if (!m_mfe_out_buf_mh_que.push(data))
     {

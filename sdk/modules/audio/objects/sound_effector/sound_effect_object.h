@@ -136,6 +136,7 @@ private:
   {
     MemMgrLite::MemHandle mh;
     uint32_t sample;
+    bool is_end;
   };
 
   /* TODO: Check validity of queue num. */
@@ -186,8 +187,8 @@ private:
 
   void execI2SOutRender(FilterComponentParam& param);
   void execHpSpOutRender(FilterComponentParam& param);
-  void execMfe(void* p_buffer, int32_t sample);
-  void execMpp(void* p_buffer, int32_t sample);
+  void execMfe(void* p_buffer, int32_t sample, bool is_end);
+  void execMpp(void* p_buffer, int32_t sample, bool is_end);
 
   void* allocMicInBuf();
   void* allocI2SInBuf();
