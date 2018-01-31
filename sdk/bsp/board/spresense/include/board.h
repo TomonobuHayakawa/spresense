@@ -475,7 +475,15 @@ void board_sdcard_initialize(void);
  ****************************************************************************/
 
 void board_sdcard_finalize(void);
+/****************************************************************************
+ * Name: board_sdcard_configuraton
+ *
+ * Description:
+ *   Configure SD Card on the board.
+ *
+ ****************************************************************************/
 
+void board_sdcard_configuraton(void);
 /****************************************************************************
  * Name: board_sdcard_enable
  *

@@ -54,15 +54,15 @@
 #include <arch/board/board.h>
 #include "cxd56_gpio.h"
 #include "cxd56_pinconfig.h"
+#include "cxd56_sdhci.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* IP4855CX25: SD memory card integrated dual voltage level translator */
+/* TXS02612RTWR: SDIO port expander with voltage level translation */
 
-#define SDCARD_VOLTAGE_LEVEL_TRANS_SEL PIN_GNSS_1PPS_OUT
-#define SDCARD_VOLTAGE_LEVEL_TRANS_EN  PIN_HIF_IRQ_OUT
+#define SDCARD_TXS02612_SEL PIN_AP_CLK
 
 /****************************************************************************
  * Public Functions
@@ -78,10 +78,17 @@
 
 void board_sdcard_initialize(void)
 {
-  /* Initialize pin configuration (input and output disabled yet) */
+  cxd56_gpio_config(SDCARD_TXS02612_SEL, false);
 
-  cxd56_gpio_config(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
-  cxd56_gpio_config(SDCARD_VOLTAGE_LEVEL_TRANS_EN, false);
+#ifdef CONFIG_SDCARD_TXS02612_PORT0
+  /* Select port0 for SD-Card */
+
+  cxd56_gpio_write(SDCARD_TXS02612_SEL, false);
+#else
+  /* Select port1 for SDIO other than SD-Card */
+
+  cxd56_gpio_write(SDCARD_TXS02612_SEL, true);
+#endif
 }
 
 /****************************************************************************
@@ -94,14 +101,49 @@ void board_sdcard_initialize(void)
 
 void board_sdcard_finalize(void)
 {
-  /* Disable level translater */
+#ifdef CONFIG_SDCARD_TXS02612_PORT0
+  /* Disable SDIO pin configuration */
 
-  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_EN, false);
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_GPIO);
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOB_GPIO);
+#else
+  /* Disable SDIO pin configuration */
 
-  /* Return back to pin configuration */
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_GPIO);
+#endif
+  /* Disable pin configuration */
 
-  cxd56_gpio_config(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
-  cxd56_gpio_config(SDCARD_VOLTAGE_LEVEL_TRANS_EN, false);
+  cxd56_gpio_config(SDCARD_TXS02612_SEL, false);
+}
+
+/****************************************************************************
+ * Name: board_sdcard_configuraton
+ *
+ * Description:
+ *   Configure SD Card on the board.
+ *
+ ****************************************************************************/
+
+void board_sdcard_configuraton(void)
+{
+  /* SDIO configuration */
+
+  modifyreg32(CXD56_SDHCI_USERDEF1CTL, SDHCI_UDEF1_SDCLKI_SEL,
+              SDHCI_UDEF1_SDCLKI_SEL_INT);
+  modifyreg32(CXD56_SDHCI_USERDEF2CTL, SDHCI_UDEF2_CMD_SEL,
+              SDHCI_UDEF2_CMD_SEL_INT);
+
+#ifdef CONFIG_SDCARD_TXS02612_PORT0
+  /* SDIO pin configuration */
+
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_SDIO);
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOB_SDCARD);
+#else
+  /* SDIO pin configuration with CD, WP pin disabled */
+
+  putreg32(0, CXD56_TOPREG_IOFIX_APP);
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_SDIO);
+#endif
 }
 
 /****************************************************************************
@@ -114,12 +156,6 @@ void board_sdcard_finalize(void)
 
 void board_sdcard_enable(void)
 {
-  /* Enable level translater with 3.3V */
-
-  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
-  up_mdelay(100);
-  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_EN, true);
-  up_mdelay(100);
 }
 
 /****************************************************************************
@@ -132,12 +168,6 @@ void board_sdcard_enable(void)
 
 void board_sdcard_disable(void)
 {
-  /* Disable level translater with 3.3V */
-
-  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
-  up_mdelay(100);
-  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_EN, false);
-  up_mdelay(100);
 }
 
 /****************************************************************************
@@ -150,10 +180,6 @@ void board_sdcard_disable(void)
 
 void board_sdcard_set_high_voltage(void)
 {
-  /* Switch 3.3V */
-
-  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, false);
-  up_mdelay(100);
 }
 
 /****************************************************************************
@@ -166,8 +192,4 @@ void board_sdcard_set_high_voltage(void)
 
 void board_sdcard_set_low_voltage(void)
 {
-  /* Switch 1.8V */
-
-  cxd56_gpio_write(SDCARD_VOLTAGE_LEVEL_TRANS_SEL, true);
-  up_mdelay(100);
 }
