@@ -5,15 +5,6 @@
 
 if BOARD_COLLET
 
-config LCD_LPM013M091A
-	bool "JDI LPM013M091A LCD Driver with frame buffer"
-	default n
-	---help---
-		JDI LPM013M091A LCD Driver.
-		This driver doesn't support reading data.
-		Recommended to use DMA to transfer data or displayed image would be
-		broken.
-
 config EINK_ET014TT1
 	bool "EInk ET014TT1 ePaper"
 	default n
