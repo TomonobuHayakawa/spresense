@@ -1,8 +1,7 @@
 /********************************************************************************************
  * include/nuttx/lcd/lpm013m091a.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Tetsuro Itabashi <Tetsuro.x.Itabashi@sony.com>
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,23 +35,12 @@
 #ifndef __INCLUDE_NUTTX_LCD_LPM013M091A_H
 #define __INCLUDE_NUTTX_LCD_LPM013M091A_H
 
-#include <nuttx/config.h>
-#include <nuttx/spi/spi.h>
-
-#include <nuttx/fs/ioctl.h>
-
-/* LCD driver ioctl definitions **********************************************/
-
-#define _LCDBASE        (0x2100) /* LCD driver commands */
-#define _LCDIOCVALID(c) (_IOC_TYPE(c)==_LCDBASE)
-#define _LCDIOC(nr)     _IOC(_LCDBASE,nr)
-
-/* IOCTL Commands ***************************************************************************/
-
-#define LCDIOC_BACKLIGHT _LCDIOC(0x0001) /* Arg: bool value */
-
+#if 0
 #define LPM013M091A_LCDWIDTH  320
 #define LPM013M091A_LCDHEIGHT 300
+#endif
+
+/* Command set. Give me description! */
 
 #define LPM013M091A_SWRESET 0x01
 
@@ -61,19 +49,13 @@
 
 #define LPM013M091A_DISPOFF 0x28
 #define LPM013M091A_DISPON  0x29
-#define LPM013M091A_CASET 0x2A
-#define LPM013M091A_PASET 0x2B
-#define LPM013M091A_RAMWR 0x2C
+#define LPM013M091A_CASET   0x2A
+#define LPM013M091A_PASET   0x2B
+#define LPM013M091A_RAMWR   0x2C
 
-#define LPM013M091A_PIXFMT 0x3A
+#define LPM013M091A_PIXFMT  0x3A
 
-#define LPM013M091A_B3 0xB3
-#define LPM013M091A_BB 0xBB
-
-#define LPM013M091A_F3 0xF3
-#define LPM013M091A_FB 0xFB
-#define LPM013M091A_FF 0xFF
-
+#if 0
 /* color info for 16bit RGB */
 #define	LPM013M091A_BLACK   0x0000
 #define	LPM013M091A_BLUE    0x001F
@@ -83,6 +65,7 @@
 #define LPM013M091A_MAGENTA 0xF81F
 #define LPM013M091A_YELLOW  0xFFE0
 #define LPM013M091A_WHITE   0xFFFF
+#endif
 
 /********************************************************************************************
  * Public Function Prototypes
@@ -100,40 +83,66 @@ extern "C"
  * Response CODE
  *******************************************************************************/
 
-typedef enum
-{
-  ResCodeOk = 0x00000000,
-  ResCodeErr,
-  ResCodeOutOfDisp,
-  ResCodeSpiSendErr,
-  ResCodeTimeOut,
-  ResCodeInitializeErr,
-  ResCodeResetErr,
-  ResCodeSizeErr,
-} ResCode;
-
-typedef enum
-{
-  TransferCommand = 0,
-  TransferData = 1,
-} TransferMode;
-
 struct lpm013m091a_lcd_s
 {
-  ResCode (*init)(FAR struct lpm013m091a_lcd_s *lcd);
-  ResCode (*sendReset)(FAR struct lpm013m091a_lcd_s *lcd);
-  ResCode (*setTransferMode)(FAR struct lpm013m091a_lcd_s *lcd, TransferMode mode);
-  ResCode (*sendData)(FAR struct lpm013m091a_lcd_s *lcd, uint32_t data);
-  ResCode (*sendDataBurst)(FAR struct lpm013m091a_lcd_s *lcd, const void *data, uint32_t size);
+  /* Interface to control the LPM013M091A lcd driver
+   *
+   *  - select      Select the device (as neccessary) before performing any operations.
+   *  - deselect    Deselect the device (as necessary).
+   *  - sendcmd     Send specific command to the LCD driver.
+   *  - sendparam   Send specific parameter to the LCD driver.
+   *  - recvparam   Receive specific parameter from the LCD driver.
+   *  - sendgram    Send pixel data to the LCD drivers gram.
+   *  - recvgram    Receive pixel data from the LCD drivers gram.
+   *  - backlight   Change the backlight level of the connected display.
+   *                In the context of the lpm013m091a that means change the
+   *                backlight level of the connected LED driver.
+   *                The implementation in detail is part of the platform
+   *                specific sub driver.
+   *
+   */
+
+  void (*select)(FAR struct lpm013m091a_lcd_s *lcd);
+  void (*deselect)(FAR struct lpm013m091a_lcd_s *lcd);
+  int (*sendcmd)(FAR struct lpm013m091a_lcd_s *lcd, const uint8_t cmd);
+  int (*sendparam)(FAR struct lpm013m091a_lcd_s *lcd, const uint8_t param);
+  int (*recvparam)(FAR struct lpm013m091a_lcd_s *lcd, uint8_t *param);
+  int (*recvgram)(FAR struct lpm013m091a_lcd_s *lcd,
+                  uint16_t *wd, uint32_t nwords);
+  int (*sendgram)(FAR struct lpm013m091a_lcd_s *lcd,
+                  const uint16_t *wd, uint32_t nwords);
+  int (*backlight)(FAR struct lpm013m091a_lcd_s *lcd, int level);
+
+  /* mcu interface specific data following */
 };
 
-struct lpm013m091a_base_s
-{
-  struct lpm013m091a_lcd_s* lcd;
-  struct spi_dev_s* spi;
-};
+/**************************************************************************************
+ * Public Function Prototypes
+ **************************************************************************************/
 
-FAR struct lcd_dev_s* lpm013m091a_initialize(struct lpm013m091a_lcd_s *lcd, struct spi_dev_s *spi);
+/**************************************************************************************
+ * Name:  lpm013m091a_initialize
+ *
+ * Description:
+ *   Initialize the LCD video driver internal sturcture. Also initialize the
+ *   lcd hardware if not done. The control of the LCD driver is depend on the
+ *   selected MCU interface and part of the platform specific subdriver (see
+ *   bsp/board/common/cxd56_lpm013m091a.c)
+ *
+ * Input Parameters:
+ *
+ *   lcd - A reference to the platform specific driver instance to control the
+ *     lpm013m091a display driver.
+ *   devno - This is for compat. must be zero.
+ *
+ * Returned Value:
+ *
+ *   On success, this function returns a reference to the LCD driver object for
+ *   the specified LCD driver. NULL is returned on any failure.
+ *
+ **************************************************************************************/
+
+FAR struct lcd_dev_s* lpm013m091a_initialize(struct lpm013m091a_lcd_s *lcd, int devno);
 
 #undef EXTERN
 #ifdef __cplusplus
