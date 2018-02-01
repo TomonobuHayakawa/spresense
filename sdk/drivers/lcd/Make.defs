@@ -36,8 +36,7 @@
 ifeq ($(CONFIG_LCD),y)
 
 ifeq ($(CONFIG_LCD_LPM013M091A),y)
-CSRCS += lpm013m091a_base.c
-CSRCS += lpm013m091a_fb.c
+CSRCS += lpm013m091a.c
 endif
 
 ifeq ($(CONFIG_LCD_ET014TT1),y)
