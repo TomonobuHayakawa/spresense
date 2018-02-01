@@ -64,10 +64,6 @@ ifeq ($(CONFIG_CXD56_EMMC),y)
 CHIP_CSRCS += cxd56_emmc.c
 endif
 
-ifeq ($(CONFIG_CXD56_SDIO),y)
-CHIP_CSRCS += cxd56_sdhci.c
-endif
-
 ifeq ($(CONFIG_CXD56_SPH),y)
 CHIP_CSRCS += cxd56_sph.c
 endif
