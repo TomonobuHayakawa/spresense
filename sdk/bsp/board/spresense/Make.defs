@@ -109,10 +109,6 @@ ifeq ($(CONFIG_CXD56_SDIO),y)
 CSRCS += cxd56_sdcard.c
 endif
 
-ifeq ($(CONFIG_LCD_LPM013M091A),y)
-CSRCS += cxd56_lpm013m091a.c
-endif
-
 ifeq ($(CONFIG_VIDEO_ISX012),y)
 CSRCS += cxd56_isx012.c
 endif
