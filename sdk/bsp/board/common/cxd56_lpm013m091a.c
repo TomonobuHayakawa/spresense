@@ -50,10 +50,11 @@
 #include <nuttx/spi/spi.h>
 #include <nuttx/lcd/lcd.h>
 #include <nuttx/lcd/lpm013m091a.h>
+#include <arch/board/board.h>
+
 #include "cxd56_gpio.h"
 #include "cxd56_spi.h"
 #include "cxd56_pinconfig.h"
-#include "pinassign.h"
 
 #if defined(CONFIG_LCD_LPM013M091A)
 
@@ -61,69 +62,248 @@
  * Private Type Definition
  ****************************************************************************/
 
+#ifndef LPM013M091A_SPI_MAXFREQUENCY
+#  define LPM013M091A_SPI_MAXFREQUENCY 20000000
+#endif
+
 /****************************************************************************
  * Private Function Protototypes
  ****************************************************************************/
-
-static int lpm013m091a_send_reset(FAR struct lpm013m091a_lcd_s *lcd);
-static int lpm013m091a_set_transfer_mode(FAR struct lpm013m091a_lcd_s *lcd,
-                                         lpm013m091a_trans_mode_t mode);
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
-static struct lcd_dev_s *g_lcd;
-
-static struct lpm013m091a_lcd_s g_lpm013m091a =
+struct lpm013m091a4ws_lcd_s
 {
-  .send_reset = lpm013m091a_send_reset,
-  .set_transfer_mode = lpm013m091a_set_transfer_mode,
+  struct lpm013m091a_lcd_s dev;
+  struct spi_dev_s *spi;
 };
+static struct lpm013m091a4ws_lcd_s g_lcddev;
+static struct lcd_dev_s *g_lcd = NULL;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-/*******************************************************************************
- * Send Reset Command to LCD Driver
- *******************************************************************************/
+/****************************************************************************
+ * Name: cxd56_lpm013m091a4ws_select
+ *
+ * Description:
+ *   Select the SPI, locking and re-configuring if necessary
+ *
+ * Input Parameters:
+ *   spi  - Reference to the public driver structure
+ *
+ * Returned Value:
+ *
+ ****************************************************************************/
 
-static int lpm013m091a_send_reset(FAR struct lpm013m091a_lcd_s *lcd)
+static void cxd56_lpm013m091a4ws_select(FAR struct lpm013m091a_lcd_s *lcd)
 {
-  cxd56_gpio_write(LPM013M091A_RST, false);
+  FAR struct lpm013m091a4ws_lcd_s *priv = (FAR struct lpm013m091a4ws_lcd_s *)lcd;
 
-  up_mdelay(10);
-
-  cxd56_gpio_write(LPM013M091A_RST, true);
-
-  up_mdelay(50);
-
-  return OK;
+  SPI_LOCK(priv->spi, true);
+  SPI_SELECT(priv->spi, SPIDEV_DISPLAY(0), true);
 }
 
-/*******************************************************************************
- * Select data or command
- * High:=> data, Low:=> command
- *******************************************************************************/
+/****************************************************************************
+ * Name: cxd56_lpm013m091a4ws_deselect
+ *
+ * Description:
+ *   De-select the SPI
+ *
+ * Input Parameters:
+ *   spi  - Reference to the public driver structure
+ *
+ * Returned Value:
+ *
+ ****************************************************************************/
 
-static int lpm013m091a_set_transfer_mode(FAR struct lpm013m091a_lcd_s *lcd, lpm013m091a_trans_mode_t mode)
+static void cxd56_lpm013m091a4ws_deselect(FAR struct lpm013m091a_lcd_s *lcd)
 {
-  bool value = (mode == TRANSFER_DATA) ? true : false;
+  FAR struct lpm013m091a4ws_lcd_s *priv = (FAR struct lpm013m091a4ws_lcd_s *)lcd;
 
-  cxd56_gpio_write(LPM013M091A_DC, value);
+  SPI_SELECT(priv->spi, SPIDEV_DISPLAY(0), false);
+  SPI_LOCK(priv->spi, false);
+}
+
+/****************************************************************************
+ * Name: cxd56_lpm013m091a4ws_backlight
+ *
+ * Description:
+ *   Set the backlight level of the connected display.
+ *
+ * Input Parameters:
+ *   spi   - Reference to the public driver structure
+ *   level - backligth level
+ *
+ * Returned Value:
+ *   OK - On Success
+ *
+ ****************************************************************************/
+
+static int cxd56_lpm013m091a4ws_backlight(FAR struct lpm013m091a_lcd_s *lcd, int level)
+{
+  if (level > 0)
+    {
+      lcd->sendcmd(lcd, 0x53);
+      lcd->sendparam(lcd, 0x24);
+    }
+  else
+    {
+      lcd->sendcmd(lcd, 0x53);
+      lcd->sendparam(lcd, 0x0);
+    }
 
   return OK;
 }
 
 /****************************************************************************
+ * Name: cxd56_lpm013m091a4ws_sendcmd
+ *
+ * Description:
+ *   Send a command to the lcd driver.
+ *
+ * Input Parameters:
+ *   lcd  - Reference to the lpm013m091a_lcd_s driver structure
+ *   cmd  - command to send
+ *
+ * Returned Value:
+ *   On success - OK
+ *
+ ****************************************************************************/
+
+static int cxd56_lpm013m091a4ws_sendcmd(FAR struct lpm013m091a_lcd_s *lcd,
+                                        const uint8_t cmd)
+{
+  FAR struct lpm013m091a4ws_lcd_s *priv = (FAR struct lpm013m091a4ws_lcd_s *)lcd;
+
+  lcdinfo("%02x\n", cmd);
+
+  SPI_SETBITS(priv->spi, 8);
+
+  /* FIXME: This function can be replaced with SPI_CMDDATA().
+   * This feature is needed to enable CONFIG_SPI_CMDDATA and board specific
+   * cmddata() function.
+   */
+
+  cxd56_gpio_write(DISPLAY_DC, false); /* Indicate CMD */
+  (void) SPI_SEND(priv->spi, cmd);
+  cxd56_gpio_write(DISPLAY_DC, true);  /* Indicate DATA */
+
+  return OK;
+}
+
+/****************************************************************************
+ * Name: cxd56_lpm013m091a4ws_sendparam
+ *
+ * Description:
+ *   Send a parameter to the lcd driver.
+ *
+ * Input Parameters:
+ *   lcd    - Reference to the lpm013m091a_lcd_s driver structure
+ *   param  - parameter to send
+ *
+ * Returned Value:
+ *   OK - On Success
+ *
+ ****************************************************************************/
+
+static int cxd56_lpm013m091a4ws_sendparam(FAR struct lpm013m091a_lcd_s *lcd,
+                                          const uint8_t param)
+{
+  FAR struct lpm013m091a4ws_lcd_s *priv = (FAR struct lpm013m091a4ws_lcd_s *)lcd;
+
+  cxd56_gpio_write(DISPLAY_DC, true);  /* Indicate DATA */
+  (void) SPI_SEND(priv->spi, param);
+
+  return OK;
+}
+
+/****************************************************************************
+ * Name: cxd56_lpm013m091a4ws_sendgram
+ *
+ * Description:
+ *   Send a number of pixel words to the lcd driver gram.
+ *
+ * Input Parameters:
+ *   lcd    - Reference to the lpm013m091a_lcd_s driver structure
+ *   wd     - Reference to the words to send
+ *   nwords - number of words to send
+ *
+ * Returned Value:
+ *   OK - On Success
+ *
+ ****************************************************************************/
+
+static int cxd56_lpm013m091a4ws_sendgram(FAR struct lpm013m091a_lcd_s *lcd,
+                                         const uint16_t *wd, uint32_t nwords)
+{
+  FAR struct lpm013m091a4ws_lcd_s *priv = (FAR struct lpm013m091a4ws_lcd_s *)lcd;
+
+  lcdinfo("lcd:%p, wd=%p, nwords=%d\n", lcd, wd, nwords);
+
+  SPI_SETBITS(priv->spi, 8);
+  (void) SPI_SNDBLOCK(priv->spi, wd, nwords * 2);
+
+  return OK;
+}
+
+/****************************************************************************
+ * Name: cxd56_lpm013m091a4ws_recvparam
+ *
+ * Description:
+ *   Receive a parameter from the lcd driver.
+ *
+ * Input Parameters:
+ *   lcd    - Reference to the lpm013m091a_lcd_s driver structure
+ *   param  - Reference to where parameter receive
+ *
+ * Returned Value:
+ *   OK - On Success
+ *
+ ****************************************************************************/
+
+static int cxd56_lpm013m091a4ws_recvparam(FAR struct lpm013m091a_lcd_s *lcd,
+                                          uint8_t *param)
+{
+  FAR struct lpm013m091a4ws_lcd_s *priv = (FAR struct lpm013m091a4ws_lcd_s *)lcd;
+
+  cxd56_gpio_write(DISPLAY_DC, true);  /* Indicate DATA */
+  *param = (uint8_t)(SPI_SEND(priv->spi, param) & 0xff);
+
+  return OK;
+}
+
+/****************************************************************************
+ * Name: cxd56_lpm013m091a4ws_recvgram
+ *
+ * Description:
+ *   Receive pixel words from the lcd driver gram.
+ *
+ * Input Parameters:
+ *   lcd    - Reference to the public driver structure
+ *   wd     - Reference to where the pixel words receive
+ *   nwords - number of pixel words to receive
+ *
+ * Returned Value:
+ *   OK - On Success
+ *
+ ****************************************************************************/
+
+static int cxd56_lpm013m091a4ws_recvgram(FAR struct lpm013m091a_lcd_s *lcd,
+                                         uint16_t *wd, uint32_t nwords)
+{
+  lcdinfo("wd=%p, nwords=%d\n", wd, nwords);
+
+  return OK;
+};
+
+/****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-extern FAR struct fb_vtable_s *lpm013m091a_fb_initialize(FAR struct lpm013m091a_lcd_s *lcd, struct spi_dev_s *spi);
-extern int lpm013m091a_register(FAR const char *devpath, FAR struct lpm013m091a_lcd_s *lcd);
-
-#if defined(CONFIG_NX_LCDDRIVER)
 /****************************************************************************
  * Name:  board_lcd_initialize
  *
@@ -136,73 +316,52 @@ extern int lpm013m091a_register(FAR const char *devpath, FAR struct lpm013m091a_
 
 int board_lcd_initialize(void)
 {
+  FAR struct lpm013m091a4ws_lcd_s *priv = &g_lcddev;
+  FAR struct spi_dev_s *spi;
+
   lcdinfo("Initializing lcd\n");
 
   if (g_lcd == NULL)
     {
-      /* globally initialize spi bus for peripherals */
-
-      lcdinfo("initialize spi %d.\n", DISPLAY_SPI);
-      FAR struct spi_dev_s *spi = cxd56_spibus_initialize(DISPLAY_SPI);
+      spi = cxd56_spibus_initialize(DISPLAY_SPI);
       if (!spi)
         {
           lcderr("ERROR: Failed to initialize spi bus.\n");
           return -ENODEV;
         }
+      priv->spi = spi;
 
-      DEBUGASSERT(spi != 0);
-      g_lcd = lpm013m091a_initialize(&g_lpm013m091a, spi);
+      /* Reset LPM013M091A */
+
+      up_mdelay(10);
+      cxd56_gpio_write(DISPLAY_RST, false);
+      up_mdelay(10);
+      cxd56_gpio_write(DISPLAY_RST, true);
+      up_mdelay(50);
+
+      /* Configure SPI */
+
+      SPI_SETMODE(priv->spi, SPIDEV_MODE3);
+      SPI_SETBITS(priv->spi, 8);
+      (void)SPI_HWFEATURES(priv->spi, 0);
+      (void)SPI_SETFREQUENCY(priv->spi, LPM013M091A_SPI_MAXFREQUENCY);
+
+      /* Initialize LPM013M091A driver with necessary methods */
+
+      priv->dev.select      = cxd56_lpm013m091a4ws_select;
+      priv->dev.deselect    = cxd56_lpm013m091a4ws_deselect;
+      priv->dev.sendcmd     = cxd56_lpm013m091a4ws_sendcmd;
+      priv->dev.sendparam   = cxd56_lpm013m091a4ws_sendparam;
+      priv->dev.recvparam   = cxd56_lpm013m091a4ws_recvparam;
+      priv->dev.sendgram    = cxd56_lpm013m091a4ws_sendgram;
+      priv->dev.recvgram    = cxd56_lpm013m091a4ws_recvgram;
+      priv->dev.backlight   = cxd56_lpm013m091a4ws_backlight;
+
+      g_lcd = lpm013m091a_initialize(&priv->dev, 0);
     }
-
-  DEBUGASSERT(g_lcd);
 
   return OK;
 }
-
-#else /* CONFIG_NX_LCDDRIVER */
-/****************************************************************************
- * Name: board_graphics_setup
- *
- * Description:
- *   Called by NX initialization logic to configure the LCD
- *
- ****************************************************************************/
-
-FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
-{
-  int ret;
-  FAR struct fb_vtable_s *dev;
-
-  lcdinfo("Initializing lcd\n");
-
-  /* globally initialize spi bus for peripherals */
-
-  lcdinfo("initialize spi %d.\n", DISPLAY_SPI);
-  FAR struct spi_dev_s *spi = cxd56_spibus_initialize(DISPLAY_SPI);
-  if (!spi)
-    {
-      lcderr("ERROR: Failed to initialize spi bus.\n");
-      return NULL;
-    }
-
-  DEBUGASSERT(spi != 0);
-  dev = lpm013m091a_fb_initialize(&g_lpm013m091a, spi);
-
-  /* Configure GPIO output pin */
-
-  cxd56_gpio_config(LPM013M091A_RST, false);
-  cxd56_gpio_config(LPM013M091A_DC, false);
-
-  ret = lpm013m091a_register("/dev/lcd0", &g_lpm013m091a);
-  if (ret < 0)
-    {
-      lcderr("Error registering lpm013m091a\n");
-    }
-
-  return dev;
-
-}
-#endif /* CONFIG_NX_LCDDRIVER */
 
 /****************************************************************************
  * Name:  board_lcd_getdev
@@ -215,9 +374,11 @@ FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
 
 FAR struct lcd_dev_s *board_lcd_getdev(int lcddev)
 {
-  DEBUGASSERT(lcddev == 0);
-  return g_lcd;
+  if (lcddev == 0)
+    {
+      return g_lcd;
+    }
+  return NULL;
 }
-
 
 #endif /* CONFIG_LCD_LPM013M091A */
