@@ -45,36 +45,71 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <semaphore.h>
 
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
 #include <nuttx/lcd/lcd.h>
+#include <nuttx/nx/nx.h>
+#include <nuttx/nx/nxglib.h>
+#endif
 #include <nuttx/video/isx012.h>
 
 #include <arch/chip/cisif.h>
-#include <arch/chip/pm.h>
+
+#include "nximage.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define COEF_Y   (128) /*            (int)(1.0000 * 128 + 0.5)*/
-#define COEF_RCR (202) /*(1.5748) -> (int)(1.5748 * 128 + 0.5)*/
-#define COEF_GCB ( 24) /*(0.4681) -> (int)(0.1873 * 128 + 0.5)*/
-#define COEF_GCR ( 60) /*(0.1873) -> (int)(0.4681 * 128 + 0.5)*/
-#define COEF_BCB (238) /*(1.8556) -> (int)(1.8556 * 128 + 0.5)*/
-
-/* TODO: Remove LCD dependency */
-
-#ifdef CONFIG_LCD_LPM013M091A
-#define CAMERA_LCD_SEND_SIZE 0x2ee00 /* 320x300x2 */
-#elif defined(CONFIG_LCD_ILI9340)
-#define CAMERA_LCD_SEND_SIZE 0x25800 /* 320x240x2 */
+#ifndef CONFIG_EXAMPLES_CAMERA_LCD_DEVNO
+#  define CONFIG_EXAMPLES_CAMERA_LCD_DEVNO 0
 #endif
+
+/* Convert 32bit integer to unsigned 8bit with saturated */
+
+#define itou8(v) ((v) < 0 ? 0 : ((v) > 255 ? 255 : (v)))
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+struct uyvy_s
+{
+  uint8_t u0;
+  uint8_t y0;
+  uint8_t v0;
+  uint8_t y1;
+};
+
+struct capture_info_s
+{
+  uint8_t code;
+  uint8_t last_frame;
+  uint32_t size;
+  uint32_t addr;
+};
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
+
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+struct nximage_data_s g_nximage =
+{
+  NULL,          /* hnx */
+  NULL,          /* hbkgd */
+  0,             /* xres */
+  0,             /* yres */
+  false,         /* havpos */
+  { 0 },         /* sem */
+  0              /* exit code */
+};
+#endif
+
+static sem_t g_capture;
 
 /****************************************************************************
  * Public Types
@@ -84,75 +119,149 @@
  * Public Data
  ****************************************************************************/
 
-/* TODO: freqlock is unnecessary because this is the outside of camera usage.
- * If you want to keep high voltage, then check CONFIG_CPUFREQ_RELEASE_LOCK
- * has been disabled.
- */
-
-static struct pm_cpu_freqlock_s img_lock =
-  PM_CPUFREQLOCK_INIT(PM_CPUFREQLOCK_TAG('C','M',0), PM_CPUFREQLOCK_FLAG_HV);
-
-static volatile uint32_t rcv_frame = 1;
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-void camera_rcv_frame_data(uint8_t code, uint8_t last_frame, uint32_t size, uint32_t addr)
-{
-/* TODO: must be use semaphore to polling wait */
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
 
-  rcv_frame = 0;
+static inline int nximage_initialize(void)
+{
+  FAR NX_DRIVERTYPE *dev;
+  nxgl_mxpixel_t color;
+  int ret;
+
+  /* Initialize the LCD device */
+
+  printf("nximage_initialize: Initializing LCD\n");
+  ret = board_lcd_initialize();
+  if (ret < 0)
+    {
+      printf("nximage_initialize: board_lcd_initialize failed: %d\n", -ret);
+      return ERROR;
+    }
+
+  /* Get the device instance */
+
+  dev = board_lcd_getdev(CONFIG_EXAMPLES_CAMERA_LCD_DEVNO);
+  if (!dev)
+    {
+      printf("nximage_initialize: board_lcd_getdev failed, devno=%d\n",
+             CONFIG_EXAMPLES_CAMERA_LCD_DEVNO);
+      return ERROR;
+    }
+
+  /* Turn the LCD on at 75% power */
+
+  (void)dev->setpower(dev, ((3*CONFIG_LCD_MAXPOWER + 3)/4));
+
+  /* Then open NX */
+
+  printf("nximage_initialize: Open NX\n");
+  g_nximage.hnx = nx_open(dev);
+  if (!g_nximage.hnx)
+    {
+      printf("nximage_initialize: nx_open failed: %d\n", errno);
+      return ERROR;
+    }
+
+  /* Set background color to black */
+
+  color = 0;
+  nx_setbgcolor(g_nximage.hnx, &color);
+  ret = nx_requestbkgd(g_nximage.hnx, &g_nximagecb, NULL);
+  if (ret < 0)
+    {
+      printf("camera_main: nx_requestbkgd failed: %d\n", errno);
+      nx_close(g_nximage.hnx);
+      return ERROR;
+    }
+
+  while (!g_nximage.havepos)
+    {
+      (void) sem_wait(&g_nximage.sem);
+    }
+  printf("camera_main: Screen resolution (%d,%d)\n", g_nximage.xres, g_nximage.yres);
+
+  return 0;
+}
+#endif
+
+volatile struct capture_info_s g_info;
+
+static void complete_capture(uint8_t code, uint8_t last_frame,
+                             uint32_t size, uint32_t addr)
+{
+  /* Save capture image information */
+
+  g_info.code = code;
+  g_info.last_frame = last_frame;
+  g_info.size = size;
+  g_info.addr = addr;
+
+  sem_post(&g_capture);
 }
 
-void camera_translate_yuv2rgb(uint8_t *buf, uint32_t hsize, uint32_t vsize)
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+
+static inline void ycbcr2rgb(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b)
 {
-  uint32_t yuv = 0;
-  uint32_t y  = 0;
-  uint32_t cb = 0;
-  uint32_t cr = 0;
-  int16_t rgb[3];
-  uint32_t n = 0, i, j;
+  int _r;
+  int _g;
+  int _b;
+  _r = (128 * (y-16) +                  202 * (cr-128) + 64) / 128;
+  _g = (128 * (y-16) -  24 * (cb-128) -  60 * (cr-128) + 64) / 128;
+  _b = (128 * (y-16) + 238 * (cb-128)                  + 64) / 128;
+  *r = itou8(_r);
+  *g = itou8(_g);
+  *b = itou8(_b);
+}
 
-  uint16_t *p_src = (uint16_t *)buf;
-  for (int iy = 0; iy < vsize ; iy++)
+static inline uint16_t ycbcrtorgb565(uint8_t y, uint8_t cb, uint8_t cr)
+{
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+
+  ycbcr2rgb(y, cb, cr, &r, &g, &b);
+  r = (r >> 3) & 0x1f;
+  g = (g >> 2) & 0x3f;
+  b = (b >> 3) & 0x1f;
+  return (uint16_t)(((uint16_t)r << 11) | ((uint16_t)g << 5) | (uint16_t)b);
+}
+
+static inline uint16_t swap16(uint16_t v)
+{
+  return ((v >> 8) & 0xff) | ((v << 8) & 0xff00);
+}
+
+/* Color conversion to show on display devices. */
+
+static void yuv2rgb(void *buf, uint32_t size)
+{
+  struct uyvy_s *ptr;
+  struct uyvy_s uyvy;
+  uint16_t *dest;
+  uint32_t i;
+
+  ptr = buf;
+  dest = buf;
+  for (i = 0; i < size / 4; i++)
     {
-      for (int ix = 0; ix < hsize; ix++) 
-        {
-          if (!(yuv & 1)) 
-            {
-              cb = (p_src[n]   & 0xff);
-              cr = (p_src[n+1] & 0xff);
-            }
+      /* Save packed YCbCr elements due to it will be replaced with
+       * converted color data.
+       */
 
-          y = (p_src[n] & 0xff00) >> 8;
-          yuv++;
-          rgb[0] = (int)( (COEF_Y*(y-16) + COEF_RCR*(cr-128) + 64) / 128);
-          rgb[1] = (int)( (COEF_Y*(y-16) - COEF_GCB*(cb-128) - 
-                          COEF_GCR*(cr-128) + 64) / 128);
-          rgb[2] = (int)( (COEF_Y*(y-16) + COEF_BCB*(cb-128) + 64) / 128);
-          for (i = 0; i < 3;i++)
-            {
-              if (rgb[i] >= 255)
-                {
-                  rgb[i] = 255;
-                }
-              else if (rgb[i] <= 0)
-                {
-                  rgb[i] = 0;
-                }
+      uyvy = *ptr++;
 
-            }
+      /* Convert color format to packed RGB565 and write it in big endian */
 
-          i =      (rgb[0] & 0xf8);       /* 5bit Red */
-          i = i | ((rgb[1] & 0xe0) >> 5); /* 3bit Green */
-          j =      (rgb[1] & 0x1c) << 3;  /* 3bit */
-          j = j | ((rgb[2] & 0xf8) >> 3); /* 5bit Blue */
-          p_src[n] = (i & 0xff) | ((j << 8) & 0xff00);
-          n++;
-        }
+      *dest++ = swap16(ycbcrtorgb565(uyvy.y0, uyvy.u0, uyvy.v0));
+      *dest++ = swap16(ycbcrtorgb565(uyvy.y1, uyvy.u0, uyvy.v0));
     }
 }
+
+#endif
 
 /****************************************************************************
  * camera_main
@@ -166,110 +275,116 @@ int camera_main(int argc, char *argv[])
 {
   cisif_param_t  cis_param;
   cisif_sarea_t  cis_area;
-  static uint8_t *img_buf;
+  void *capturebuffer;
+  uint32_t capturesize;
   uint32_t hsize;
   uint32_t vsize;
-  int fd1;
-  int fd2;
+  int fd;
   int ret;
 
-  up_pm_acquire_freqlock(&img_lock);
-
-  img_buf = memalign(32, CAMERA_LCD_SEND_SIZE); /* get buffer to imager and LCD */
-
-  fd1 = open("/dev/imager0", O_CREAT); /* open device of imager */
-  if (fd1 < 0)
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+  ret = nximage_initialize();
+  if (ret < 0)
     {
-      printf("failed to open imager driver : %d:%d\n", fd1, errno);
+      printf("camera_main: Failed to get NX handle: %d\n", errno);
+      return 1;
     }
-  else
-    {
-      ret = ioctl(fd1, IMGIOC_SETSTATE, STATE_ISX012_ACTIVE); /* ActiveISX012 */
-      if (ret < 0)
-        {
-          printf("IMGIOC_SETSTATE failed. %d\n", ret);
-          return ret;
-        }
-    }
-
-  board_graphics_setup(0);
-
-  /* TODO: Must be use NuttX LCD interface. */
-
-  fd2 = open("/dev/lcd0", O_WRONLY);
-  if (fd2 < 0)
-    {
-      printf("failed to open display driver : %d\n", fd2);
-    }
-  else
-    {
-      ioctl(fd2, 1, 1);
-    }
+#endif
 
   hsize = 320;
   vsize = 240;
+  capturesize = hsize * vsize * 2;
+
+  /* Allocate image buffer for image sensor. This buffer must be 32 byte
+   * aligned because it will be accessed directly from hardware.
+   */
+
+  capturebuffer = memalign(32, capturesize);
+
+  fd = open("/dev/imager0", 0);
+  if (fd < 0)
+    {
+      printf("failed to open imager driver : %d:%d\n", fd, errno);
+      return 0;
+    }
+  ret = ioctl(fd, IMGIOC_SETSTATE, STATE_ISX012_ACTIVE);
+  if (ret < 0)
+    {
+      printf("IMGIOC_SETSTATE failed. %d\n", ret);
+      return ret;
+    }
+
+  sem_init(&g_capture, 1, 0);
+
+  /* TODO: Need description for this configuration */
+
   cis_param.format                = FORMAT_CISIF_YUV;
-  cis_param.yuv_param.hsize       = 320;
-  cis_param.yuv_param.vsize       = 240;
+  cis_param.yuv_param.hsize       = hsize;
+  cis_param.yuv_param.vsize       = vsize;
   cis_param.yuv_param.notify_size = 0;
   cis_param.yuv_param.notify_func = NULL;
-  cis_param.yuv_param.comp_func   = camera_rcv_frame_data;
+  cis_param.yuv_param.comp_func   = complete_capture;
   cis_param.jpg_param.notify_size = 0;
   cis_param.jpg_param.notify_func = NULL;
   cis_param.jpg_param.comp_func   = NULL;
-  ret = cxd56_cisifinit(&cis_param); /* initial CISIF */
+  ret = cxd56_cisifinit(&cis_param);
   if (ret != OK)
     {
       printf("camera_main: cxd56_cisifinit failed: %d\n", ret);
+      goto finish;
     }
 
-  cis_area.strg_addr = img_buf;
-  cis_area.strg_size = 320*240*2;
-  while(1)
-    {
-      ret = cxd56_cisifcaptureframe(&cis_area, NULL); /* get frame */
-      if (ret == OK)
-        {
-          while(rcv_frame); /* wait frame */
-          rcv_frame=1;
-          if (fd2)
-            {
-              /* TODO: Remove this #if */
-#if 1 /* translate from YUV to RGB565 */
-              camera_translate_yuv2rgb(img_buf, hsize, vsize);
-#else /* RGB565 */
-              /* byte swap */
-              uint16_t *p_src = (uint16_t *)img_buf;
-              for (int i = 0; i < hsize*vsize; i++) 
-                {
-                  uint16_t tmp = *p_src;
-                  *p_src++ = tmp << 8 | tmp >> 8;
-                }
+  cis_area.strg_addr = capturebuffer;
+  cis_area.strg_size = capturesize;
+
+#ifdef CONFIG_EXAMPLES_CAMERA_INFINITE
+  for (;;)
 #endif
-              ret = write(fd2, img_buf, CAMERA_LCD_SEND_SIZE); /* display to LCD */
-
-              /* TODO: to more meaningful message */
-
-              printf("DIS:%d\n", ret);
-            }
-        }
-      else
+    {
+      ret = cxd56_cisifcaptureframe(&cis_area, NULL);
+      if (ret != OK)
         {
           printf("camera_main: cxd56_cisifcaptureframe failed: %d\n", ret);
+          goto finish;
         }
+
+      /* Waiting for capture done */
+
+      sem_wait(&g_capture);
+
+      printf("frame: %d at %08x (size %08x) (code=%d)\n", g_info.last_frame,
+             g_info.addr, g_info.size, g_info.code);
+
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+      /* Convert YUV color format to RGB565 */
+
+      yuv2rgb(capturebuffer, capturesize);
+
+      nximage_image(g_nximage.hbkgd, capturebuffer);
+#else
+      /* TODO: Save capture image to file or any other output destination */
+#endif
     }
 
-  ret = close(fd1); /* close device of imager */
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+  /* Stop until key input for prevent clear display by nx_releasebkgd() */
+
+  (void) getchar();
+#endif
+
+ finish:
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+  nx_releasebkgd(g_nximage.hbkgd);
+  nx_close(g_nximage.hnx);
+#endif
+
+  ret = close(fd);
   if (ret < 0)
     {
       printf("failed to close imager driver : %d\n", ret);
     }
 
-  ret = close(fd2); /* close device of LCD */
-  if (ret < 0)
-    {
-      printf("failed to close display driver : %d\n", ret);
-    }
+  free(capturebuffer);
 
   return 0;
 }
