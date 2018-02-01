@@ -69,12 +69,6 @@ SoundEffectObject* s_effec_obj = NULL;
 /* TODO: Now 16bit fixec. It have to be configurable. */
 #define I2S_IN_BYTE_LEN (2)
 
-#define MAX_MIC_IN_PCM_BUF_SIZE \
-  (MAX_CAPTURE_SAMPLE_NUM * AC_IN_BYTE_LEN * MAX_MIC_IN_CH_NUM)
-
-#define MAX_I2S_IN_PCM_BUF_SIZE \
-  (MAX_CAPTURE_SAMPLE_NUM * I2S_IN_BYTE_LEN * MAX_I2S_IN_CH_NUM)
-
 /* Note: I2S only supports 2-ch output */
 /* TODO: Limitation of HW, This definition
  * should be defined in baseband driver layer.
@@ -153,13 +147,13 @@ bool AS_DeactivateEffector(void)
 }
 
 /*--------------------------------------------------------------------*/
-static void capture_done_callback(CaptureComponentCmpltParam param)
+static void capture_done_callback(CaptureDataParam param)
 {
-  err_t er = MsgLib::send<CaptureComponentCmpltParam>(s_self_dtq,
-                                                      MsgPriNormal,
-                                                      MSG_AUD_SEF_CMD_INPUT,
-                                                      s_self_dtq,
-                                                      param);
+  err_t er = MsgLib::send<CaptureDataParam>(s_self_dtq,
+                                            MsgPriNormal,
+                                            MSG_AUD_SEF_CMD_INPUT,
+                                            s_self_dtq,
+                                            param);
 
   F_ASSERT(er == ERR_OK);
 }
@@ -583,9 +577,11 @@ void SoundEffectObject::act(MsgPacket *msg)
 
   if (!AS_get_capture_comp_handler(&m_capture_from_mic_hdlr,
                                    CaptureDeviceAnalogMic,
+                                   s_mic_in_pool_id,
                                    mic_channel)
    || !AS_get_capture_comp_handler(&m_capture_from_i2s_hdlr,
                                    CaptureDeviceI2S,
+                                   s_i2s_in_pool_id,
                                    0))
     {
       sendAudioCmdCmplt(cmd, AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
@@ -830,8 +826,8 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
     {
       FilterComponentParam filter_param;
 
-      filter_param.filter_type = Apu::MFE;
-      filter_param.callback = &mfe_done_callback;
+      filter_param.filter_type    = Apu::MFE;
+      filter_param.callback       = &mfe_done_callback;
       filter_param.init_mfe_param = m_init_mfe_param;
 
       if ((rst = AS_filter_init(filter_param, &dsp_inf))
@@ -841,8 +837,8 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
           return;
         }
 
-      filter_param.filter_type = Apu::XLOUD;
-      filter_param.callback = &xloud_done_callback;
+      filter_param.filter_type      = Apu::XLOUD;
+      filter_param.callback         = &xloud_done_callback;
       filter_param.init_xloud_param = m_init_xloud_param;
 
       if ((rst = AS_filter_init(filter_param, &dsp_inf))
@@ -858,10 +854,8 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
     {
       CaptureComponentParam cap_comp_param;
 
-      cap_comp_param.handle = m_capture_from_mic_hdlr;
-      cap_comp_param.exec_capture_comp_param.p_pcm = allocMicInBuf();
-      cap_comp_param.exec_capture_comp_param.pcm_sample =
-        MAX_CAPTURE_SAMPLE_NUM;
+      cap_comp_param.handle                = m_capture_from_mic_hdlr;
+      cap_comp_param.exec_param.pcm_sample = MAX_CAPTURE_SAMPLE_NUM;
 
       if (!AS_exec_capture(cap_comp_param))
         {
@@ -869,10 +863,8 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
           return;
         }
 
-      cap_comp_param.handle = m_capture_from_i2s_hdlr;
-      cap_comp_param.exec_capture_comp_param.p_pcm = allocI2SInBuf();
-      cap_comp_param.exec_capture_comp_param.pcm_sample =
-        MAX_CAPTURE_SAMPLE_NUM;
+      cap_comp_param.handle                = m_capture_from_i2s_hdlr;
+      cap_comp_param.exec_param.pcm_sample = MAX_CAPTURE_SAMPLE_NUM;
 
       if (!AS_exec_capture(cap_comp_param))
         {
@@ -882,6 +874,7 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
     }
 
   /* initialize sync counter of mic and i2s */
+
   m_mic_in_sync_cnt = 0;
   m_i2s_in_sync_cnt = 0;
   m_capt_sync_wait_flg = true;
@@ -910,7 +903,7 @@ void SoundEffectObject::stopOnActive(MsgPacket* msg)
 /*--------------------------------------------------------------------*/
 void SoundEffectObject::illegalInput(MsgPacket *msg)
 {
-  msg->popParam<CaptureComponentCmpltParam>();
+  msg->popParam<CaptureDataParam>();
   SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_ILLEGAL_REQUEST);
 }
 
@@ -958,7 +951,7 @@ void SoundEffectObject::convertCh1to2(uint16_t *p_src, uint16_t *p_dst, uint32_t
 }
 
 /*--------------------------------------------------------------------*/
-void SoundEffectObject::input(CaptureComponentCmpltParam& param)
+void SoundEffectObject::input(CaptureDataParam& param)
 {
   if (CaptureDeviceAnalogMic == param.output_device)
     {
@@ -966,12 +959,8 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
       if ((m_filter_mode & FILTER_MODE_MFE) != 0)
         {
           /* TODO: 名前をPre-に隠蔽。Front-end 処理としての認識でよい */
-          execMfe(param.exec_capture_comp_param.p_pcm,
-                  param.exec_capture_comp_param.pcm_sample,
-                  param.end_flag);
+          execMfe(param.buf.cap_mh, param.buf.sample, param.end_flag);
           m_mic_in_sync_cnt++;
-
-          freeMicInBuf();
         }
       else
         {
@@ -981,26 +970,24 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
             reinterpret_cast<unsigned long*>(allocI2SOutBuf());
 
           render_param.exec_mfe_param.output_buffer.size =
-            param.exec_capture_comp_param.pcm_sample
-            * m_i2s_out_ch_num * AC_IN_BYTE_LEN;
+            param.buf.sample * m_i2s_out_ch_num * AC_IN_BYTE_LEN;
 
           /* case of MFE is through */
           if (m_mic_in_ch_num == 4)
             {
               selectCh4to2
-              ((uint16_t *)param.exec_capture_comp_param.p_pcm,
+              ((uint16_t *)param.buf.cap_mh.getPa(),
                (uint16_t *)render_param.exec_mfe_param.output_buffer.p_buffer,
-               (uint32_t)param.exec_capture_comp_param.pcm_sample);
+               (uint32_t)param.buf.sample);
             }
           else
             {
               convertCh1to2
-              ((uint16_t *)param.exec_capture_comp_param.p_pcm,
+              ((uint16_t *)param.buf.cap_mh.getPa(),
                (uint16_t *)render_param.exec_mfe_param.output_buffer.p_buffer,
-               (uint32_t)param.exec_capture_comp_param.pcm_sample);
+               (uint32_t)param.buf.sample);
             }
 
-          freeMicInBuf();
           execI2SOutRender(render_param);
 
           /* stop process */
@@ -1024,12 +1011,8 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
       /* case of MFE is active */
       if((m_filter_mode & FILTER_MODE_MFE) != 0)
         {
-          execMpp(param.exec_capture_comp_param.p_pcm,
-                  param.exec_capture_comp_param.pcm_sample,
-                  param.end_flag);
+          execMpp(param.buf.cap_mh, param.buf.sample, param.end_flag);
           m_i2s_in_sync_cnt++;
-
-          freeI2SInBuf();
         }
       else
         {
@@ -1040,8 +1023,7 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
             reinterpret_cast<unsigned long*>(allocHpOutBuf());
 
           render_param.exec_xloud_param.output_buffer.size =
-            param.exec_capture_comp_param.pcm_sample
-            * MAX_I2S_IN_CH_NUM * I2S_IN_BYTE_LEN;
+            param.buf.sample * MAX_I2S_IN_CH_NUM * I2S_IN_BYTE_LEN;
 
           if (render_param.exec_xloud_param.output_buffer.size
               > MAX_HP_OUT_PCM_BUF_SIZE)
@@ -1055,19 +1037,20 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
             }
 
           memcpy(render_param.exec_xloud_param.output_buffer.p_buffer,
-                 param.exec_capture_comp_param.p_pcm,
+                 param.buf.cap_mh.getPa(),
                  render_param.exec_xloud_param.output_buffer.size);
 
-          freeI2SInBuf();
           execHpSpOutRender(render_param);
 
           /* stop process */
+
           if (m_state.get() != SoundFXRunState)
             {
               if (!param.end_flag)
                 {
                   return;
                 }
+
               if (!AS_stop_renderer(m_hp_render_comp_handler,
                                     AS_DMASTOPMODE_NORMAL))
                 {
@@ -1085,8 +1068,7 @@ void SoundEffectObject::input(CaptureComponentCmpltParam& param)
 /*--------------------------------------------------------------------*/
 void SoundEffectObject::inputOnActive(MsgPacket *msg)
 {
-  CaptureComponentCmpltParam param =
-    msg->moveParam<CaptureComponentCmpltParam>();
+  CaptureDataParam param = msg->moveParam<CaptureDataParam>();
 
   /* Send input data to filter. */
 
@@ -1100,10 +1082,8 @@ void SoundEffectObject::inputOnActive(MsgPacket *msg)
 
       CaptureComponentParam cap_comp_param;
 
-      cap_comp_param.handle = m_capture_from_mic_hdlr;
-      cap_comp_param.exec_capture_comp_param.p_pcm = allocMicInBuf();
-      cap_comp_param.exec_capture_comp_param.pcm_sample =
-        MAX_CAPTURE_SAMPLE_NUM;
+      cap_comp_param.handle                = m_capture_from_mic_hdlr;
+      cap_comp_param.exec_param.pcm_sample = MAX_CAPTURE_SAMPLE_NUM;
 
       AS_exec_capture(cap_comp_param);
     }
@@ -1113,10 +1093,8 @@ void SoundEffectObject::inputOnActive(MsgPacket *msg)
 
       CaptureComponentParam cap_comp_param;
 
-      cap_comp_param.handle = m_capture_from_i2s_hdlr;
-      cap_comp_param.exec_capture_comp_param.p_pcm = allocI2SInBuf();
-      cap_comp_param.exec_capture_comp_param.pcm_sample =
-        MAX_CAPTURE_SAMPLE_NUM;
+      cap_comp_param.handle                = m_capture_from_i2s_hdlr;
+      cap_comp_param.exec_param.pcm_sample = MAX_CAPTURE_SAMPLE_NUM;
 
       AS_exec_capture(cap_comp_param);
     }
@@ -1129,8 +1107,7 @@ void SoundEffectObject::inputOnActive(MsgPacket *msg)
 /*--------------------------------------------------------------------*/
 void SoundEffectObject::inputOnStopping(MsgPacket *msg)
 {
-  CaptureComponentCmpltParam param =
-    msg->peekParam<CaptureComponentCmpltParam>();
+  CaptureDataParam param = msg->peekParam<CaptureDataParam>();
 
   if (m_capt_sync_wait_flg)
     {
@@ -1140,8 +1117,8 @@ void SoundEffectObject::inputOnStopping(MsgPacket *msg)
 
           CaptureComponentParam cap_comp_param;
 
-          cap_comp_param.handle = m_capture_from_mic_hdlr;
-          cap_comp_param.stop_capture_comp_param.mode = AS_DMASTOPMODE_NORMAL;
+          cap_comp_param.handle          = m_capture_from_mic_hdlr;
+          cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
 
           AS_stop_capture(cap_comp_param);
 
@@ -1168,7 +1145,7 @@ void SoundEffectObject::inputOnStopping(MsgPacket *msg)
 
   /* pop message parameter */
 
-  msg->popParam<CaptureComponentCmpltParam>();
+  msg->popParam<CaptureDataParam>();
 }
 
 /*--------------------------------------------------------------------*/
@@ -1221,7 +1198,7 @@ void SoundEffectObject::filterRstOnStopping(MsgPacket *msg)
             }
 
           stopParam.filter_type = Apu::MFE;
-          stopParam.callback = &mfe_done_callback;
+          stopParam.callback    = &mfe_done_callback;
 
           AS_filter_stop(stopParam);
         }
@@ -1243,7 +1220,7 @@ void SoundEffectObject::filterRstOnStopping(MsgPacket *msg)
             }
 
           stopParam.filter_type = Apu::XLOUD;
-          stopParam.callback = &xloud_done_callback;
+          stopParam.callback    = &xloud_done_callback;
 
           AS_filter_stop(stopParam);
         }
@@ -1533,11 +1510,11 @@ uint32_t SoundEffectObject::initMfe(const AudioCommand& cmd)
 
   CaptureComponentParam cap_comp_param;
 
-  cap_comp_param.init_capture_comp_param.capture_ch_num = m_mic_in_ch_num;
+  cap_comp_param.init_param.capture_ch_num    = m_mic_in_ch_num;
   /* TODO: Fixed valuse */
-  cap_comp_param.init_capture_comp_param.capture_bit_width = AudPcm16Bit;
-  cap_comp_param.init_capture_comp_param.callback = capture_done_callback;
-  cap_comp_param.handle = m_capture_from_mic_hdlr;
+  cap_comp_param.init_param.capture_bit_width = AudPcm16Bit;
+  cap_comp_param.init_param.callback          = capture_done_callback;
+  cap_comp_param.handle                       = m_capture_from_mic_hdlr;
 
   if (!AS_init_capture(cap_comp_param))
     {
@@ -1548,11 +1525,11 @@ uint32_t SoundEffectObject::initMfe(const AudioCommand& cmd)
   /* TODO: There is a case that do not capture I2S,
    *       Therefor should be configurable to disable.
    */
-  cap_comp_param.init_capture_comp_param.capture_ch_num = m_i2s_in_ch_num;
+  cap_comp_param.init_param.capture_ch_num    = m_i2s_in_ch_num;
   /* TODO: Fixed value */
-  cap_comp_param.init_capture_comp_param.capture_bit_width = AudPcm16Bit;
-  cap_comp_param.init_capture_comp_param.callback = capture_done_callback;
-  cap_comp_param.handle = m_capture_from_i2s_hdlr;
+  cap_comp_param.init_param.capture_bit_width = AudPcm16Bit;
+  cap_comp_param.init_param.callback          = capture_done_callback;
+  cap_comp_param.handle                       = m_capture_from_i2s_hdlr;
 
   if (!AS_init_capture(cap_comp_param))
     {
@@ -1660,21 +1637,17 @@ void SoundEffectObject::execHpSpOutRender(FilterComponentParam& param)
 }
 
 /*--------------------------------------------------------------------*/
-void SoundEffectObject::execMfe(void *p_buffer, int32_t sample, bool is_end)
+void SoundEffectObject::execMfe(MemMgrLite::MemHandle mh,
+                                int32_t sample,
+                                bool is_end)
 {
-  if(m_mic_in_buf_mh_que.empty())
-    {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
-      return;
-    }
-
   FilterComponentParam param;
 
   param.filter_type = Apu::MFE;
   param.callback = &mfe_done_callback;
 
   param.exec_mfe_param.input_buffer.p_buffer =
-    reinterpret_cast<unsigned long*>(p_buffer);
+    reinterpret_cast<unsigned long*>(mh.getPa());
 
   param.exec_mfe_param.input_buffer.size =
     sample * m_mic_in_ch_num * AC_IN_BYTE_LEN;
@@ -1692,7 +1665,9 @@ void SoundEffectObject::execMfe(void *p_buffer, int32_t sample, bool is_end)
 
   /* Copy MH from MIC-captured data to mfe-in data. */
 
-  SoundFxBufParam micin = m_mic_in_buf_mh_que.top();
+  SoundFxBufParam micin;
+  micin.mh     = mh;
+  micin.sample = sample;
   micin.is_end = is_end;
 
   if (!m_mfe_in_buf_mh_que.push(micin))
@@ -1702,24 +1677,20 @@ void SoundEffectObject::execMfe(void *p_buffer, int32_t sample, bool is_end)
 }
 
 /*--------------------------------------------------------------------*/
-void SoundEffectObject::execMpp(void *p_buffer, int32_t sample, bool is_end)
+void SoundEffectObject::execMpp(MemMgrLite::MemHandle mh,
+                                int32_t sample,
+                                bool is_end)
 {
   /* First, Send I2S-in data to xLOUD(MPP) filter component.
    * Next, next request I2S-in caputure command.
    */
-
-  if (m_i2s_in_buf_mh_que.empty())
-    {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
-      return;
-    }
 
   FilterComponentParam param;
   param.filter_type = Apu::XLOUD;
   param.callback = &xloud_done_callback;
 
   param.exec_xloud_param.input_buffer.p_buffer =
-    reinterpret_cast<unsigned long*>(p_buffer);
+    reinterpret_cast<unsigned long*>(mh.getPa());
 
   param.exec_xloud_param.input_buffer.size =
     sample * m_i2s_in_ch_num * I2S_IN_BYTE_LEN;
@@ -1733,67 +1704,15 @@ void SoundEffectObject::execMpp(void *p_buffer, int32_t sample, bool is_end)
 
   /* Copy MH from I2S-captured data to mpp-in data. */
 
-  SoundFxBufParam i2sin = m_i2s_in_buf_mh_que.top();
+  SoundFxBufParam i2sin;
+  i2sin.mh     = mh;
+  i2sin.sample = sample;
   i2sin.is_end = is_end;
 
   if (!m_mpp_in_buf_mh_que.push(i2sin))
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
     }
-}
-
-/*--------------------------------------------------------------------*/
-void* SoundEffectObject::allocMicInBuf()
-{
-  MemMgrLite::MemHandle mh;
-
-  if (mh.allocSeg(s_mic_in_pool_id,
-                  MAX_MIC_IN_PCM_BUF_SIZE)
-      != ERR_OK)
-    {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
-      return NULL;
-    }
-
-  SoundFxBufParam data;
-
-  data.mh = mh;
-  data.sample = MAX_CAPTURE_SAMPLE_NUM;
-  data.is_end = false;
-
-  if (!m_mic_in_buf_mh_que.push(data))
-    {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return NULL;
-    }
-
-  return mh.getPa();
-}
-
-/*--------------------------------------------------------------------*/
-void* SoundEffectObject::allocI2SInBuf()
-{
-  MemMgrLite::MemHandle mh;
-
-  if (mh.allocSeg(s_i2s_in_pool_id, MAX_I2S_IN_PCM_BUF_SIZE) != ERR_OK)
-    {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
-      return NULL;
-    }
-
-  SoundFxBufParam data;
-
-  data.mh = mh;
-  data.sample = MAX_CAPTURE_SAMPLE_NUM;
-  data.is_end = false;
-
-  if (!m_i2s_in_buf_mh_que.push(data))
-    {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return NULL;
-    }
-
-  return mh.getPa();
 }
 
 /*--------------------------------------------------------------------*/

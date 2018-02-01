@@ -132,15 +132,8 @@ private:
 
   s_std::Queue<AudioCommand, 1> m_external_cmd_que;
 
-  struct mic_in_data_s
-  {
-    MemMgrLite::MemHandle mh;
-    uint32_t pcm_sample;
-  };
-
-  typedef s_std::Queue<mic_in_data_s, CAPTURE_PCM_BUF_QUE_SIZE> MicInMhQueue;
-  MicInMhQueue m_mic_in_buf_mh_que;
-  MicInMhQueue m_cnv_in_buf_mh_que;
+  typedef s_std::Queue<MemMgrLite::MemHandle, CAPTURE_PCM_BUF_QUE_SIZE> CnvInMhQueue;
+  CnvInMhQueue m_cnv_in_buf_mh_que;
 
   void run();
   void parse(MsgPacket *);
@@ -170,7 +163,7 @@ private:
   void captureDoneOnStop(MsgPacket *);
 
   bool startCapture();
-  void execEnc(void *p_pcm, uint32_t pcm_size);
+  void execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_size);
   void stopEnc(void);
 
   void* getMicInBufAddr();
@@ -179,16 +172,6 @@ private:
   uint32_t loadCodec(AudioCodec, int32_t, uint32_t *);
   bool unloadCodec(void);
 
-  bool freeMicInBuf()
-    {
-      if (!m_mic_in_buf_mh_que.pop())
-        {
-          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
-          return false;
-        }
-
-      return true;
-    }
   bool freeCnvInBuf()
     {
       if (!m_cnv_in_buf_mh_que.pop())

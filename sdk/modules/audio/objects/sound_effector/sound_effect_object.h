@@ -144,8 +144,6 @@ private:
   typedef s_std::Queue<SoundFxBufParam, CAP_BUF_QUEUE_SIZE> OutDataMhQueue;
   typedef s_std::Queue<SoundFxBufParam, CAP_BUF_QUEUE_SIZE> RcgDataMhQueue;
 
-  InDataMhQueue  m_mic_in_buf_mh_que;
-  InDataMhQueue  m_i2s_in_buf_mh_que;
   InDataMhQueue  m_mfe_in_buf_mh_que;
   InDataMhQueue  m_mpp_in_buf_mh_que;
   OutDataMhQueue m_hp_out_buf_mh_que;
@@ -180,41 +178,19 @@ private:
   void tuning(MsgPacket* msg);
   void filterDoneCmplt(MsgPacket* msg);
 
-  void input(CaptureComponentCmpltParam& param);
+  void input(CaptureDataParam& param);
 
   uint32_t initMfe(const AudioCommand& cmd);
   uint32_t initMpp(const AudioCommand& cmd);
 
   void execI2SOutRender(FilterComponentParam& param);
   void execHpSpOutRender(FilterComponentParam& param);
-  void execMfe(void* p_buffer, int32_t sample, bool is_end);
-  void execMpp(void* p_buffer, int32_t sample, bool is_end);
+  void execMfe(MemMgrLite::MemHandle mh, int32_t sample, bool is_end);
+  void execMpp(MemMgrLite::MemHandle mh, int32_t sample, bool is_end);
 
-  void* allocMicInBuf();
-  void* allocI2SInBuf();
   void* allocHpOutBuf();
   void* allocI2SOutBuf();
   void* allocMfeOutBuf();
-
-  bool freeMicInBuf()
-  {
-    if (!m_mic_in_buf_mh_que.pop())
-      {
-        SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
-        return false;
-      }
-    return true;
-  }
-
-  bool freeI2SInBuf()
-  {
-    if (!m_i2s_in_buf_mh_que.pop())
-      {
-        SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
-        return false;
-      }
-    return true;
-  }
 
   bool freeMfeInBuf()
   {

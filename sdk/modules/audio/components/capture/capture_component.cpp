@@ -128,28 +128,29 @@ static void AS_CaptureNotifyDmaDoneDev0(AudioDrvDmaResult *p_param)
 {
   CaptureComponent *instance = s_pFactory->getCaptureCompInstance(0);
 
-  if (instance->m_cap_data_que.empty())
+  /* Check DMA requests */
+
+  if (instance->m_req_data_que.empty())
     {
       CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
       return;
     }
 
-  CaptureComponentParam command = instance->m_cap_data_que.top();
+  /* Construct result parameters */
 
-  CaptureComponentCmpltParam result;
+  CaptureDataParam result;
 
   result.output_device = instance->m_output_device;
   result.end_flag      = p_param->endflg;
+  result.buf           = instance->m_req_data_que.top();
 
-  result.exec_capture_comp_param.p_pcm = 
-    command.exec_capture_comp_param.p_pcm;
-
-  result.exec_capture_comp_param.pcm_sample =
-    command.exec_capture_comp_param.pcm_sample;
+  /* Notify to requester (use callback) */
 
   instance->m_callback(result);
 
-  if (!instance->m_cap_data_que.pop())
+  /* Discard request parameter */
+
+  if (!instance->m_req_data_que.pop())
     {
       CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
       return;
@@ -162,28 +163,21 @@ static void AS_CaptureNotifyDmaDoneDev1(AudioDrvDmaResult *p_param)
 {
   CaptureComponent *instance = s_pFactory->getCaptureCompInstance(1);
 
-  if (instance->m_cap_data_que.empty())
+  if (instance->m_req_data_que.empty())
     {
       CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
       return;
     }
 
-  CaptureComponentParam command = instance->m_cap_data_que.top();
-
-  CaptureComponentCmpltParam result;
+  CaptureDataParam result;
 
   result.output_device = instance->m_output_device;
   result.end_flag      = p_param->endflg;
-
-  result.exec_capture_comp_param.p_pcm =
-    command.exec_capture_comp_param.p_pcm;
-
-  result.exec_capture_comp_param.pcm_sample =
-    command.exec_capture_comp_param.pcm_sample;
+  result.buf           = instance->m_req_data_que.top();
 
   instance->m_callback(result);
 
-  if (!instance->m_cap_data_que.pop())
+  if (!instance->m_req_data_que.pop())
     {
       CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
       return;
@@ -391,6 +385,7 @@ static bool rcv_result(int ch)
 /*--------------------------------------------------------------------*/
 bool AS_get_capture_comp_handler(CaptureComponentHandler *p_handle,
                                  CaptureDevice device_type,
+                                 MemMgrLite::PoolId mem_pool_id,
                                  uint8_t mic_channel)
 {
   if (!s_pFactory->getCaptureCompHandler(p_handle))
@@ -400,21 +395,21 @@ bool AS_get_capture_comp_handler(CaptureComponentHandler *p_handle,
 
   CaptureComponentParam param;
 
-  param.act_capture_comp_param.path_sel_param.pathTo = AS_PATH_TO_DMAC;
+  param.act_param.path_sel_param.pathTo = AS_PATH_TO_DMAC;
 
   switch (device_type)
     {
       case CaptureDeviceAnalogMic:
       case CaptureDeviceDigitalMic:
-          param.act_capture_comp_param.path_sel_param.pathFrom =
+          param.act_param.path_sel_param.pathFrom =
             AS_PATH_FROM_MIC1_8;
 
-          param.act_capture_comp_param.path_sel_param.mic_dma_channel =
+          param.act_param.path_sel_param.mic_dma_channel =
             mic_channel;
           break;
 
       case CaptureDeviceI2S:
-          param.act_capture_comp_param.path_sel_param.pathFrom =
+          param.act_param.path_sel_param.pathFrom =
             AS_PATH_FROM_I2S1;
           break;
 
@@ -423,12 +418,15 @@ bool AS_get_capture_comp_handler(CaptureComponentHandler *p_handle,
           return false;
     }
 
-  param.act_capture_comp_param.output_device = device_type;
+  param.act_param.output_device = device_type;
+  param.act_param.mem_pool_id   = mem_pool_id;
 
   if (!s_pFactory->parse(*p_handle, MSG_AUD_BB_CMD_ACT, param))
     {
       return false;
     }
+
+  /* Wait response of ACTIVATE */
 
   return rcv_result(*p_handle);
 }
@@ -439,6 +437,8 @@ bool AS_release_capture_comp_handler(CaptureComponentHandler handle)
   CaptureComponentParam param;
 
   s_pFactory->parse(handle, MSG_AUD_BB_CMD_DEACT, param);
+
+  /* Wait response of DEACTIVATE */
 
   if (!rcv_result(handle))
     {
@@ -483,6 +483,8 @@ bool AS_stop_capture(const CaptureComponentParam& param)
       return false;
     }
 
+  /* Wait response of STOP */
+
   return rcv_result(param.handle);
 }
 
@@ -494,8 +496,8 @@ static void dma_notify_cmplt_int(asDmacSelId dmacId, E_AS_DMA_INT code)
   CaptureComponentHandler handle =
     s_pFactory->getCaptureHandleByDmacId(dmacId);
 
-  param.notify_capture_comp_param.type = NtfDmaCmplt;
-  param.notify_capture_comp_param.code = code;
+  param.notify_param.type = NtfDmaCmplt;
+  param.notify_param.code = code;
 
   err_t err = MsgLib::sendIsr<CaptureComponentParam>(s_self_dtq[handle],
                                                      MsgPriNormal,
@@ -639,13 +641,14 @@ bool CaptureComponent::act(const CaptureComponentParam& param)
   bool result = true;
 
   CAPTURE_DBG("ACT: path <from %d/to %d>, mic dma ch %d, outdev %d\n",
-              param.act_capture_comp_param.path_sel_param.pathFrom,
-              param.act_capture_comp_param.path_sel_param.pathTo,
-              param.act_capture_comp_param.path_sel_param.mic_dma_channel,
-              param.act_capture_comp_param.output_device);
+              param.act_param.path_sel_param.pathFrom,
+              param.act_param.path_sel_param.pathTo,
+              param.act_param.path_sel_param.mic_dma_channel,
+              param.act_param.output_device);
 
-  m_path_sel_param = param.act_capture_comp_param.path_sel_param;
-  m_output_device  = param.act_capture_comp_param.output_device;
+  m_path_sel_param = param.act_param.path_sel_param;
+  m_output_device  = param.act_param.output_device;
+  m_mem_pool_id    = param.act_param.mem_pool_id;
 
   if (result && E_AS_OK != AS_SetAudioDataPath(&m_path_sel_param,
                                                &m_dmac_id,
@@ -712,15 +715,15 @@ bool CaptureComponent::init(const CaptureComponentParam& param)
   bool result = true;
 
   CAPTURE_DBG("INIT: ch num %d, bit len %d, cb %08x\n",
-              param.init_capture_comp_param.capture_ch_num,
-              param.init_capture_comp_param.capture_bit_width,
-              param.init_capture_comp_param.callback);
+              param.init_param.capture_ch_num,
+              param.init_param.capture_bit_width,
+              param.init_param.callback);
 
   asInitDmacParam init_param;
 
   init_param.dmacId = m_dmac_id;
 
-  switch (param.init_capture_comp_param.capture_bit_width)
+  switch (param.init_param.capture_bit_width)
     {
       case AudPcm16Bit:
           init_param.format = AS_SAMPLING_FMT_16;
@@ -739,7 +742,7 @@ bool CaptureComponent::init(const CaptureComponentParam& param)
   init_param.p_error_func   = m_dma_err_cb;
   init_param.p_dmadone_func = m_dma_done_cb;
 
-  m_callback = param.init_capture_comp_param.callback;
+  m_callback = param.init_param.callback;
 
   if (result && E_AS_OK != AS_InitDmac(&init_param))
     {
@@ -757,29 +760,15 @@ bool CaptureComponent::init(const CaptureComponentParam& param)
 /*--------------------------------------------------------------------*/
 bool CaptureComponent::execOnRdy(const CaptureComponentParam& param)
 {
-  if (!m_cap_data_que.push(param))
+  if (!m_cap_pre_que.push(param))
     {
       CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return false;
     }
-
-  asReadDmacParam read_dmac_param;
-
-  read_dmac_param.dmacId = m_dmac_id;
-  read_dmac_param.addr  = (uint32_t)param.exec_capture_comp_param.p_pcm;
-  read_dmac_param.size  = param.exec_capture_comp_param.pcm_sample;
-  read_dmac_param.addr2 = 0;
-  read_dmac_param.size2 = 0;
 
   /* At first, caputre request is only pushed into queue.
    * Not start yet, DMAC needs more than one request at its start.
    */
-
-  if (!m_read_dmac_cmd_que.push(read_dmac_param))
-    {
-      CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return false;
-    }
 
   m_state = PreAct;
 
@@ -789,42 +778,35 @@ bool CaptureComponent::execOnRdy(const CaptureComponentParam& param)
 /*--------------------------------------------------------------------*/
 bool CaptureComponent::execOnPreAct(const CaptureComponentParam& param)
 {
-  if (!m_cap_data_que.push(param))
-    {
-      CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return false;
-    }
-
-  asReadDmacParam read_dmac_param;
-
-  read_dmac_param.dmacId = m_dmac_id;
-  read_dmac_param.addr   = (uint32_t)param.exec_capture_comp_param.p_pcm;
-  read_dmac_param.size   = param.exec_capture_comp_param.pcm_sample;
-  read_dmac_param.addr2  = 0;
-  read_dmac_param.size2  = 0;
-
-  if (!m_read_dmac_cmd_que.push(read_dmac_param))
+  if (!m_cap_pre_que.push(param))
     {
       CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return false;
     }
 
   /* When predefined number of requests are ready,
-   * set request to DMAC and start.
+   * send read request to DMAC and start.
    */
 
-  if (m_read_dmac_cmd_que.full())
+  if (m_cap_pre_que.full())
     {
-      while (!m_read_dmac_cmd_que.empty())
+      while (!m_cap_pre_que.empty())
         {
-          asReadDmacParam cur_cmd = m_read_dmac_cmd_que.top();
+          asReadDmacParam dmac_param;
+          CaptureComponentParam pre = m_cap_pre_que.top();
 
-          if (E_AS_OK != AS_ReadDmac(&cur_cmd))
+          dmac_param.dmacId = m_dmac_id;
+          dmac_param.addr   = (uint32_t)getCapBuf(pre.exec_param.pcm_sample);
+          dmac_param.size   = pre.exec_param.pcm_sample;
+          dmac_param.addr2  = 0;
+          dmac_param.size2  = 0;
+
+          if (E_AS_OK != AS_ReadDmac(&dmac_param))
             {
               return false;
             }
 
-          if (!m_read_dmac_cmd_que.pop())
+          if (!m_cap_pre_que.pop())
             {
               CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
             }
@@ -844,21 +826,15 @@ bool CaptureComponent::execOnPreAct(const CaptureComponentParam& param)
 /*--------------------------------------------------------------------*/
 bool CaptureComponent::execOnAct(const CaptureComponentParam& param)
 {
-  if (!m_cap_data_que.push(param))
-    {
-      CAPTURE_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return false;
-    }
+  asReadDmacParam dmac_param;
 
-  asReadDmacParam read_dmac_param;
+  dmac_param.dmacId = m_dmac_id;
+  dmac_param.addr   = (uint32_t)getCapBuf(param.exec_param.pcm_sample);
+  dmac_param.size   = param.exec_param.pcm_sample;
+  dmac_param.addr2  = 0;
+  dmac_param.size2  = 0;
 
-  read_dmac_param.dmacId = m_dmac_id;
-  read_dmac_param.addr   = (uint32_t)param.exec_capture_comp_param.p_pcm;
-  read_dmac_param.size   = param.exec_capture_comp_param.pcm_sample;
-  read_dmac_param.addr2  = 0;
-  read_dmac_param.size2  = 0;
-
-  if (E_AS_OK != AS_ReadDmac(&read_dmac_param))
+  if (E_AS_OK != AS_ReadDmac(&dmac_param))
     {
       return false;
     }
@@ -890,7 +866,7 @@ bool CaptureComponent::stopOnAct(const CaptureComponentParam& param)
 
   CAPTURE_DBG("STOP:\n");
 
-  if (E_AS_OK != AS_StopDmac(m_dmac_id, param.stop_capture_comp_param.mode))
+  if (E_AS_OK != AS_StopDmac(m_dmac_id, param.stop_param.mode))
     {
       result = false;
     }
@@ -915,13 +891,13 @@ bool CaptureComponent::notify(const CaptureComponentParam& param)
 {
   bool result = false;
 
-  switch(param.notify_capture_comp_param.type)
+  switch(param.notify_param.type)
     {
       case NtfDmaCmplt:
         {
           if (E_AS_OK != AS_NotifyDmaCmplt
                                   (m_dmac_id,
-                                   param.notify_capture_comp_param.code))
+                                   param.notify_param.code))
             {
               return false;
             }
@@ -934,6 +910,35 @@ bool CaptureComponent::notify(const CaptureComponentParam& param)
     }
 
   return result;
+}
+
+/*--------------------------------------------------------------------*/
+void* CaptureComponent::getCapBuf(uint32_t cap_sample)
+{
+  /* Allocate memory for capture, and push to request que */
+
+  MemMgrLite::MemHandle mh;
+
+  if (mh.allocSeg(m_mem_pool_id,
+                  cap_sample * m_path_sel_param.mic_dma_channel * 2)
+      != ERR_OK)
+    {
+      CAPTURE_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      return NULL;
+    }
+
+  CaptureBuffer buf;
+
+  buf.cap_mh = mh;
+  buf.sample = cap_sample;
+
+  if (!m_req_data_que.push(buf))
+    {
+      CAPTURE_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      return NULL;
+    }
+
+  return mh.getPa();
 }
 
 __WIEN2_END_NAMESPACE

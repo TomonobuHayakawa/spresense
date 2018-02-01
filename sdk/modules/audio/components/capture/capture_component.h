@@ -42,6 +42,14 @@ __WIEN2_BEGIN_NAMESPACE
 /* Equals to Max number of DMAC resource */
 #define MAX_CAPTURE_COMP_INSTANCE_NUM  CONFIG_AUDIOUTILS_CAPTURE_CH_NUM
 
+/* General types */
+
+struct CaptureBuffer
+{
+  MemMgrLite::MemHandle cap_mh;
+  uint32_t              sample; 
+};
+
 enum CaptureDevice
 {
   CaptureDeviceAnalogMic = 0,
@@ -50,21 +58,21 @@ enum CaptureDevice
   CaptureDeviceTypeNum
 };
 
+struct CaptureDataParam
+{
+  CaptureDevice output_device;
+  CaptureBuffer buf;
+  bool          end_flag;
+};
+
+typedef void (* CaptureDoneCB)(CaptureDataParam p_param);
+
+/* API paramters */
+
 struct ExecCaptureComponentParam
 {
-  void    *p_pcm;
   int32_t pcm_sample;
 };
-
-
-struct CaptureComponentCmpltParam
-{
-  CaptureDevice             output_device;
-  bool                      end_flag;
-  ExecCaptureComponentParam exec_capture_comp_param;
-};
-
-typedef void (* CaptureDoneCB)(CaptureComponentCmpltParam p_param);
 
 struct InitCaptureComponentParam
 {
@@ -75,8 +83,9 @@ struct InitCaptureComponentParam
 
 struct ActCaptureComponentParam
 {
-  asPathSelParam path_sel_param;
-  CaptureDevice  output_device;
+  asPathSelParam     path_sel_param;
+  CaptureDevice      output_device;
+  MemMgrLite::PoolId mem_pool_id;
 };
 
 struct StopCaptureComponentParam
@@ -104,18 +113,21 @@ struct CaptureComponentParam
 
   union
   {
-    ActCaptureComponentParam    act_capture_comp_param;
-    InitCaptureComponentParam   init_capture_comp_param;
-    ExecCaptureComponentParam   exec_capture_comp_param;
-    StopCaptureComponentParam   stop_capture_comp_param;
-    NotifyCaptureComponentParam notify_capture_comp_param;
+    ActCaptureComponentParam    act_param;
+    InitCaptureComponentParam   init_param;
+    ExecCaptureComponentParam   exec_param;
+    StopCaptureComponentParam   stop_param;
+    NotifyCaptureComponentParam notify_param;
   };
 };
+
+/* API definitions */
 
 extern "C" {
 
 bool AS_get_capture_comp_handler(CaptureComponentHandler *p_handle,
                                  CaptureDevice device_type,
+                                 MemMgrLite::PoolId mem_pool_id,
                                  uint8_t mic_channel);
 
 bool AS_release_capture_comp_handler(CaptureComponentHandler p_handle);
@@ -145,8 +157,8 @@ public:
 
   CaptureDevice m_output_device;
 
-  typedef s_std::Queue<CaptureComponentParam, MAX_CAPTURE_QUE_NUM> CapDataQue;
-  CapDataQue m_cap_data_que;
+  typedef s_std::Queue<CaptureBuffer, MAX_CAPTURE_QUE_NUM> CapDataQue;
+  CapDataQue m_req_data_que;
 
   void create(AS_DmaDoneCb, AS_ErrorCb, MsgQueId, MsgQueId);
 
@@ -166,12 +178,14 @@ private:
   MsgQueId m_self_dtq;
   MsgQueId m_self_sync_dtq;
 
+  MemMgrLite::PoolId m_mem_pool_id;
+
   asPathSelParam m_path_sel_param;
 
   AudioState<State> m_state;
 
-  typedef s_std::Queue<asReadDmacParam, 2> ReadDmacCmdQue;
-  ReadDmacCmdQue m_read_dmac_cmd_que;
+  typedef s_std::Queue<CaptureComponentParam, 2> ReadDmacCmdQue;
+  ReadDmacCmdQue m_cap_pre_que;
 
   typedef bool (CaptureComponent::*EvtProc)(const CaptureComponentParam&);
   static EvtProc EvetProcTbl[AUD_BB_MSG_NUM][StateNum];
@@ -189,6 +203,8 @@ private:
   bool stopOnPreAct(const CaptureComponentParam& param);
   bool stopOnAct(const CaptureComponentParam& param);
   bool notify(const CaptureComponentParam& param);
+
+  void* getCapBuf(uint32_t cap_sample);
 };
 
 

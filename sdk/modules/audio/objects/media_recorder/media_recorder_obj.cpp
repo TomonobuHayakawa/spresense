@@ -86,15 +86,15 @@ static VoiceRecorderObjectTask *s_rcd_obj = NULL;
  * Private Functions
  ****************************************************************************/
 
-static void capture_comp_done_callback(CaptureComponentCmpltParam param)
+static void capture_comp_done_callback(CaptureDataParam param)
 {
   err_t er;
 
-  er = MsgLib::send<CaptureComponentCmpltParam>(s_self_dtq,
-                                                MsgPriNormal,
-                                                MSG_AUD_VRC_RST_CAPTURE,
-                                                s_self_dtq,
-                                                param);
+  er = MsgLib::send<CaptureDataParam>(s_self_dtq,
+                                      MsgPriNormal,
+                                      MSG_AUD_VRC_RST_CAPTURE,
+                                      s_self_dtq,
+                                      param);
   F_ASSERT(er == ERR_OK);
 }
 
@@ -650,11 +650,10 @@ void VoiceRecorderObjectTask::startOnReady(MsgPacket *msg)
   uint32_t apu_result = AS_ECODE_OK;
   uint32_t dsp_inf = 0;
 
-  cap_comp_param.init_capture_comp_param.capture_ch_num = m_channel_num;
-  cap_comp_param.init_capture_comp_param.capture_bit_width = m_pcm_bit_width;
-  cap_comp_param.init_capture_comp_param.callback =
-    capture_comp_done_callback;
-  cap_comp_param.handle = m_capture_from_mic_hdlr;
+  cap_comp_param.init_param.capture_ch_num    = m_channel_num;
+  cap_comp_param.init_param.capture_bit_width = m_pcm_bit_width;
+  cap_comp_param.init_param.callback          = capture_comp_done_callback;
+  cap_comp_param.handle                       = m_capture_from_mic_hdlr;
   if (!AS_init_capture(cap_comp_param))
     {
       sendAudioCmdCmplt(cmd, AS_ECODE_DMAC_INITIALIZE_ERROR);
@@ -760,8 +759,8 @@ void VoiceRecorderObjectTask::stopOnRec(MsgPacket *msg)
 
   /* Stop DMA transfer. */
 
-  cap_comp_param.handle                       = m_capture_from_mic_hdlr;
-  cap_comp_param.stop_capture_comp_param.mode = AS_DMASTOPMODE_NORMAL;
+  cap_comp_param.handle          = m_capture_from_mic_hdlr;
+  cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
 
   AS_stop_capture(cap_comp_param);
 
@@ -1020,7 +1019,7 @@ void VoiceRecorderObjectTask::encDoneOnOverflow(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void VoiceRecorderObjectTask::illegalCaptureDone(MsgPacket *msg)
 {
-  msg->moveParam<CaptureComponentCmpltParam>();
+  msg->moveParam<CaptureDataParam>();
   MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_ILLEGAL_REQUEST);
 }
 
@@ -1028,52 +1027,33 @@ void VoiceRecorderObjectTask::illegalCaptureDone(MsgPacket *msg)
 void VoiceRecorderObjectTask::captureDoneOnRec(MsgPacket *msg)
 {
   CaptureComponentParam cap_comp_param;
-  CaptureComponentCmpltParam capture_result =
-    msg->moveParam<CaptureComponentCmpltParam>();
+  CaptureDataParam capture_result = msg->moveParam<CaptureDataParam>();
 
-  /* Note: Must check m_mic_in_buf_mh_que size first. */
+  /* Request next capture */
 
-  if (m_mic_in_buf_mh_que.empty())
-    {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
-      return;
-    }
-
-  cap_comp_param.handle = m_capture_from_mic_hdlr;
-  cap_comp_param.exec_capture_comp_param.p_pcm = getMicInBufAddr();
-  cap_comp_param.exec_capture_comp_param.pcm_sample = getPcmCaptureSample();
+  cap_comp_param.handle                = m_capture_from_mic_hdlr;
+  cap_comp_param.exec_param.pcm_sample = getPcmCaptureSample();
   AS_exec_capture(cap_comp_param);
 
   /* Transfer Mic-in pcm data. */
 
-  execEnc(capture_result.exec_capture_comp_param.p_pcm,
-          capture_result.exec_capture_comp_param.pcm_sample *
+  execEnc(capture_result.buf.cap_mh,
+          capture_result.buf.sample *
           m_pcm_byte_len * m_channel_num);
-
-  freeMicInBuf();
 }
 
 /*--------------------------------------------------------------------------*/
 void VoiceRecorderObjectTask::captureDoneOnStop(MsgPacket *msg)
 {
-  CaptureComponentCmpltParam capture_result =
-    msg->moveParam<CaptureComponentCmpltParam>();
-
-  /* Note: Must check m_mic_in_buf_mh_que size first. */
-
-  if (m_mic_in_buf_mh_que.empty())
-    {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
-      return;
-    }
+  CaptureDataParam capture_result = msg->moveParam<CaptureDataParam>();
 
   /* Transfer Mic-in pcm data. */
 
-  execEnc(capture_result.exec_capture_comp_param.p_pcm,
-          capture_result.exec_capture_comp_param.pcm_sample *
+  execEnc(capture_result.buf.cap_mh,
+          capture_result.buf.sample *
           m_pcm_byte_len * m_channel_num);
 
-  freeMicInBuf();
+  /* Check end of capture */
 
   if (capture_result.end_flag)
     {
@@ -1094,11 +1074,9 @@ bool VoiceRecorderObjectTask::startCapture()
   for (int i = 0; i < CAPTURE_DELAY_STAGE_NUM; i++)
     {
       CaptureComponentParam cap_comp_param;
-      cap_comp_param.handle = m_capture_from_mic_hdlr;
-      cap_comp_param.exec_capture_comp_param.p_pcm      =
-        getMicInBufAddr();
-      cap_comp_param.exec_capture_comp_param.pcm_sample =
-        getPcmCaptureSample();
+      cap_comp_param.handle                = m_capture_from_mic_hdlr;
+      cap_comp_param.exec_param.pcm_sample = getPcmCaptureSample();
+
       result = AS_exec_capture(cap_comp_param);
       if (!result)
         {
@@ -1110,7 +1088,7 @@ bool VoiceRecorderObjectTask::startCapture()
 }
 
 /*--------------------------------------------------------------------------*/
-void VoiceRecorderObjectTask::execEnc(void* p_pcm, uint32_t pcm_size)
+void VoiceRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_size)
 {
   if (m_codec_type == AudCodecXAVCLPCM)
     {
@@ -1121,7 +1099,7 @@ void VoiceRecorderObjectTask::execEnc(void* p_pcm, uint32_t pcm_size)
           param.callback = src_done_callback;
 
           param.exec_src_param.input_buffer.p_buffer  =
-            reinterpret_cast<unsigned long *>(p_pcm);
+            reinterpret_cast<unsigned long *>(mh.getPa());
           param.exec_src_param.input_buffer.size      = pcm_size;
           param.exec_src_param.output_buffer.p_buffer =
             reinterpret_cast<unsigned long *>(getOutputBufAddr());
@@ -1129,7 +1107,7 @@ void VoiceRecorderObjectTask::execEnc(void* p_pcm, uint32_t pcm_size)
             m_max_output_pcm_size;
           AS_filter_exec(param);
 
-          m_cnv_in_buf_mh_que.push(m_mic_in_buf_mh_que.top());
+          m_cnv_in_buf_mh_que.push(mh);
         }
       else
         {
@@ -1137,7 +1115,7 @@ void VoiceRecorderObjectTask::execEnc(void* p_pcm, uint32_t pcm_size)
           SrcFilterCompCmpltParam cmplt;
           cmplt.event_type = Apu::ExecEvent;
           cmplt.exec_src_param.input_buffer.p_buffer  =
-            reinterpret_cast<unsigned long *>(p_pcm);
+            reinterpret_cast<unsigned long *>(mh.getPa());
           cmplt.exec_src_param.input_buffer.size      = pcm_size;
           cmplt.exec_src_param.output_buffer.p_buffer =
             reinterpret_cast<unsigned long *>(getOutputBufAddr());
@@ -1157,14 +1135,14 @@ void VoiceRecorderObjectTask::execEnc(void* p_pcm, uint32_t pcm_size)
     {
       ExecEncParam param;
       param.input_buffer.p_buffer  =
-        reinterpret_cast<unsigned long *>(p_pcm);
+        reinterpret_cast<unsigned long *>(mh.getPa());
       param.input_buffer.size      = pcm_size;
       param.output_buffer.p_buffer =
         reinterpret_cast<unsigned long *>(getOutputBufAddr());
       param.output_buffer.size     = m_max_output_pcm_size;
       AS_encode_exec(param);
 
-      m_cnv_in_buf_mh_que.push(m_mic_in_buf_mh_que.top());
+      m_cnv_in_buf_mh_que.push(mh);
     }
 }
 
@@ -1206,27 +1184,6 @@ void VoiceRecorderObjectTask::stopEnc(void)
       param.output_buffer.size = m_max_output_pcm_size;
       AS_encode_stop(param);
     }
-}
-
-/*--------------------------------------------------------------------------*/
-void* VoiceRecorderObjectTask::getMicInBufAddr()
-{
-  mic_in_data_s data;
-  MemMgrLite::MemHandle mic_in_buf_mh;
-  if (mic_in_buf_mh.allocSeg(s_in_pool_id, m_max_capture_pcm_size) != ERR_OK)
-    {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
-      return NULL;
-    }
-
-  data.mh         = mic_in_buf_mh;
-  data.pcm_sample = getPcmCaptureSample();
-  if (!m_mic_in_buf_mh_que.push(data))
-    {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return NULL;
-    }
-  return mic_in_buf_mh.getPa();
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1546,8 +1503,8 @@ void VoiceRecorderObjectTask::writeToDataSinker(
       if (!rst)
         {
           CaptureComponentParam cap_comp_param;
-          cap_comp_param.handle = m_capture_from_mic_hdlr;
-          cap_comp_param.stop_capture_comp_param.mode = AS_DMASTOPMODE_NORMAL;
+          cap_comp_param.handle          = m_capture_from_mic_hdlr;
+          cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
 
           AS_stop_capture(cap_comp_param);
 
@@ -1568,6 +1525,7 @@ bool VoiceRecorderObjectTask::getInputDeviceHdlr(void)
     {
       if (!AS_get_capture_comp_handler(&m_capture_from_mic_hdlr,
                                        m_input_device,
+                                       s_in_pool_id,
                                        m_channel_num))
         {
           return false;
@@ -1577,6 +1535,7 @@ bool VoiceRecorderObjectTask::getInputDeviceHdlr(void)
     {
       if (!AS_get_capture_comp_handler(&m_capture_from_mic_hdlr,
                                        m_input_device,
+                                       s_in_pool_id,
                                        0))
         {
           return false;
