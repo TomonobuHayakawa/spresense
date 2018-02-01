@@ -34,6 +34,7 @@
 ############################################################################
 
 -include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
 
 # camera built-in application info
 
@@ -49,6 +50,10 @@ STACKSIZE = $(CONFIG_EXAMPLES_CAMERA_STACKSIZE)
 ASRCS =
 CSRCS =
 MAINSRC = camera_main.c
+
+ifeq ($(CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD),y)
+CSRCS += camera_bkgd.c
+endif
 
 CONFIG_EXAMPLES_CAMERA_PROGNAME ?= camera$(EXEEXT)
 PROGNAME = $(CONFIG_EXAMPLES_CAMERA_PROGNAME)
