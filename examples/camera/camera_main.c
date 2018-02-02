@@ -230,11 +230,6 @@ static inline uint16_t ycbcrtorgb565(uint8_t y, uint8_t cb, uint8_t cr)
   return (uint16_t)(((uint16_t)r << 11) | ((uint16_t)g << 5) | (uint16_t)b);
 }
 
-static inline uint16_t swap16(uint16_t v)
-{
-  return ((v >> 8) & 0xff) | ((v << 8) & 0xff00);
-}
-
 /* Color conversion to show on display devices. */
 
 static void yuv2rgb(void *buf, uint32_t size)
@@ -254,10 +249,10 @@ static void yuv2rgb(void *buf, uint32_t size)
 
       uyvy = *ptr++;
 
-      /* Convert color format to packed RGB565 and write it in big endian */
+      /* Convert color format to packed RGB565 */
 
-      *dest++ = swap16(ycbcrtorgb565(uyvy.y0, uyvy.u0, uyvy.v0));
-      *dest++ = swap16(ycbcrtorgb565(uyvy.y1, uyvy.u0, uyvy.v0));
+      *dest++ = ycbcrtorgb565(uyvy.y0, uyvy.u0, uyvy.v0);
+      *dest++ = ycbcrtorgb565(uyvy.y1, uyvy.u0, uyvy.v0);
     }
 }
 
