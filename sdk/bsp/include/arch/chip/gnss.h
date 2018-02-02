@@ -603,6 +603,17 @@ extern "C" {
 #define CXD56_GNSS_GLONASS_EPHEMERIS_SIZE 1152 /**< GLONASS Ephemeris Size */
 /* @} */
 
+/*
+ * @name PVTLOG notify threshold of the stored data.
+*/
+/* @{ */
+
+#define CXD56_GNSS_PVTLOG_THRESHOLD_FULL            0 /* Limit of the storage size */
+#define CXD56_GNSS_PVTLOG_THRESHOLD_HALF            1 /* 1/2 of the Storage size */
+#define CXD56_GNSS_PVTLOG_THRESHOLD_ONE_DATA        2 /* Each log stored */
+
+/* @} */
+
 /**
  * @name Offset value that specifies the data type to read from GNSS
  * 
@@ -907,11 +918,17 @@ struct cxd56_gnss_signal_info_s
 
 /** @struct cxd56_pvtlog_setting_s
  *  @brief PVTLOG setting Parameter.
+ *         If the log interval(cycle) is smaller than the positioning interval,
+ *         it is logged every positioning interval.
+ *         The output timing is specified by the ratio to the log buffer in the
+ *         GNSS device by threshold. Possible values ​​are
+ *         #CXD56_GNSS_PVTLOG_THRESHOLD_FULL, #CXD56_GNSS_PVTLOG_THRESHOLD_HALF,
+ *         and #CXD56_GNSS_PVTLOG_THRESHOLD_ONE_DATA.
  */
 
 struct cxd56_pvtlog_setting_s
 {
-  uint32_t cycle;     /**< Cycle for PVT log store */
+  uint32_t cycle;     /**< PVT log interval in seconds */
   uint32_t threshold; /**< Notification threshold of log storage amount */
 };
 
