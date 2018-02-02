@@ -3333,6 +3333,10 @@ void scu_initialize(void)
   struct cxd56_scudev_s *priv = &g_scudev;
   int i;
 
+#ifdef CONFIG_CXD56_UDMAC
+  cxd56_udmainitialize();
+#endif
+
   memset(priv, 0, sizeof(struct cxd56_scudev_s));
 
   sem_init(&priv->syncwait, 0, 0);
