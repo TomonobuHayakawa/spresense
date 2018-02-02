@@ -359,7 +359,7 @@ void *VoiceRecognitionCommandObject::allocVadInBuf()
   MemMgrLite::MemHandle mh;
   if (mh.allocSeg(s_in_pool_id, VAD_IN_DATA_SIZE) != ERR_OK)
     {
-      RECOGNITION_OBJ_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      RECOGNITION_OBJ_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return NULL;
     }
 

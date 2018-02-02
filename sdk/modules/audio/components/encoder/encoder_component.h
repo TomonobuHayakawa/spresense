@@ -116,7 +116,7 @@ private:
 
     if (mh.allocSeg(m_apu_pool_id, sizeof(Apu::Wien2ApuCmd)) != ERR_OK)
       {
-        ENCODER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+        ENCODER_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
         return NULL;
       }
 
@@ -133,7 +133,7 @@ private:
   {
     if (!m_apu_cmd_mh_que.pop())
       {
-        FILTER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
+        ENCODER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
         return false;
       }
 

@@ -422,11 +422,12 @@ void VoiceCmdComponent::recv_apu(DspDrvComPrm_t *p_dsp_param)
         }
     }
 
-  MsgLib::send<VoiceRecognitionCommandObject::CommandResultParam_t>
+  err_t err = MsgLib::send<VoiceRecognitionCommandObject::CommandResultParam_t>
                                                  (m_recognizer_dtq,
                                                   MsgPriNormal,
                                                   MSG_AUD_RCG_VOICE_CMPLT,
                                                   NULL,
                                                   result_param);
+  F_ASSERT(err == ERR_OK);
 }
 

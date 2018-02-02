@@ -80,10 +80,7 @@ void _Attention(uint8_t module_id,
                           MSG_AUD_MGR_CALL_ATTENTION,
                           0,
                           info);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 }
 
 #else /* ATTENTION_USE_FILENAME_LINE */
@@ -118,10 +115,7 @@ void _Attention(uint8_t module_id,
                           MSG_AUD_MGR_CALL_ATTENTION,
                           0,
                           info);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 }
 
 #endif /* ATTENTION_USE_FILENAME_LINE */

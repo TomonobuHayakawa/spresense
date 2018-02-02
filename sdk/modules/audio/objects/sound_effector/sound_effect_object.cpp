@@ -891,6 +891,7 @@ void SoundEffectObject::stopOnActive(MsgPacket* msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
+      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
@@ -1720,7 +1721,7 @@ void* SoundEffectObject::allocHpOutBuf()
 
   if (mh.allocSeg(s_hp_out_pool_id, MAX_HP_OUT_PCM_BUF_SIZE) != ERR_OK)
     {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      SOUNDFX_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return NULL;
     }
 
@@ -1732,7 +1733,7 @@ void* SoundEffectObject::allocHpOutBuf()
 
   if (!m_hp_out_buf_mh_que.push(data))
     {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return NULL;
     }
 
@@ -1746,7 +1747,7 @@ void* SoundEffectObject::allocI2SOutBuf()
 
   if (mh.allocSeg(s_i2s_out_pool_id, MAX_I2S_OUT_PCM_BUF_SIZE) != ERR_OK)
     {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      SOUNDFX_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return NULL;
     }
 
@@ -1758,7 +1759,7 @@ void* SoundEffectObject::allocI2SOutBuf()
 
   if (!m_i2s_out_buf_mh_que.push(data))
     {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return NULL;
     }
 
@@ -1772,7 +1773,7 @@ void* SoundEffectObject::allocMfeOutBuf()
 
   if (mh.allocSeg(s_mfe_out_pool_id, MAX_MFE_OUT_PCM_BUF_SIZE) != ERR_OK)
     {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      SOUNDFX_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return NULL;
     }
 
@@ -1784,7 +1785,7 @@ void* SoundEffectObject::allocMfeOutBuf()
 
   if (!m_mfe_out_buf_mh_que.push(data))
     {
-      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return NULL;
     }
 

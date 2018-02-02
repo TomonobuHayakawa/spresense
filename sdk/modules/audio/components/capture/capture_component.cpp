@@ -923,7 +923,7 @@ void* CaptureComponent::getCapBuf(uint32_t cap_sample)
                   cap_sample * m_path_sel_param.mic_dma_channel * 2)
       != ERR_OK)
     {
-      CAPTURE_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      CAPTURE_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return NULL;
     }
 

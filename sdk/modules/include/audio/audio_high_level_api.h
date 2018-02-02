@@ -523,11 +523,11 @@
 
 #define AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR   0x0C
 
-/*! \brief Memory Handole Alloc Error */
+/*! \brief Memory Handle Alloc Error */
 
 #define AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR 0x0D
 
-/*! \brief Memory Handole Free Error */
+/*! \brief Memory Handle Free Error */
 
 #define AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR  0x0E
 
@@ -2008,27 +2008,27 @@ extern "C"
  *
  * @param[in] packet: AudioCommand* Command packet
  *
- * @retval none
+ * @retval error code
  */
 
-void AS_SendAudioCommand(AudioCommand* packet);
+int AS_SendAudioCommand(AudioCommand* packet);
 
 /**
  * @brief Receive Audio Result
  *
  * @param[out] packet: AudioResult*: Result packet
  *
- * @retval none
+ * @retval error code
  */
 
-void AS_ReceiveAudioResult(AudioResult* packet);
+int AS_ReceiveAudioResult(AudioResult* packet);
 
 /**
  * @brief Activate AudioSubSystem
  *
  * @param[in] ids: AudioSubSystemIDs* Message Queue ID of Audio Module
  *
- * @retval int
+ * @retval error code
  */
 
 int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids);
@@ -2036,7 +2036,7 @@ int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids);
 /**
  * @brief Deactivate AudioSubSystem
  *
- * @retval int
+ * @retval error code
  */
 
 int AS_DeactivateAudioSubSystem(void);

@@ -300,7 +300,7 @@ bool MFEComponent::exec_apu(ExecMFEParam param)
 
   if (m_exec_queue.full() || !m_exec_queue.push(p_apu_cmd))
     {
-      FILTER_FATAL(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+      FILTER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return false;
     }
 

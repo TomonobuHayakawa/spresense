@@ -752,6 +752,7 @@ void VoiceRecorderObjectTask::stopOnRec(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
+      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
@@ -775,6 +776,7 @@ void VoiceRecorderObjectTask::stopOnOverflow(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
+      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
     }
 
@@ -1194,13 +1196,13 @@ void* VoiceRecorderObjectTask::getOutputBufAddr()
   MemMgrLite::MemHandle mh;
   if (mh.allocSeg(s_out_pool_id, m_max_output_pcm_size) != ERR_OK)
     {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      MEDIA_RECORDER_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return NULL;
     }
 
   if (!m_output_buf_mh_que.push(mh))
     {
-      MEDIA_RECORDER_FATAL(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return NULL;
     }
   return mh.getPa();

@@ -66,7 +66,7 @@ static AudioManager *s_mng = NULL;
 extern "C" {
 
 /*--------------------------------------------------------------------------*/
-void AS_SendAudioCommand(FAR AudioCommand *packet)
+int AS_SendAudioCommand(FAR AudioCommand *packet)
 {
   MSG_TYPE msg_type;
 
@@ -210,10 +210,9 @@ void AS_SendAudioCommand(FAR AudioCommand *packet)
                                         msg_type,
                                         s_selfMid,
                                         *packet);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
+
+  return AS_ERR_CODE_OK;
 }
 
 static pid_t s_amng_pid = -1;
@@ -275,7 +274,7 @@ int AS_DeactivateAudioSubSystem(void)
 }
 
 /*--------------------------------------------------------------------------*/
-void AS_ReceiveAudioResult(FAR AudioResult *packet)
+int AS_ReceiveAudioResult(FAR AudioResult *packet)
 {
   err_t           err_code;
   FAR MsgQueBlock *que;
@@ -291,6 +290,8 @@ void AS_ReceiveAudioResult(FAR AudioResult *packet)
   *packet = msg->moveParam<AudioResult>();
   err_code = que->pop();
   F_ASSERT(err_code == ERR_OK);
+
+  return AS_ERR_CODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -877,10 +878,7 @@ void AudioManager::getstatus(AudioCommand &cmd)
                                        MSG_AUD_MGR_RST,
                                        m_selfDtq,
                                        packet);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1006,10 +1004,7 @@ void AudioManager::soundFx(AudioCommand &cmd)
                                         msg_type,
                                         m_selfDtq,
                                         cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1070,10 +1065,7 @@ void AudioManager::mfe(AudioCommand &cmd)
                                         msg_type,
                                         m_selfDtq,
                                         cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1155,10 +1147,7 @@ void AudioManager::mpp(AudioCommand &cmd)
                                         MsgPriNormal,
                                         msg_type,
                                         m_selfDtq, cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1232,10 +1221,7 @@ void AudioManager::player(AudioCommand &cmd)
                                         msg_type,
                                         m_selfDtq,
                                         cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1309,10 +1295,7 @@ void AudioManager::subPlayer(AudioCommand &cmd)
                                         msg_type,
                                         m_selfDtq,
                                         cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1368,10 +1351,7 @@ void AudioManager::recorder(AudioCommand &cmd)
                                         msg_type,
                                         m_selfDtq,
                                         cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1431,10 +1411,7 @@ void AudioManager::setRdyOnAct(AudioCommand &cmd)
                                   MSG_AUD_SEF_CMD_DEACT,
                                   m_selfDtq,
                                   cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+   F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1462,11 +1439,11 @@ void AudioManager::setRdyOnPlay(AudioCommand &cmd)
                                       MSG_AUD_PLY_CMD_DEACT,
                                       m_selfDtq,
                                       cmd);
-      if (er)
+      F_ASSERT(er == ERR_OK);
+      if (!m_player_transition_que.push(er))
         {
-          F_ASSERT(0);
+          MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
         }
-      m_player_transition_que.push(er);
       m_active_player &= ~AS_ACTPLAYER_MAIN;
     }
 
@@ -1477,11 +1454,11 @@ void AudioManager::setRdyOnPlay(AudioCommand &cmd)
                                       MSG_AUD_PLY_CMD_DEACT,
                                       m_selfDtq,
                                       cmd);
-      if (er)
+      F_ASSERT(er == ERR_OK);
+      if (!m_player_transition_que.push(er))
         {
-          F_ASSERT(0);
+           MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
         }
-      m_player_transition_que.push(er);
       m_active_player &= ~AS_ACTPLAYER_SUB;
     }
 #else
@@ -1509,10 +1486,7 @@ void AudioManager::setRdyOnRecorder(AudioCommand &cmd)
                                   MSG_AUD_VRC_CMD_DEACTIVATE,
                                   m_selfDtq,
                                   cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1595,10 +1569,7 @@ void AudioManager::setActive(AudioCommand &cmd)
                                   MsgPriNormal,
                                   MSG_AUD_RCG_ACT,
                                   m_selfDtq);
-          if (er)
-            {
-              F_ASSERT(0);
-            }
+          F_ASSERT(er == ERR_OK);
         }
     }
 
@@ -1607,10 +1578,7 @@ void AudioManager::setActive(AudioCommand &cmd)
                                         MSG_AUD_SEF_CMD_ACT,
                                         m_selfDtq,
                                         cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1724,11 +1692,11 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
                                             MSG_AUD_PLY_CMD_ACT,
                                             m_selfDtq,
                                             cmd);
-      if (er)
+      F_ASSERT(er == ERR_OK);
+      if (!m_player_transition_que.push(er))
         {
-          F_ASSERT(0);
+           MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
         }
-      m_player_transition_que.push(er);
     }
 
   if (m_active_player & AS_ACTPLAYER_SUB)
@@ -1749,11 +1717,11 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
                                             MSG_AUD_PLY_CMD_ACT,
                                             m_selfDtq,
                                             cmd);
-      if (er)
+      F_ASSERT(er == ERR_OK);
+      if (!m_player_transition_que.push(er))
         {
-          F_ASSERT(0);
+           MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
         }
-      m_player_transition_que.push(er);
     }
 #else
   sendErrRespResult(cmd.header.sub_code,
@@ -1820,10 +1788,7 @@ void AudioManager::setRecorder(AudioCommand &cmd)
                                         MSG_AUD_VRC_CMD_ACTIVATE,
                                         m_selfDtq,
                                         cmd);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
                     AS_MODULE_ID_AUDIO_MANAGER,
@@ -1878,10 +1843,7 @@ void AudioManager::voiceCommand(AudioCommand &cmd)
                 MSG_AUD_RCG_START,
                 m_selfDtq,
                 param);
-            if (err)
-              {
-                F_ASSERT(0);
-              }
+            F_ASSERT(err == ERR_OK);
           }
         break;
 
@@ -1907,10 +1869,7 @@ void AudioManager::voiceCommand(AudioCommand &cmd)
                                    MsgPriNormal,
                                    MSG_AUD_RCG_STOP,
                                    m_selfDtq);
-          if (err)
-            {
-              F_ASSERT(0);
-            }
+          F_ASSERT(err == ERR_OK);
         }
         break;
 
@@ -1967,17 +1926,20 @@ void AudioManager::cmpltOnReady(const AudioMngCmdCmpltResult &cmd)
     {
       case AUDCMD_SETPLAYERSTATUS:
         m_command_code = AUDCMD_SETPLAYERSTATUS;
-            m_player_transition_que.pop();
-            if (m_player_transition_que.empty())
-              {
-                result_code = AUDRLT_STATUSCHANGED;
-                m_State    = AS_MNG_STATUS_PLAYER;
-                m_SubState = AS_MNG_SUB_STATUS_PLAYREADY;
-              }
-            else
-              {
-                return;
-              }
+        if (!m_player_transition_que.pop())
+          {
+            MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
+          }
+        if (m_player_transition_que.empty())
+          {
+            result_code = AUDRLT_STATUSCHANGED;
+            m_State    = AS_MNG_STATUS_PLAYER;
+            m_SubState = AS_MNG_SUB_STATUS_PLAYREADY;
+          }
+         else
+          {
+            return;
+          }
         break;
 
       case AUDCMD_SETRECORDERSTATUS:
@@ -2167,14 +2129,17 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
         break;
 
       case AUDCMD_SETREADYSTATUS:
-        m_player_transition_que.pop();
+        if (!m_player_transition_que.pop())
+          {
+            MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
+          }
         if (m_player_transition_que.empty())
           {
             if (deactivatePlayer())
               {
                     result_code = AUDRLT_STATUSCHANGED;
-                  }
               }
+          }
         else
           {
             return;
@@ -2349,10 +2314,7 @@ void AudioManager::sendResult(uint8_t code, uint8_t sub_code)
                                        MSG_AUD_MGR_RST,
                                        m_selfDtq,
                                        packet);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -2376,10 +2338,7 @@ void AudioManager::sendErrRespResult(uint8_t  sub_code,
                                        MSG_AUD_MGR_RST,
                                        m_selfDtq,
                                        packet);
-  if (er)
-    {
-      F_ASSERT(0);
-    }
+  F_ASSERT(er == ERR_OK);
 }
 
 /*--------------------------------------------------------------------------*/

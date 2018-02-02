@@ -565,6 +565,7 @@ void PlayerObj::activate(MsgPacket *msg)
 
       if (!m_external_cmd_que.push(cmd))
         {
+          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
           sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
           return;
         }
@@ -592,6 +593,7 @@ void PlayerObj::deactivate(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
@@ -664,6 +666,7 @@ void PlayerObj::stopOnPlay(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
@@ -706,6 +709,7 @@ void PlayerObj::stopOnUnderflow(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
@@ -726,6 +730,7 @@ void PlayerObj::stopOnPrePlay(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
@@ -760,6 +765,7 @@ void PlayerObj::stopOnPrePlayUnderflow(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(cmd))
     {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
       return;
     }
@@ -966,7 +972,7 @@ void PlayerObj::decDoneOnPlay(MsgPacket *msg)
 
   if (!m_decoded_pcm_mh_que.push(data))
     {
-      MEDIA_PLAYER_FATAL(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return;
     }
 
@@ -1036,7 +1042,7 @@ void PlayerObj::decDoneOnWaitStop(MsgPacket *msg)
 
   if (!m_decoded_pcm_mh_que.push(data))
     {
-      MEDIA_PLAYER_FATAL(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return;
     }
 
@@ -1499,11 +1505,11 @@ void PlayerObj::stopOutputMix(void)
 
   outmix_param.handle = m_outmix_handle;
 
-  MsgLib::send<OutputMixObjParam>(m_output_mix_dtq,
-                                  MsgPriNormal,
-                                  MSG_AUD_MIX_CMD_STOP,
-                                  m_self_dtq,
-                                  outmix_param);
+  er = MsgLib::send<OutputMixObjParam>(m_output_mix_dtq,
+                                       MsgPriNormal,
+                                       MSG_AUD_MIX_CMD_STOP,
+                                       m_self_dtq,
+                                       outmix_param);
   F_ASSERT(er == ERR_OK);
 }
 
@@ -1536,7 +1542,7 @@ void* PlayerObj::allocPcmBuf(uint32_t size)
   MemMgrLite::MemHandle mh;
   if (mh.allocSeg(m_pcm_pool_id, size) != ERR_OK)
     {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      MEDIA_PLAYER_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return NULL;
     }
   if (!m_pcm_buf_mh_que.push(mh))
@@ -1555,7 +1561,7 @@ void* PlayerObj::getEs(uint32_t* size)
 
   if (mh.allocSeg(m_es_pool_id, *size) != ERR_OK)
     {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+      MEDIA_PLAYER_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return NULL;
     }
 
