@@ -260,6 +260,8 @@ void cxd56_udmadump(DMA_HANDLE handle, const struct cxd56_udmaregs_s *regs,
 #  define cxd56_udmadump(handle,regs,msg)
 #endif
 
+void cxd56_udmainitialize(void);
+
 #undef EXTERN
 #if defined(__cplusplus)
 }
