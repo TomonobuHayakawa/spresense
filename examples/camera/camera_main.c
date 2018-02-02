@@ -172,7 +172,7 @@ static inline int nximage_initialize(void)
   ret = nx_requestbkgd(g_nximage.hnx, &g_nximagecb, NULL);
   if (ret < 0)
     {
-      printf("camera_main: nx_requestbkgd failed: %d\n", errno);
+      printf("nximage_initialize: nx_requestbkgd failed: %d\n", errno);
       nx_close(g_nximage.hnx);
       return ERROR;
     }
@@ -181,7 +181,7 @@ static inline int nximage_initialize(void)
     {
       (void) sem_wait(&g_nximage.sem);
     }
-  printf("camera_main: Screen resolution (%d,%d)\n", g_nximage.xres, g_nximage.yres);
+  printf("nximage_initialize: Screen resolution (%d,%d)\n", g_nximage.xres, g_nximage.yres);
 
   return 0;
 }
