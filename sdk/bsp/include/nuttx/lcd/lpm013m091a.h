@@ -35,11 +35,6 @@
 #ifndef __INCLUDE_NUTTX_LCD_LPM013M091A_H
 #define __INCLUDE_NUTTX_LCD_LPM013M091A_H
 
-#if 0
-#define LPM013M091A_LCDWIDTH  320
-#define LPM013M091A_LCDHEIGHT 300
-#endif
-
 /* Command set. Give me description! */
 
 #define LPM013M091A_SWRESET 0x01
@@ -54,18 +49,6 @@
 #define LPM013M091A_RAMWR   0x2C
 
 #define LPM013M091A_PIXFMT  0x3A
-
-#if 0
-/* color info for 16bit RGB */
-#define	LPM013M091A_BLACK   0x0000
-#define	LPM013M091A_BLUE    0x001F
-#define	LPM013M091A_RED     0xF800
-#define	LPM013M091A_GREEN   0x07E0
-#define LPM013M091A_CYAN    0x07FF
-#define LPM013M091A_MAGENTA 0xF81F
-#define LPM013M091A_YELLOW  0xFFE0
-#define LPM013M091A_WHITE   0xFFFF
-#endif
 
 /********************************************************************************************
  * Public Function Prototypes
