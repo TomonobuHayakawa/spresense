@@ -244,8 +244,8 @@ static int cxd56_ili93404ws_sendgram(FAR struct ili9340_lcd_s *lcd,
 
   lcdinfo("lcd:%p, wd=%p, nwords=%d\n", lcd, wd, nwords);
 
-  SPI_SETBITS(priv->spi, 8);
-  (void) SPI_SNDBLOCK(priv->spi, wd, nwords * 2);
+  SPI_SETBITS(priv->spi, 16);
+  (void) SPI_SNDBLOCK(priv->spi, wd, nwords);
 
   return OK;
 }
