@@ -234,7 +234,7 @@ PlayerObj::MsgProc PlayerObj::MsgProcTbl[AUD_PLY_MSG_NUM][PlayerStateNum] =
 
   {                                  /* Player status:        */
     &PlayerObj::activate,            /*   BootedState.        */
-    &PlayerObj::init,                /*   ReadyState.         */
+    &PlayerObj::illegalEvt,          /*   ReadyState.         */
     &PlayerObj::parseSubState,       /*   PrePlayParentState. */
     &PlayerObj::illegalEvt,          /*   PlayState.          */
     &PlayerObj::illegalEvt,          /*   StoppingState.      */
