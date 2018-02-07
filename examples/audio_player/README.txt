@@ -7,17 +7,6 @@ Usage
 
 Select options in below.
 
-Å°Kernel
-- [Library Routines]
-    [Standard Math library] <= Y
-
-- [File Systems]
-    [FAT file system ] <= Y
-      [FAT long file names] <= Y
-      [FAT maximum file name size] <= 128
-    [SMART file system] <= Y
-      [Maximum file name length] <= 32
-
 Å°SDK
 - [CXD56xx Configuration Options]
     [Audio] <= Y
@@ -40,9 +29,9 @@ After that, you can see worker binary 'AACDEC', 'MP3DEC', 'OPUSDEC'
 in directory sdk/modules/audio/dsp.
 Store worker binary, playlist and play contents in the path specified by option.
  - Default path
-    worker binary : /mnt/vfat/bin
-    play list     : /mnt/vfat/playlist
-    contents      : /mnt/vfat/audio
+    worker binary : /mnt/sd0/bin
+    play list     : /mnt/sd0/playlist
+    contents      : /mnt/sd0/audio
 
 Execute
 --------------------------

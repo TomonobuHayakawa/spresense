@@ -2,7 +2,6 @@
  * examples/audio_player/audio_player_main.c
  *
  *   Copyright (C) 2017 Sony Corporation
- *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -44,11 +43,10 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <errno.h>
-
 #include <asmp/mpshm.h>
 #include <arch/chip/pm.h>
+#include <arch/board/board.h>
 #include <sys/stat.h>
-
 #include "memutils/os_utils/chateau_osal.h"
 #include "audio/audio_high_level_api.h"
 #include "memutils/simple_fifo/CMN_SimpleFifo.h"
@@ -62,17 +60,19 @@
 #include "include/fixed_fence.h"
 #include "playlist/playlist.h"
 
-#include <arch/chip/cxd56_audio.h>
-
 using namespace MemMgrLite;
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifndef CONFIG_EXAMPLES_AUDIO_PLAYER_FILE_MOUNTPT
-#  define CONFIG_EXAMPLES_AUDIO_PLAYER_FILE_MOUNTPT "/mnt/vfat/AUDIO"
+#ifndef CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT
+#  define CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT "/mnt/sd0/AUDIO"
 #endif
+
+/* PlayList file name */
+
+#define PLAY_LIST_NAME "TRACK_DB.CSV"
 
 /* For FIFO */
 
@@ -182,7 +182,7 @@ static void app_freq_release(void)
 static bool app_open_contents_dir(void)
 {
   DIR *dirp;
-  const char *name = CONFIG_EXAMPLES_AUDIO_PLAYER_FILE_MOUNTPT;
+  const char *name = CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT;
   
   dirp = opendir(name);
 
@@ -215,7 +215,7 @@ static bool app_open_playlist(void)
       return false;
     }
 
-  s_player_info.playlist_ins = new Playlist("TRACK_DB.CSV");
+  s_player_info.playlist_ins = new Playlist(PLAY_LIST_NAME);
   
   result = s_player_info.playlist_ins->init();
   if (!result)
@@ -765,7 +765,7 @@ static bool app_start_player(void)
     }
 
   char full_path[128];
-  snprintf(full_path, sizeof(full_path), "%s/%s", CONFIG_EXAMPLES_AUDIO_PLAYER_FILE_MOUNTPT, track.title);
+  snprintf(full_path, sizeof(full_path), "%s/%s", CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT, track.title);
 
   s_player_info.file.fd = app_play_file_open(full_path, &s_player_info.file.size);
   if (s_player_info.file.fd < 0)
@@ -898,9 +898,15 @@ extern "C" int player_main(int argc, char *argv[])
       return 1;
     }
 
-  /* Cancel I/O mute. */
+  /* Cancel output mute. */
 
   app_set_volume(PLAYER_DEF_VOLUME);
+
+  if (board_external_amp_mute_control(false) != OK)
+    {
+      printf("Error: board_external_amp_mute_control(false) failuer.\n");
+      return 1;
+    }
 
   /* Initialize frequency lock parameter. */
 
@@ -942,6 +948,14 @@ extern "C" int player_main(int argc, char *argv[])
   /* Unlock cpu frequency. */
 
   app_freq_release();
+
+  /* Set output mute. */
+
+  if (board_external_amp_mute_control(true) != OK)
+    {
+      printf("Error: board_external_amp_mute_control(true) failuer.\n");
+      return 1;
+    }
 
   /* Close playlist. */
 
