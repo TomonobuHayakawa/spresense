@@ -692,6 +692,20 @@ struct cxd56_gnss_spectrum_s
   double   peak[CXD56_GNSS_PEAK_SPECTRUM_MAXNUM]; /**< Peak Spectrum        */
 };
 
+#define CXD56_GNSS_SBAS_MESSAGE_DATA_LEN (27)
+/*
+ * SBAS Data
+ */
+struct cxd56_gnss_sbasdata_s
+{
+  uint64_t timesnow; /**< system now times */
+  uint32_t gpstow;   /**< GPS Time of Week */
+  uint16_t gpswn;    /**< GPS week number */
+  uint16_t svid;     /**< satellite id */
+  uint8_t  msgid;    /**< sbas message ID */
+  uint8_t  sbasmsg[CXD56_GNSS_SBAS_MESSAGE_DATA_LEN]; /**< sbas message data */
+};
+
 /* @} gnss_output_data */
 
 /**

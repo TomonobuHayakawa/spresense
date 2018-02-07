@@ -36,6 +36,7 @@
 #define __SDK_BSP_SRC_CXD56XX_CXD56_GNSS_API_H
 
 #include <arch/chip/gnss_type.h>
+#include <arch/chip/gnss.h>
 
 /* GD Start mode */
 /*   GD_Start */
@@ -409,7 +410,7 @@ int GD_PvtlogGetLogStatus(FAR struct cxd56_gnss_status_s *pLogStatus);
  * Start outputting carrier phase info.
  */
 
-int GD_RtkStart(int interval, uint32_t gnss, int ephOut);
+int GD_RtkStart(FAR struct cxd56_rtk_setting_s *pParam);
 
 /*
  * Stop outputting carrier phase info.

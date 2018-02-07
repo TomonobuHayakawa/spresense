@@ -75,7 +75,7 @@ extern int PM_SleepCpu(int cpuid, int mode);
 #endif
 
 #ifndef CONFIG_CXD56_GNSS_NSIGNALRECEIVERS
-#  define CONFIG_CXD56_GNSS_NSIGNALRECEIVERS  3
+#  define CONFIG_CXD56_GNSS_NSIGNALRECEIVERS  4
 #endif
 
 #ifndef CONFIG_CXD56_GNSS_BACKUP_BUFFER_SIZE
@@ -259,6 +259,8 @@ static int cxd56_gnss_set_rtk_ephemeris_enable(FAR struct file *filep,
                                                unsigned long    arg);
 static int cxd56_gnss_get_rtk_ephemeris_enable(FAR struct file *filep,
                                                unsigned long    arg);
+static int cxd56_gnss_start_navmsg_output(FAR struct file *filep,
+                                          unsigned long    arg);
 
 /* file operation functions */
 
@@ -348,6 +350,7 @@ static int (*g_cmdlist[CXD56_GNSS_IOCTL_MAX])(FAR struct file *filep,
   cxd56_gnss_stop_pvtlog,
   cxd56_gnss_delete_pvtlog,
   cxd56_gnss_get_pvtlog_status,
+  cxd56_gnss_start_navmsg_output,
   /* max                       CXD56_GNSS_IOCTL_MAX */
 };
 
@@ -1577,8 +1580,9 @@ static int cxd56_gnss_start_rtk_output(FAR struct file *filep,
     }
 
   setting = (FAR struct cxd56_rtk_setting_s *)arg;
+  setting->sbasout = 0;
 
-  return GD_RtkStart(setting->interval, setting->gnss, setting->ephout);
+  return GD_RtkStart(setting);
 }
 
 /****************************************************************************
@@ -1772,6 +1776,37 @@ static int cxd56_gnss_get_rtk_ephemeris_enable(FAR struct file *filep,
   *(uint32_t *)arg = enable;
 
   return ret;
+}
+
+/****************************************************************************
+ * Name: cxd56_gnss_start_navmsg_output
+ *
+ * Description:
+ *   Process CXD56_GNSS_IOCTL_NAVMSG_START command.
+ *   Start NAVMSG data output
+ *
+ * Input Parameters:
+ *   filep - File structure pointer
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_gnss_start_navmsg_output(FAR struct file *filep,
+                                          unsigned long    arg)
+{
+  FAR struct cxd56_rtk_setting_s *setting;
+
+  if (!arg)
+    {
+      return -EINVAL;
+    }
+
+  setting = (FAR struct cxd56_rtk_setting_s *)arg;
+
+  return GD_RtkStart(setting);
 }
 
 /*
@@ -2223,6 +2258,11 @@ static int8_t cxd56_gnss_select_notifytype(off_t fpos, FAR uint32_t *offset)
       type = CXD56_CPU1_DATA_TYPE_PVTLOG;
       *offset = 0;
     }
+  else if (fpos == CXD56_GNSS_READ_OFFSET_SBAS)
+    {
+      type = CXD56_CPU1_DATA_TYPE_SBAS;
+      *offset = 0;
+    }
   else
     {
       type = -1;
@@ -2661,6 +2701,10 @@ static int cxd56_gnss_register(FAR const char *devpath)
     {
       CXD56_CPU1_DATA_TYPE_CPUFIFOAPI,
       cxd56_gnss_cpufifoapi_signalhandler
+    },
+    {
+      CXD56_CPU1_DATA_TYPE_SBAS,
+      cxd56_gnss_common_signalhandler
     }
   };
 

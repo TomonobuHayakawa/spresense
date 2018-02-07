@@ -587,6 +587,10 @@ extern "C" {
 
 #define CXD56_GNSS_READ_OFFSET_GLNEPHEMERIS 0x8000
 
+/** Offset for SBAS data */
+
+#define CXD56_GNSS_READ_OFFSET_SBAS         0x9000
+
 /** Offset for Spectrum data */
 
 #define CXD56_GNSS_READ_OFFSET_SPECTRUM     0xa000
@@ -620,6 +624,8 @@ extern "C" {
 #define CXD56_GNSS_SIG_GPSEPHEMERIS 11
 /** Signal type is RTK GLONASS Ephemeris */
 #define CXD56_GNSS_SIG_GLNEPHEMERIS 12
+/** Signal type is SBAS */
+#define CXD56_GNSS_SIG_SBAS         14
 /* @} */
 
 /* @} gnss_defs */

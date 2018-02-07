@@ -559,10 +559,16 @@ extern "C" {
 
 #define CXD56_GNSS_IOCTL_PVTLOG_GET_STATUS 46
 
+/**
+ * Currently version not supported.
+ */
+
+#define CXD56_GNSS_IOCTL_NAVMSG_START 47
+
 /* check macros for GNSS commands */
 
 #define CXD56_GNSS_IOCTL_INVAL 0
-#define CXD56_GNSS_IOCTL_MAX   47
+#define CXD56_GNSS_IOCTL_MAX   48
 
 /* @} gnss_ioctl */
 
@@ -642,6 +648,10 @@ extern "C" {
 
 #define CXD56_GNSS_READ_OFFSET_GLNEPHEMERIS 0x8000
 
+/** Offset for SBAS data */
+
+#define CXD56_GNSS_READ_OFFSET_SBAS         0x9000
+
 /** Offset for Spectrum data */
 
 #define CXD56_GNSS_READ_OFFSET_SPECTRUM     0xa000
@@ -688,6 +698,10 @@ extern "C" {
 /** Signal type is RTK GLONASS Ephemeris */
 
 #define CXD56_GNSS_SIG_GLNEPHEMERIS 12
+
+/** Signal type is SBAS */
+
+#define CXD56_GNSS_SIG_SBAS         14
 
 /* @} */
 
@@ -949,6 +963,7 @@ struct cxd56_rtk_setting_s
   int       interval; /**< RTK data output interval */
   uint32_t  gnss;     /**< RTK satellite setting */
   int       ephout;   /**< Ephemeris notify enable setting */
+  uint64_t  sbasout;  /**< sbas notify enable setting */
 };
 
 /* @} gnss_datatypes */

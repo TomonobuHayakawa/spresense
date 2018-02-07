@@ -12,7 +12,7 @@ config CXD56_GNSS_NPOLLWAITERS
 
 config CXD56_GNSS_NSIGNALRECEIVERS
   int "GNSS max signal receivers"
-  default 3
+  default 4
 
 config CXD56_GNSS_WORKER_STACKSIZE
   int "GNSS worker thread stack size"
