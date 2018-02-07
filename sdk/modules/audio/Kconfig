@@ -162,9 +162,9 @@ endif
 
 config AUDIOUTILS_DSP_MOUNTPT
 	string "DSP image mount path"
-	default "/mnt/vfat/BIN"
+	default "/mnt/sd0/BIN"
 	---help---
-		The path to the DSP mount point. Default: /mnt/vfat/BIN"
+		The path to the DSP mount point. Default: /mnt/sd0/BIN"
 
 config AUDIOUTILS_EVENTLOG
     bool "Print event log to console"
