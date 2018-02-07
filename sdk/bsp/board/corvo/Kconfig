@@ -4,21 +4,4 @@
 #
 
 if BOARD_CORVO
-
-config EINK_ET014TT1
-	bool "EInk ET014TT1 ePaper"
-	default n
-	---help---
-		Supports the E Ink ET014TT1 1.43" monochrome display.
-
-if EINK_ET014TT1
-
-config EINK_ET014TT1_ROTATE
-	bool "rotate device"
-	default y
-	---help---
-		Rotate ePaper device.
-
-endif
-
 endif
