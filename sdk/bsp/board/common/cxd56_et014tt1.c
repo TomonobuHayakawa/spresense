@@ -1,7 +1,7 @@
 /****************************************************************************
  * configs/cxd56xx/src/cxd56_et014tt1.c
  *
- *   Copyright (C) 2017 Sony Corporation
+ *   Copyright (C) 2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -42,89 +42,399 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 #include <errno.h>
 #include <debug.h>
 
 #include <nuttx/time.h>
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
+#include <nuttx/lcd/lcd.h>
+#include <nuttx/lcd/et014tt1.h>
 #include <nuttx/spi/spi.h>
 #include <arch/board/board.h>
-#include "cxd56_et014tt1.h"
 #include "cxd56_gpio.h"
 #include "cxd56_spi.h"
 #include "cxd56_pinconfig.h"
-#include "pinassign.h"
 
-#if defined(CONFIG_EINK_ET014TT1)
+#if defined(CONFIG_LCD_ET014TT1)
 
-int EPD_HAL_Init(void);
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+#define SPI_FREQUENCY20MHz   (20000000)
+#define SPI_FREQUENCY40MHz   (40000000)
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+struct et014tt1_pin_s
+{
+    int16_t rst;
+    int16_t busy;
+    int16_t cs;
+    int16_t oei;
+    int16_t power;
+};
+
+struct cxd56_et014tt1_lcd_s
+{
+  struct et014tt1_lcd_s lcd;
+  FAR struct spi_dev_s *spi;
+
+  /* Pin configuration. Each pins are defined at board.h */
+
+  struct et014tt1_pin_s pin;
+
+  /* Store starting time for timer emulation */
+
+  int timerstate;
+  struct timespec expiredtime;
+};
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
-static struct lcd_dev_s *g_lcd;
-
-static FAR struct spi_dev_s *g_spi = NULL;
-static struct et014tt1_pin_s g_pin =
-{
-  .rst   = ET014TT1_RST,       /* rst */
-  .busy  = ET014TT1_BUSY,      /* busy */
-  .cs    = ET014TT1_CS,        /* cs */
-  .oei   = -1,                 /* oei */
-  .power = -1                  /* power */
-};
+static FAR struct cxd56_et014tt1_lcd_s g_lcddev;
+static FAR struct lcd_dev_s *g_lcd = NULL;
 
 /****************************************************************************
- * Name: board_graphics_setup
+ * Private functions
+ ****************************************************************************/
+
+static inline void cxd56_et014tt1_pininitialize(void)
+{
+  FAR struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  FAR struct et014tt1_pin_s *pin = &priv->pin;
+
+  pin->rst   = EINK_RST;
+  pin->busy  = EINK_BUSY;
+  pin->cs    = EINK_CS;
+  pin->oei   = EINK_OEI;
+  pin->power = EINK_POWER;
+
+  cxd56_gpio_config(pin->rst, false);
+  cxd56_gpio_config(pin->busy, true);
+  cxd56_gpio_config(pin->cs, false);
+}
+
+/****************************************************************************
+ * Name: et014tt1_configspi
+ ****************************************************************************/
+
+static void cxd56_et014tt1_configspi(FAR struct spi_dev_s *spi)
+{
+  /* Configure SPI for ET014TT1 */
+
+  SPI_SETMODE(spi, SPIDEV_MODE3);
+  SPI_SETBITS(spi, 8);
+
+  SPI_HWFEATURES(spi, 0);
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_spisetclock
+ ****************************************************************************/
+
+static void cxd56_et014tt1_spisetclock(int speed)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+
+  switch (speed)
+    {
+      case ET014TT1_SPI_SPEED_LOW:
+        SPI_SETFREQUENCY(priv->spi, SPI_FREQUENCY20MHz);
+        break;
+
+      case ET014TT1_SPI_SPEED_HIGH:
+        SPI_SETFREQUENCY(priv->spi, SPI_FREQUENCY40MHz);
+        break;
+
+      default:
+        lcderr("Unsupported speed: %d\n", speed);
+        break;
+    }
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_spicsenable
+ ****************************************************************************/
+
+static void cxd56_et014tt1_spicsenable(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  cxd56_gpio_write(priv->pin.cs, false);
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_spicsdisable
+ ****************************************************************************/
+
+static void cxd56_et014tt1_spicsdisable(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  cxd56_gpio_write(priv->pin.cs, true);
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_spiwrite
+ ****************************************************************************/
+
+static void cxd56_et014tt1_spiwrite(const uint8_t *buf, int32_t len)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+
+  SPI_LOCK(priv->spi, true);
+
+  cxd56_et014tt1_configspi(priv->spi);
+
+  SPI_SELECT(priv->spi, SPIDEV_DISPLAY(0), true);
+  SPI_SNDBLOCK(priv->spi, buf, len);
+  SPI_SELECT(priv->spi, SPIDEV_DISPLAY(0), false);
+
+  SPI_LOCK(priv->spi, false);
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_spireadbyte
+ ****************************************************************************/
+
+static uint8_t cxd56_et014tt1_spireadbyte(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  int ret = -1;
+
+  SPI_LOCK(priv->spi, true);
+
+  cxd56_et014tt1_configspi(priv->spi);
+  SPI_SELECT(priv->spi, SPIDEV_DISPLAY(0), true);
+
+  SPI_RECVBLOCK(priv->spi, &ret, 1);
+
+  SPI_SELECT(priv->spi, SPIDEV_DISPLAY(0), false);
+  SPI_LOCK(priv->spi, false);
+
+  return ret & 0xff;
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_setresetpin
+ ****************************************************************************/
+
+static void cxd56_et014tt1_setresetpin(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  cxd56_gpio_write(priv->pin.rst, true);
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_clrresetpin
+ ****************************************************************************/
+
+static void cxd56_et014tt1_clrresetpin(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  cxd56_gpio_write(priv->pin.rst, false);
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_setpoweronpin
+ ****************************************************************************/
+
+static void cxd56_et014tt1_setpoweronpin(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  if (priv->pin.power >= 0)
+    {
+      cxd56_gpio_write(priv->pin.power, true);
+    }
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_clrpoweronpin
+ ****************************************************************************/
+
+static void cxd56_et014tt1_clrpoweronpin(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  if (priv->pin.power >= 0)
+    {
+      cxd56_gpio_write(priv->pin.power, false);
+    }
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_setoeipin
+ ****************************************************************************/
+
+static void cxd56_et014tt1_setoeipin(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  if (priv->pin.oei >= 0)
+    {
+      cxd56_gpio_write(priv->pin.oei, true);
+    }
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_clroeipin
+ ****************************************************************************/
+
+static void cxd56_et014tt1_clroeipin(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  if (priv->pin.oei >= 0)
+    {
+      cxd56_gpio_write(priv->pin.oei, false);
+    }
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_readbusypin
+ ****************************************************************************/
+
+static uint32_t cxd56_et014tt1_readbusypin(void)
+{
+  struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  return (uint32_t)cxd56_gpio_read(priv->pin.busy);
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_delayms
+ ****************************************************************************/
+
+static void cxd56_et014tt1_delayms(int32_t ms)
+{
+  up_mdelay(ms);
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_onframestartevent
+ ****************************************************************************/
+
+static void cxd56_et014tt1_onframestartevent(void)
+{
+  /* Do nothing */
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_starttimer
+ ****************************************************************************/
+
+static void cxd56_et014tt1_starttimer(uint32_t ns)
+{
+  FAR struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  FAR struct timespec *exp = &priv->expiredtime;
+  struct timespec ts;
+
+  clock_gettime(CLOCK_REALTIME, &ts);
+
+  exp->tv_sec = ts.tv_sec + (ns / 1000000000);
+  exp->tv_nsec = ts.tv_nsec + (ns % 1000000000);
+
+  priv->timerstate = ET014TT1_TIMER_RUNNING;
+}
+
+/****************************************************************************
+ * Name: cxd56_et014tt1_gettimerstate
+ ****************************************************************************/
+
+static int cxd56_et014tt1_gettimerstate(void)
+{
+  FAR struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  FAR struct timespec *exp = &priv->expiredtime;
+  struct timespec now;
+
+  if (priv->timerstate == ET014TT1_TIMER_RUNNING)
+    {
+      clock_gettime(CLOCK_REALTIME, &now);
+
+      if (now.tv_sec > exp->tv_sec)
+        {
+          priv->timerstate = ET014TT1_TIMER_STOP;
+        }
+      else if (now.tv_sec == exp->tv_sec && now.tv_nsec > exp->tv_nsec)
+        {
+          priv->timerstate = ET014TT1_TIMER_STOP;
+        }
+    }
+
+  return priv->timerstate;
+}
+
+/****************************************************************************
+ * Public functions
+ ****************************************************************************/
+/****************************************************************************
+ * Name: board_lcd_initialize
  *
  * Description:
  *   Called by NX initialization logic to configure the LCD
  *
  ****************************************************************************/
 
-FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
+int board_lcd_initialize(void)
 {
-  int ret;
-  FAR struct fb_vtable_s *dev
+  FAR struct cxd56_et014tt1_lcd_s *priv = &g_lcddev;
+  FAR struct et014tt1_lcd_s *lcd = &priv->lcd;
+  FAR struct spi_dev_s *spi;
 
   lcdinfo("Initializing lcd\n");
 
-  /* globally initialize spi bus for peripherals */
+  if (g_lcd)
+    {
+      /* Display already initialized */
+
+      return OK;
+    }
+
+  memset(priv, 0, sizeof(struct cxd56_et014tt1_lcd_s));
+
+  /* Initialize private data */
+
+  priv->spi = NULL;
 
   lcdinfo("initialize spi %d.\n", DISPLAY_SPI);
-  FAR struct spi_dev_s *spi = cxd56_spibus_initialize(DISPLAY_SPI);
+  spi = cxd56_spibus_initialize(DISPLAY_SPI);
   if (!spi)
     {
       lcderr("ERROR: Failed to initialize spi bus.\n");
-      return NULL;
+      return -EINVAL;
     }
 
-  DEBUGASSERT(spi != 0);
+  cxd56_et014tt1_configspi(spi);
 
-  g_spi = spi;
+  /* Configure GPIO output pin */
 
-  dev = et014tt1_initialize(g_spi, &g_pin);
+  cxd56_et014tt1_pininitialize();
 
-#ifdef CONFIG_ARCH_BOARD_COLLET
   board_power_control(POWER_EINK, true);
-#endif
 
-  ret = EPD_HAL_Init();
-  if (ret < 0)
-    {
-      lcderr("Error EPD_HAL_Init\n");
-    }
+  priv->spi = spi;
 
-  ret = et014tt1_register("/dev/lcd0");
-  if (ret < 0)
-    {
-      lcderr("Error et014tt1_register\n");
-    }
+  lcd->spisetclock       = cxd56_et014tt1_spisetclock;
+  lcd->spicsenable       = cxd56_et014tt1_spicsenable;
+  lcd->spicsdisable      = cxd56_et014tt1_spicsdisable;
+  lcd->spiwrite          = cxd56_et014tt1_spiwrite;
+  lcd->spireadbyte       = cxd56_et014tt1_spireadbyte;
+  lcd->setresetpin       = cxd56_et014tt1_setresetpin;
+  lcd->clrresetpin       = cxd56_et014tt1_clrresetpin;
+  lcd->setpoweronpin     = cxd56_et014tt1_setpoweronpin;
+  lcd->clrpoweronpin     = cxd56_et014tt1_clrpoweronpin;
+  lcd->setoeipin         = cxd56_et014tt1_setoeipin;
+  lcd->clroeipin         = cxd56_et014tt1_clroeipin;
+  lcd->readbusypin       = cxd56_et014tt1_readbusypin;
+  lcd->delayms           = cxd56_et014tt1_delayms;
+  lcd->onframestartevent = cxd56_et014tt1_onframestartevent;
+  lcd->starttimer        = cxd56_et014tt1_starttimer;
+  lcd->gettimerstate     = cxd56_et014tt1_gettimerstate;
 
-  return dev;
+  g_lcd = et014tt1_initialize(lcd, 0);
 
+  return OK;
 }
 
 /****************************************************************************
@@ -138,29 +448,11 @@ FAR struct fb_vtable_s *board_graphics_setup(unsigned int devno)
 
 FAR struct lcd_dev_s *board_lcd_getdev(int lcddev)
 {
-  DEBUGASSERT(lcddev == 0);
-  return g_lcd;
-}
-
-/****************************************************************************
- * Name: EPD_HAL_Init
- *
- * Initialize HAL
- *
- *******************************************************************************/
-
-int EPD_HAL_Init(void)
-{
-  et014tt1_configspi(g_spi);
-
-  /* Configure GPIO output pin */
-
-  cxd56_gpio_config(g_pin.rst, false);
-  cxd56_gpio_config(g_pin.busy, true);
-  cxd56_gpio_config(g_pin.cs, false);
-
-  return 0;
+  if (lcddev == 0)
+    {
+      return g_lcd;
+    }
+  return NULL;
 }
 
 #endif /* CONFIG_EINK_ET014TT1 */
-

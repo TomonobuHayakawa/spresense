@@ -123,7 +123,7 @@ ifeq ($(CONFIG_LCD_LPM013M091A),y)
 CSRCS += cxd56_lpm013m091a.c
 endif
 
-ifeq ($(CONFIG_EINK_ET014TT1),y)
+ifeq ($(CONFIG_LCD_ET014TT1),y)
 CSRCS += cxd56_et014tt1.c
 endif
 

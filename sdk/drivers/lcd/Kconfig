@@ -13,7 +13,6 @@ if LCD
 config LCD_LPM013M091A
 	bool "JDI LPM013M091A LCD Driver"
 	default n
-#	select LCD_NOGETRUN
 	---help---
 		JDI LPM013M091A LCD Driver.
 		This driver doesn't support reading data.
@@ -24,7 +23,37 @@ config LCD_ET014TT1
 	bool "EInk ET014TT1 ePaper"
 	default n
 	---help---
-		Supports the E Ink ET014TT1 1.43 inch monochrome display.
+		E Ink ET014TT1 1.43 inch monochrome display.
+
+if LCD_ET014TT1
+choice
+	prompt "LCD Orientation"
+	default LCD_ET014TT1_LANDSCAPE
+	---help---
+		Configure display orientation.
+
+config LCD_ET014TT1_LANDSCAPE
+	bool "Landscape orientation"
+	---help---
+		Define for "landscape" orientation support.
+
+config LCD_ET014TT1_PORTRAIT
+	bool "Portrait orientation"
+	---help---
+		Define for "portrait" orientation support.
+
+config LCD_ET014TT1_RLANDSCAPE
+	bool "Reverse landscape orientation"
+	---help---
+		Define for "reverse landscape" orientation support.
+
+config LCD_ET014TT1_RPORTRAIT
+	bool "Reverse portrait display"
+	---help---
+		Define for "reverse portrait" orientation support.
+
+endchoice
+endif
 
 config LCD_ILI9340
 	bool "ILI9340 LCD Single Chip Driver"

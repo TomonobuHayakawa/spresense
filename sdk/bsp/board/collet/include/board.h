@@ -252,6 +252,21 @@ enum board_power_device {
 #define CXD5247_AVDD  (0x01)
 #define CXD5247_DVDD  (0x02)
 
+/* Display device pin definitions *******************************************/
+
+#define DISPLAY_RST     PIN_SPI2_MOSI
+#define DISPLAY_DC      PIN_SPI2_MISO
+
+#define DISPLAY_SPI     4
+
+/* External pin definitions for EINK deivce */
+
+#define EINK_RST    PIN_SPI2_CS_X
+#define EINK_BUSY   PIN_SPI2_SCK
+#define EINK_CS     PIN_SEN_IRQ_IN
+#define EINK_OEI    (-1)
+#define EINK_POWER  (-1)
+
 /*
  * Set signal id for notify USB device connection status and supply current value.
  * signal returns "usbdev_notify_s" struct pointer in sival_ptr.

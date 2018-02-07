@@ -1,9 +1,7 @@
 /****************************************************************************
  * include/nuttx/lcd/et014tt1.h
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Kei Yamamoto <Kei.x.Yamamoto@sony.com>
- *           Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,21 +31,87 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-#ifndef __INCLUDE_NUTTX_ET014TT1_H
-#define __INCLUDE_NUTTX_ET014TT1_H
 
-#include <nuttx/fs/ioctl.h>
+#ifndef __INCLUDE_NUTTX_LCD_ET014TT1_H
+#define __INCLUDE_NUTTX_LCD_ET014TT1_H
 
-/* EInk driver ioctl definitions ********************************************/
+/*****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-#define _EINKBASE        (0x2200) /* EInk driver commands */
-#define _EINKIOCVALID(c) (_IOC_TYPE(c)==_EINKBASE)
-#define _EINKIOC(nr)     _IOC(_EINKBASE,nr)
+#define ET014TT1_SPI_SPEED_LOW  0
+#define ET014TT1_SPI_SPEED_HIGH 1
 
-/* IOCTL Commands ***********************************************************/
+#define ET014TT1_TIMER_STOP    0
+#define ET014TT1_TIMER_RUNNING 1
 
-#define EINKIOC_POWEROFF   _EINKIOC(0x0001) /* Arg: none */
-#define EINKIOC_POWERON    _EINKIOC(0x0002) /* Arg: none */
-#define EINKIOC_PANELCLEAR _EINKIOC(0x0003) /* Arg: none */
+struct et014tt1_lcd_s
+{
+  /* This interface structure defined as EPD_TCON_DRIVER_HAL in SWT.
+   *
+   */
+
+  void     (*spisetclock)(int speed);
+  void     (*spicsenable)(void);
+  void     (*spicsdisable)(void);
+  void     (*spiwrite)(const uint8_t *buf, int32_t len);
+  uint8_t  (*spireadbyte)(void);
+
+  void     (*setresetpin)(void);
+  void     (*clrresetpin)(void);
+  void     (*setpoweronpin)(void);
+  void     (*clrpoweronpin)(void);
+  void     (*setoeipin)(void);
+  void     (*clroeipin)(void);
+  uint32_t (*readbusypin)(void);
+  void     (*delayms)(int32_t ms);
+
+  void     (*onframestartevent)(void);
+
+  void     (*starttimer)(uint32_t ns);
+  int      (*gettimerstate)(void);
+};
+
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
+/**************************************************************************************
+ * Public Function Prototypes
+ **************************************************************************************/
+
+/****************************************************************************
+ * Name: et014tt1_initialize
+ *
+ * Description:
+ *   Initialize LCD
+ *
+ ****************************************************************************/
+
+FAR struct lcd_dev_s *et014tt1_initialize(struct et014tt1_lcd_s *lcd, int devno);
+
+/****************************************************************************
+ * Name: et014tt1_update
+ *
+ * This function is non NuttX standard interface.
+ *
+ * ET014TT1 ePaper device is too slow for displaying. So we provide special
+ * update interface to applications for faster updating and lower power
+ * comsumption.
+ * Thus, application must call this after frame buffer updated to show drawing
+ * results.
+ *
+ ****************************************************************************/
+
+void et014tt1_update(void);
+
+#undef EXTERN
+#ifdef __cplusplus
+}
+#endif
 
 #endif

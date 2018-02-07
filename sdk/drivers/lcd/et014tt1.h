@@ -1,9 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_et014tt1.h
+ * drivers/lcd/et014tt1.h
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Kei Yamamoto <Kei.x.Yamamoto@sony.com>
- *           Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,48 +31,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_ET014TT1_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_ET014TT1_H
+#ifndef __DRIVERS_LCD_ET014TT1_H
+#define __DRIVERS_LCD_ET014TT1_H
 
-#ifndef __ASSEMBLY__
-#ifdef __cplusplus
-#define EXTERN extern "C"
-extern "C"
-{
-#else
-#define EXTERN extern
-#endif
+#define ET014TT1_DISPLAYMODEINIT 0
+#define ET014TT1_DISPLAYMODEGC   1
+#define ET014TT1_DISPLAYMODEGU   2
+#define ET014TT1_DISPLAYMODEA2   3
+
+#define ET014TT1_BORDER_OFF   0
+#define ET014TT1_BORDER_BLACK 1
+#define ET014TT1_BORDER_WHITE 2
 
 typedef struct
 {
-    int32_t Width;
-    int32_t Height;
-    int32_t BPP;
-}EPD_TCON_PANEL_INFO;
-
-typedef enum
-{
-    SPI_SPEED_LOW = 0,
-    SPI_SPEED_HIGH = 1
-}SPI_SPEED_TYPE;
-
-typedef enum
-{
-    TIMER_RUNNING = 1,
-    TIMER_STOP = 0,
-}TIMER_STATE_TYPE;
-
-typedef enum
-{
-    EPD_BORDER_OFF   = 0,
-    EPD_BORDER_BLACK = 1,
-    EPD_BORDER_WHITE = 2
-}EPD_BORDER_TYPE;
+  int32_t Width;
+  int32_t Height;
+  int32_t BPP;
+} EPD_TCON_PANEL_INFO;
 
 typedef struct
 {
     /* SPI HAL */
-    void (*Spi_SetClock)(SPI_SPEED_TYPE speed);
+    void (*Spi_SetClock)(int speed);
     void (*Spi_CS_Enable)(void);
     void (*Spi_CS_Disable)(void);
     void (*Spi_Write)(const uint8_t *buf, int32_t len);
@@ -93,8 +72,19 @@ typedef struct
     void (*OnFrameStartEvent)(void);
 
     void (*StartTimer)(uint32_t ns);
-    TIMER_STATE_TYPE (*GetTimerState)(void);
-}EPD_TCON_DRIVER_HAL;
+    int (*GetTimerState)(void);
+} EPD_TCON_DRIVER_HAL;
+
+#ifndef __ASSEMBLY__
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
+/* SWT library API prototypes */
 
 const EPD_TCON_PANEL_INFO *EPD_TCON_GetPanelInfo(void);
 void     EPD_TCON_Update(uint8_t mode);
@@ -108,23 +98,9 @@ uint8_t *EPD_TCON_GetUpdateBuffer(void);
 uint32_t EPD_TCON_LoadWaveform(const uint8_t *data);
 void     EPD_TCON_SetFrameRate(uint16_t fr);
 uint16_t EPD_TCON_GetFrameRate(void);
-void     EPD_TCON_Set_Border(EPD_BORDER_TYPE border,
-                    uint16_t frame, uint16_t delayms);
+void     EPD_TCON_Set_Border(int border,
+                             uint16_t frame, uint16_t delayms);
 int16_t  EPD_TCON_ReadTemperature(void);
-
-struct et014tt1_pin_s
-{
-    int16_t rst;
-    int16_t busy;
-    int16_t cs;
-    int16_t oei;
-    int16_t power;
-};
-
-FAR struct fb_vtable_s *et014tt1_initialize(FAR struct spi_dev_s *spi,
-                                            struct et014tt1_pin_s *pin);
-int et014tt1_register(FAR const char *devpath);
-void et014tt1_configspi(FAR struct spi_dev_s *spi);
 
 #undef EXTERN
 #ifdef __cplusplus

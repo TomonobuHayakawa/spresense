@@ -269,6 +269,14 @@ enum board_power_device {
 
 #define DISPLAY_SPI     4
 
+/* External pin definitions for EINK deivce */
+
+#define EINK_RST    PIN_PWM2
+#define EINK_BUSY   PIN_SPI3_CS1_X
+#define EINK_CS     PIN_PWM3
+#define EINK_OEI    -1
+#define EINK_POWER  -1
+
 /*
  * Set signal id for notify USB device connection status and supply current value.
  * signal returns "usbdev_notify_s" struct pointer in sival_ptr.

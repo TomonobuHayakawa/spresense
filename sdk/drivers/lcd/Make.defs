@@ -39,16 +39,16 @@ ifeq ($(CONFIG_LCD_LPM013M091A),y)
 CSRCS += lpm013m091a.c
 endif
 
-ifeq ($(CONFIG_LCD_ET014TT1),y)
-CSRCS += et014tt1.c
-CSRCS += et014tt1_waveformdata.c
-CFLAGS += $(shell $(INCDIR) $(INCDIROPT) "$(CC)" $(SDKDIR)$(DELIM)bsp$(DELIM)src)
-CFLAGS += $(shell $(INCDIR) $(INCDIROPT) "$(CC)" $(TOPDIR)$(DELIM)arch$(DELIM)arm$(DELIM)src$(DELIM)chip)
-CFLAGS += $(shell $(INCDIR) $(INCDIROPT) "$(CC)" $(TOPDIR)$(DELIM)sched)
-endif
-
 ifeq ($(CONFIG_LCD_ILI9340),y)
 CSRCS += ili9340.c
+endif
+
+# ET014TT1 driver depends on SWTCON2 contributed library.
+# So we need to add link archives to final binary image.
+# See drivers/contrib/LibTargets.mk.
+
+ifeq ($(CONFIG_LCD_ET014TT1),y)
+CSRCS += et014tt1.c
 endif
 
 DEPPATH += --dep-path lcd
