@@ -1123,6 +1123,9 @@ void VoiceRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_siz
           memcpy(cmplt.exec_src_param.output_buffer.p_buffer,
                  cmplt.exec_src_param.input_buffer.p_buffer,
                  pcm_size);
+
+          m_cnv_in_buf_mh_que.push(mh);
+
           er = MsgLib::send<SrcFilterCompCmpltParam>(s_self_dtq,
                                                      MsgPriNormal,
                                                      MSG_AUD_VRC_RST_FILTER,
