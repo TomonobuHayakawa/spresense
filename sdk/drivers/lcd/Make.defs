@@ -45,7 +45,7 @@ endif
 
 # ET014TT1 driver depends on SWTCON2 contributed library.
 # So we need to add link archives to final binary image.
-# See drivers/contrib/LibTargets.mk.
+# See contrib/LibTargets.mk.
 
 ifeq ($(CONFIG_LCD_ET014TT1),y)
 CSRCS += et014tt1.c
