@@ -232,9 +232,10 @@ static int et014tt1_getrun(fb_coord_t row, fb_coord_t col,
 {
   FAR struct et014tt1_dev_s *priv = &g_lcddev;
   FAR uint8_t *src;
+  int step;
   size_t i;
 
-  if (!buffer || devno != 0)
+  if (!buffer)
     {
       return -EINVAL;
     }
