@@ -100,8 +100,6 @@ ifneq ($(KERNCONF),)
 	$(Q) $(SDKDIR)/tools/config.py --kernel $(KERNCONF)
 endif
 	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
-	$(Q) $(DIRUNLINK) $(TOPDIR)/include/arch/board
-	$(Q) $(DIRUNLINK) $(TOPDIR)/$(ARCH_SRC)/board
 PHONY += buildkernel
 
 # installkernel
@@ -163,6 +161,8 @@ dirlinks: bsp/include/arch/board
 PHONY += dirlinks
 
 context: check_context bsp/include/sdk/config.h dirlinks
+	$(Q) $(DIRUNLINK) $(TOPDIR)/include/arch/board
+	$(Q) $(DIRUNLINK) $(TOPDIR)/$(ARCH_SRC)/board
 	$(Q) for dir in $(CONTEXTDIRS) ; do \
 		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" context; \
 	done
