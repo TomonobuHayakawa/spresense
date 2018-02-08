@@ -1,0 +1,77 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_EPAPER
+	bool "ePaper \"Hello, World!\" example"
+	default n
+	---help---
+		Enable the ePaper \"Hello, World!\" example
+
+if EXAMPLES_EPAPER
+
+config EXAMPLES_EPAPER_VPLANE
+	int "Video Plane"
+	default 0
+	---help---
+		The plane to select from the framebuffer driver for use in the test.
+		Default: 0
+
+config EXAMPLES_EPAPER_DEVNO
+	int "Video Device Number"
+	default 0
+	---help---
+		The LCD device to select from the LCD driver for use in the test:
+		Default: 0
+
+config EXAMPLES_EPAPER_BPP
+	int "Bits-Per-Pixel"
+	default 8
+	---help---
+		Pixels per pixel to use.  Valid options include 1, 2, 4, 8, 16, 24,
+		and 32.
+
+
+comment "Example Color Configuration"
+
+config EXAMPLES_EPAPER_DEFAULT_COLORS
+	bool "Use Default Colors"
+	default y
+
+if !EXAMPLES_EPAPER_DEFAULT_COLORS
+
+config EXAMPLES_EPAPER_BGCOLOR
+	hex "Background color"
+	default 0x0
+	---help---
+		The color of the background.  Default depends on config
+		EXAMPLES_EPAPER_BPP.
+
+config EXAMPLES_EPAPER_FONTCOLOR
+	hex "Background font color"
+	default 0x0
+	---help---
+		The color of the fonts used in the background window. Default
+		depends on config EXAMPLES_EPAPER_BPP.
+
+endif
+
+comment "Example Font Configuration"
+
+config EXAMPLES_EPAPER_DEFAULT_FONT
+	bool "Use Default Font"
+	default y
+
+if !EXAMPLES_EPAPER_DEFAULT_FONT
+
+config EXAMPLES_EPAPER_FONTID
+	int "Background font ID"
+	default 0
+	---help---
+		Selects the font used in the background window (see font ID numbers
+		in include/nuttx/nx/nxfonts.h)
+
+endif
+
+endif
