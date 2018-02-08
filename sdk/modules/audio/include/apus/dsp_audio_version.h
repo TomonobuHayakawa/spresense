@@ -63,7 +63,7 @@
 /* Filter Version. */
 
 #define DSP_MFESRC_VERSION    0x010202    /* 01.02.02 */
-#define DSP_SRC_VERSION       0x010203    /* 01.02.03 */
+#define DSP_SRC_VERSION       0x020101    /* 02.01.01 */
 #define DSP_MPPEAX_VERSION    0x010202    /* 01.02.02 */
 
 /* Recognizer Version. */

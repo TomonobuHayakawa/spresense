@@ -1275,7 +1275,8 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
       case AS_CHANNEL_MONO:
         if (m_input_device == CaptureDeviceI2S)
           {
-            return AS_ECODE_COMMAND_PARAM_INPUT_DEVICE;
+            MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+            return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
           }
         break;
 
@@ -1375,12 +1376,27 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamWAV(
       case AS_CHANNEL_MONO:
         if (m_input_device == CaptureDeviceI2S)
           {
-            return AS_ECODE_COMMAND_PARAM_INPUT_HANDLER;
+            MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+            return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
           }
           break;
 
       case AS_CHANNEL_STEREO:
+          break;
       case AS_CHANNEL_4CH:
+        if (m_input_device == CaptureDeviceI2S)
+          {
+            MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+            return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
+          }
+          break;
+      case AS_CHANNEL_6CH:
+      case AS_CHANNEL_8CH:
+        if (m_input_device != CaptureDeviceDigitalMic)
+          {
+            MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+            return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
+          }
           break;
 
       default:
@@ -1438,7 +1454,8 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamOPUS(
       case AS_CHANNEL_MONO:
         if (m_input_device == CaptureDeviceI2S)
           {
-            return AS_ECODE_COMMAND_PARAM_INPUT_DEVICE;
+            MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+            return AS_ECODE_COMMAND_PARAM_CHANNEL_NUMBER;
           }
         break;
 
