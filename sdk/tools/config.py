@@ -102,6 +102,8 @@ if __name__ == "__main__":
                         help='run config in "qconfig"')
     parser.add_argument('-g', '--gconfig', action='store_true',
                         help='run config in "gconfig"')
+    parser.add_argument('-d', '--dir', type=str, nargs=1,
+                        help='change configs directory')
     parser.add_argument('-v', '--verbose', action='count',
                         help='verbose messages')
     opts = parser.parse_args()
@@ -124,6 +126,14 @@ if __name__ == "__main__":
     topdir = os.path.abspath(os.path.join(sdkdir, '..', 'nuttx'))
     configdir = os.path.join(sdkdir, 'configs')
     kconfigdir = os.path.join(sdkdir, 'configs', 'kernel')
+
+    # If -d options has been specified, then replace base config directory to
+    # specified ones.
+
+    if opts.dir:
+        d = opts.dir[0]
+        configdir = d
+        kconfigdir = os.path.join(d, 'kernel')
 
     if not os.path.isdir(configdir) or not os.path.isdir(kconfigdir):
         print('Config directory not found.', file=sys.stderr)
