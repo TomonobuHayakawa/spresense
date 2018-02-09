@@ -58,10 +58,12 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Make default config from current config')
-    parser.add_argument('configname', metavar='<config name>', type=str, nargs='?',
+    parser.add_argument('configname', metavar='<config name>', type=str, nargs=1,
                         help='configuration name')
     parser.add_argument('-k', dest='kernel', action='store_true',
                         help='save kernel configuration')
+    parser.add_argument('-d', '--dir', type=str, nargs=1,
+                        help='change configs directory')
     parser.add_argument('--all', action='store_true',
                         help='Save SDK and kernel configuration with same name')
     parser.add_argument('--verbose', '-v', action='count',
@@ -69,7 +71,8 @@ if __name__ == '__main__':
 
     opts = parser.parse_args()
 
-    configname = opts.configname
+    configname = opts.configname[0]
+
     savesdk = True
     savekernel = False
     if opts.kernel:
@@ -85,7 +88,7 @@ if __name__ == '__main__':
     if opts.verbose == 2:
         loglevel = logging.DEBUG
     logging.basicConfig(level=loglevel)
-    
+
     sdkdir = os.getcwd()
     topdir = os.path.abspath(os.path.join(sdkdir, '..', 'nuttx'))
 
@@ -108,7 +111,20 @@ if __name__ == '__main__':
     # Setup all of paths
 
     configdir = os.path.join(sdkdir, 'configs')
-    kernconfdir = os.path.join(sdkdir, 'configs', 'kernel')
+    kconfigdir = os.path.join(sdkdir, 'configs', 'kernel')
+
+    # If -d options has been specified, then replace base config directory to
+    # specified ones.
+
+    if opts.dir:
+        d = opts.dir[0]
+        configdir = d
+        kconfigdir = os.path.join(d, 'kernel')
+
+    if not os.path.isdir(configdir) or not os.path.isdir(kconfigdir):
+        print('Error: configuration directory not found.', file=sys.stderr)
+        sys.exit(4)
+
     logging.debug('Kernel dir: %s', topdir)
     logging.debug('SDK dir   : %s', sdkdir)
     logging.debug('Config dir: %s\n', configdir)
@@ -120,5 +136,5 @@ if __name__ == '__main__':
         save_default_config(sdkdir, confpath, False)
 
     if savekernel:
-        confpath = os.path.join(kernconfdir, configname + '-defconfig')
+        confpath = os.path.join(kconfigdir, configname + '-defconfig')
         save_default_config(topdir, confpath, True)
