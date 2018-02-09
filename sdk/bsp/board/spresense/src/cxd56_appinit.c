@@ -342,6 +342,14 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
+#ifdef CONFIG_PWM
+  ret = board_pwm_setup();
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialze pwm. \n");
+    }
+#endif
+
 #ifdef CONFIG_CXD56_ADC
   ret = cxd56_adcinitialize();
   if (ret < 0)

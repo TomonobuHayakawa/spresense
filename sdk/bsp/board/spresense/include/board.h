@@ -604,6 +604,16 @@ void board_isx012_release_sleep(void);
 
 #endif /* CONFIG_VIDEO_ISX012 */
 
+/****************************************************************************
+ * Name: board_pwm_setup
+ *
+ * Description:
+ *   Initialize PWM on the board.
+ *
+ ****************************************************************************/
+
+int board_pwm_setup(void);
+
 #undef EXTERN
 #if defined(__cplusplus)
 }

@@ -144,7 +144,7 @@ static const struct pwm_ops_s g_pwmops =
 static struct cxd56_pwm_chan_s g_pwm_ch0 =
 {
   .ops        = &g_pwmops,
-  .ch         = 0,
+  .ch         = CXD56_PWM_CH0,
   .prescale   = 0,
 };
 #endif
@@ -153,7 +153,7 @@ static struct cxd56_pwm_chan_s g_pwm_ch0 =
 static struct cxd56_pwm_chan_s g_pwm_ch1 =
 {
   .ops        = &g_pwmops,
-  .ch         = 1,
+  .ch         = CXD56_PWM_CH1,
   .prescale   = 0,
 };
 #endif
@@ -162,7 +162,7 @@ static struct cxd56_pwm_chan_s g_pwm_ch1 =
 static struct cxd56_pwm_chan_s g_pwm_ch2 =
 {
   .ops        = &g_pwmops,
-  .ch         = 2,
+  .ch         = CXD56_PWM_CH2,
   .prescale   = 0,
 };
 #endif
@@ -171,7 +171,7 @@ static struct cxd56_pwm_chan_s g_pwm_ch2 =
 static struct cxd56_pwm_chan_s g_pwm_ch3 =
 {
   .ops        = &g_pwmops,
-  .ch         = 3,
+  .ch         = CXD56_PWM_CH3,
   .prescale   = 0,
 };
 #endif
@@ -304,6 +304,16 @@ static int convert_freq2period(uint32_t freq, ub16_t duty, uint32_t *param)
 
 static int pwm_setup(FAR struct pwm_lowerhalf_s *dev)
 {
+  FAR struct cxd56_pwm_chan_s *priv = (FAR struct cxd56_pwm_chan_s *)dev;
+  int ret;
+
+  ret = pwm_pin_config(priv->ch);
+  if (ret < 0)
+    {
+      pwmerr("Failed to pinconf():%d\n", channel);
+      return -EINVAL;
+    }
+
   return OK;
 }
 
@@ -354,6 +364,12 @@ static int pwm_start(FAR struct pwm_lowerhalf_s *dev,
   if (ret < 0)
     {
       return -EINVAL;
+    }
+
+  if (PWM_REG(priv->ch)->EN & 1) /* running */
+    {
+      PWM_REG(priv->ch)->PARAM = param;
+      return OK;
     }
 
   PWM_REG(priv->ch)->EN = 0x0;
