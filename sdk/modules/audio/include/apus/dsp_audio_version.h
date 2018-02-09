@@ -57,7 +57,7 @@
 
 /* Encoder Version. */
 
-#define DSP_MP3ENC_VERSION    0x010203    /* 01.02.03 */
+#define DSP_MP3ENC_VERSION    0x020101    /* 02.01.01 */
 #define DSP_OPUSENC_VERSION   0x010304    /* 01.03.04 */
 
 /* Filter Version. */
