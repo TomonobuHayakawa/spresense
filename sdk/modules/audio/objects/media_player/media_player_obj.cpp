@@ -903,16 +903,6 @@ void PlayerObj::decDoneOnPlay(MsgPacket *msg)
   data.is_valid = ((data.size == 0) ?
                     false : cmplt.exec_dec_cmplt.is_valid_frame);
 
-  if (!data.is_valid)
-    {
-      uint32_t size = m_input_device_handler->getFrameSize();
-      if (size == 0)
-        {
-          return;
-        }
-        data.size = size;
-    }
-
   if (!m_decoded_pcm_mh_que.push(data))
     {
       MEDIA_PLAYER_FATAL(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
@@ -983,16 +973,6 @@ void PlayerObj::decDoneOnWaitStop(MsgPacket *msg)
       data.is_es_end = true;
     }
 
-  if (!data.is_valid)
-    {
-      uint32_t size = m_input_device_handler->getFrameSize();
-      if (size == 0)
-        {
-          return;
-        }
-      data.size = size;
-    }
-
   if (!m_decoded_pcm_mh_que.push(data))
     {
       MEDIA_PLAYER_FATAL(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
@@ -1016,16 +996,6 @@ void PlayerObj::decDoneOnPrePlay(MsgPacket *msg)
   data.size     = cmplt.exec_dec_cmplt.output_buffer.size;
   data.is_valid = ((data.size == 0) ?
                    false : cmplt.exec_dec_cmplt.is_valid_frame);
-
-  if (!data.is_valid)
-    {
-      uint32_t size = m_input_device_handler->getFrameSize();
-      if (size == 0)
-        {
-          return;
-        }
-      data.size = size;
-    }
 
   if (!m_decoded_pcm_mh_que.push(data))
     {
