@@ -1,7 +1,7 @@
 /****************************************************************************
  * config/corvo/src/cxd56_power.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2017,2018 Sony Corporation. All rights reserved.
  *   Author: Kazuya Hioki <Kazuya.Hioki@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -287,6 +287,36 @@ int board_xtal_power_control(bool en)
 bool board_xtal_power_monitor(void)
 {
   return board_power_monitor(POWER_TCXO);
+}
+
+/****************************************************************************
+ * Name: board_lna_power_control
+ *
+ * Description:
+ *   Power on/off the LNA device on the board.
+ *
+ ****************************************************************************/
+
+int board_lna_power_control(bool en)
+{
+  int ret = 0;
+
+  /* Get exclusive access to the lna / tcxo power control */
+
+  if (en)
+    {
+      /* power on */
+
+      board_power_control(POWER_LNA, true);
+    }
+  else
+    {
+      /* power off */
+
+      board_power_control(POWER_LNA, false);
+    }
+
+  return ret;
 }
 
 /****************************************************************************

@@ -37,15 +37,21 @@
 
 BOARDNAME := $(patsubst "%",%,$(strip $(CONFIG_BOARD_NAME)))
 
-VPATH   = common
-DEPPATH = --dep-path common
+# For ASRCS and CSRCS, use the file specified by $(BOARDNAME)/Make.defs 
+# in preference.
 
 ASRCS =
-CSRCS = cxd56_boot.c
+CSRCS =
+DEPPATH =
 
 ifneq ($(BOARDNAME),)
 include $(BOARDNAME)/Make.defs
 endif
+
+VPATH   += common
+DEPPATH += --dep-path common
+
+CSRCS += cxd56_boot.c
 
 ifeq ($(CONFIG_ARCH_FPU),y)
 CSRCS += cxd56_ostest.c

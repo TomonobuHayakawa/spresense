@@ -1,7 +1,7 @@
 /****************************************************************************
  * configs/corvo/include/board.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016,2018 Sony Corporation. All rights reserved.
  *   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -377,6 +377,16 @@ int board_xtal_power_control(bool en);
  ****************************************************************************/
 
 bool board_xtal_power_monitor(void);
+
+/****************************************************************************
+ * Name: board_lna_power_control
+ *
+ * Description:
+ *   Power on/off the LNA device on the board.
+ *
+ ****************************************************************************/
+
+int board_lna_power_control(bool en);
 
 /****************************************************************************
  * Name: board_aca_power_control
