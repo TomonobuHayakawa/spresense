@@ -466,7 +466,7 @@ bool SF_ActivateSensorSubSystem(MsgQueId selfMId, api_response_callback_t callba
 {
   s_selfMid = selfMId;
   s_response_callback = callback;
-  s_smng_pid = task_create("sensermanaging",
+  s_smng_pid = task_create("sensor_manager",
                            SF_TASK_PRIORITY,
                            SF_TASK_MANAGER_STACK_SIZE,
                            (main_t)SF_SensorManagerEntry,
