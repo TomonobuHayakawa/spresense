@@ -136,4 +136,16 @@ FAR struct fb_vtable_s *cxd56_lpm013m091a_fb_initialize(FAR const char *devpath,
 int cxd56_isx012initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c);
 #endif
 
+/****************************************************************************
+ * Name: cxd56_bmp280initialize
+ *
+ * Description:
+ *   Called to configure an I2C and to register BMP280 for the corvo board.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_BMP280
+int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c);
+#endif
+
 #endif /* __CONFIGS_SPRESENSE_SRC_SPRESENSE_H */
