@@ -263,7 +263,7 @@ int board_app_initialize(uintptr_t arg)
   struct pm_cpu_wakelock_s wlock;
 
 #ifdef CONFIG_CXD56_I2C0
-  FAR struct i2c_master_s *i2c;
+  FAR struct i2c_master_s *i2c0;
 #endif
 #ifdef CONFIG_CXD56_I2C2
   FAR struct i2c_master_s *i2c2;
@@ -400,19 +400,21 @@ int board_app_initialize(uintptr_t arg)
 
 #ifdef CONFIG_CXD56_I2C0
   /* globally intialize i2c bus for peripherals */
-  i2c = cxd56_i2cbus_initialize(0);
-  if (!i2c)
+
+  i2c0 = cxd56_i2cbus_initialize(0);
+  if (!i2c0)
   {
-    _err("ERROR: Failed to intialize i2c bus.\n");
+    _err("ERROR: Failed to intialize i2c bus0.\n");
     return -ENODEV;
   }
 #ifdef HAVE_I2CTOOL
-  cxd56_i2c_register(i2c, 0);
+  cxd56_i2c_register(i2c0, 0);
 #endif
 #endif
 
 #ifdef CONFIG_CXD56_I2C2
   /* globally intialize i2c bus for peripherals */
+
   i2c2 = cxd56_i2cbus_initialize(2);
   if (!i2c2)
   {
@@ -425,10 +427,18 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_BMP280
-  ret = cxd56_bmp280initialize(i2c);
+  ret = cxd56_bmp280initialize(i2c0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BMP280.\n");
+    }
+#endif
+
+#ifdef CONFIG_LT1PA01
+  ret = cxd56_lt1pa01initialize(i2c0);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialize LT1PA01.\n");
     }
 #endif
 

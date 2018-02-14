@@ -148,4 +148,16 @@ int cxd56_isx012initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c
 int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c);
 #endif
 
+/****************************************************************************
+ * Name: cxd56_lt1pa01initialize
+ *
+ * Description:
+ *   Called to configure an I2C and to register LT1PA01 for corvo board
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_LT1PA01
+int cxd56_lt1pa01initialize(FAR struct i2c_master_s* i2c);
+#endif
+
 #endif /* __CONFIGS_SPRESENSE_SRC_SPRESENSE_H */
