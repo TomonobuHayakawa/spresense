@@ -2,7 +2,6 @@
  * examples/voice_call/voice_call_main.c
  *
  *   Copyright (C) 2017 Sony Corporation
- *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -42,6 +41,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <asmp/mpshm.h>
+#include <arch/board/board.h>
 #include "memutils/os_utils/chateau_osal.h"
 #include "memutils/memory_manager/MemHandle.h"
 #include "memutils/message/Message.h"
@@ -52,8 +52,6 @@
 #include "include/msgq_pool.h"
 #include "include/pool_layout.h"
 #include "include/fixed_fence.h"
-
-#include <arch/chip/cxd56_audio.h>
 
 using namespace MemMgrLite;
 
@@ -674,7 +672,7 @@ extern "C" int voice_call_main(int argc, char *argv[])
       return 1;
     }
 
-  /* Cancel I/O mute. */
+  /* Cancel output mute. */
 
   if (!app_init_volume())
     {
@@ -682,6 +680,12 @@ extern "C" int voice_call_main(int argc, char *argv[])
       return 1;
     }
 
+  if (board_external_amp_mute_control(false) != OK)
+    {
+      printf("Error: board_external_amp_mute_control(false) failuer.\n");
+      return 1;
+    }
+  
   /* Start baseband operation. */
 
   if (!app_start_bb())
@@ -703,6 +707,14 @@ extern "C" int voice_call_main(int argc, char *argv[])
   if (!app_stop_bb())
     {
       printf("Error: app_stop_bb failure.\n");
+      return 1;
+    }
+
+  /* Set output mute. */
+
+  if (board_external_amp_mute_control(true) != OK)
+    {
+      printf("Error: board_external_amp_mute_control(true) failuer.\n");
       return 1;
     }
 
