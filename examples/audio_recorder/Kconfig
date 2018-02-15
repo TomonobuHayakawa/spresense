@@ -30,8 +30,8 @@ config EXAMPLES_AUDIO_RECORDER_STACKSIZE
 
 config EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT
 	string "recording file mount path"
-	default "/mnt/vfat/REC"
+	default "/mnt/sd0/REC"
 	---help---
-		The path to the recording file mount point. Default: /mnt/vfat/REC
+		The path to the recording file mount point. Default: /mnt/sd0/REC
 
 endif
