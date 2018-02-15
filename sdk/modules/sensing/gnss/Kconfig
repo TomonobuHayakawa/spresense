@@ -22,14 +22,6 @@ config CXD56_GNSS_WORKER_THREAD_PRIORITY
   int "GNSS worker thread priority"
   default 255
 
-config CXD56_GNSS_DISABLE_LNA_CONTROL
-  bool "Disable power control of the LNA device from GNSS device driver"
-  default false
-  ---help---
-    If LNA is always on or there are other control methods about power control
-    of LNA device, this value should be true. Board-config function definition
-    to control LNA is required when this value is false.
-
 config CXD56_GNSS_HOT_SLEEP
 	bool "Enable GNSS HOT Sleep"
 	default n
