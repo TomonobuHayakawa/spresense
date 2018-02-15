@@ -13,13 +13,8 @@ lib$(DELIM)libgnss$(LIBEXT): modules$(DELIM)sensing$(DELIM)gnss$(DELIM)libgnss$(
 	$(Q) install $< $@
 
 ifeq ($(CONFIG_GPSUTILS_CXD56NMEA_LIB),y)
-SDKLIBS += lib$(DELIM)libcxd56nmea$(LIBEXT)
-SDKMODDIRS += modules$(DELIM)sensing$(DELIM)gnss$(DELIM)cxd56nmea
-
+EXTLIBS += lib$(DELIM)libcxd56nmea$(LIBEXT)
 endif
-
-modules$(DELIM)sensing$(DELIM)gnss$(DELIM)cxd56nmea$(DELIM)libcxd56nmea$(LIBEXT): context
-	$(Q) $(MAKE) -C modules$(DELIM)sensing$(DELIM)gnss$(DELIM)cxd56nmea TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libcxd56nmea$(LIBEXT)
 
 lib$(DELIM)libcxd56nmea$(LIBEXT): modules$(DELIM)sensing$(DELIM)gnss$(DELIM)cxd56nmea$(DELIM)libcxd56nmea$(LIBEXT)
 	$(Q) install $< $@
