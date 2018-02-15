@@ -411,7 +411,6 @@ int board_app_initialize(uintptr_t arg)
   cxd56_i2c_register(i2c0, 0);
 #endif
 #endif
-
 #ifdef CONFIG_CXD56_I2C2
   /* globally intialize i2c bus for peripherals */
 
@@ -493,6 +492,14 @@ int board_app_initialize(uintptr_t arg)
               _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
             }
         }
+    }
+#endif
+
+#ifdef CONFIG_KX022
+  ret = cxd56_kx022initialize("/dev/accel", i2c0);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialize KX022.\n");
     }
 #endif
 
