@@ -113,10 +113,6 @@ ifeq ($(CONFIG_RPR0521RS),y)
 CSRCS += cxd56_rpr0521rs.c
 endif
 
-ifeq ($(CONFIG_CXD56_GNSS), y)
-CSRCS += cxd56_gnssext.c
-endif
-
 ifeq ($(CONFIG_SPI),y)
 CSRCS += cxd56_spi.c
 endif
