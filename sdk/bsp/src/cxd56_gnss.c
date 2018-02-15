@@ -52,6 +52,7 @@
 #include <nuttx/board.h>
 #include <nuttx/spi/spi.h>
 #include <arch/chip/gnss.h>
+#include <arch/board/board.h>
 #include "cxd56_gnss_api.h"
 #include "cxd56_cpu1signal.h"
 
@@ -64,9 +65,6 @@
 extern int PM_LoadImage(int cpuid, const char* filename);
 extern int PM_StartCpu(int cpuid, int wait);
 extern int PM_SleepCpu(int cpuid, int mode);
-#ifndef CONFIG_CXD56_GNSS_DISABLE_LNA_CONTROL
-extern int cxd56_gnssext_control_lna(bool en);
-#endif
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -381,22 +379,18 @@ static int cxd56_gnss_start(FAR struct file *filep, unsigned long arg)
   int     ret;
   uint8_t start_mode = (uint8_t)arg;
 
-#ifndef CONFIG_CXD56_GNSS_DISABLE_LNA_CONTROL
-  ret = cxd56_gnssext_control_lna(true);
+  ret = board_lna_power_control(true);
   if (ret < 0)
     {
       return ret;
     }
-#endif
 
   ret = cxd56_gnss_cpufifo_api(filep, CXD56_GNSS_GD_GNSS_START,
                                start_mode);
-#ifndef CONFIG_CXD56_GNSS_DISABLE_LNA_CONTROL
   if (ret < 0)
     {
-      cxd56_gnssext_control_lna(false);
+      board_lna_power_control(false);
     }
-#endif
 
   return ret;
 }
@@ -419,13 +413,10 @@ static int cxd56_gnss_start(FAR struct file *filep, unsigned long arg)
 
 static int cxd56_gnss_stop(FAR struct file *filep, unsigned long arg)
 {
-  int     ret;
+  int ret;
 
-  ret =
-    cxd56_gnss_cpufifo_api(filep, CXD56_GNSS_GD_GNSS_STOP, 0);
-#ifndef CONFIG_CXD56_GNSS_DISABLE_LNA_CONTROL
-  cxd56_gnssext_control_lna(false);
-#endif
+  ret = cxd56_gnss_cpufifo_api(filep, CXD56_GNSS_GD_GNSS_STOP, 0);
+  board_lna_power_control(false);
 
   return ret;
 }
