@@ -149,6 +149,18 @@ int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c);
 #endif
 
 /****************************************************************************
+ * Name: cxd56_ak09912initialize
+ *
+ * Description:
+ *   Called to configure an I2C and to register AKM09912 for corvo board
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_AK09912
+int cxd56_ak09912initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c);
+#endif
+
+/****************************************************************************
  * Name: cxd56_lt1pa01initialize
  *
  * Description:

@@ -433,6 +433,22 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
+#ifdef CONFIG_AK09912
+  ret = cxd56_ak09912initialize("/dev/accel", i2c0);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialize KX022.\n");
+    }
+#endif
+
+#ifdef CONFIG_KX022
+  ret = cxd56_kx022initialize("/dev/accel", i2c0);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialize KX022.\n");
+    }
+#endif
+
 #ifdef CONFIG_LT1PA01
   ret = cxd56_lt1pa01initialize(i2c0);
   if (ret < 0)
@@ -492,14 +508,6 @@ int board_app_initialize(uintptr_t arg)
               _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
             }
         }
-    }
-#endif
-
-#ifdef CONFIG_KX022
-  ret = cxd56_kx022initialize("/dev/accel", i2c0);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize KX022.\n");
     }
 #endif
 
