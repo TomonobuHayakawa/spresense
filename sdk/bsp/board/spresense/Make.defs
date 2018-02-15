@@ -57,42 +57,6 @@ ifeq ($(CONFIG_USBMSC_COMPOSITE),y)
 CSRCS += cxd56_composite.c
 endif
 
-ifeq ($(CONFIG_BMP280),y)
-CSRCS += cxd56_bmp280.c
-endif
-
-ifeq ($(CONFIG_BMI160),y)
-CSRCS += cxd56_bmi160.c
-endif
-
-ifeq ($(CONFIG_AK09912),y)
-CSRCS += cxd56_ak09912.c
-endif
-
-ifeq ($(CONFIG_KX022),y)
-CSRCS += cxd56_kx022.c
-endif
-
-ifeq ($(CONFIG_BM1422GMV),y)
-CSRCS += cxd56_bm1422gmv.c
-endif
-
-ifeq ($(CONFIG_BM1383GLV),y)
-CSRCS += cxd56_bm1383glv.c
-endif
-
-ifeq ($(CONFIG_BH1745NUC),y)
-CSRCS += cxd56_bh1745nuc.c
-endif
-
-ifeq ($(CONFIG_RPR0521RS),y)
-CSRCS += cxd56_rpr0521rs.c
-endif
-
-ifeq ($(CONFIG_PWM),y)
-CSRCS += cxd56_pwm.c
-endif
-
 ifeq ($(CONFIG_CXD56_AUDIO), y)
 CSRCS += cxd56_audio.c
 endif

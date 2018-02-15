@@ -62,10 +62,6 @@ ifeq ($(CONFIG_BCM20707), y)
 CSRCS += cxd56_bcm20706.c
 endif
 
-ifeq ($(CONFIG_EINK_ET014TT1),y)
-CSRCS += cxd56_et014tt1.c
-endif
-
 ifeq ($(CONFIG_VIDEO_ISX012),y)
 CSRCS += cxd56_isx012.c
 endif

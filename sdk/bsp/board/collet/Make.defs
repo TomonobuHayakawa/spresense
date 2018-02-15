@@ -57,7 +57,3 @@ endif
 ifeq ($(CONFIG_MODEM_ALT_1160), y)
 CSRCS += cxd56_alt1160.c
 endif
-
-ifeq ($(CONFIG_EINK_ET014TT1),y)
-CSRCS += cxd56_et014tt1.c
-endif
