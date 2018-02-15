@@ -299,24 +299,7 @@ bool board_xtal_power_monitor(void)
 
 int board_lna_power_control(bool en)
 {
-  int ret = 0;
-
-  /* Get exclusive access to the lna / tcxo power control */
-
-  if (en)
-    {
-      /* power on */
-
-      board_power_control(POWER_LNA, true);
-    }
-  else
-    {
-      /* power off */
-
-      board_power_control(POWER_LNA, false);
-    }
-
-  return ret;
+  return board_power_control(POWER_LNA, en);
 }
 
 /****************************************************************************
