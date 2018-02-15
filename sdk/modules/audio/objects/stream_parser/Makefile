@@ -45,7 +45,7 @@ DEPPATH += --dep-path .
 
 CXXSRCS =
 
-ifeq ($(CONFIG_AUDIOUTILS_PLAYER_CODEC_PCM),y))
+ifeq ($(CONFIG_AUDIOUTILS_PLAYER_CODEC_PCM),y)
 CXXSRCS += ram_lpcm_data_source.cpp
 endif
 
