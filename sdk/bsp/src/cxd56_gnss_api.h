@@ -456,5 +456,18 @@ int GD_RtkSetEphNotify(int enable);
 
 int GD_RtkGetEphNotify(FAR int* enable);
 
+/*
+ * Set the Ephemeris data Ephemeris data size is variable.
+ */
+
+int GD_SetVarEphemeris(uint32_t *ephemeris, uint32_t ephemerisSize);
+
+/*
+ * Get the Ephemeris data Ephemeris data size is variable.
+ */
+
+int GD_GetVarEphemeris(uint32_t satellite, uint32_t* ephemeris,
+                       uint32_t ephemerisSize);
+
 
 #endif /* __SDK_BSP_SRC_CXD56XX_CXD56_GNSS_API_H */

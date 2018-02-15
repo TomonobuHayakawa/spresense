@@ -261,6 +261,10 @@ static int cxd56_gnss_get_rtk_ephemeris_enable(FAR struct file *filep,
                                                unsigned long    arg);
 static int cxd56_gnss_start_navmsg_output(FAR struct file *filep,
                                           unsigned long    arg);
+static int cxd56_gnss_get_var_ephemeris(FAR struct file *filep, 
+                                        unsigned long arg);
+static int cxd56_gnss_set_var_ephemeris(FAR struct file *filep,
+                                        unsigned long arg);
 
 /* file operation functions */
 
@@ -351,6 +355,8 @@ static int (*g_cmdlist[CXD56_GNSS_IOCTL_MAX])(FAR struct file *filep,
   cxd56_gnss_delete_pvtlog,
   cxd56_gnss_get_pvtlog_status,
   cxd56_gnss_start_navmsg_output,
+  cxd56_gnss_set_var_ephemeris,
+  cxd56_gnss_get_var_ephemeris,
   /* max                       CXD56_GNSS_IOCTL_MAX */
 };
 
@@ -1150,7 +1156,7 @@ static int cxd56_gnss_set_time_gps(FAR struct file *filep, unsigned long arg)
 
 static int cxd56_gnss_clear_receiver_info(FAR struct file *filep, unsigned long arg)
 {
-  uint32_t clear_type = (double)arg;
+  uint32_t clear_type = arg;
 
   return GD_ClearReceiverInfo(clear_type);
 }
@@ -1807,6 +1813,67 @@ static int cxd56_gnss_start_navmsg_output(FAR struct file *filep,
   setting = (FAR struct cxd56_rtk_setting_s *)arg;
 
   return GD_RtkStart(setting);
+}
+
+/****************************************************************************
+ * Name: cxd56_gnss_set_var_ephemeris
+ *
+ * Description:
+ *   Process CXD56_GNSS_IOCTL_SET_VAR_EPHEMERIS command.
+ *   Set the Ephemeris data
+ *
+ * Input Parameters:
+ *   filep - File structure pointer
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_gnss_set_var_ephemeris(FAR struct file *filep,
+                                        unsigned long arg)
+{
+  FAR struct cxd56_gnss_set_var_ephemeris_s *param;
+
+  if (!arg)
+    {
+      return -EINVAL;
+    }
+  param = (FAR struct cxd56_gnss_set_var_ephemeris_s *)arg;
+
+  return GD_SetVarEphemeris(param->data, param->size);
+}
+
+/****************************************************************************
+ * Name: cxd56_gnss_get_var_ephemeris
+ *
+ * Description:
+ *   Process CXD56_GNSS_IOCTL_GET_VAR_EPHEMERIS command.
+ *   Get the Ephemeris data
+ *
+ * Input Parameters:
+ *   filep - File structure pointer
+ *   arg   - Data for command
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+static int cxd56_gnss_get_var_ephemeris(FAR struct file *filep, 
+                                        unsigned long arg)
+{
+  FAR struct cxd56_gnss_get_var_ephemeris_s *param;
+
+  if (!arg)
+    {
+      return -EINVAL;
+    }
+
+  param = (FAR struct cxd56_gnss_get_var_ephemeris_s *)arg;
+
+  return GD_GetVarEphemeris(param->type, param->data, param->size);
 }
 
 /*

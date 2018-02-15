@@ -565,10 +565,36 @@ extern "C" {
 
 #define CXD56_GNSS_IOCTL_NAVMSG_START 47
 
+/**
+ * Set ephemeris data.\n
+ * Only satellites with data are output.\n
+ * Ephemeris data size is variable.\n
+ * Ephemeris data max size is 3072(GPS) or 1152(GLONASS) bytes.\n
+ * This command must be issued in idle mode.
+ *
+ * @param[in] arg
+ * Address pointing to struct #cxd56_gnss_set_var_ephemeris_s object.
+ */
+
+#define CXD56_GNSS_IOCTL_SET_VAR_EPHEMERIS 48
+
+/**
+ * Get the latest ephemeris data extracted from the satellite signal.\n
+ * Only satellites with data are output.\n
+ * Ephemeris data size is variable.\n
+ * Ephemeris data max size is 3072(GPS) or 1152(GLONASS) bytes.\n
+ * This command must be issued in idle mode.
+ *
+ * @param[out] arg
+ * Address pointing to struct #cxd56_gnss_get_var_ephemeris_s object.
+ */
+
+#define CXD56_GNSS_IOCTL_GET_VAR_EPHEMERIS 49
+
 /* check macros for GNSS commands */
 
 #define CXD56_GNSS_IOCTL_INVAL 0
-#define CXD56_GNSS_IOCTL_MAX   48
+#define CXD56_GNSS_IOCTL_MAX   50
 
 /* @} gnss_ioctl */
 
@@ -964,6 +990,28 @@ struct cxd56_rtk_setting_s
   uint32_t  gnss;     /**< RTK satellite setting */
   int       ephout;   /**< Ephemeris notify enable setting */
   uint64_t  sbasout;  /**< sbas notify enable setting */
+};
+
+/** @struct cxd56_gnss_set_var_ephemeris_s
+ *  @brief  Sattelite ephemeris data
+ */
+
+struct cxd56_gnss_set_var_ephemeris_s
+{
+  uint32_t *data; /**< Address pointing to ephemeris data buffer */
+  uint32_t  size; /**< ephemeris data buffer size */
+};
+
+/** @struct cxd56_gnss_get_var_ephemeris_s
+ *  @brief  Sattelite ephemeris data
+ */
+
+struct cxd56_gnss_get_var_ephemeris_s
+{
+  uint32_t  type; /**< One of #CXD56_GNSS_DATA_GPS,
+                       #CXD56_GNSS_DATA_GLONASS. */
+  uint32_t *data; /**< Address pointing to ephemeris data buffer */
+  uint32_t  size; /**< ephemeris data buffer size */
 };
 
 /* @} gnss_datatypes */
