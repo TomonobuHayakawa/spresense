@@ -369,6 +369,16 @@ int board_xtal_power_control(bool en);
 bool board_xtal_power_monitor(void);
 
 /****************************************************************************
+ * Name: board_lna_power_control
+ *
+ * Description:
+ *   Power on/off the LNA device on the board.
+ *
+ ****************************************************************************/
+
+int board_lna_power_control(bool en);
+
+/****************************************************************************
  * Name: board_aca_power_control
  *
  * Description:

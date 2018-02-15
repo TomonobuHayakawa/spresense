@@ -290,6 +290,19 @@ bool board_xtal_power_monitor(void)
 }
 
 /****************************************************************************
+ * Name: board_lna_power_control
+ *
+ * Description:
+ *   Power on/off the LNA device on the board.
+ *
+ ****************************************************************************/
+
+int board_lna_power_control(bool en)
+{
+  return board_power_control(POWER_LNA, en);
+}
+
+/****************************************************************************
  * Name: board_reset
  *
  * Description:
