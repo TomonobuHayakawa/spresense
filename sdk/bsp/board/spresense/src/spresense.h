@@ -185,6 +185,18 @@ int cxd56_kx022initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c)
 #endif
 
 /****************************************************************************
+ * Name: cxd56_rpr0521rsinitialize
+ *
+ * Description:
+ *   Called to configure an I2C and to register RPR0521RS for collet board
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_RPR0521RS
+int cxd56_rpr0521rsinitialize(FAR struct i2c_master_s* i2c);
+#endif
+
+/****************************************************************************
  * Name: cxd56_bh1745nucinitialize
  *
  * Description:
