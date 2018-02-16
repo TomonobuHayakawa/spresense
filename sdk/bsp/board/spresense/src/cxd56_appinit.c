@@ -465,6 +465,14 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
+#ifdef CONFIG_BH1721FVC
+  ret = cxd56_bh1721fvcinitialize(i2c0);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialize BH1721FVC.\n");
+    }
+#endif
+
 #ifdef CONFIG_BH1745NUC
   ret = cxd56_bh1745nucinitialize("/dev/color", i2c0);
   if (ret < 0)

@@ -197,6 +197,18 @@ int cxd56_rpr0521rsinitialize(FAR struct i2c_master_s* i2c);
 #endif
 
 /****************************************************************************
+ * Name: cxd56_bh1721fvcinitialize
+ *
+ * Description:
+ *   Called to configure an I2C and to register BH1721FVC for collet board
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_BH1721FVC
+int cxd56_bh1721fvcinitialize(FAR struct i2c_master_s* i2c);
+#endif
+
+/****************************************************************************
  * Name: cxd56_bh1745nucinitialize
  *
  * Description:
