@@ -6,10 +6,14 @@ examples/decimator
 
   Supported sensors are decimator supported devices. See below option menu.
 
-  [System Type]
-    [CXD56xx Peripheral Support]
-      [Sensor Control Unit Support]
-        [SCU Decimator assignments]
+  [CXD56xx Configuration Options]
+    [Sensor Control Unit Support]
+      [SCU Decimator assignments]
+        [BMI160 Gyroscope to decimator]
+        [BMI160 Accelerometer to decimator]
+        [AK09912 Magnetometer to decimator]
+        [KX022 Accelerometer to decimator]
+        [BM1422GMV Magnetometer to decimator]
 
   This application depends on these devices and SCU configuration.
 
@@ -21,6 +25,8 @@ examples/decimator
   Configuration Pre-requisites:
 
     CONFIG_CXD56_SCU - CXD56xx Sensor Control Unit
+
+    And assign sensor to decimator listed in above.
 
   Example Configuration:
 
