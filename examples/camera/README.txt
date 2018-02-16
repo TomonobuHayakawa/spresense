@@ -1,27 +1,24 @@
 examples/camera
 ^^^^^^^^^^^^^^^
 
-  Example for CAMERA test.
-
   This sample code gets an image from the image sensor.
 
   Supported image sensor is ISX012.
 
 
-  Select the following configuration options:
+  This example can be used by camera default config.
 
-  $ make buildkernel KERNCONF=nsh
   $ ./tools/config.py camera
 
-  To use the LCD, select the following configuration options:
+  Alternatively, this example can be output captured images to LCD directly.
+  If you want to work with LCD devices, type like this:
 
-  $ make buildkernel KERNCONF=lcd
   $ ./tools/config.py camera ili9340
 
-  In addition to the above, the following definitions are also selectabled:
+  And enable following options.
 
-  CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD -- Display to LCD example. Default: n
-  CONFIG_EXAMPLES_CAMERA_INFINITE   -- Capture infinitely. Default: n
+  CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD -- Show captured image on the LCD
+  CONFIG_EXAMPLES_CAMERA_INFINITE   -- Capture infinitely
 
   Execute under nsh:
 
