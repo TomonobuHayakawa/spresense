@@ -449,6 +449,14 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
+#ifdef CONFIG_APDS9930
+  ret = cxd56_apds9930initialize(i2c0);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialize APDS9930.\n");
+    }
+#endif
+
 #ifdef CONFIG_LT1PA01
   ret = cxd56_lt1pa01initialize(i2c0);
   if (ret < 0)

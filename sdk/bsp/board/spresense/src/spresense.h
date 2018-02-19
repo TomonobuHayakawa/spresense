@@ -185,6 +185,18 @@ int cxd56_kx022initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c)
 #endif
 
 /****************************************************************************
+ * Name: cxd56_apds9930initialize
+ *
+ * Description:
+ *   Called to configure an I2C and to register APDS9930 for collet board
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_APDS9930
+int cxd56_apds9930initialize(FAR struct i2c_master_s* i2c);
+#endif
+
+/****************************************************************************
  * Name: cxd56_rpr0521rsinitialize
  *
  * Description:
