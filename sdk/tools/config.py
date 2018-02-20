@@ -6,6 +6,7 @@ import sys
 import logging
 import glob
 import shutil
+import re
 
 MODE_MENUCONFIG = "menuconfig"
 MODE_QCONFIG = "qconfig"
@@ -81,6 +82,30 @@ def apply_defconfig(configname, configlist, topdir, sdkdir, kernel):
         print('Post process failed. %d' % ret)
     return ret
 
+def apply_spices(spices, configfile):
+    with open(configfile, 'r') as src:
+        buf = src.read()
+
+    ENABLER = r'CONFIG_%s=y'
+    DISABLER = r'# CONFIG_%s is not set'
+
+    for spice in spices:
+        flag, spice = spice[0], spice[1:]
+        if flag == '+':
+            repl = ENABLER % spice
+        else:
+            repl = DISABLER % spice
+
+        r = re.compile(r'.*CONFIG_%s[= ].*' % spice, re.M)
+        m = r.search(buf)
+        if m:
+            buf = r.sub(repl, buf)
+        else:
+            buf += repl
+
+    with open(configfile, 'w') as dest:
+        dest.write(buf)
+
 def do_kconfig_conf(mode, sdkdir):
     ret = os.system('make %s' % mode)
     return ret
@@ -152,8 +177,30 @@ if __name__ == "__main__":
 
         sys.exit(0)
 
+    defconfigs = []
+    spices = []
     if len(opts.configname) > 0:
-        ret = apply_defconfig(opts.configname, configs, topdir, sdkdir, opts.kernel)
+        for c in opts.configname:
+            if c.startswith('-') or c.startswith('+'):
+                logging.info("    spice: %s", c)
+                spices.append(c)
+            else:
+                logging.info("defconfig: %s", c)
+                defconfigs.append(c)
+
+    if len(defconfigs) > 0:
+        ret = apply_defconfig(defconfigs, configs, topdir, sdkdir, opts.kernel)
+        if ret != 0:
+            sys.exit(ret)
+
+    if len(spices) > 0:
+        if opts.kernel:
+            d = topdir
+        else:
+            d = sdkdir
+
+        apply_spices(spices, "%s/.config" % d)
+        ret = os.system('make -C %s olddefconfig 2>&1 >/dev/null' % d)
         if ret != 0:
             sys.exit(ret)
 
