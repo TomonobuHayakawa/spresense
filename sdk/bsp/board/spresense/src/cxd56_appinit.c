@@ -268,6 +268,9 @@ int board_app_initialize(uintptr_t arg)
 #ifdef CONFIG_CXD56_I2C2
   FAR struct i2c_master_s *i2c2;
 #endif
+#ifdef CONFIG_CXD56_SPI4
+  FAR struct spi_dev_s *spi4;
+#endif
 #ifdef CONFIG_CXD56_SPI5
   FAR struct spi_dev_s *spi5;
 #endif
@@ -312,6 +315,19 @@ int board_app_initialize(uintptr_t arg)
 
 #ifdef CONFIG_CXD56_SCU
   scu_initialize();
+#endif
+
+#ifdef CONFIG_CXD56_SPI4
+  /* globally initialize spi bus for peripherals */
+  spi4 = cxd56_spibus_initialize(4);
+  if (!spi4)
+  {
+    _err("ERROR: Failed to initialize spi bus.\n");
+    return -ENODEV;
+  }
+#ifdef HAVE_SPITOOL
+  cxd56_spi_register(spi4, 4);
+#endif
 #endif
 
 #ifdef CONFIG_CXD56_SPI5
