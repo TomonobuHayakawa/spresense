@@ -95,6 +95,10 @@
 #  include "cxd56_sdhci.h"
 #endif
 
+#ifdef CONFIG_CXD56_SPISD
+#  include "cxd56_spisd.h"
+#endif
+
 #ifdef CONFIG_CXD56_CPUFIFO
 #  include "cxd56_cpufifo.h"
 #endif
@@ -556,6 +560,23 @@ int board_app_initialize(uintptr_t arg)
               _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
             }
         }
+    }
+#endif
+
+#ifdef CONFIG_CXD56_SPISD
+  /* Mount the SPI-based MMC/SD block driver */
+
+  ret = cxd56xx_spisdinitialize(0, spi4);
+  if (ret < 0)
+    {
+      ferr("ERROR: Failed to initialize SPI device to MMC/SD: %d\n",
+            ret);
+    }
+
+  ret = mount("/dev/mmcsd0", "/mnt/sd0", "vfat", 0, NULL);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
     }
 #endif
 
