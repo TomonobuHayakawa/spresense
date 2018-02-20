@@ -1,4 +1,3 @@
-# CONFIG_MMCSD_SPI is not set
 # CONFIG_NSH_ARGCAT is not set
 # CONFIG_NSH_CMDOPT_DF_H is not set
 # CONFIG_NSH_CMDOPT_HEXDUMP is not set
@@ -6,6 +5,7 @@
 # CONFIG_NX_DISABLE_16BPP is not set
 # CONFIG_NX_DISABLE_8BPP is not set
 # CONFIG_NX_WRITEONLY is not set
+# CONFIG_SPI_CALLBACK is not set
 # CONFIG_STANDARD_SERIAL is not set
 CONFIG_ARCH="arm"
 CONFIG_ARCH_BOARD="cxd56-corvo"
