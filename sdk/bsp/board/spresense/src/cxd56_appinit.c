@@ -278,7 +278,7 @@ int board_app_initialize(uintptr_t arg)
 #ifdef CONFIG_CXD56_SPI5
   FAR struct spi_dev_s *spi5;
 #endif
-#ifdef CONFIG_CXD56_SDIO
+#if defined(CONFIG_CXD56_SDIO) && !defined(CONFIG_CXD56_SPISD)
   FAR struct sdio_dev_s *sdhci0;
   struct stat stat_sdio;
 #endif
@@ -515,7 +515,7 @@ int board_app_initialize(uintptr_t arg)
 
   ret = nsh_sfc_initialize();
 
-#ifdef CONFIG_CXD56_SDIO
+#if defined(CONFIG_CXD56_SDIO) && !defined(CONFIG_CXD56_SPISD)
   /* Mount the SDHC-based MMC/SD block driver */
   /* This should be used with 3.3V */
   /* First, get an instance of the SDHC interface */
