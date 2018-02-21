@@ -185,21 +185,29 @@
 
 #define AUDCMD_CLKRECOVERY    (AUDCMD_CATEGORY_PLAYER | 0x04)
 
+/*! \brief Command Code: SetGain */
+
+#define AUDCMD_SETGAIN        (AUDCMD_CATEGORY_PLAYER | 0x05)
+
 /*! \brief Command Code: InitSubPlayer */
 
-#define AUDCMD_INITSUBPLAYER  (AUDCMD_CATEGORY_PLAYER | 0x05)
+#define AUDCMD_INITSUBPLAYER  (AUDCMD_CATEGORY_PLAYER | 0x06)
 
 /*! \brief Command Code: PlaySubPlayer */
 
-#define AUDCMD_PLAYSUBPLAYER  (AUDCMD_CATEGORY_PLAYER | 0x06)
+#define AUDCMD_PLAYSUBPLAYER  (AUDCMD_CATEGORY_PLAYER | 0x07)
 
 /*! \brief Command Code: StopSubPlayer */
 
-#define AUDCMD_STOPSUBPLAYER  (AUDCMD_CATEGORY_PLAYER | 0x07)
+#define AUDCMD_STOPSUBPLAYER  (AUDCMD_CATEGORY_PLAYER | 0x08)
 
 /*! \brief Command Code: ClkRecovery */
 
-#define AUDCMD_CLKRECOVERYSUB (AUDCMD_CATEGORY_PLAYER | 0x08)
+#define AUDCMD_CLKRECOVERYSUB (AUDCMD_CATEGORY_PLAYER | 0x09)
+
+/*! \brief Command Code: SetGain */
+
+#define AUDCMD_SETGAINSUB     (AUDCMD_CATEGORY_PLAYER | 0x0a)
 
 /** @} */
 
@@ -222,6 +230,10 @@
 
 #define  AUDRLT_CLKRECOVERY_CMPLT    AUDCMD_CLKRECOVERY
 
+/*! \brief Result Code: SetGainComplete */
+
+#define  AUDRLT_SETGAIN_CMPLT        AUDCMD_SETGAIN
+
 /*! \brief Result Code: InitPlayCmplt */
 
 #define  AUDRLT_SUBINITPLAYERCMPLT   AUDCMD_INITSUBPLAYER
@@ -237,6 +249,10 @@
 /*! \brief Result Code: ClkRecoveryComplete */
 
 #define  AUDRLT_CLKRECOVERYSUB_CMPLT AUDCMD_CLKRECOVERYSUB
+
+/*! \brief Result Code: SetGainComplete */
+
+#define  AUDRLT_SETGAINSUB_CMPLT     AUDCMD_SETGAINSUB
 
 /** @} */
 

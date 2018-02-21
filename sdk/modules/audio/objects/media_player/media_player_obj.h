@@ -194,7 +194,10 @@ private:
   void decDoneOnPrePlayUnderflow(MsgPacket *);
   void decDoneOnPrePlayWaitEsEnd(MsgPacket *);
 
+  void decSetDone(MsgPacket *);
+
   void setClkRecovery(MsgPacket *);
+  void setGain(MsgPacket *);
 
   uint32_t loadCodec(AudioCodec codec, uint32_t* dsp_inf);
   bool unloadCodec();

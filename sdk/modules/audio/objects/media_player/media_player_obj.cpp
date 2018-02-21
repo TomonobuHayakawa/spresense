@@ -175,6 +175,26 @@ static bool decoder_comp_done_callback(void *p_response, FAR void *p_requester)
       }
       break;
 
+    case Apu::SetParamEvent:
+      {
+        cmplt.setparam_dec_cmplt.l_gain = packet->setparam_dec_cmd.l_gain;
+        cmplt.setparam_dec_cmplt.r_gain = packet->setparam_dec_cmd.l_gain;
+
+        MEDIA_PLAYER_VDBG("SetPrm Lg %d Rg %d\n",
+                          cmplt.setparam_dec_cmplt.l_gain,
+                          cmplt.setparam_dec_cmplt.r_gain);
+
+        err_t er = MsgLib::send<DecCmpltParam>((static_cast<FAR PlayerObj *>
+                                                (p_requester))->get_selfId(),
+                                               MsgPriNormal,
+                                               MSG_AUD_PLY_CMD_DEC_SET_DONE,
+                                               (static_cast<FAR PlayerObj *>
+                                                (p_requester))->get_selfId(),
+                                               cmplt);
+        F_ASSERT(er == ERR_OK);
+      }
+      break;
+
     default:
       MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_DSP_ILLEGAL_REPLY);
       return false;
@@ -306,6 +326,18 @@ PlayerObj::MsgProc PlayerObj::MsgProcTbl[AUD_PLY_MSG_NUM][PlayerStateNum] =
     &PlayerObj::setClkRecovery,      /*   WaitEsEndState.     */
     &PlayerObj::setClkRecovery,      /*   UnderflowState.     */
     &PlayerObj::setClkRecovery       /*   WaitStopState.      */
+  },
+
+  /* Message type: MSG_AUD_PLY_CMD_SETGAIN */
+  {                                  /* Player status:        */
+    &PlayerObj::illegalEvt,          /*   BootedState.        */
+    &PlayerObj::setGain,             /*   ReadyState.         */
+    &PlayerObj::parseSubState,       /*   PrePlayParentState. */
+    &PlayerObj::setGain,             /*   PlayState.          */
+    &PlayerObj::setGain,             /*   StoppingState.      */
+    &PlayerObj::setGain,             /*   WaitEsEndState.     */
+    &PlayerObj::setGain,             /*   UnderflowState.     */
+    &PlayerObj::setGain,             /*   WaitStopState.      */
   }
 };
 
@@ -357,7 +389,6 @@ PlayerObj::MsgProc PlayerObj::PlayerSubStateTbl[AUD_PLY_MSG_NUM][SubStateNum] =
     &PlayerObj::illegalEvt,                /*   SubStatePrePlayUnderflow. */
   },
 
-
   /* Message type: MSG_AUD_PLY_CMD_CLKRECOVERY. */
 
   {                                        /* Player sub status:          */
@@ -365,6 +396,15 @@ PlayerObj::MsgProc PlayerObj::PlayerSubStateTbl[AUD_PLY_MSG_NUM][SubStateNum] =
     &PlayerObj::setClkRecovery,            /*   SubStatePrePlayStopping.  */
     &PlayerObj::setClkRecovery,            /*   SubStatePrePlayWaitEsEnd. */
     &PlayerObj::setClkRecovery,            /*   SubStatePrePlayUnderflow. */
+  },
+
+  /* Message type: MSG_AUD_PLY_CMD_SETGAIN. */
+
+  {                                        /* Player sub status:          */
+    &PlayerObj::setGain,                   /*   SubStatePrePlay.          */
+    &PlayerObj::setGain,                   /*   SubStatePrePlayStopping.  */
+    &PlayerObj::setGain,                   /*   SubStatePrePlayWaitEsEnd. */
+    &PlayerObj::setGain,                   /*   SubStatePrePlayUnderflow. */
   }
 };
 
@@ -396,6 +436,19 @@ PlayerObj::MsgProc PlayerObj::PlayerResultTbl[AUD_PLY_RST_MSG_NUM][PlayerStateNu
     &PlayerObj::decDoneOnWaitEsEnd,  /*   WaitEsEndState.     */
     &PlayerObj::decDoneOnWaitStop,   /*   UnderflowState.     */
     &PlayerObj::illegalDecDone       /*   WaitStopState.      */
+  },
+
+  /* Message type: MSG_AUD_PLY_CMD_DEC_SET_DONE. */
+
+  {
+    &PlayerObj::illegalDecDone,      /*   BootedState.        */
+    &PlayerObj::decSetDone,          /*   ReadyState.         */
+    &PlayerObj::parseSubState,       /*   PrePlayParentState. */
+    &PlayerObj::decSetDone,          /*   PlayState.          */
+    &PlayerObj::decSetDone,          /*   StoppingState.      */
+    &PlayerObj::decSetDone,          /*   WaitEsEndState.     */
+    &PlayerObj::decSetDone,          /*   UnderflowState.     */
+    &PlayerObj::decSetDone           /*   WaitStopState.      */
   }
 };
 
@@ -418,6 +471,15 @@ PlayerObj::MsgProc PlayerObj::PlayerResultSubTbl[AUD_PLY_RST_MSG_NUM][SubStateNu
     &PlayerObj::decDoneOnPrePlayStopping,  /*   SubStatePrePlayStopping.  */
     &PlayerObj::decDoneOnPrePlayWaitEsEnd, /*   SubStatePrePlayWaitEsEnd. */
     &PlayerObj::decDoneOnPrePlayUnderflow, /*   SubStatePrePlayUnderflow. */
+  },
+
+  /* Message type: MSG_AUD_PLY_CMD_DEC_SET_DONE. */
+
+  {                                        /* Player sub status:          */
+    &PlayerObj::decSetDone,                /*   SubStatePrePlay.          */
+    &PlayerObj::decSetDone,                /*   SubStatePrePlayStopping.  */
+    &PlayerObj::decSetDone,                /*   SubStatePrePlayWaitEsEnd. */
+    &PlayerObj::decSetDone,                /*   SubStatePrePlayUnderflow. */
   }
 };
 
@@ -1159,6 +1221,35 @@ void PlayerObj::decDoneOnPrePlayUnderflow(MsgPacket *msg)
 }
 
 /*--------------------------------------------------------------------------*/
+void PlayerObj::decSetDone(MsgPacket *msg)
+{
+  DecCmpltParam cmplt = msg->moveParam<DecCmpltParam>();
+  AS_decode_recv_done(m_p_dec_instance);
+
+   if (Apu::SetParamEvent != cmplt.event_type)
+    {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+      return;
+    }
+
+  if (m_external_cmd_que.empty())
+    {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
+      return;
+    }
+
+  AudioCommand ext_cmd = m_external_cmd_que.top();
+  if (!m_external_cmd_que.pop())
+    {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
+    }
+
+  /* Send result. */
+
+  sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
+}
+
+/*--------------------------------------------------------------------------*/
 void PlayerObj::setClkRecovery(MsgPacket *msg)
 {
   AudioCommand cmd = msg->moveParam<AudioCommand>();
@@ -1185,6 +1276,32 @@ void PlayerObj::setClkRecovery(MsgPacket *msg)
   /* Send result. */
 
   sendAudioCmdCmplt(cmd, AS_ECODE_OK);
+}
+
+/*--------------------------------------------------------------------------*/
+void PlayerObj::setGain(MsgPacket *msg)
+{
+  AudioCommand cmd = msg->moveParam<AudioCommand>();
+
+  if (!m_external_cmd_que.push(cmd))
+    {
+      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
+      return;
+    }
+
+  /* Set paramter to Decoder */
+
+  SetDecCompParam param;
+
+  param.l_gain = cmd.set_gain_param.l_gain;
+  param.r_gain = cmd.set_gain_param.r_gain;
+
+  if (AS_decode_setparam(param, m_p_dec_instance) == false)
+    {
+      /* Do nothing. */
+    }
+
+  /* Response is sent after decoder_component done */
 }
 
 /*--------------------------------------------------------------------------*/

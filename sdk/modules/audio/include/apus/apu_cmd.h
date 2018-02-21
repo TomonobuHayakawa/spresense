@@ -230,6 +230,7 @@ public:
   AudioChannelFormat channel_format;    /**< Channel format of output data */
   uint32_t           sampling_rate;     /**< Sampling rate of output data */
   AudioChannelConfig channel_config;    /**< Channel config of output data */
+  AudioMixerChSelect channel_select;    /**< Mixing Channel select */
   int32_t            decoder_output_sample; /**< Sample number of output data */
 };
 typedef struct apu_pcm_param_s ApuPcmParam;
@@ -275,6 +276,16 @@ public:
                                /**<  or pointer and buffer size) */
 };
 
+/**
+ * Set paramter processing
+ */
+
+struct ApuSetParamDecCmd
+{
+public:
+  uint8_t l_gain; /**< audio level gain of L ch (0 - 200%) */
+  uint8_t r_gain; /**< audio level gain of R ch (0 - 200%) */
+};
 
 /****************************************************************************/
 /**
@@ -701,6 +712,8 @@ struct Wien2ApuCmd
     ApuFlushRecognitionCmd  flush_recognition_cmd; /**< Parameters for flushing */
                                                    /**<  recognition processing */
 
+    ApuSetParamDecCmd       setparam_dec_cmd;      /**< Parameters for setting */
+                                                   /**<  decoder processing */
     ApuSetParamFilterCmd    setparam_filter_cmd;   /**< Parameters for setting */
                                                    /**<  filter processing */
 

@@ -1396,6 +1396,12 @@ typedef struct
      */
 
     AsClkRecoveryParam clk_recovery_param;
+
+    /*! \brief [in] for set audio gain level
+     * (header.command_code==#AUDCMD_SETGAIN)
+     */
+
+    AsSetGainParam set_gain_param;
 #endif
 #ifdef AS_FEATURE_RECORDER_ENABLE
 

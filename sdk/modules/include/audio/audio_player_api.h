@@ -94,6 +94,10 @@
 
 #define LENGTH_CLK_RECOVERY  (2)
 
+/*! \brief Set audio gain leve command ("AUDCMD_SETGAIN)packet length */
+
+#define LENGTH_SET_GAIN (2)
+
 /** @} */
 
 /****************************************************************************
@@ -357,6 +361,23 @@ typedef struct
 
   uint32_t times;
 } AsClkRecoveryParam;
+
+/** Set Audio gain level Command (#AUDCMD_SETGAIN) parameter */
+
+typedef struct
+{
+  /*! \brief [in] Gain level Lch
+   * Percentage 0 - 200 %
+   */
+
+  uint8_t l_gain;
+
+  /*! \brief [in] Gain level Rch
+   * Percentage 0 - 200 %
+   */
+
+  uint8_t r_gain;
+} AsSetGainParam;
 
 /** Message queue ID parameter of activate function */
 

@@ -126,6 +126,7 @@ void AS_SendAudioCommand(FAR AudioCommand *packet)
       case AUDCMD_PLAYPLAYER:
       case AUDCMD_STOPPLAYER:
       case AUDCMD_CLKRECOVERY:
+      case AUDCMD_SETGAIN:
         msg_type = MSG_AUD_MGR_CMD_PLAYER;
         break;
 
@@ -133,6 +134,7 @@ void AS_SendAudioCommand(FAR AudioCommand *packet)
       case AUDCMD_PLAYSUBPLAYER:
       case AUDCMD_STOPSUBPLAYER:
       case AUDCMD_CLKRECOVERYSUB:
+      case AUDCMD_SETGAINSUB:
         msg_type = MSG_AUD_MGR_CMD_SUBPLAYER;
         break;
 
@@ -1210,6 +1212,15 @@ void AudioManager::player(AudioCommand &cmd)
         msg_type = MSG_AUD_PLY_CMD_CLKRECOVERY;
         break;
 
+      case AUDCMD_SETGAIN:
+        check = packetCheck(LENGTH_SET_GAIN, AUDCMD_SETGAIN, cmd);
+        if (!check)
+          {
+            return;
+          }
+        msg_type = MSG_AUD_PLY_CMD_SETGAIN;
+        break;
+
       default:
         sendErrRespResult(cmd.header.sub_code,
                           AS_MODULE_ID_AUDIO_MANAGER,
@@ -1276,6 +1287,15 @@ void AudioManager::subPlayer(AudioCommand &cmd)
             return;
           }
         msg_type = MSG_AUD_PLY_CMD_CLKRECOVERY;
+        break;
+
+      case AUDCMD_SETGAINSUB:
+        check = packetCheck(LENGTH_SET_GAIN, AUDCMD_SETGAINSUB, cmd);
+        if (!check)
+          {
+            return;
+          }
+        msg_type = MSG_AUD_PLY_CMD_SETGAIN;
         break;
 
       default:
@@ -2143,6 +2163,10 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
         result_code = AUDRLT_CLKRECOVERY_CMPLT;
         break;
 
+      case AUDCMD_SETGAIN:
+        result_code = AUDRLT_SETGAIN_CMPLT;
+        break;
+
       case AUDCMD_SETREADYSTATUS:
         m_player_transition_que.pop();
         if (m_player_transition_que.empty())
@@ -2174,6 +2198,9 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
         result_code = AUDRLT_CLKRECOVERYSUB_CMPLT;
         break;
 
+      case AUDCMD_SETGAINSUB:
+        result_code = AUDRLT_SETGAINSUB_CMPLT;
+        break;
 
       case AUDCMD_POWERON:
         m_State    = AS_MNG_STATUS_READY;

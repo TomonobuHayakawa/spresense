@@ -129,6 +129,15 @@ enum AudioChannelConfig
   AUD_PCM_CH_CONFIG_NUM
 };
 
+/* Definitions of channel selection of mixer */
+
+enum AudioMixerChSelect
+{
+  AudChSelThrough = 0,  /* Output ch equals to input ch */
+  AudChSelLelf,         /* Select L ch */
+  AudChSelRight,        /* Select R ch */
+};
+
 enum AudioCodec
 {
   InvalidCodecType = 0xffffffff,

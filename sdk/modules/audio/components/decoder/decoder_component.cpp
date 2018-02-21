@@ -73,6 +73,12 @@ bool AS_decode_stop(const StopDecCompParam& param, void *p_instance)
 }
 
 /*--------------------------------------------------------------------*/
+bool AS_decode_setparam(const SetDecCompParam& param, void *p_instance)
+{
+  return ((DecoderComponent *)p_instance)->setparam_apu(param);
+}
+
+/*--------------------------------------------------------------------*/
 bool AS_decode_recv_apu(void *p_param, void *p_instance)
 {
   return ((DecoderComponent *)p_instance)->recv_apu(p_param);
@@ -220,6 +226,7 @@ uint32_t DecoderComponent::init_apu(const InitDecCompParam& param,
 
   p_apu_cmd->init_dec_cmd.out_pcm_param.bit_length     = param.bit_width;
   p_apu_cmd->init_dec_cmd.out_pcm_param.channel_format = Aud2ChannelFormat;
+  p_apu_cmd->init_dec_cmd.out_pcm_param.channel_select = AudChSelThrough;
 
   if ((p_apu_cmd->init_dec_cmd.codec_type == AudCodecXAVCLPCM
     || p_apu_cmd->init_dec_cmd.codec_type == AudCodecFLAC)
@@ -348,6 +355,29 @@ bool DecoderComponent::flush_apu(const StopDecCompParam& param)
   p_apu_cmd->header.event_type   = Apu::FlushEvent;
 
   p_apu_cmd->flush_dec_cmd.output_buffer = param.output_buffer;
+
+  send_apu(p_apu_cmd);
+  return true;
+}
+
+/*--------------------------------------------------------------------*/
+bool DecoderComponent::setparam_apu(const SetDecCompParam& param)
+{
+  Apu::Wien2ApuCmd *p_apu_cmd =
+    reinterpret_cast<Apu::Wien2ApuCmd*>(getApuCmdBuf());
+
+  if (p_apu_cmd == NULL)
+    {
+      return false;
+    }
+
+  memset(p_apu_cmd, 0x00, sizeof(Apu::Wien2ApuCmd));
+
+  p_apu_cmd->header.process_mode = Apu::DecMode;
+  p_apu_cmd->header.event_type   = Apu::SetParamEvent;
+
+  p_apu_cmd->setparam_dec_cmd.l_gain = param.l_gain;
+  p_apu_cmd->setparam_dec_cmd.r_gain = param.r_gain;
 
   send_apu(p_apu_cmd);
   return true;

@@ -54,6 +54,12 @@ struct StopDecCompParam
   bool         is_valid_frame;
 };
 
+struct SetDecCompParam
+{
+  uint8_t l_gain; /**< audio level gain of L ch (0 - 200%) */
+  uint8_t r_gain; /**< audio level gain of R ch (0 - 200%) */
+};
+
 struct DecCmpltParam
 {
   Apu::ApuEventType event_type;
@@ -63,6 +69,7 @@ struct DecCmpltParam
     InitDecCompParam init_dec_cmplt;
     ExecDecCompParam exec_dec_cmplt;
     StopDecCompParam stop_dec_cmplt;
+    SetDecCompParam  setparam_dec_cmplt;
   };
 };
 
@@ -83,6 +90,8 @@ uint32_t AS_decode_init(const InitDecCompParam& param,
 bool AS_decode_exec(const ExecDecCompParam& param, void *p_instance);
 
 bool AS_decode_stop(const StopDecCompParam& param, void *p_instance);
+
+bool AS_decode_setparam(const SetDecCompParam& param, void *p_instance);
 
 bool AS_decode_recv_apu(void *p_param, void *p_instance);
 
@@ -112,6 +121,7 @@ public:
   uint32_t init_apu(const InitDecCompParam& param, uint32_t *dsp_inf);
   bool exec_apu(const ExecDecCompParam& param);
   bool flush_apu(const StopDecCompParam& param);
+  bool setparam_apu(const SetDecCompParam& param);
   bool recv_apu(void *p_param);
   bool recv_done(void) { return freeApuCmdBuf(); };
   uint32_t activate(AudioCodec, uint32_t *dsp_inf);
