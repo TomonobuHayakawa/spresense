@@ -28,4 +28,19 @@ endchoice # "TXS02612 port"
 
 endif # SDCARD_TXS02612
 
+config CXD56_SPISD
+	bool "SPISD"
+	default n
+
+menu "SPISD Configuration"
+	depends on CXD56_SPISD
+
+config CXD56_SPISD_SLOT_NO
+	int "SPI SD Card Slot Number"
+	default 0
+	---help---
+		Select spi sd card slot number.
+
+endmenu # SPISD Configuration
+
 endif
