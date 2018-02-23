@@ -2125,7 +2125,7 @@ static void cxd56_gnss_cpufifoapi_signalhandler(uint32_t data,
 {
   FAR struct cxd56_gnss_dev_s *priv = (FAR struct cxd56_gnss_dev_s *)userdata;
 
-  priv->apiret = (int)CXD56_CPU1_GET_DATA(data);
+  priv->apiret = CXD56_CPU1_GET_DATA((int)data);
   sem_post(&priv->apiwait);
 
   return;
