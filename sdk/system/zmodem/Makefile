@@ -35,7 +35,7 @@
 
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
-include $(APPDIR)/Make.defs
+include $(SDKDIR)/Make.defs
 
 # Zmodem sz and rz commands
 
@@ -46,8 +46,10 @@ ASRCS  =
 
 CSRCS  = zm_send.c zm_receive.c zm_state.c zm_proto.c zm_watchdog.c
 CSRCS += zm_utils.c zm_dumpbuffer.c
+ifeq ($(CONFIG_SYSTEM_ZMODEM),y)
 SZ_MAINSRC = sz_main.c
 RZ_MAINSRC = rz_main.c
+endif
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -62,12 +64,12 @@ ifneq ($(CONFIG_BUILD_KERNEL),y)
 endif
 
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-  BIN = ..\..\libapps$(LIBEXT)
+  BIN = ..\libsystem$(LIBEXT)
 else
 ifeq ($(WINTOOL),y)
-  BIN = ..\\..\\libapps$(LIBEXT)
+  BIN = ..\\libsystem$(LIBEXT)
 else
-  BIN = ../../libapps$(LIBEXT)
+  BIN = ../libsystem$(LIBEXT)
 endif
 endif
 
@@ -89,9 +91,15 @@ ROOTDEPPATH = --dep-path .
 
 VPATH =
 
+ifeq ($(WINTOOL),y)
+CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/system/zmodem/include)"
+else
+CFLAGS += -isystem $(SDKDIR)/system/zmodem/include
+endif
+
 all: .built
 .PHONY: context depend clean distclean preconfig
-.PRECIOUS: ../../libapps$(LIBEXT)
+.PRECIOUS: ../libsystem$(LIBEXT)
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
@@ -123,6 +131,7 @@ endif
 
 # Register application
 
+ifeq ($(CONFIG_SYSTEM_ZMODEM),y)
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
 $(BUILTIN_REGISTRY)$(DELIM)sz.bdat: $(DEPCONFIG) Makefile
 	$(call REGISTER,"sz",$(PRIORITY),$(STACKSIZE),sz_main)
@@ -133,6 +142,7 @@ $(BUILTIN_REGISTRY)$(DELIM)rz.bdat: $(DEPCONFIG) Makefile
 context: $(BUILTIN_REGISTRY)$(DELIM)sz.bdat $(BUILTIN_REGISTRY)$(DELIM)rz.bdat
 else
 context:
+endif
 endif
 
 # Create dependencies
