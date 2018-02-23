@@ -12,3 +12,4 @@ config SDKDIR
 source "$SDKDIR/bsp/Kconfig"
 source "$SDKDIR/drivers/Kconfig"
 source "$SDKDIR/modules/Kconfig"
+source "$SDKDIR/system/Kconfig"
