@@ -36,6 +36,7 @@
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(SDKDIR)/Make.defs
+include $(SDKDIR)/system/Make.defs
 
 # Zmodem sz and rz commands
 
