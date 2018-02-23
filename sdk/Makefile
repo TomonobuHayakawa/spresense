@@ -283,8 +283,11 @@ savedefconfig: .kconfig.tmp clean_context
 	$(Q) SDKDIR=$(SDKDIR) kconfig-conf --savedefconfig defconfig $<
 PHONY += savedefconfig
 
-.kconfig.tmp: ext_preconfig
+.kconfig.tmp: preconfig ext_preconfig
 	$(Q) tools/gentmpkconfig.py $@
+
+preconfig:
+	$(Q) $(MAKE) -C system TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" preconfig
 
 ext_preconfig:
 ifneq ($(EXTSUBDIRS),)

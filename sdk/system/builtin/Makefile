@@ -63,7 +63,7 @@ VPATH		=
 # Build Targets
 
 all:	.built
-.PHONY: context depend clean distclean
+.PHONY: context depend clean distclean preconfig
 .PRECIOUS:
 
 $(AOBJS): %$(OBJEXT): %.S
@@ -135,5 +135,7 @@ distclean: clean
 	$(call DELFILE, .depend)
 	$(call DELFILE, builtin_list.h)
 	$(call DELFILE, builtin_proto.h)
+
+preconfig:
 
 -include Make.dep

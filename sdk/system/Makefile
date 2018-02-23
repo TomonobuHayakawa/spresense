@@ -35,7 +35,15 @@
 include $(SDKDIR)/Make.defs
 DELIM ?= $(strip /)
 
+MENUDESC = "System tools"
+
 BIN = libsystem$(LIBEXT)
+
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+  MKKCONFIG = $(SDKDIR)\tools\mkkconfig.bat
+else
+  MKKCONFIG = $(SDKDIR)/tools/mkkconfig.sh
+endif
 
 # Sub-directories
 
@@ -59,6 +67,7 @@ $(1)_$(2):
 endef
 
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),all)))
+$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),preconfig)))
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),context)))
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),depend)))
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),clean)))
@@ -75,3 +84,6 @@ clean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_clean)
 
 distclean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_distclean)
 	$(call CLEAN)
+
+preconfig: $(foreach SDIR, $(SUBDIRS), $(SDIR)_preconfig)
+	$(Q) $(MKKCONFIG) -m $(MENUDESC)
