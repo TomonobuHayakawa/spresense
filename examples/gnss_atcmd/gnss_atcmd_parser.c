@@ -774,7 +774,7 @@ static int command_gemg(FAR struct gnss_atcmd_info *info,
 {
   struct orbitaldata_info oinfo = {
     CXD56_GNSS_IOCTL_GET_EPHEMERIS,
-    CXD56_GNSS_SAT_GPS,
+    CXD56_GNSS_DATA_GPS,
     CXD56_GNSS_GPS_EPHEMERIS_SIZE,
   };
 
@@ -787,7 +787,7 @@ static int command_gems(FAR struct gnss_atcmd_info *info,
 {
   struct orbitaldata_info oinfo = {
     CXD56_GNSS_IOCTL_SET_EPHEMERIS,
-    CXD56_GNSS_SAT_GPS,
+    CXD56_GNSS_DATA_GPS,
     CXD56_GNSS_GPS_EPHEMERIS_SIZE,
   };
 
@@ -800,7 +800,7 @@ static int command_galg(FAR struct gnss_atcmd_info *info,
 {
   struct orbitaldata_info oinfo = {
     CXD56_GNSS_IOCTL_GET_ALMANAC,
-    CXD56_GNSS_SAT_GPS,
+    CXD56_GNSS_DATA_GPS,
     CXD56_GNSS_GPS_ALMANAC_SIZE
   };
 
@@ -813,7 +813,7 @@ static int command_gals(FAR struct gnss_atcmd_info *info,
 {
   struct orbitaldata_info oinfo = {
     CXD56_GNSS_IOCTL_SET_ALMANAC,
-    CXD56_GNSS_SAT_GPS,
+    CXD56_GNSS_DATA_GPS,
     CXD56_GNSS_GPS_ALMANAC_SIZE
   };
 
@@ -826,7 +826,7 @@ static int command_lemg(FAR struct gnss_atcmd_info *info,
 {
   struct orbitaldata_info oinfo = {
     CXD56_GNSS_IOCTL_GET_EPHEMERIS,
-    CXD56_GNSS_SAT_GLONASS,
+    CXD56_GNSS_DATA_GLONASS,
     CXD56_GNSS_GLONASS_EPHEMERIS_SIZE,
   };
 
@@ -839,7 +839,7 @@ static int command_lems(FAR struct gnss_atcmd_info *info,
 {
   struct orbitaldata_info oinfo = {
     CXD56_GNSS_IOCTL_SET_EPHEMERIS,
-    CXD56_GNSS_SAT_GLONASS,
+    CXD56_GNSS_DATA_GLONASS,
     CXD56_GNSS_GLONASS_EPHEMERIS_SIZE,
   };
 
@@ -851,8 +851,7 @@ static int command_lalg(FAR struct gnss_atcmd_info *info,
                         int argc)
 {
   struct orbitaldata_info oinfo = {CXD56_GNSS_IOCTL_GET_ALMANAC,
-                                   CXD56_GNSS_SAT_GLONASS,
-
+                                   CXD56_GNSS_DATA_GLONASS,
                                    CXD56_GNSS_GLONASS_ALMANAC_SIZE};
   return get_orbitaldata(info, cmdentry, &oinfo);
 }
@@ -862,8 +861,7 @@ static int command_lals(FAR struct gnss_atcmd_info *info,
                         int argc)
 {
   struct orbitaldata_info oinfo = {CXD56_GNSS_IOCTL_SET_ALMANAC,
-                                   CXD56_GNSS_SAT_GLONASS,
-
+                                   CXD56_GNSS_DATA_GLONASS,
                                    CXD56_GNSS_GLONASS_ALMANAC_SIZE};
   return set_orbitaldata(info, cmdentry, &oinfo);
 }
