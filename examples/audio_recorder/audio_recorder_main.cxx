@@ -71,9 +71,26 @@ using namespace MemMgrLite;
 #  define CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT "/mnt/vfat/REC"
 #endif
 
+/* Use microphone type.
+ *   Set MICROPHONE_ANALOG or MICROPHONE_DIGITAL as type
+ */
+
+#define USE_MICROPHONE  MICROPHONE_ANALOG
+
+/* Use microphone channel number.
+ *   [Analog microphone]
+ *       Maximum number: 4
+ *       The channel number is 1/2/4
+ *   [Digital microphone]
+ *       Maximum number: 8
+ *       The channel number is 1/2/4/6/8
+ */
+
+#define USE_MIC_CHANNEL_NUM  2
+
 /* For FIFO. */
 
-#define READ_SIMPLE_FIFO_SIZE 3072
+#define READ_SIMPLE_FIFO_SIZE (1536 * USE_MIC_CHANNEL_NUM)
 #define SIMPLE_FIFO_FRAME_NUM 10
 #define SIMPLE_FIFO_BUF_SIZE  (READ_SIMPLE_FIFO_SIZE * SIMPLE_FIFO_FRAME_NUM)
 
@@ -169,7 +186,17 @@ enum channel_type_e
 {
   CHAN_TYPE_MONO = 0,
   CHAN_TYPE_STEREO,
+  CHAN_TYPE_4CH,
+  CHAN_TYPE_6CH,
+  CHAN_TYPE_8CH,
   CHAN_TYPE_NUM
+};
+
+enum microphone_device_e
+{
+  MICROPHONE_ANALOG = 0,
+  MICROPHONE_DIGITAL,
+  MICROPHONE_NUM
 };
 
 /****************************************************************************
@@ -488,20 +515,51 @@ static bool app_set_ready(void)
   return printAudCmdResult(command.header.command_code, result);
 }
 
+static void app_set_mic_gain_analog(AudioCommand* command)
+{
+  command->header.packet_length = LENGTH_INITMICGAIN;
+  command->header.command_code  = AUDCMD_INITMICGAIN;
+  command->header.sub_code      = 0;
+  command->init_mic_gain_param.mic_gain[0] = 210;
+  command->init_mic_gain_param.mic_gain[1] = 210;
+  command->init_mic_gain_param.mic_gain[2] = 210;
+  command->init_mic_gain_param.mic_gain[3] = 210;
+  command->init_mic_gain_param.mic_gain[4] = AS_MICGAIN_HOLD;
+  command->init_mic_gain_param.mic_gain[5] = AS_MICGAIN_HOLD;
+  command->init_mic_gain_param.mic_gain[6] = AS_MICGAIN_HOLD;
+  command->init_mic_gain_param.mic_gain[7] = AS_MICGAIN_HOLD;
+}
+
+static void app_set_mic_gain_digital(AudioCommand* command)
+{
+  command->header.packet_length = LENGTH_INITMICGAIN;
+  command->header.command_code  = AUDCMD_INITMICGAIN;
+  command->header.sub_code      = 0;
+  command->init_mic_gain_param.mic_gain[0] = 0;
+  command->init_mic_gain_param.mic_gain[1] = 0;
+  command->init_mic_gain_param.mic_gain[2] = 0;
+  command->init_mic_gain_param.mic_gain[3] = 0;
+  command->init_mic_gain_param.mic_gain[4] = 0;
+  command->init_mic_gain_param.mic_gain[5] = 0;
+  command->init_mic_gain_param.mic_gain[6] = 0;
+  command->init_mic_gain_param.mic_gain[7] = 0;
+}
+
 static bool app_init_mic_gain(void)
 {
+
   AudioCommand command;
-  command.header.packet_length = LENGTH_INITMICGAIN;
-  command.header.command_code  = AUDCMD_INITMICGAIN;
-  command.header.sub_code      = 0;
-  command.init_mic_gain_param.mic_gain[0] = 210;
-  command.init_mic_gain_param.mic_gain[1] = 210;
-  command.init_mic_gain_param.mic_gain[2] = 210;
-  command.init_mic_gain_param.mic_gain[3] = 210;
-  command.init_mic_gain_param.mic_gain[4] = AS_MICGAIN_HOLD;
-  command.init_mic_gain_param.mic_gain[5] = AS_MICGAIN_HOLD;
-  command.init_mic_gain_param.mic_gain[6] = AS_MICGAIN_HOLD;
-  command.init_mic_gain_param.mic_gain[7] = AS_MICGAIN_HOLD;
+  switch(USE_MICROPHONE)
+    {
+      case  MICROPHONE_ANALOG:
+        app_set_mic_gain_analog(&command);
+        break;
+      case MICROPHONE_DIGITAL:
+        app_set_mic_gain_digital(&command);
+        break;
+      default:
+        return false;
+    }
   AS_SendAudioCommand(&command);
 
   AudioResult result;
@@ -552,6 +610,15 @@ static bool app_set_recording_param(codec_type_e codec_type,
         break;
       case CHAN_TYPE_STEREO:
         s_recorder_info.file.channel_number = AS_CHANNEL_STEREO;
+        break;
+      case CHAN_TYPE_4CH:
+        s_recorder_info.file.channel_number = AS_CHANNEL_4CH;
+        break;
+      case CHAN_TYPE_6CH:
+        s_recorder_info.file.channel_number = AS_CHANNEL_6CH;
+        break;
+      case CHAN_TYPE_8CH:
+        s_recorder_info.file.channel_number = AS_CHANNEL_8CH;
         break;
       default:
         printf("Error: Invalid channel type(%d)\n", ch_type);
