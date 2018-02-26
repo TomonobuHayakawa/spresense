@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/audio/drivers/baseband/include/common_macro.h
+ * bsp/src/audio/cxd56_audio_irq.h
  *
- *   Copyright (C) 2010, 2017 Sony Corporation
+ *   Copyright (C) 2016, 2017, 2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,56 +31,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
-/* Description: Common macros definitions. */
 
-#ifndef __SDK_BSP_SRC_AUDIO_COMMON_MACRO_H
-#define __SDK_BSP_SRC_AUDIO_COMMON_MACRO_H
+#ifndef __BSP_SRC_AUDIO_CXD56_AUDIO_IRQ_H
+#define __BSP_SRC_AUDIO_CXD56_AUDIO_IRQ_H
 
 /****************************************************************************
  * Included Files
- ***************************************************************************/
+ ****************************************************************************/
 
-#include <stddef.h> /* size_t, offsetof */
+#include <arch/chip/cxd56_audio.h>
 
 /****************************************************************************
  * Pre-processor Definitions
- ***************************************************************************/
-
-#ifndef __cplusplus
-#ifndef __bool_true_false_are_defined
-#  define __bool_true_false_are_defined
-typedef enum { false, true } bool;
-#endif /* __bool_true_false_are_defined */
-#endif /* __cplusplus */
-
-#define ALIGN_OF(type) offsetof(struct { char x; type y; }, y)
-#define COUNT_OF(array) (sizeof(array) / sizeof(array[0]))
-
-#define ROUND_DOWN(n, power2) ((n) & ~((power2) - 1))
-#define ROUND_UP(n, power2) ROUND_DOWN(((n) + ((power2) - 1)), power2)
-
-#define JOIN_MACRO(x, y) JOIN_TOKEN(x, y)
-#define JOIN_TOKEN(x, y) x ## y
-
-#if defined(__CC_ARM)
-#  define INLINE __inline
-#else
-#  define INLINE inline
-#endif
+ ****************************************************************************/
 
 /****************************************************************************
  * Public Types
- ***************************************************************************/
+ ****************************************************************************/
 
 /****************************************************************************
  * Public Data
- ***************************************************************************/
+ ****************************************************************************/
 
 /****************************************************************************
- * Public Functions
- ***************************************************************************/
+ * Inline Functions
+ ****************************************************************************/
 
-#endif /* __SDK_BSP_SRC_AUDIO_COMMON_MACRO_H */
-/*
- * $Log: $
- */
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
+
+void cxd56_audio_irq_attach(void);
+void cxd56_audio_irq_detach(void);
+void cxd56_audio_irq_enable(void);
+void cxd56_audio_irq_disable(void);
+
+#endif /* __BSP_SRC_AUDIO_CXD56_AUDIO_IRQ_H */

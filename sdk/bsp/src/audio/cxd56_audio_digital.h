@@ -1,7 +1,7 @@
 /****************************************************************************
- * modules/audio/components/renderer/level_ctrl.h
+ * bsp/src/audio/cxd56_audio_digital.h
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016, 2017, 2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,72 +30,38 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
+ ***************************************************************************/
+
+#ifndef __BSP_SRC_AUDIO_CXD56_AUDIO_DIGITAL_H
+#define __BSP_SRC_AUDIO_CXD56_AUDIO_DIGITAL_H
+
+/****************************************************************************
+ * Included Files
  ****************************************************************************/
-
-#ifndef LEVEL_CTRL_H
-#define LEVEL_CTRL_H
-
-//#include "wien2_common_defs.h"
 
 #include <arch/chip/cxd56_audio.h>
 
-/*--------------------------------------------------------------------*/
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
 
-class LevelCtrl
-{
-public:
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-  enum LevelCtrlCmd
-  {
-    CmdMuteOff = 0,
-    CmdMuteOn,
-    CmdStay,
-    CmdNum
-  };
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
-  LevelCtrl() :
-      m_state(StatusMuteOn)
-    , m_auto_fade(true)
-    , m_tablePtr(NULL)
-  {
-  };
+/****************************************************************************
+ * Inline Functions
+ ****************************************************************************/
 
-  ~LevelCtrl(){};
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-  bool init(cxd56_audio_dma_t dmac_id, bool auto_fade, bool fade_enable);
-  bool setFadeRamp(uint32_t* sample_per_frame);
-  bool exec(LevelCtrlCmd request, bool is_wait);
+void cxd56_audio_digital_poweron(void);
+void cxd56_audio_digital_enable(void);
 
-  bool getAutoFade(void) { return m_auto_fade; }
-
-private:
-
-  enum LevelCtrlState
-  {
-    StatusMuteOff = 0,
-    StatusFadeOut,
-    StatusMuteOn,
-    StatusFadeIn,
-    StatusLevel,
-    StatusNum
-  };
-
-  typedef void (LevelCtrl::*ActProc)(bool);
-  static ActProc ActProcTbl[StatusNum][StatusNum];
-
-  LevelCtrlState   m_state;
-  cxd56_audio_dma_t m_dmac_id;
-  bool m_auto_fade;
-
-  static LevelCtrlState chgMuteState[CmdNum][StatusNum];
-  static LevelCtrlState chgNoFadeMuteState[CmdNum][StatusNum];
-
-  LevelCtrlState (*m_tablePtr)[StatusNum];
-
-  void muteSdinVol(bool wait_flag);
-  void unMuteSdinVol(bool wait_flag);
-  void no_action(bool wait_flg);
-};
-
-#endif /* LEVEL_CTRL_H */
-
+#endif /* __BSP_SRC_AUDIO_CXD56_AUDIO_DIGITAL_H */

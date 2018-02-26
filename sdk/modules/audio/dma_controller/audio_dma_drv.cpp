@@ -65,176 +65,6 @@
 
 extern "C" uint32_t cxd56_get_cpu_baseclk(void);
 
-#ifdef CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW
-/* Underflow insertion data 
- *  (saize: sample[UNDERFLOW_DATA_SAMPLE] * bitleng[4] * channel[2])
- */
-
-static char under_data[UNDERFLOW_INSERT_SAMPLE * AS_DMAC_BYTE_WT_24BIT * AS_DMA_I2SO_CH] = {0};
-#endif  /* CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW */
-
-/*--------------------------------------------------------------------*/
-static E_AS syncDmacTrg(asDmacSelId dmacId, bool nointr)
-{
-  uint32_t cpu_baseclk = cxd56_get_cpu_baseclk();
-  uint32_t wait_err_cnt_normal = (2*cpu_baseclk/48000);
-  uint32_t wait_err_cnt_hires = (wait_err_cnt_normal/4);
-
-  E_AS rtCode = E_AS_DMAC_ERR_START;
-  uint32_t chsel = 0;
-  uint32_t context = 0;
-  uint32_t retry_count = 0;
-  uint32_t smp_int_flg = 0;
-  uint32_t wait_smp_count = 0;
-  uint32_t err_int_flg = 0;
-  uint32_t wait_err_count = 0;
-  uint32_t cmd_buf_stat = 0;
-  uint32_t wait_buf_count = 0;
-  uint32_t done_int_flg = 0;
-  uint32_t wait_done_count = 0;
-
-  getDmacChannel(dmacId, &chsel);   /* Read ch setting */
-  clearDmacErrIntStatus(dmacId);    /* Err clear */
-  clearDmacSmpIntStatus(dmacId);    /* Smp clear */
-  setDmacDoneIntMask(dmacId, true); /* Int mask */
-
-  while (retry_count++ < RETRY_CNT)
-    {
-      Chateau_LockInterrupt(&context);
-
-      wait_smp_count = 0;
-
-      while (wait_smp_count++ < TIMEOUT_CNT)
-        {
-          getDmacSmpIntStatus(dmacId, &smp_int_flg);
-
-          /* Wait smp. */
-
-          if(smp_int_flg == 1)
-            {
-              break;
-            }
-        }
-
-      /* reset ch + set ch + dma start */
-
-      setDmacTrgWithChSel(dmacId, nointr, chsel);
-
-      Chateau_UnlockInterrupt(&context);
-
-      if (GetClkMode() == AS_CLK_MODE_HIRES)
-        {
-          wait_err_count = wait_err_cnt_hires;
-        }
-      else
-        {
-          wait_err_count = wait_err_cnt_normal;
-        }
-
-      BUSY_LOOP(wait_err_count);
-
-      getDmacErrIntStatus(dmacId, &err_int_flg);
-
-      /* Err check. */
-
-      if (err_int_flg == 1)
-        {
-          setDmacStop(dmacId);           /* Dma stop */
-          clearDmacErrIntStatus(dmacId); /* Err clear */
-
-          wait_buf_count = 0;
-
-          while (wait_buf_count++ < TIMEOUT_CNT)
-            {
-              getDmacMonbufStatus(dmacId, &cmd_buf_stat);
-
-              /* Wait dma buffer empty. */
-
-              if (cmd_buf_stat == AS_DMAC_CMD_BUF_STATUS_EMPTY)
-                {
-                  wait_done_count = 0;
-
-                  while (wait_done_count++ < TIMEOUT_CNT)
-                    {
-                      getDmacDoneIntStatus(dmacId, &done_int_flg);
-
-                      /* Wait done. */
-
-                      if (done_int_flg == 1)
-                        {
-                          break;
-                        }
-                    }
-
-                  clearDmacDoneIntStatus(dmacId); /* Done clear */
-
-                  break;
-                }
-            }
-
-          _info("retry(%d:%d,%d,%d)\n",
-              retry_count, wait_smp_count, wait_buf_count, wait_done_count);
-        }
-      else
-        {
-          rtCode = E_AS_OK;
-          break;
-        }
-  }
-
-  setDmacDoneIntMask(dmacId, false);
-
-  return rtCode;
-}
-
-/*--------------------------------------------------------------------*/
-static E_AS startDmacWithCheck(asDmacSelId dmacId,
-                               uint32_t addr,
-                               uint32_t sample,
-                               bool nointr,
-                               bool errCheck)
-{
-  E_AS rtCode = E_AS_OK;
-  uint32_t stat = 0;
-
-  rtCode = getDmacCmdStatus(dmacId, &stat);
-
-  if (rtCode != E_AS_OK)
-    {
-      return rtCode;
-    }
-
-  if (stat != 1)
-    {
-      return E_AS_DMAC_BUSY;
-    }
-
-  rtCode = setDmacAddr(dmacId, addr);
-
-  if (rtCode != E_AS_OK)
-    {
-      return rtCode;
-    }
-
-  rtCode = setDmacSample(dmacId, sample);
-
-  if (rtCode != E_AS_OK)
-    {
-      return rtCode;
-    }
-
-  if (errCheck == true )
-    {
-      rtCode = syncDmacTrg(dmacId, nointr);
-    }
-  else
-    {
-      rtCode = setDmacTrg(dmacId, nointr);
-    }
-
-  return rtCode;
-}
-
 AsDmaDrv::dmaDrvFuncTbl AsDmaDrv::m_func_tbl[] =
 {
   {
@@ -253,13 +83,13 @@ AsDmaDrv::dmaDrvFuncTbl AsDmaDrv::m_func_tbl[] =
   {
     EvtRun,
 
-    {                             /* DmaController status:  */
-      &AsDmaDrv::illegal,         /*   AS_DMA_STATE_BOOTED  */
-      &AsDmaDrv::runDmaOnStop,    /*   AS_DMA_STATE_STOP    */
-      &AsDmaDrv::runDmaOnReady,   /*   AS_DMA_STATE_READY   */
+    {                           /* DmaController status:  */
+      &AsDmaDrv::illegal,       /*   AS_DMA_STATE_BOOTED  */
+      &AsDmaDrv::runDmaOnStop,  /*   AS_DMA_STATE_STOP    */
+      &AsDmaDrv::runDmaOnReady, /*   AS_DMA_STATE_READY   */
       &AsDmaDrv::runDmaOnPrepare, /*   AS_DMA_STATE_PREPARE */
       &AsDmaDrv::runDma,          /*   AS_DMA_STATE_RUN     */
-      &AsDmaDrv::illegal          /*   AS_DMA_STATE_FLUSH   */
+      &AsDmaDrv::illegal        /*   AS_DMA_STATE_FLUSH   */
     }
   },
 
@@ -423,6 +253,7 @@ bool AsDmaDrv::illegal(void *p_param)
 /*--------------------------------------------------------------------*/
 bool AsDmaDrv::init(void *p_param)
 {
+  CXD56_AUDIO_ECODE drv_ret = CXD56_AUDIO_ECODE_OK;
   AudioDrvDmaInitParam *initParam =
     reinterpret_cast<AudioDrvDmaInitParam*>(p_param);
 
@@ -433,6 +264,17 @@ bool AsDmaDrv::init(void *p_param)
   m_ch_num = initParam->ch_num;
   m_dmadone_func = initParam->p_dmadone_func;
 
+  drv_ret = cxd56_audio_init_dma(initParam->dmac_id,
+                                 initParam->format,
+                                 &m_ch_num);
+  if (CXD56_AUDIO_ECODE_OK != drv_ret)
+    {
+      _err("AsDmaDrv::init cxd56_audio_init_dma() failer. err = 0x%x\n",
+            drv_ret);
+      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
+      return false;
+    }
+
   if (m_dmadone_func == NULL)
     {
       m_min_size = DMAC_MIN_SIZE_POL;
@@ -442,16 +284,19 @@ bool AsDmaDrv::init(void *p_param)
       m_min_size = DMAC_MIN_SIZE_INT;
     }
 
-  if (!m_level_ctrl.init(m_dmac_id, true, true))
+  if (!m_level_ctrl.init(initParam->dmac_id, true, true))
     {
       return false;
     }
 
-  asDmac_EnableInt();
-
-  Chateau_EnableInterrupt(AUDMIC_IRQn);
-  Chateau_EnableInterrupt(AUDI2S1_IRQn);
-  Chateau_EnableInterrupt(AUDI2S2_IRQn);
+  drv_ret = cxd56_audio_en_dmaint();
+  if (CXD56_AUDIO_ECODE_OK != drv_ret)
+    {
+      _err("AsDmaDrv::init cxd56_audio_en_dmaint() failer. err = 0x%x\n",
+            drv_ret);
+      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
+      return false;
+    }
 
   m_state = AS_DMA_STATE_READY;
 
@@ -461,31 +306,29 @@ bool AsDmaDrv::init(void *p_param)
 }
 
 /*--------------------------------------------------------------------*/
-E_AS AsDmaDrv::setDmaCmd(asDmacSelId dmac_id,
+E_AS AsDmaDrv::setDmaCmd(cxd56_audio_dma_t dmac_id,
                          uint32_t addr,
                          uint32_t size,
                          bool nointr,
                          bool dma_run_1st)
 {
   E_AS rtCode = E_AS_OK;
-
+  CXD56_AUDIO_ECODE drv_ret = CXD56_AUDIO_ECODE_OK;
 #ifndef CHECK_DMA_CH_SHIFT
   dma_run_1st = false;
 #endif
 
-  rtCode = startDmacWithCheck(dmac_id, addr, size, nointr, dma_run_1st);
+  drv_ret = cxd56_audio_start_dma(dmac_id, addr, size);
 
-  if (rtCode == E_AS_DMAC_ERR_START)
+  if (drv_ret == CXD56_AUDIO_ECODE_DMA_BUSY)
     {
-      dmaErrCb(E_AS_BB_DMA_ERR_START);
-    }
-  else if (rtCode == E_AS_DMAC_BUSY)
-    {
+      rtCode = E_AS_DMAC_BUSY;
       dmaErrCb(E_AS_BB_DMA_ERR_REQUEST);
     }
-  else if (rtCode != E_AS_OK)
+  else if (drv_ret != CXD56_AUDIO_ECODE_OK)
     {
-      dmaErrCb(E_AS_BB_DMA_PARAM);
+      rtCode = E_AS_DMAC_ERR_START;
+      dmaErrCb(E_AS_BB_DMA_ERR_START);
     }
 
   return rtCode;
@@ -502,7 +345,7 @@ void AsDmaDrv::runDmaSplitRequest(AudioDrvDmaRunParam *pDmaParam,
 
   while (sizeCalc != 0)
     {
-      if ((m_dmac_id == AS_DMAC_SEL_AC_IN)
+      if ((m_dmac_id == CXD56_AUDIO_DMAC_MIC)
        && ((m_ch_num % 2) == 1)
        && (m_dma_byte_len == AS_DMAC_BYTE_WT_16BIT))
         {
@@ -577,13 +420,13 @@ bool AsDmaDrv::pushRequest(void *p_param, bool use_callback)
   uint32_t size1_cnt = 0;
   uint32_t size2_cnt = 0;
 
-  if ((GetDmaDataFormat() == AS_DMA_DATA_FORMAT_RL)
+  if ((cxd56_audio_get_dmafmt() == CXD56_AUDIO_DMA_FMT_RL)
    && (m_dma_byte_len == AS_DMAC_BYTE_WT_16BIT))
     {
       switch (m_dmac_id)
         {
-          case AS_DMAC_SEL_I2S_OUT:
-          case AS_DMAC_SEL_I2S2_OUT:
+          case CXD56_AUDIO_DMAC_I2S0_DOWN:
+          case CXD56_AUDIO_DMAC_I2S1_DOWN:
               AS_AudioDrvDmaGetSwapData(dmaParam.run_dmac_param.addr,
                                         dmaParam.run_dmac_param.size);
 
@@ -700,7 +543,7 @@ bool AsDmaDrv::startDma(void *p_param)
 {
   bool run_1st = true;
   E_AS rtCode = E_AS_OK;
-  m_dmac_id = *(reinterpret_cast<asDmacSelId*>(p_param));
+  m_dmac_id = *(reinterpret_cast<cxd56_audio_dma_t*>(p_param));
 
   /* Move request from ready queue to running queue (= DMA transfer queue). */
 
@@ -729,9 +572,9 @@ bool AsDmaDrv::startDma(void *p_param)
 
   if (rtCode != E_AS_DMAC_ERR_START)
     {
-      clearDmacErrIntStatus(m_dmac_id);
+      cxd56_audio_clear_dmaerrint(m_dmac_id);
 
-      setDmacErrIntMask(m_dmac_id, false);
+      cxd56_audio_unmask_dmaerrint(m_dmac_id);
 
       m_state = AS_DMA_STATE_RUN;
 
@@ -758,13 +601,13 @@ void AsDmaDrv::dmaCmplt(void)
                                 (void *)dmaParam.addr_dest);
     }
 
-  if ((GetDmaDataFormat() == AS_DMA_DATA_FORMAT_RL)
+  if ((cxd56_audio_get_dmafmt() == CXD56_AUDIO_DMA_FMT_RL)
    && (m_dma_byte_len == AS_DMAC_BYTE_WT_16BIT) )
     {
       switch (m_dmac_id)
         {
-          case AS_DMAC_SEL_I2S_IN:
-          case AS_DMAC_SEL_I2S2_IN:
+          case CXD56_AUDIO_DMAC_I2S0_UP:
+          case CXD56_AUDIO_DMAC_I2S1_UP:
               AS_AudioDrvDmaGetSwapData(dmaParam.split_addr,
                                         dmaParam.split_size);
               break;
@@ -857,7 +700,7 @@ bool AsDmaDrv::dmaCmpltOnRun(void *p_param)
 
   if (m_running_que.size() == 0)
     {
-      asBca_StopDmac(m_dmac_id);
+      cxd56_audio_stop_dma(m_dmac_id);
 
       dmaErrCb(E_AS_BB_DMA_UNDERFLOW);
 
@@ -885,8 +728,7 @@ bool AsDmaDrv::dmaCmpltOnFlush(void *p_param)
 
   if (m_running_que.size() == STOP_QUEUE_COUNT)
     {
-      asBca_StopDmac(m_dmac_id);
-      setDmacErrIntMask(m_dmac_id, true); /* TODO: should be deleted for ES */
+      cxd56_audio_stop_dma(m_dmac_id);
     }
   else if (m_running_que.size() == 0 )
     {
@@ -936,7 +778,7 @@ bool AsDmaDrv::stopOnRun(void *p_param)
 
   if ((m_ready_que.size() + m_running_que.size()) <=  STOP_QUEUE_COUNT)
     {
-      asBca_StopDmac(m_dmac_id);
+      cxd56_audio_stop_dma(m_dmac_id);
     }
 
   m_state = AS_DMA_STATE_FLUSH;
@@ -1048,9 +890,9 @@ bool AsDmaDrv::getInfo(void *p_param)
 }
 
 /*--------------------------------------------------------------------*/
-void AsDmaDrv::allocDmaBuffer(asDmacSelId dmac_id)
+void AsDmaDrv::allocDmaBuffer(cxd56_audio_dma_t dmac_id)
 {
-  if(dmac_id == AS_DMAC_SEL_AC_IN)
+  if(dmac_id == CXD56_AUDIO_DMAC_MIC)
     {
       m_dma_buffer[0] = (FAR uint32_t *)kmm_malloc(DMA_BUFFER_POOL_SEG_SIZE);
 
@@ -1069,9 +911,9 @@ void AsDmaDrv::allocDmaBuffer(asDmacSelId dmac_id)
 }
 
 /*--------------------------------------------------------------------*/
-void AsDmaDrv::freeDmaBuffer(asDmacSelId dmac_id)
+void AsDmaDrv::freeDmaBuffer(cxd56_audio_dma_t dmac_id)
 {
-  if(dmac_id == AS_DMAC_SEL_AC_IN)
+  if(dmac_id == CXD56_AUDIO_DMAC_MIC)
     {
       kmm_free(m_dma_buffer[0]);
       kmm_free(m_dma_buffer[1]);

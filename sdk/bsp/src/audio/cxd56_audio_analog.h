@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/audio/drivers/baseband/include/audio_io_config.h
+ * bsp/src/audio/cxd56_audio_analog.h
  *
- *   Copyright (C) 2015, 2017 Sony Corporation
+ *   Copyright (C) 2016, 2017, 2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,62 +31,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
-/* Description: Audio BaseBand I/O Settings */
 
-#ifndef __SDK_BSP_SRC_AUDIO_AUDIO_IO_CONFIG_H
-#define __SDK_BSP_SRC_AUDIO_AUDIO_IO_CONFIG_H
+#ifndef __BSP_SRC_AUDIO_CXD56_AUDIO_ANALOG_H
+#define __BSP_SRC_AUDIO_CXD56_AUDIO_ANALOG_H
 
 /****************************************************************************
  * Included Files
- ***************************************************************************/
+ ****************************************************************************/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <arch/chip/cxd56_audio.h>
 
 /****************************************************************************
  * Pre-processor Definitions
- ***************************************************************************/
-
-typedef enum
-{
-  AUDIO_IO_LOWEMI_UNKNOWN  = 0,
-  AUDIO_IO_LOWEMI_4MA,
-  AUDIO_IO_LOWEMI_2MA,
-  AUDIO_IO_LOWEMI_NUM
-} audioIoLowemi;
-
-typedef enum
-{
-  AUDIO_IO_I2S_MODE_UNKNOWN  = 0,
-  AUDIO_IO_I2S_MODE_MASTER,
-  AUDIO_IO_I2S_MODE_SLAVE,
-  AUDIO_IO_I2S_MODE_NUM
-} audioIoI2sMode;
-
-typedef enum
-{
-  AUDIO_IO_I2S_SEL_I2S0  = 0,
-  AUDIO_IO_I2S_SEL_I2S1,
-  AUDIO_IO_I2S_SEL_NUM
-} audioIoI2sSel;
+ ****************************************************************************/
 
 /****************************************************************************
  * Public Types
- ***************************************************************************/
+ ****************************************************************************/
 
 /****************************************************************************
- * Public Functions
- ***************************************************************************/
+ * Public Data
+ ****************************************************************************/
 
-void setAudioIoMclk(void);
-void setAudioIoPdm(audioIoLowemi lowemi);
-void setAudioIoI2s(audioIoI2sSel i2s_sel,
-                   audioIoI2sMode i2s_mode,
-                   audioIoLowemi lowemi);
+/****************************************************************************
+ * Inline Functions
+ ****************************************************************************/
 
-#ifdef __cplusplus
-} /* end of extern "C" */
-#endif /* __cplusplus */
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-#endif /* __SDK_BSP_SRC_AUDIO_AUDIO_IO_CONFIG_H */
+CXD56_AUDIO_ECODE cxd56_audio_analog_poweron(void);
+CXD56_AUDIO_ECODE cxd56_audio_analog_poweroff(void);
+CXD56_AUDIO_ECODE cxd56_audio_analog_poweron_input(FAR cxd56_audio_mic_gain_t *gain);
+CXD56_AUDIO_ECODE cxd56_audio_analog_poweron_output(void);
+CXD56_AUDIO_ECODE cxd56_audio_analog_poweroff_input(void);
+CXD56_AUDIO_ECODE cxd56_audio_analog_poweroff_output(void);
+CXD56_AUDIO_ECODE cxd56_audio_analog_enable_output(void);
+CXD56_AUDIO_ECODE cxd56_audio_analog_disable_output(void);
+CXD56_AUDIO_ECODE cxd56_audio_analog_set_micgain(FAR cxd56_audio_mic_gain_t *gain);
+CXD56_AUDIO_ECODE cxd56_audio_analog_wait_input_standby(void);
+
+#endif /* __BSP_SRC_AUDIO_CXD56_AUDIO_ANALOG_H */

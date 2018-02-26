@@ -78,7 +78,6 @@ public:
 
   ~AudioManager()
   {
-    cxd56_audio_bb_unregister("/dev/audio/baseband");
   };
 
 private:
@@ -96,7 +95,6 @@ private:
     m_active_player(0),
     m_player_transition_count(0)
   {
-    cxd56_audio_bb_register("/dev/audio/baseband");
   };
 
   MsgQueId m_selfDtq;

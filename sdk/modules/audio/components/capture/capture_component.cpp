@@ -1,15 +1,38 @@
-/***********************************************************************
+/****************************************************************************
+ * audioutils/components/capture/capture_component.cpp
  *
- *      File Name: capture_component.cpp
+ *   Copyright (C) 2015 Sony Corporation
  *
- *      Description: Capture component
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- *      Notes: (C) Copyright 2015 Sony Corporation
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name NuttX nor Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
- *      Author: Hsingying Ho
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  *
- ***********************************************************************
- */
+ ****************************************************************************/
+
+#include <arch/chip/cxd56_audio.h>
 #include "capture_component.h"
 
 #include "dma_controller/audio_dma_drv.h"
@@ -73,7 +96,7 @@ public:
     return NULL;
   }
 
-  CaptureComponentHandler getCaptureHandleByDmacId(asDmacSelId dmac_id)
+  CaptureComponentHandler getCaptureHandleByDmacId(cxd56_audio_dma_t dmac_id)
   {
     for (int i = 0; i < MAX_CAPTURE_COMP_INSTANCE_NUM; i++)
       {
@@ -385,8 +408,7 @@ static bool rcv_result(int ch)
 /*--------------------------------------------------------------------*/
 bool AS_get_capture_comp_handler(CaptureComponentHandler *p_handle,
                                  CaptureDevice device_type,
-                                 MemMgrLite::PoolId mem_pool_id,
-                                 uint8_t mic_channel)
+                                 MemMgrLite::PoolId mem_pool_id)
 {
   if (!s_pFactory->getCaptureCompHandler(p_handle))
     {
@@ -395,22 +417,15 @@ bool AS_get_capture_comp_handler(CaptureComponentHandler *p_handle,
 
   CaptureComponentParam param;
 
-  param.act_param.path_sel_param.pathTo = AS_PATH_TO_DMAC;
-
   switch (device_type)
     {
       case CaptureDeviceAnalogMic:
       case CaptureDeviceDigitalMic:
-          param.act_param.path_sel_param.pathFrom =
-            AS_PATH_FROM_MIC1_8;
-
-          param.act_param.path_sel_param.mic_dma_channel =
-            mic_channel;
+          param.act_param.dma_path_id = CXD56_AUDIO_DMA_PATH_MIC_TO_MEM;
           break;
 
       case CaptureDeviceI2S:
-          param.act_param.path_sel_param.pathFrom =
-            AS_PATH_FROM_I2S1;
+          param.act_param.dma_path_id = CXD56_AUDIO_DMA_PATH_I2S0_TO_MEM;
           break;
 
       default:
@@ -489,9 +504,25 @@ bool AS_stop_capture(const CaptureComponentParam& param)
 }
 
 /*--------------------------------------------------------------------*/
-static void dma_notify_cmplt_int(asDmacSelId dmacId, E_AS_DMA_INT code)
+static void dma_notify_cmplt_int(cxd56_audio_dma_t dmacId, uint32_t dma_result)
 {
+  E_AS_DMA_INT code;
   CaptureComponentParam param;
+
+  switch (dma_result)
+    {
+      case CXD56_AUDIO_ECODE_DMA_CMPLT:
+        code = E_AS_DMA_INT_CMPLT;
+        break;
+
+      case CXD56_AUDIO_ECODE_DMA_CMB:
+        code = E_AS_DMA_INT_ERR_BUS;
+        break;
+
+      default:
+        code = E_AS_DMA_INT_ERR;
+        break;
+    }
 
   CaptureComponentHandler handle =
     s_pFactory->getCaptureHandleByDmacId(dmacId);
@@ -640,19 +671,17 @@ bool CaptureComponent::act(const CaptureComponentParam& param)
 {
   bool result = true;
 
-  CAPTURE_DBG("ACT: path <from %d/to %d>, mic dma ch %d, outdev %d\n",
-              param.act_param.path_sel_param.pathFrom,
-              param.act_param.path_sel_param.pathTo,
-              param.act_param.path_sel_param.mic_dma_channel,
+  CAPTURE_DBG("ACT: path %d, signal %d, outdev %d\n",
+              param.act_param.dma_path_id,
               param.act_param.output_device);
 
-  m_path_sel_param = param.act_param.path_sel_param;
   m_output_device  = param.act_param.output_device;
   m_mem_pool_id    = param.act_param.mem_pool_id;
 
-  if (result && E_AS_OK != AS_SetAudioDataPath(&m_path_sel_param,
-                                               &m_dmac_id,
-                                               AS_DMAC_ID_NONE))
+  if (result &&
+      CXD56_AUDIO_ECODE_OK != cxd56_audio_get_dmahandle(
+        param.act_param.dma_path_id,
+        &m_dmac_id))
     {
       result = false;
     }
@@ -689,7 +718,8 @@ bool CaptureComponent::deact(const CaptureComponentParam& param)
       result = false;
     }
 
-  if (result && E_AS_OK != AS_ClearAudioDataPath(&m_path_sel_param))
+  if (result &&
+      CXD56_AUDIO_ECODE_OK != cxd56_audio_free_dmahandle(m_dmac_id))
     {
       result = false;
     }
@@ -722,15 +752,16 @@ bool CaptureComponent::init(const CaptureComponentParam& param)
   asInitDmacParam init_param;
 
   init_param.dmacId = m_dmac_id;
+  init_param.ch_num = param.init_param.capture_ch_num;
 
   switch (param.init_param.capture_bit_width)
     {
       case AudPcm16Bit:
-          init_param.format = AS_SAMPLING_FMT_16;
+          init_param.format = CXD56_AUDIO_SAMP_FMT_16;
           break;
 
       case AudPcm24Bit:
-          init_param.format = AS_SAMPLING_FMT_24;
+          init_param.format = CXD56_AUDIO_SAMP_FMT_24;
           break;
 
       default:
@@ -753,6 +784,8 @@ bool CaptureComponent::init(const CaptureComponentParam& param)
     {
       result = false;
     }
+
+  m_ch_num = param.init_param.capture_ch_num;
 
   return result;
 }
@@ -922,7 +955,7 @@ void* CaptureComponent::getCapBuf(uint32_t cap_sample)
   MemMgrLite::MemHandle mh;
 
   if (mh.allocSeg(m_mem_pool_id,
-                  cap_sample * m_path_sel_param.mic_dma_channel * 2)
+                  cap_sample * m_ch_num * 2)
       != ERR_OK)
     {
       CAPTURE_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);

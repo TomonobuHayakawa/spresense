@@ -239,7 +239,7 @@ private:
     return true;
   }
 
-  void freeOutBuf(asDmacSelId dmac_select_id);
+  void freeOutBuf(cxd56_audio_dma_t dmac_select_id);
 
   void sendAudioCmdCmplt(const AudioCommand& cmd,
                          uint32_t result,

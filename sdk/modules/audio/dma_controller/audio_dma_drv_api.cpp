@@ -48,51 +48,25 @@ static E_AS initDmac(asInitDmacParam *pInitDmacParam)
 {
   E_AS rtCode = E_AS_OK;
   E_AS_BB rtCodeBB = E_AS_BB_DMA_OK;
-  uint32_t dma_err;
   AudioDrvDmaInitParam param;
-
-  rtCode = asDmac_InitDriver(pInitDmacParam->dmacId,
-                             pInitDmacParam->format,
-                             &param.ch_num);
-  if (rtCode != E_AS_OK)
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return rtCode;
-    }
-
-  _info("dma(%d:%d)\n", pInitDmacParam->dmacId, pInitDmacParam->format);
-
-  clearDmacDoneIntStatus(pInitDmacParam->dmacId);
-  clearDmacErrIntStatus(pInitDmacParam->dmacId);
-  clearDmacCmbIntStatus(pInitDmacParam->dmacId);
 
   if (pInitDmacParam->p_dmadone_func != NULL)
     {
       dmacMinimumSize[pInitDmacParam->dmacId] = DMAC_MIN_SIZE_INT;
       param.p_dmadone_func = pInitDmacParam->p_dmadone_func;
-      setDmacDoneIntMask(pInitDmacParam->dmacId, false);
-      /* TODO: should be false for ES */
-      setDmacErrIntMask(pInitDmacParam->dmacId, true);
-      setDmacBusIntMask(pInitDmacParam->dmacId, false);
-      setDmacCmbIntMask(pInitDmacParam->dmacId, false);
     }
   else
     {
       dmacMinimumSize[pInitDmacParam->dmacId] = DMAC_MIN_SIZE_POL;
       param.p_dmadone_func = NULL;
-      setDmacDoneIntMask(pInitDmacParam->dmacId, true);
-      setDmacErrIntMask(pInitDmacParam->dmacId, true);
-      setDmacBusIntMask(pInitDmacParam->dmacId, false);
-      setDmacCmbIntMask(pInitDmacParam->dmacId, false);
     }
 
-  getDmacErrorStatus(pInitDmacParam->dmacId, &dma_err);
-  F_ASSERT(dma_err == 0);
-
   param.dmac_id      = pInitDmacParam->dmacId;
+  param.ch_num       = pInitDmacParam->ch_num;
+  param.format       = pInitDmacParam->format;
   param.p_error_func = pInitDmacParam->p_error_func;
 
-  if (pInitDmacParam->format == AS_SAMPLING_FMT_24)
+  if (pInitDmacParam->format == CXD56_AUDIO_SAMP_FMT_24)
     {
       param.dma_byte_len = AS_DMAC_BYTE_WT_24BIT;
     }
@@ -123,52 +97,16 @@ E_AS AS_InitDmac(asInitDmacParam *pInitDmacParam)
       return E_AS_INITDMAC_NULL;
     }
 
-  if (!chkPowerOnBaseBand())
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return E_AS_INITDMAC_POWER_ON_CHK_ERR;
-    }
-
-  asAc_AhbmasterEnable();
-
   E_AS rtCode = initDmac(pInitDmacParam);
 
   return rtCode;
 }
 
 /*--------------------------------------------------------------------*/
-E_AS AS_StartDmac(asDmacSelId dmacId)
+E_AS AS_StartDmac(cxd56_audio_dma_t dmacId)
 {
   E_AS rtCode = E_AS_OK;
   E_AS_BB rtCodeBB = E_AS_BB_DMA_OK;
-  uint32_t stat;
-
-  if (!chkPowerOnBaseBand())
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return E_AS_STARTDMAC_POWER_ON_CHK_ERR;
-    }
-
-  if ((dmacId == AS_DMAC_ID_NONE)
-   || (dmacId >= AS_DMAC_SEL_MAX_ENTRY))
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return E_AS_DMAC_ID_PARAM;
-    }
-
-  rtCode = getDmacCmdStatus(dmacId, &stat);
-
-  if (rtCode != E_AS_OK)
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return rtCode;
-   }
-
-  if (stat != 1)
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return E_AS_DMAC_BUSY;
-    }
 
   rtCodeBB = AS_AudioDrvDmaStart(dmacId);
 
@@ -186,12 +124,6 @@ E_AS AS_ReadDmac(asReadDmacParam *pReadDmacParam)
   E_AS rtCode = E_AS_OK;
   E_AS_BB rtCodeBB = E_AS_BB_DMA_OK;
 
-  if (!chkPowerOnBaseBand())
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return E_AS_READDMAC_POWER_ON_CHK_ERR;
-    }
-
   if (pReadDmacParam == NULL)
     {
       DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
@@ -200,13 +132,13 @@ E_AS AS_ReadDmac(asReadDmacParam *pReadDmacParam)
 
   switch (pReadDmacParam->dmacId)
     {
-      case AS_DMAC_SEL_AC_IN:
-      case AS_DMAC_SEL_I2S_IN:
-      case AS_DMAC_SEL_I2S2_IN:
+      case CXD56_AUDIO_DMAC_MIC:
+      case CXD56_AUDIO_DMAC_I2S0_UP:
+      case CXD56_AUDIO_DMAC_I2S1_UP:
           break;
 
-      case AS_DMAC_SEL_I2S_OUT:
-      case AS_DMAC_SEL_I2S2_OUT:
+      case CXD56_AUDIO_DMAC_I2S0_DOWN:
+      case CXD56_AUDIO_DMAC_I2S1_DOWN:
           DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
           _err("ERR: dma(%d) ID error\n", pReadDmacParam->dmacId);
           return E_AS_DMAC_ID_PARAM;
@@ -285,12 +217,6 @@ E_AS AS_WriteDmac(asWriteDmacParam *pWriteDmacParam)
   E_AS rtCode = E_AS_OK;
   E_AS_BB rtCodeBB = E_AS_BB_DMA_OK;
 
-  if (!chkPowerOnBaseBand())
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return E_AS_WRITEDMAC_POWER_ON_CHK_ERR;
-    }
-
   if (pWriteDmacParam == NULL)
     {
       DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
@@ -299,15 +225,15 @@ E_AS AS_WriteDmac(asWriteDmacParam *pWriteDmacParam)
 
   switch (pWriteDmacParam->dmacId)
     {
-      case AS_DMAC_SEL_AC_IN:
-      case AS_DMAC_SEL_I2S_IN:
-      case AS_DMAC_SEL_I2S2_IN:
+      case CXD56_AUDIO_DMAC_MIC:
+      case CXD56_AUDIO_DMAC_I2S0_UP:
+      case CXD56_AUDIO_DMAC_I2S1_UP:
           DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
           _err("ERR: dma(%d) ID error\n", pWriteDmacParam->dmacId);
           return E_AS_DMAC_ID_PARAM;
 
-      case AS_DMAC_SEL_I2S_OUT:
-      case AS_DMAC_SEL_I2S2_OUT:
+      case CXD56_AUDIO_DMAC_I2S0_DOWN:
+      case CXD56_AUDIO_DMAC_I2S1_DOWN:
           break;
 
       default:
@@ -379,23 +305,11 @@ E_AS AS_WriteDmac(asWriteDmacParam *pWriteDmacParam)
 }
 
 /*--------------------------------------------------------------------*/
-E_AS AS_StopDmac(asDmacSelId dmacId, asDmacStopMode stopMode)
+E_AS AS_StopDmac(cxd56_audio_dma_t dmacId, asDmacStopMode stopMode)
 {
   E_AS rtCode = E_AS_OK;
   E_AS_BB rtCodeBB = E_AS_BB_DMA_OK;
   AudioDrvDmaStopParam param;
-
-  if (!chkPowerOnBaseBand())
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return E_AS_STOPDMAC_POWER_ON_CHK_ERR;
-    }
-
-  if ((dmacId == AS_DMAC_ID_NONE) || (dmacId >= AS_DMAC_SEL_MAX_ENTRY))
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return E_AS_DMAC_ID_PARAM;
-    }
 
   param.dmac_id   = dmacId;
   param.stop_mode = (AudioDrvDmaStopMode)stopMode;
@@ -411,23 +325,11 @@ E_AS AS_StopDmac(asDmacSelId dmacId, asDmacStopMode stopMode)
 }
 
 /*--------------------------------------------------------------------*/
-E_AS AS_GetReadyCmdNumDmac(asDmacSelId dmacId, uint32_t *pResult)
+E_AS AS_GetReadyCmdNumDmac(cxd56_audio_dma_t dmacId, uint32_t *pResult)
 {
   E_AS rtCode = E_AS_OK;
   E_AS_BB rtCodeBB = E_AS_BB_DMA_OK;
   AudioDrvDmaInfo dmaInfo;
-
-  if (!chkPowerOnBaseBand())
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return E_AS_GETREADYCMDDMAC_POWER_ON_CHK_ERR;
-    }
-
-  if ((dmacId == AS_DMAC_ID_NONE) || (dmacId >= AS_DMAC_SEL_MAX_ENTRY))
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return E_AS_DMAC_ID_PARAM;
-    }
 
   if (pResult == NULL)
     {
@@ -450,21 +352,11 @@ E_AS AS_GetReadyCmdNumDmac(asDmacSelId dmacId, uint32_t *pResult)
 }
 
 /*--------------------------------------------------------------------*/
-E_AS AS_RegistDmaIntCb(asDmacSelId dmacId, AS_DmaIntCb p_dmaIntCb)
+E_AS AS_RegistDmaIntCb(cxd56_audio_dma_t dmacId,
+                       cxd56_audio_dma_cb_t p_dmaIntCb)
 {
   E_AS rtCode = E_AS_OK;
-
-  if (!chkPowerOnBaseBand())
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return E_AS_GETREADYCMDDMAC_POWER_ON_CHK_ERR;
-    }
-
-  if ((dmacId == AS_DMAC_ID_NONE) || (dmacId >= AS_DMAC_SEL_MAX_ENTRY))
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return E_AS_DMAC_ID_PARAM;
-    }
+  CXD56_AUDIO_ECODE drv_ret = CXD56_AUDIO_ECODE_OK;
 
   if (p_dmaIntCb == NULL)
     {
@@ -472,27 +364,20 @@ E_AS AS_RegistDmaIntCb(asDmacSelId dmacId, AS_DmaIntCb p_dmaIntCb)
       return E_AS_GETREADYCMD_RESULT_NULL;
     }
 
-  rtCode = asDmac_RegsitIntCb(dmacId, p_dmaIntCb);
+  drv_ret = cxd56_audio_set_dmacb(dmacId, p_dmaIntCb);
+  if (CXD56_AUDIO_ECODE_OK != drv_ret)
+    {
+      _err("cxd56_audio_set_dmacb() is failer. err = 0x%x\n", ret);
+      rtCode = E_AS_DMAC_ID_PARAM;
+    }
 
   return rtCode;
 }
 
 /*--------------------------------------------------------------------*/
-E_AS AS_NotifyDmaCmplt(asDmacSelId dmacId, E_AS_DMA_INT code)
+E_AS AS_NotifyDmaCmplt(cxd56_audio_dma_t dmacId, E_AS_DMA_INT code)
 {
   E_AS rtCode = E_AS_OK;
-
-  if (!chkPowerOnBaseBand())
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return E_AS_GETREADYCMDDMAC_POWER_ON_CHK_ERR;
-    }
-
-  if ((dmacId == AS_DMAC_ID_NONE) || (dmacId >= AS_DMAC_SEL_MAX_ENTRY))
-    {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return E_AS_DMAC_ID_PARAM;
-    }
 
   if (E_AS_BB_DMA_OK != AS_AudioDrvDmaNofifyCmplt(dmacId, code))
     {

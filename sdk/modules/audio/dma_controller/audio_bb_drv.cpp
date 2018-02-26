@@ -46,8 +46,8 @@
 /****************************************************************************
     Definitions
  ****************************************************************************/
-#define CHECK_DMA_ERR_INT
-#define CHECK_BUS_ERR_INT
+
+#define DMA_INST_NUM  (CXD56_AUDIO_DMAC_I2S1_DOWN + 1)
 
 /****************************************************************************
     Macros
@@ -56,10 +56,10 @@ extern "C" {
 
 /****************************************************************************/
 /*TODO:Do not need all.*/
-static AsDmaDrv *s_dma_drv_instance[AS_DMAC_SEL_MAX_ENTRY-1];
+static AsDmaDrv *s_dma_drv_instance[DMA_INST_NUM];
 
 /****************************************************************************/
-E_AS dmaDrvActive(asDmacSelId dmacId)
+E_AS dmaDrvActive(cxd56_audio_dma_t dmacId)
 {
   s_dma_drv_instance[dmacId] = new AsDmaDrv(dmacId);
 
@@ -73,7 +73,7 @@ E_AS dmaDrvActive(asDmacSelId dmacId)
 
 
 /****************************************************************************/
-E_AS dmaDrvDeactive(asDmacSelId dmacId)
+E_AS dmaDrvDeactive(cxd56_audio_dma_t dmacId)
 {
   if (s_dma_drv_instance[dmacId] == NULL)
     {
@@ -87,29 +87,15 @@ E_AS dmaDrvDeactive(asDmacSelId dmacId)
 
 /****************************************************************************/
 
-static bool activateDmac[AS_DMAC_SEL_MAX_ENTRY - 1] =
+static bool activateDmac[DMA_INST_NUM] =
 {
   false, false, false, false, false
 };
 
 /*--------------------------------------------------------------------*/
-E_AS AS_ActivateDmac(asDmacSelId dmacId)
+E_AS AS_ActivateDmac(cxd56_audio_dma_t dmacId)
 {
   E_AS rtCode = E_AS_OK;
-
-  /* Check baseband power status. */
-
-  if (!chkPowerOnBaseBand())
-    {
-      return E_AS_ACTDMAC_POWER_ON_CHK_ERR;
-    }
-
-  /* Check DMAC id. */
-
-  if (dmacId >= (AS_DMAC_SEL_MAX_ENTRY - 1))
-    {
-      return E_AS_DMAC_ID_PARAM;
-    }
 
   /* Get resource for using dmac. */
 
@@ -127,29 +113,15 @@ E_AS AS_ActivateDmac(asDmacSelId dmacId)
       rtCode = E_AS_DMAC_ACTIVATED_ERR;
     }
 
-  _info("dma(%d) er(%d)\n", dmacId, rtCode);
+  _info("dma(%d) er(0x%x)\n", dmacId, rtCode);
 
   return rtCode;
 }
 
 /*--------------------------------------------------------------------*/
-E_AS AS_DeactivateDmac(asDmacSelId dmacId)
+E_AS AS_DeactivateDmac(cxd56_audio_dma_t dmacId)
 {
   E_AS rtCode = E_AS_OK;
-
-  /* Check baseband power status. */
-
-  if (!chkPowerOnBaseBand())
-    {
-      return E_AS_DEACTDMAC_POWER_ON_CHK_ERR;
-    }
-
-  /* Check DMAC id. */
-
-  if (dmacId >= (AS_DMAC_SEL_MAX_ENTRY - 1))
-    {
-      return E_AS_DMAC_ID_PARAM;
-    }
 
   /* Release resource for using dmac. */
 
@@ -167,7 +139,7 @@ E_AS AS_DeactivateDmac(asDmacSelId dmacId)
       rtCode = E_AS_DMAC_DEACTIVATED_ERR;
     }
 
-  _info("dma(%d) er(%d)\n", dmacId, rtCode);
+  _info("dma(%d) er(0x%x)\n", dmacId, rtCode);
 
   return rtCode;
 }
@@ -202,7 +174,7 @@ E_AS_BB AS_AudioDrvDmaRun(asReadDmacParam *pParam)
 }
 
 /*--------------------------------------------------------------------*/
-E_AS_BB AS_AudioDrvDmaStart(asDmacSelId dmac_id)
+E_AS_BB AS_AudioDrvDmaStart(cxd56_audio_dma_t dmac_id)
 {
   if (s_dma_drv_instance[dmac_id]->parse(AsDmaDrv::EvtStart,
                                          (void *)&dmac_id))
@@ -226,7 +198,8 @@ E_AS_BB AS_AudioDrvDmaStop(AudioDrvDmaStopParam *pParam)
 }
 
 /*--------------------------------------------------------------------*/
-E_AS_BB AS_AudioDrvDmaGetInfo(asDmacSelId dmac_id, AudioDrvDmaInfo *pDmaInfo)
+E_AS_BB AS_AudioDrvDmaGetInfo(cxd56_audio_dma_t dmac_id,
+                                      FAR AudioDrvDmaInfo *pDmaInfo)
 {
   if (s_dma_drv_instance[dmac_id]->parse(AsDmaDrv::EvtGetInfo,
                                          (void *)pDmaInfo))
@@ -238,7 +211,7 @@ E_AS_BB AS_AudioDrvDmaGetInfo(asDmacSelId dmac_id, AudioDrvDmaInfo *pDmaInfo)
 }
 
 /*--------------------------------------------------------------------*/
-E_AS_BB AS_AudioDrvDmaNofifyCmplt(asDmacSelId dmacId, E_AS_DMA_INT code)
+E_AS_BB AS_AudioDrvDmaNofifyCmplt(cxd56_audio_dma_t dmacId, CXD56_AUDIO_ECODE code)
 {
   bool result = false;
 

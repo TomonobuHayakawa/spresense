@@ -159,7 +159,7 @@ static void capture_done_callback(CaptureDataParam param)
 /*--------------------------------------------------------------------*/
 static void render_done_callback(AudioDrvDmaResult *pParam, void *p_requester)
 {
-  err_t er = MsgLib::send<asDmacSelId>(s_self_dtq,
+  err_t er = MsgLib::send<cxd56_audio_dma_t>(s_self_dtq,
                                        MsgPriNormal,
                                        MSG_AUD_SEF_CMD_DMA_OUT_DONE,
                                        NULL,
@@ -547,32 +547,12 @@ void SoundEffectObject::act(MsgPacket *msg)
       return;
     }
 
-  /* check mic cnannel number is over MAX */
-
-  uint8_t mic_channel = 0;
-
-  if ((cmd.set_baseband_status_param.input_device & INPUT_DEVICE_MASK_AMIC_CH)
-      != 0)
-    { /* Check AMic is enable */
-      mic_channel =
-        ((cmd.set_baseband_status_param.input_device &
-          INPUT_DEVICE_MASK_AMIC_CH) == AS_INPUT_DEVICE_AMIC1CH)
-        ? 1 : 4; /* 1ch or 4ch */
-    }
-
-  if (mic_channel > MAX_MIC_IN_CH_NUM)
-    {
-      D_ASSERT(0); /* code bug */
-    }
-
   if (!AS_get_capture_comp_handler(&m_capture_from_mic_hdlr,
                                    CaptureDeviceAnalogMic,
-                                   s_mic_in_pool_id,
-                                   mic_channel)
+                                   s_mic_in_pool_id)
    || !AS_get_capture_comp_handler(&m_capture_from_i2s_hdlr,
                                    CaptureDeviceI2S,
-                                   s_i2s_in_pool_id,
-                                   0))
+                                   s_i2s_in_pool_id))
     {
       sendAudioCmdCmplt(cmd, AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
       return;
@@ -1232,7 +1212,7 @@ void SoundEffectObject::filterDoneCmplt(MsgPacket *msg)
 /*--------------------------------------------------------------------*/
 void SoundEffectObject::dmaOutDoneCmpltOnActive(MsgPacket *msg)
 {
-  asDmacSelId param= msg->moveParam<asDmacSelId>();
+  cxd56_audio_dma_t param= msg->moveParam<cxd56_audio_dma_t>();
 
   freeOutBuf(param);
 }
@@ -1240,7 +1220,7 @@ void SoundEffectObject::dmaOutDoneCmpltOnActive(MsgPacket *msg)
 /*--------------------------------------------------------------------*/
 void SoundEffectObject::dmaOutDoneCmpltOnStopping(MsgPacket *msg)
 {
-  asDmacSelId param = msg->moveParam<asDmacSelId>();
+  cxd56_audio_dma_t param = msg->moveParam<cxd56_audio_dma_t>();
 
   freeOutBuf(param);
 
@@ -1267,11 +1247,11 @@ void SoundEffectObject::dmaOutDoneCmpltOnStopping(MsgPacket *msg)
 }
 
 /*--------------------------------------------------------------------*/
-void SoundEffectObject::freeOutBuf(asDmacSelId dmac_select_id)
+void SoundEffectObject::freeOutBuf(cxd56_audio_dma_t dmac_select_id)
 {
   switch(dmac_select_id)
     {
-      case AS_DMAC_SEL_I2S2_OUT:
+      case CXD56_AUDIO_DMAC_I2S1_DOWN:
         freeI2SOutBuf();
         if((m_filter_mode & FILTER_MODE_MFE) != 0)
           {
@@ -1279,7 +1259,7 @@ void SoundEffectObject::freeOutBuf(asDmacSelId dmac_select_id)
           }
         break;
 
-      case AS_DMAC_SEL_I2S_OUT:
+      case CXD56_AUDIO_DMAC_I2S0_DOWN:
         freeHpOutBuf();
         break;
 

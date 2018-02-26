@@ -51,20 +51,20 @@ extern "C" {
 /**
  * @brief Activate DMAC
  *
- * @param[in] asDmacSelId DMAC ID
+ * @param[in] cxd56_audio_dma_t DMAC ID
  *
  * @retval E_AS return code
  */
-E_AS AS_ActivateDmac(asDmacSelId dmacId);
+E_AS AS_ActivateDmac(cxd56_audio_dma_t dmacId);
 
 /**
  * @brief Deactivate DMAC
  *
- * @param[in] asDmacSelId DMAC ID
+ * @param[in] cxd56_audio_dma_t DMAC ID
  *
  * @retval E_AS return code
  */
-E_AS AS_DeactivateDmac(asDmacSelId dmacId);
+E_AS AS_DeactivateDmac(cxd56_audio_dma_t dmacId);
 
 #ifdef __cplusplus
 } /* end of extern "C" */
@@ -98,7 +98,7 @@ public:
     ExternalEventNum
   };
 
-  AsDmaDrv(asDmacSelId dmac_id)
+  AsDmaDrv(cxd56_audio_dma_t dmac_id)
       : m_dmac_id(dmac_id)
       , m_state(AS_DMA_STATE_BOOTED)
       , m_error_func(dma_err_callback)
@@ -130,7 +130,7 @@ private:
     AS_DmaDrvFunc p_func[AS_DMA_STATE_MAX_ENTRY];
   };
 
-  asDmacSelId m_dmac_id;
+  cxd56_audio_dma_t m_dmac_id;
 
   asDmaState  m_state;
 
@@ -162,7 +162,7 @@ private:
 
   dmaDrvFuncTbl* searchFuncTbl(ExternalEvent);
 
-  E_AS setDmaCmd(asDmacSelId, uint32_t, uint32_t, bool, bool);
+  E_AS setDmaCmd(cxd56_audio_dma_t, uint32_t, uint32_t, bool, bool);
 
   bool illegal(void*);
   void muteSdinVol(bool);
@@ -185,8 +185,8 @@ private:
   bool stopOnRun(void*);
   bool getInfo(void*);
   void dmaErrCb(E_AS_BB);
-  void allocDmaBuffer(asDmacSelId);
-  void freeDmaBuffer(asDmacSelId);
+  void allocDmaBuffer(cxd56_audio_dma_t);
+  void freeDmaBuffer(cxd56_audio_dma_t);
   void fadeControl(void);
   void volumeCtrl(bool validity, bool is_last_frame);
   bool pushRequest(void*, bool);

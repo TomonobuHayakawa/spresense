@@ -1,7 +1,7 @@
 /****************************************************************************
- * nuttx/arch/arm/src/cxd56xx/audio/drivers/baseband/src/bca_drv_api.c
+ * bsp/src/audio/cxd56_audio_pin.c
  *
- *   Copyright (C) 2016, 2017 Sony Corporation
+ *   Copyright (C) 2016, 2017, 2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,12 +36,17 @@
  * Included Files
  ****************************************************************************/
 
-#include <arch/chip/cxd56_audio.h>
-
-#include "audio/as_drv_common.h"
+#include <sdk/config.h>
+#include "audio/cxd56_audio_config.h"
+#include "audio/cxd56_audio_filter.h"
+#include "audio/cxd56_audio_ac_reg.h"
 
 /****************************************************************************
  * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
@@ -56,111 +61,86 @@
  * Private Functions
  ****************************************************************************/
 
+
+/*--------------------------------------------------------------------------*/
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-E_AS asBca_StopDmac(asDmacSelId dmacId)
+CXD56_AUDIO_ECODE cxd56_audio_filter_set_cstereo(bool en,
+                                                 bool sign_inv,
+                                                 int16_t vol)
 {
-  E_AS rtCode = E_AS_OK;
-  uint32_t stat = 0;
-
-  rtCode = getDmacCmdStatus(dmacId, &stat);
-  if (rtCode != E_AS_OK)
-    return rtCode;
-  if (stat != 1)
+  CXD56_AUDIO_ECODE ret = CXD56_AUDIO_ECODE_OK;
+  if (en)
     {
-      return E_AS_DMAC_BUSY;
+      ret = cxd56_audio_ac_reg_enable_cstereo(sign_inv, vol);
+    }
+  else
+    {
+      cxd56_audio_ac_reg_disable_cstereo();
     }
 
-  switch (dmacId)
-    {
-      case AS_DMAC_SEL_AC_IN:
-        write32_bca_reg(bcaRegMap[BCA_Mic_In_rtd_trg].addr, 0x04);
-        break;
-
-      case AS_DMAC_SEL_I2S_IN:
-        write32_bca_reg(bcaRegMap[BCA_I2s1_In_rtd_trg].addr, 0x04);
-        break;
-
-      case AS_DMAC_SEL_I2S_OUT:
-        write32_bca_reg(bcaRegMap[BCA_I2s1_Out_rtd_trg].addr, 0x04);
-        break;
-
-      case AS_DMAC_SEL_I2S2_IN:
-        write32_bca_reg(bcaRegMap[BCA_I2s2_In_rtd_trg].addr, 0x04);
-        break;
-
-      case AS_DMAC_SEL_I2S2_OUT:
-        write32_bca_reg(bcaRegMap[BCA_I2s2_Out_rtd_trg].addr, 0x04);
-        break;
-
-      default:
-        D_ASSERT(0);
-        break;
-    }
-
-  return rtCode;
+  return ret;
 }
 
-void asBca_SetSmstrParam()
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_filter_poweron_dnc(void)
 {
-  write_bca_reg(BCA_Int_m_ovf_smasl, 0);
-  write_bca_reg(BCA_Int_m_ovf_smasr, 0);
+  cxd56_audio_ac_reg_poweron_dnc();
 }
 
-E_AS asBca_SetSrcParam()
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_filter_poweroff_dnc(void)
 {
-  E_AS rtCode = E_AS_OK;
-
-  switch (bb_config_tblp->i2s_data_path)
-    {
-      case AS_I2S_DATA_PATH_1:
-        write_bca_reg(BCA_Int_m_i2s1_bck_err1, 0);
-        break;
-
-      case AS_I2S_DATA_PATH_2:
-        write_bca_reg(BCA_Int_m_i2s1_bck_err1, 0);
-        write_bca_reg(BCA_Int_m_i2s1_bck_err2, 0);
-        break;
-
-      default:
-        /* Do nothing. */
-        break;
-    }
-  return rtCode;
+  cxd56_audio_ac_reg_poweroff_dnc();
 }
 
-E_AS asBca_SetDncParam(asDncSelId dncId)
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_filter_set_dnc(cxd56_audio_dnc_id_t id,
+                                bool en,
+                                FAR cxd56_audio_dnc_bin_t *bin)
 {
-  E_AS rtCode = E_AS_OK;
+  /* Desable DNC. */
 
-  switch (dncId)
+  cxd56_audio_ac_reg_disable_dnc(id);
+
+  /* Set binary data to SRAM. */
+
+  if (bin != NULL)
     {
-      case AS_DNC_SEL_DNC1:
-        write_bca_reg(BCA_Int_m_anc_faint, 0);
-        write_bca_reg(BCA_Int_m_ovf_dnc1l, 0);
-        write_bca_reg(BCA_Int_m_ovf_dnc1r, 0);
-        break;
-
-      case AS_DNC_SEL_DNC2:
-        write_bca_reg(BCA_Int_m_anc_faint, 0);
-        write_bca_reg(BCA_Int_m_ovf_dnc2l, 0);
-        write_bca_reg(BCA_Int_m_ovf_dnc2r, 0);
-        break;
-
-      case AS_DNC_SEL_BOTH:
-        write_bca_reg(BCA_Int_m_anc_faint, 0);
-        write_bca_reg(BCA_Int_m_ovf_dnc1l, 0);
-        write_bca_reg(BCA_Int_m_ovf_dnc1r, 0);
-        write_bca_reg(BCA_Int_m_ovf_dnc2l, 0);
-        write_bca_reg(BCA_Int_m_ovf_dnc2r, 0);
-        break;
-
-      default:
-        return E_AS_DNC_SEL_PARAM;
+      cxd56_audio_ac_reg_set_dncram(id, bin);
     }
 
-  return rtCode;
+  /* Enable DNC. */
+
+  if (en)
+    {
+      cxd56_audio_ac_reg_enable_dnc(id);
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_filter_set_deq(bool en,
+                                FAR cxd56_audio_deq_coef_t *deq)
+{
+  /* Disable DEQ. */
+
+  cxd56_audio_ac_reg_disable_deq();
+
+  /* Set DEQ coef data to register. */
+
+  if (deq != NULL)
+    {
+      cxd56_audio_ac_reg_set_deq_param(deq);
+    }
+
+  /* Enable DEQ. */
+
+  if (en)
+    {
+      cxd56_audio_ac_reg_enable_deq();
+    }
 }
 

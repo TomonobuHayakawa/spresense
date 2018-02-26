@@ -1,7 +1,7 @@
 /****************************************************************************
  * audioutils/components/renderer/renderer_component.h
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016, 2017 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -83,7 +83,7 @@ class RendererComponent
 {
 public:
   RendererComponent()
-    : m_dmac_id(AS_DMAC_ID_NONE)
+    : m_dmac_id(CXD56_AUDIO_DMAC_I2S0_DOWN)
     , m_state(AS_MODULE_ID_RENDERER_CMP, "", Booted)
   {}
 
@@ -97,14 +97,16 @@ public:
 
   struct ActRenderCompParam
   {
-    asPathSelParam path_sel_param;
+    cxd56_audio_dma_path_t  dma_path_id;
+    cxd56_audio_signal_t    sig_id;
+    cxd56_audio_sel_t       sel_info;
   };
 
   struct InitRenderCompParam
   {
-    asSampFmt    format;
-    RenderDoneCB callback;
-    void         *p_requester;
+    cxd56_audio_samp_fmt_t format;
+    RenderDoneCB           callback;
+    void                   *p_requester;
   };
 
   struct ExecRenderCompParam
@@ -137,7 +139,7 @@ public:
     };
   };
 
-  asDmacSelId m_dmac_id;
+  cxd56_audio_dma_t m_dmac_id;
 
   void *m_p_requester;
 
@@ -162,8 +164,6 @@ private:
 
   MsgQueId m_self_dtq;
   MsgQueId m_self_sync_dtq;
-
-  asPathSelParam m_path_sel_param;
 
   AudioState<State> m_state;
 

@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/audio/drivers/baseband/include/ac_drv_volueme.h
+ * bsp/src/audio/cxd56_audio_power.h
  *
- *   Copyright (C) 2016, 2017 Sony Corporation
+ *   Copyright (C) 2016, 2017, 2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,54 +31,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
-/* Description: Audio Codec volume header */
 
-#ifndef __SDK_BSP_SRC_AUDIO_AC_DRV_VOLUME_H
-#define __SDK_BSP_SRC_AUDIO_AC_DRV_VOLUME_H
+#ifndef __BSP_SRC_AUDIO_CXD56_AUDIO_POWER_H
+#define __BSP_SRC_AUDIO_CXD56_AUDIO_POWER_H
 
 /****************************************************************************
  * Included Files
- ***************************************************************************/
+ ****************************************************************************/
 
-#include "audio/as_drv_common.h"
-#include "audio/ac_drv.h"
-#include "audio/ac_drv_reg.h"
+#include <arch/chip/cxd56_audio.h>
 
 /****************************************************************************
  * Pre-processor Definitions
- ***************************************************************************/
-
-#define MUTE_BIT_API  0x01
-#define MUTE_BIT_FADE 0x02
-#define MUTE_VOL_REG  0x33
-#define VOL_WAIT_TIME 20
-#define VOL_TO_REG(vol) (((vol) / 5) & 0xff)
-#define VOL_MUTE_TIME(vol, n_cycle) \
-  (((VOL_TO_REG(vol) - MUTE_VOL_REG) & 0xff) * (n_cycle + 1 ) * 4 / 48)
+ ****************************************************************************/
 
 /****************************************************************************
  * Public Types
- ***************************************************************************/
-
-typedef struct
-{
-  AC_REG_ID codecVolId;
-  int16_t   hold_vol;
-  uint8_t   mute_bit;
-} setVolParam;
+ ****************************************************************************/
 
 /****************************************************************************
- * Public Functions
- ***************************************************************************/
+ * Public Data
+ ****************************************************************************/
 
-uint32_t setMuteVolume(asCodecVolSelId volId, bool waitFlg, uint8_t typeId);
-uint32_t setUnMuteVolume(asCodecVolSelId volId,
-                         bool waitFlg,
-                         uint8_t typeId);
-uint32_t setVolume(asCodecVolSelId volId,
-                   int16_t volume,
-                   bool waitFlg,
-                   uint8_t typeId);
-uint32_t convBeepFreqToVal(uint32_t beepFreq);
+/****************************************************************************
+ * Inline Functions
+ ****************************************************************************/
 
-#endif /* __SDK_BSP_SRC_AUDIO_AC_DRV_VOLUME_H */
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
+
+CXD56_AUDIO_ECODE cxd56_audio_power_on(void);
+CXD56_AUDIO_ECODE cxd56_audio_power_off(void);
+
+#endif /* __BSP_SRC_AUDIO_CXD56_AUDIO_POWER_H */

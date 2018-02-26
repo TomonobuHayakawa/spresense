@@ -91,7 +91,7 @@ bool InputHandlerOfRAM::initialize(PlayerInHandle* p_handle)
 
   if (m_codec_type == AudCodecLPCM)
     {
-      if (m_clock_mode == AS_CLK_MODE_HIRES)
+      if (m_clock_mode == CXD56_AUDIO_CLKMODE_HIRES)
         {
           /* TODO: Delete magic number(2ch,24bit). */
 

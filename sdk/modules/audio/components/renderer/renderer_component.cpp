@@ -1,7 +1,7 @@
 /****************************************************************************
  * audioutils/components/renderer/renderer_component.cpp
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016, 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -102,7 +102,7 @@ public:
     return NULL;
   }
 
-  RenderComponentHandler getRenderHandleByDmacId(asDmacSelId dmac_id)
+  RenderComponentHandler getRenderHandleByDmacId(cxd56_audio_dma_t dmac_id)
   {
     for (int i = 0 ; i < MAX_RENDER_COMP_INSTANCE_NUM ; i++)
       {
@@ -398,22 +398,33 @@ bool AS_get_render_comp_handler(RenderComponentHandler *p_handle,
     }
 
   RendererComponent::RendererComponentParam param;
-  param.act_render_param.path_sel_param.pathFrom = AS_PATH_FROM_DMAC;
 
-  switch (device_type)
+  if (*p_handle == 0)
     {
-      case RenderDeviceHPSP:
-      case RenderDeviceHPSPSoundEffect:
-          param.act_render_param.path_sel_param.pathTo =
-            (*p_handle == 0) ? AS_PATH_TO_MIXER1 : AS_PATH_TO_MIXER2;
-          break;
+      param.act_render_param.dma_path_id = CXD56_AUDIO_DMA_PATH_MEM_TO_BUSIF1;
+      param.act_render_param.sig_id      = CXD56_AUDIO_SIG_BUSIF1;
+      param.act_render_param.sel_info.au_dat_sel1 = true;
+      param.act_render_param.sel_info.au_dat_sel2 = false;
+      param.act_render_param.sel_info.cod_insel2  = true;
+      param.act_render_param.sel_info.cod_insel3  = false;
+      param.act_render_param.sel_info.src1in_sel  = false;
+      param.act_render_param.sel_info.src2in_sel  = false;
+    }
+  else
+    {
+      param.act_render_param.dma_path_id = CXD56_AUDIO_DMA_PATH_MEM_TO_BUSIF2;
+      param.act_render_param.sig_id      = CXD56_AUDIO_SIG_BUSIF2;
+      param.act_render_param.sel_info.au_dat_sel1 = false;
+      param.act_render_param.sel_info.au_dat_sel2 = true;
+      param.act_render_param.sel_info.cod_insel2  = false;
+      param.act_render_param.sel_info.cod_insel3  = true;
+      param.act_render_param.sel_info.src1in_sel  = false;
+      param.act_render_param.sel_info.src2in_sel  = false;
+    }
 
-      case RenderDeviceI2S:
-          param.act_render_param.path_sel_param.pathTo = AS_PATH_TO_I2S1;
-          break;
-      default:
-          RENDERER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-          return false;
+  if (device_type == RenderDeviceI2S)
+    {
+      param.act_render_param.sel_info.src1in_sel  = true;
     }
 
   if (!s_pFactory->parse(*p_handle, MSG_AUD_BB_CMD_ACT, param))
@@ -461,17 +472,17 @@ bool AS_init_renderer(RenderComponentHandler handle,
 {
   RendererComponent::RendererComponentParam param;
 
-  AsClkModeId clock_mode = GetClkMode();
+  cxd56_audio_clkmode_t clock_mode = cxd56_audio_get_clkmode();
 
   /* Hi-Reso (24bit/sample) or not */
 
-  if (AS_CLK_MODE_HIRES == clock_mode)
+  if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
     {
-      param.init_render_param.format = AS_SAMPLING_FMT_24;
+      param.init_render_param.format = CXD56_AUDIO_SAMP_FMT_24;
     }
   else
     {
-      param.init_render_param.format = AS_SAMPLING_FMT_16;
+      param.init_render_param.format = CXD56_AUDIO_SAMP_FMT_16;
     }
 
   param.init_render_param.callback    = callback;
@@ -521,9 +532,25 @@ bool AS_stop_renderer(RenderComponentHandler handle, asDmacStopMode mode)
 }
 
 /*--------------------------------------------------------------------*/
-static void dma_notify_cmplt_int(asDmacSelId dmacId, E_AS_DMA_INT code)
+static void dma_notify_cmplt_int(cxd56_audio_dma_t dmacId, uint32_t dma_result)
 {
+  E_AS_DMA_INT code;
   RendererComponent::RendererComponentParam param;
+
+  switch (dma_result)
+    {
+      case CXD56_AUDIO_ECODE_DMA_CMPLT:
+        code = E_AS_DMA_INT_CMPLT;
+        break;
+
+      case CXD56_AUDIO_ECODE_DMA_CMB:
+        code = E_AS_DMA_INT_ERR_BUS;
+        break;
+
+      default:
+        code = E_AS_DMA_INT_ERR;
+        break;
+    }
 
   RenderComponentHandler handle = s_pFactory->getRenderHandleByDmacId(dmacId);
 
@@ -651,15 +678,21 @@ bool RendererComponent::act(const RendererComponentParam& param)
 {
   bool result = true;
 
-  RENDERER_DBG("ACT: path <from %d/to %d>\n",
-               param.act_render_param.path_sel_param.pathFrom,
-               param.act_render_param.path_sel_param.pathTo);
+  RENDERER_DBG("ACT: path %d, signal %d\n",
+               param.act_render_param.dma_path_id,
+               param.act_render_param.sig_id);
+  if (result &&
+      CXD56_AUDIO_ECODE_OK != cxd56_audio_get_dmahandle(
+        param.act_render_param.dma_path_id,
+        &m_dmac_id))
+    {
+      result = false;
+    }
 
-  m_path_sel_param = param.act_render_param.path_sel_param;
-
-  if (result && E_AS_OK != AS_SetAudioDataPath(&m_path_sel_param,
-                                               &m_dmac_id,
-                                               AS_DMAC_ID_NONE))
+  if (result &&
+      CXD56_AUDIO_ECODE_OK != cxd56_audio_set_datapath(
+        param.act_render_param.sig_id,
+        param.act_render_param.sel_info))
     {
       result = false;
     }
@@ -696,7 +729,8 @@ bool RendererComponent::deact(const RendererComponentParam& param)
       result = false;
     }
 
-  if (result && E_AS_OK != AS_ClearAudioDataPath(&m_path_sel_param))
+  if (result &&
+      CXD56_AUDIO_ECODE_OK != cxd56_audio_free_dmahandle(m_dmac_id))
     {
       result = false;
     }

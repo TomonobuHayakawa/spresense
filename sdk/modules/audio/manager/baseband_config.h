@@ -38,6 +38,34 @@
 #include "memutils/common_utils/common_types.h"
 #include "audio/audio_high_level_api.h"
 
+
+/** maximum value for above parameter */
+#define AS_CS_VOL_MAX           -195
+/** minimum value for above parameter */
+#define AS_CS_VOL_MIN           -825
+
+/** maximum value for above parameters */
+#define AS_VOLUME_MAX           120
+/** minimum value for above parameters */
+#define AS_VOLUME_MIN           -1020
+/** mute setting for above parameters */
+#define AS_VOLUME_MUTE          -1025
+
+
+/** maximum value for above parameter */
+#define AS_BEEP_VOL_MAX         0
+/** minimum value for above parameter */
+#define AS_BEEP_VOL_MIN         -90
+
+/** maximum value for above parameter */
+#define AS_BEEP_FREQ_MAX        4085
+/** minimum value for above parameter */
+#define AS_BEEP_FREQ_MIN        94
+
+#define CHECK_RANGE(val, hold, min, max) \
+          (((val) == (hold)) || \
+          (((min) <= ((int32_t)val)) && ((val) <= (max))))
+
 enum bbPowerId
 {
     BB_POWER_INPUT,
@@ -50,13 +78,10 @@ enum bbPowerId
 
 struct BaseBandConfigInit_s
 {
-    uint32_t       rate[AS_I2S_ID_NUM];          /* I2S data rate.       */
-    asBypassModeId bypass_mode_en[AS_I2S_ID_NUM];/* I2S SRC bypass mode. */
-    int32_t        mic_gain[AS_MIC_CHANNEL_MAX]; /* MIC gain.            */
-    asOutDeviceId  output_device_sel;            /* Output device ID.    */
-    uint8_t        format;                       /* Data format.         */
+    cxd56_audio_mic_gain_t mic_gain;             /* MIC gain.            */
+    uint8_t        output_device_sel;            /* Output device ID.    */
     int16_t        cs_vol;                       /* Clear stereo volume. */
-    uint8_t        cs_en;                        /* Clear stereo mode.   */
+    bool           cs_en;                        /* Clear stereo mode.   */
     int32_t        beep_vol;                     /* Beep volume.         */
     uint32_t       beep_freq;                    /* Beep frequency.      */
 };
@@ -65,15 +90,15 @@ typedef struct BaseBandConfigInit_s BaseBandConfigInit_t;
 class BasebandConfig
 {
 public:
-  BasebandConfig()
+  BasebandConfig() :
+    m_input_en(false),
+    m_output_en(false)
   {
     clearBasebandInitConfig();
   };
 
   uint32_t initMicGain(AudioCommand &cmd);
   uint32_t setMicGain(AudioCommand &cmd);
-  uint32_t initI2SParam(AudioCommand &cmd);
-  uint32_t setI2SParam(AudioCommand &cmd);
   uint32_t initOutputSelect(AudioCommand &cmd);
   uint32_t setOutputSelect(AudioCommand &cmd);
   uint32_t initDEQParam(AudioCommand &cmd);
@@ -90,12 +115,16 @@ public:
   uint32_t setActiveBaseband(bbPowerId power_id);
 
 private:
-  E_AS  powerOnBaseBand(bbPowerId power_id);
-  E_AS  powerOffBaseBand(bbPowerId power_id);
+  CXD56_AUDIO_ECODE  powerOnBaseBand(bbPowerId power_id);
+  CXD56_AUDIO_ECODE  powerOffBaseBand(bbPowerId power_id);
   void  clearBasebandInitConfig(void);
-  void  checkErrCode(E_AS, E_AS);
+  void  checkErrCode(CXD56_AUDIO_ECODE, CXD56_AUDIO_ECODE);
+  bool  chkEnableBaseBandInput(void);
+  bool  chkEnableBaseBandOutput(void);
 
   BaseBandConfigInit_t m_bb_config_init_tbl;
+  bool m_input_en;
+  bool m_output_en;
 };
 
 #endif /* __BASEBAND_CONFIG_H */

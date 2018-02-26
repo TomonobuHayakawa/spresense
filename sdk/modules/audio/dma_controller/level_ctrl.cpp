@@ -129,7 +129,7 @@ LevelCtrl::ActProc LevelCtrl::ActProcTbl[StatusNum][StatusNum] =
 };
 
 /*--------------------------------------------------------------------*/
-bool LevelCtrl::init(asDmacSelId dmac_id, bool auto_fade, bool fade_enable)
+bool LevelCtrl::init(cxd56_audio_dma_t dmac_id, bool auto_fade, bool fade_enable)
 {
   /* select state transition table and initial mute state request */
 
@@ -142,9 +142,9 @@ bool LevelCtrl::init(asDmacSelId dmac_id, bool auto_fade, bool fade_enable)
       this->m_tablePtr = chgNoFadeMuteState;
     }
 
-  /* initialize target mixer id */
+  /* set target id */
 
-  this->m_sdin = GetDmacPathToMixerId(dmac_id);
+  m_dmac_id = dmac_id;
 
   /* store auto_fade info */
 
@@ -169,32 +169,27 @@ bool LevelCtrl::init(asDmacSelId dmac_id, bool auto_fade, bool fade_enable)
 /*--------------------------------------------------------------------*/
 bool LevelCtrl::setFadeRamp(uint32_t* samples_for_fade)
 {
-  uint32_t rate           = 0;
-  uint32_t dig_sft        = 0;
-  E_AS     rtcd           = E_AS_OK;
-
-  /* if mute is not enabled, DIG_SFT register is 0 (fade not support) */
-
-  dig_sft = (this->m_tablePtr == chgMuteState) ? 1 : 0;
-
   /* calc fade required samples */
 
   *samples_for_fade = 996;
 
-  /* set to baseband driver */
+  /* if mute is not enabled, DIG_SFT register is 0 (fade not support) */
 
-  rtcd = asAc_SetDigSft(dig_sft);
-  if (rtcd != E_AS_OK)
+  if (this->m_tablePtr == chgMuteState)
     {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return false;
+      if (CXD56_AUDIO_ECODE_OK != cxd56_audio_en_digsft(CXD56_AUDIO_DSR_1STEP))
+        {
+          DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
+          return false;
+        }
     }
-
-  rtcd = asAc_SetDsrRate(rate);
-  if (rtcd != E_AS_OK)
+  else
     {
-      DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
-      return false;
+      if (CXD56_AUDIO_ECODE_OK != cxd56_audio_dis_digsft())
+        {
+          DMAC_ERR(AS_ATTENTION_SUB_CODE_BASEBAND_ERROR);
+          return false;
+        }
     }
 
   return true;
@@ -235,14 +230,14 @@ bool LevelCtrl::exec(LevelCtrlCmd request, bool is_wait)
 /*--------------------------------------------------------------------*/
 void LevelCtrl::muteSdinVol(bool wait_fade_term)
 {
-  switch (this->m_sdin)
+  switch (this->m_dmac_id)
     {
-      case AS_MIXER1_OUT:
-        muteVolumeFade(AS_VOLUME_INPUT1, wait_fade_term);
+      case CXD56_AUDIO_DMAC_I2S0_DOWN:
+        cxd56_audio_mute_vol_fade(CXD56_AUDIO_VOLID_MIXER_IN1, wait_fade_term);
         break;
 
-      case AS_MIXER2_OUT:
-        muteVolumeFade(AS_VOLUME_INPUT2, wait_fade_term);
+      case CXD56_AUDIO_DMAC_I2S1_DOWN:
+        cxd56_audio_mute_vol_fade(CXD56_AUDIO_VOLID_MIXER_IN2, wait_fade_term);
         break;
 
       default:
@@ -254,14 +249,14 @@ void LevelCtrl::muteSdinVol(bool wait_fade_term)
 /*--------------------------------------------------------------------*/
 void LevelCtrl::unMuteSdinVol(bool wait_fade_term)
 {
-  switch (this->m_sdin)
+  switch (this->m_dmac_id)
     {
-      case AS_MIXER1_OUT:
-        unMuteVolumeFade(AS_VOLUME_INPUT1, wait_fade_term);
+      case CXD56_AUDIO_DMAC_I2S0_DOWN:
+        cxd56_audio_unmute_vol_fade(CXD56_AUDIO_VOLID_MIXER_IN1, wait_fade_term);
         break;
 
-      case AS_MIXER2_OUT:
-        unMuteVolumeFade(AS_VOLUME_INPUT2, wait_fade_term);
+      case CXD56_AUDIO_DMAC_I2S1_DOWN:
+        cxd56_audio_unmute_vol_fade(CXD56_AUDIO_VOLID_MIXER_IN2, wait_fade_term);
         break;
 
       default:

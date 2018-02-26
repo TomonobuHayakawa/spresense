@@ -41,6 +41,7 @@
 #include <nuttx/arch.h>
 #include <string.h>
 #include <stdlib.h>
+#include <arch/chip/cxd56_audio.h>
 #include "memutils/os_utils/os_wrapper.h"
 #include "memutils/common_utils/common_assert.h"
 #include "media_player_obj.h"
@@ -1278,7 +1279,7 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
   uint32_t   rst = AS_ECODE_OK;
   AudioCodec codec_type_of_next_track;
   InitDecCompParam init_dec_comp_param;
-  AsClkModeId      clock_mode;
+  cxd56_audio_clkmode_t clock_mode;
 
   rst = m_input_device_handler->start();
   if (rst != AS_ECODE_OK)
@@ -1316,8 +1317,8 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
 
   /* TODO: delete fixed value. */
 
-  clock_mode = GetClkMode();
-  if (AS_CLK_MODE_HIRES == clock_mode)
+  clock_mode = cxd56_audio_get_clkmode();
+  if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
     {
       init_dec_comp_param.bit_width = AudPcm24Bit;
     }

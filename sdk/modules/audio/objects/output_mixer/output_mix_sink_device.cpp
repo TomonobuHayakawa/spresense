@@ -469,8 +469,8 @@ static void send_renderer(RenderComponentHandler handle,
                           bool is_valid)
 {
   uint32_t byte_size_per_sample = 0;
-  AsClkModeId clock_mode = GetClkMode();
-  if (AS_CLK_MODE_HIRES == clock_mode)
+  cxd56_audio_clkmode_t clock_mode = cxd56_audio_get_clkmode();
+  if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
     {
       byte_size_per_sample = BYTE_SIZE_PER_SAMPLE_HIGHRES;
     }

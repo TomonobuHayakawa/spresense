@@ -52,12 +52,13 @@ typedef enum AudioDrvDmaStopMode_
 
 typedef struct AudioDrvDmaInitParam_
 {
-  asDmacSelId  dmac_id;
-  AS_ErrorCb   p_error_func;
-  AS_DmaDoneCb p_dmadone_func;
-  uint8_t      dma_byte_len;
-  uint8_t      ch_num;
-  bool         fade_en;
+  cxd56_audio_dma_t dmac_id;
+  cxd56_audio_samp_fmt_t format;
+  AS_ErrorCb        p_error_func;
+  AS_DmaDoneCb      p_dmadone_func;
+  uint8_t           dma_byte_len;
+  uint8_t           ch_num;
+  bool              fade_en;
 } AudioDrvDmaInitParam;
 
 typedef struct AudioDrvDmaRunParam_
@@ -72,13 +73,13 @@ typedef struct AudioDrvDmaRunParam_
 
 typedef struct AudioDrvDmaStopParam_
 {
-  asDmacSelId         dmac_id;
+  cxd56_audio_dma_t   dmac_id;
   AudioDrvDmaStopMode stop_mode;
 } AudioDrvDmaStopParam;
 
 typedef struct AudioDrvDmaInfo_
 {
-  asDmacSelId dmac_id;
+  cxd56_audio_dma_t dmac_id;
   uint32_t    running_wait;
   uint32_t    running_empty;
   uint32_t    ready_wait;
@@ -89,20 +90,20 @@ typedef struct AudioDrvDmaInfo_
 
 typedef struct AudioDrvResultParam_
 {
-  asDmacSelId dmac_id;
-  E_AS_BB     result;
+  cxd56_audio_dma_t dmac_id;
+  E_AS_BB result;
 } AudioDrvResultParam;
 
 
 E_AS_BB AS_AudioDrvDmaInit(AudioDrvDmaInitParam*);
 E_AS_BB AS_AudioDrvDmaRun(asReadDmacParam*);
 E_AS_BB AS_AudioDrvDmaStop(AudioDrvDmaStopParam*);
-E_AS_BB AS_AudioDrvDmaGetInfo(asDmacSelId, AudioDrvDmaInfo*);
-E_AS_BB AS_AudioDrvDmaStart(asDmacSelId);
-E_AS_BB AS_AudioDrvDmaNofifyCmplt(asDmacSelId, E_AS_DMA_INT);
+E_AS_BB AS_AudioDrvDmaGetInfo(cxd56_audio_dma_t, AudioDrvDmaInfo*);
+E_AS_BB AS_AudioDrvDmaStart(cxd56_audio_dma_t);
+E_AS_BB AS_AudioDrvDmaNofifyCmplt(cxd56_audio_dma_t, CXD56_AUDIO_ECODE);
 
-E_AS dmaDrvTaskActive(asDmacSelId dmacId);
-E_AS dmaDrvTaskDeactive(asDmacSelId dmacId);
+E_AS_BB dmaDrvTaskActive(cxd56_audio_dma_t dmacId);
+E_AS_BB dmaDrvTaskDeactive(cxd56_audio_dma_t dmacId);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/audio/drivers/baseband/include/ac_reg_map.h
+ * bsp/src/audio/cxd56_audio_volume.h
  *
- *   Copyright (C) 2014, 2017 Sony Corporation
+ *   Copyright (C) 2016, 2017, 2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,54 +31,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
-/*
- * This header file is generated as follows.
- * % perl genRegHeader.pl AC_TOP_regmap_20140805.xlsm
- * Output file: ac_reg_map.h, ac_reg_map.c
- * Number of detected registers: 317
- */
 
-#ifndef __SDK_BSP_SRC_AUDIO_AC_REG_MAP_H
-#define __SDK_BSP_SRC_AUDIO_AC_REG_MAP_H
+#ifndef __BSP_SRC_AUDIO_CXD56_AUDIO_VOLUME_H
+#define __BSP_SRC_AUDIO_CXD56_AUDIO_VOLUME_H
 
 /****************************************************************************
  * Included Files
- ***************************************************************************/
+ ****************************************************************************/
 
-#include <stdint.h>
+#include <arch/chip/cxd56_audio.h>
 
 /****************************************************************************
  * Pre-processor Definitions
- ***************************************************************************/
-
-/* Enable at local test.
- * #define AC_LOCAL_TEST
- */
-
-#ifdef AC_LOCAL_TEST
-#  define AC_REG_BASE  0x00001000
-#else
-#  define AC_REG_BASE  (0x0c000000 + 0x02300000)
-#endif
-
-#define AC_REVID     0x20
-#define AC_DEVICEID  0x02
-
-#define DNC1_IRAM_BASE  0x3000
-#define DNC1_CRAM_BASE  0x3800
-#define DNC2_IRAM_BASE  0x3c00
-#define DNC2_CRAM_BASE  0x4400
+ ****************************************************************************/
 
 /****************************************************************************
  * Public Types
- ***************************************************************************/
+ ****************************************************************************/
 
 /****************************************************************************
  * Public Data
- ***************************************************************************/
+ ****************************************************************************/
 
 /****************************************************************************
- * Public Functions
- ***************************************************************************/
+ * Inline Functions
+ ****************************************************************************/
 
-#endif /* _AC_REG_MAP_H_ */
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
+
+CXD56_AUDIO_ECODE cxd56_audio_volume_set(cxd56_audio_volid_t id, int16_t vol);
+CXD56_AUDIO_ECODE cxd56_audio_volume_mute(cxd56_audio_volid_t id);
+CXD56_AUDIO_ECODE cxd56_audio_volume_unmute(cxd56_audio_volid_t id);
+CXD56_AUDIO_ECODE cxd56_audio_volume_mute_fade(cxd56_audio_volid_t id,
+                                               bool wait);
+CXD56_AUDIO_ECODE cxd56_audio_volume_unmute_fade(cxd56_audio_volid_t id,
+                                                 bool wait);
+#endif /* __BSP_SRC_AUDIO_CXD56_AUDIO_VOLUME_H */

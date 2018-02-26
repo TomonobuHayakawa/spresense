@@ -1,15 +1,36 @@
-/***********************************************************************
+/****************************************************************************
+ * audioutils/components/capture/capture_component.h
  *
- *      File Name: capture_component.h
+ *   Copyright (C) 2015 Sony Corporation
  *
- *      Description: Header file of capture component
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- *      Notes: (C) Copyright 2015 Sony Corporation
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name NuttX nor Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
- *      Author: Hsingying Ho
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  *
- ***********************************************************************
- */
+ ****************************************************************************/
 
 #ifndef CAPTURE_COMPONENT_H
 #define CAPTURE_COMPONENT_H
@@ -83,9 +104,9 @@ struct InitCaptureComponentParam
 
 struct ActCaptureComponentParam
 {
-  asPathSelParam     path_sel_param;
-  CaptureDevice      output_device;
-  MemMgrLite::PoolId mem_pool_id;
+  cxd56_audio_dma_path_t  dma_path_id;
+  CaptureDevice           output_device;
+  MemMgrLite::PoolId      mem_pool_id;
 };
 
 struct StopCaptureComponentParam
@@ -127,8 +148,7 @@ extern "C" {
 
 bool AS_get_capture_comp_handler(CaptureComponentHandler *p_handle,
                                  CaptureDevice device_type,
-                                 MemMgrLite::PoolId mem_pool_id,
-                                 uint8_t mic_channel);
+                                 MemMgrLite::PoolId mem_pool_id);
 
 bool AS_release_capture_comp_handler(CaptureComponentHandler p_handle);
 
@@ -144,14 +164,15 @@ class CaptureComponent
 {
 public:
   CaptureComponent()
-    : m_dmac_id(AS_DMAC_ID_NONE)
+    : m_dmac_id(CXD56_AUDIO_DMAC_MIC)
     , m_output_device(CaptureDeviceTypeNum)
+    , m_ch_num(CONFIG_AUDIOUTILS_CAPTURE_CH_NUM)
     , m_state(AS_MODULE_ID_CAPTURE_CMP, "", Booted)
   {}
 
   ~CaptureComponent() {}
 
-  asDmacSelId m_dmac_id;
+  cxd56_audio_dma_t m_dmac_id;
 
   CaptureDoneCB m_callback;
 
@@ -180,7 +201,7 @@ private:
 
   MemMgrLite::PoolId m_mem_pool_id;
 
-  asPathSelParam m_path_sel_param;
+  uint8_t m_ch_num;
 
   AudioState<State> m_state;
 

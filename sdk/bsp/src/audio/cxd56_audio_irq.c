@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/audio/drivers/baseband/include/ac_drv_func.h
+ * bsp/src/audio/cxd56_audio_int.c
  *
- *   Copyright (C) 2014, 2017 Sony Corporation
+ *   Copyright (C) 2016, 2017, 2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,56 +31,73 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ***************************************************************************/
-/* Description: Audio Codec driver low-level API sub function */
-
-#ifndef __SDK_BSP_SRC_AUDIO_AC_DRV_SUB_FUNC_H
-#define __SDK_BSP_SRC_AUDIO_AC_DRV_SUB_FUNC_H
 
 /****************************************************************************
  * Included Files
- ***************************************************************************/
+ ****************************************************************************/
 
-#include "audio/as_drv_common.h"
-#include "audio/ac_drv.h"
-#include "audio/ac_drv_reg.h"
+#include <sdk/config.h>
+#include <nuttx/irq.h>
+#include <nuttx/arch.h>
+#include "up_arch.h"
+#include "audio/cxd56_audio_irq.h"
 
 /****************************************************************************
  * Pre-processor Definitions
- ***************************************************************************/
+ ****************************************************************************/
 
 /****************************************************************************
- * Public Types
- ***************************************************************************/
+ * Public Function Prototypes
+ ****************************************************************************/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern void CXD56_audio_dma_int_handler(void);
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
 
 /****************************************************************************
  * Public Data
- ***************************************************************************/
+ ****************************************************************************/
 
-extern BaseBandConfigTbl *bb_config_tblp;
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
 
 /****************************************************************************
  * Public Functions
- ***************************************************************************/
+ ****************************************************************************/
 
-E_AS setSrcParam(asSrcSelId srcId, FAR asI2sParam *pI2sParam);
-E_AS setI2sMode(asSrcSelId srcId, FAR asSrcParam *pSrc);
-E_AS setI2sChSwap(asSrcSelId srcId, FAR asSrcParam *pSrc);
-E_AS setSelCicParam(asCicSelId cicId, FAR asCicParam *pCicParam);
-E_AS setDecimCommon(FAR asDecimParam *pDcmParam);
-E_AS setDecimOut(asDecimSelId dcmId, FAR asDecimParam *pDcmParam);
-E_AS setAlcParam(void);
-E_AS setSpcParam(void);
-E_AS setDeqCoef(AC_REG_ID acRegId, FAR const uint32_t *pCoef, uint32_t len);
-E_AS setDncRam(uint32_t offset, FAR const uint32_t *pData, uint32_t len);
-E_AS setAcSmstrParam(asSmstrModeId mode);
-E_AS setAcSerDesParam(FAR asSerDesParam *pSdesParam);
+void cxd56_audio_irq_attach(void)
+{
+  irq_attach(CXD56_IRQ_AUDIO_0, (xcpt_t)CXD56_audio_dma_int_handler, NULL);
+  irq_attach(CXD56_IRQ_AUDIO_1, (xcpt_t)CXD56_audio_dma_int_handler, NULL);
+  irq_attach(CXD56_IRQ_AUDIO_2, (xcpt_t)CXD56_audio_dma_int_handler, NULL);
+  irq_attach(CXD56_IRQ_AUDIO_3, (xcpt_t)CXD56_audio_dma_int_handler, NULL);
+}
 
-#ifdef __cplusplus
-} /* end of extern "C" */
-#endif /* __cplusplus */
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_irq_detach(void)
+{
+  irq_detach(CXD56_IRQ_AUDIO_0);
+  irq_detach(CXD56_IRQ_AUDIO_1);
+  irq_detach(CXD56_IRQ_AUDIO_2);
+  irq_detach(CXD56_IRQ_AUDIO_3);
+}
 
-#endif /* __SDK_BSP_SRC_AUDIO_AC_DRV_SUB_FUNC_H */
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_irq_enable(void)
+{
+  up_enable_irq(CXD56_IRQ_AUDIO_0);
+  up_enable_irq(CXD56_IRQ_AUDIO_1);
+  up_enable_irq(CXD56_IRQ_AUDIO_2);
+}
+
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_irq_disable(void)
+{
+  up_disable_irq(CXD56_IRQ_AUDIO_0);
+  up_disable_irq(CXD56_IRQ_AUDIO_1);
+  up_disable_irq(CXD56_IRQ_AUDIO_2);
+}

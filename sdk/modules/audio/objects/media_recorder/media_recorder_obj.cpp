@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <nuttx/arch.h>
 #include <stdlib.h>
+#include <arch/chip/cxd56_audio.h>
 #include "memutils/common_utils/common_assert.h"
 #include "media_recorder_obj.h"
 #include "components/encoder/encoder_component.h"
@@ -678,8 +679,8 @@ void VoiceRecorderObjectTask::startOnReady(MsgPacket *msg)
       FilterComponentParam filter_param;
       filter_param.filter_type = Apu::SRC;
       filter_param.init_src_param.sample_num = getPcmCaptureSample();
-      AsClkModeId clock_mode = GetClkMode();
-      if (AS_CLK_MODE_HIRES == clock_mode)
+      cxd56_audio_clkmode_t clock_mode = cxd56_audio_get_clkmode();
+      if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
         {
           filter_param.init_src_param.input_sampling_rate =
             192000; /* Fixed value. */
@@ -1428,8 +1429,8 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamLPCM(
 
       case AS_BITLENGTH_24:
         {
-          AsClkModeId clock_mode = GetClkMode();
-          if (AS_CLK_MODE_HIRES == clock_mode)
+          cxd56_audio_clkmode_t clock_mode = cxd56_audio_get_clkmode();
+          if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
             {
               break;
             }
@@ -1448,8 +1449,8 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamLPCM(
 
       case AS_SAMPLINGRATE_192000:
         {
-          AsClkModeId clock_mode = GetClkMode();
-          if (AS_CLK_MODE_HIRES == clock_mode)
+          cxd56_audio_clkmode_t clock_mode = cxd56_audio_get_clkmode();
+          if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
             {
               break;
             }
@@ -1560,8 +1561,7 @@ bool VoiceRecorderObjectTask::getInputDeviceHdlr(void)
     {
       if (!AS_get_capture_comp_handler(&m_capture_from_mic_hdlr,
                                        m_input_device,
-                                       s_in_pool_id,
-                                       m_channel_num))
+                                       s_in_pool_id))
         {
           return false;
         }
@@ -1570,8 +1570,7 @@ bool VoiceRecorderObjectTask::getInputDeviceHdlr(void)
     {
       if (!AS_get_capture_comp_handler(&m_capture_from_mic_hdlr,
                                        m_input_device,
-                                       s_in_pool_id,
-                                       0))
+                                       s_in_pool_id))
         {
           return false;
         }

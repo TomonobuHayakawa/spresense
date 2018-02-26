@@ -2592,43 +2592,13 @@ void AudioManager::setMicGain(AudioCommand &cmd)
 /*--------------------------------------------------------------------------*/
 void AudioManager::initI2SParam(AudioCommand &cmd)
 {
-  bool check =
-    packetCheck(LENGTH_INITI2SPARAM, AUDCMD_INITI2SPARAM, cmd);
-  if (!check)
-    {
-      return;
-    }
-
-  uint32_t rst = bbConfig.initI2SParam(cmd);
-  if (rst == AS_ECODE_OK)
-    {
-      sendResult(AUDRLT_INITI2SPARAMCMPLT, cmd.header.sub_code);
-    }
-  else
-    {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
-    }
+  sendResult(AUDRLT_INITI2SPARAMCMPLT, cmd.header.sub_code);
 }
 
 /*--------------------------------------------------------------------------*/
 void AudioManager::setI2SParam(AudioCommand &cmd)
 {
-  bool check =
-    packetCheck(LENGTH_INITI2SPARAM, AUDCMD_INITI2SPARAM, cmd);
-  if (!check)
-    {
-      return;
-    }
-
-  uint32_t rst = bbConfig.setI2SParam(cmd);
-  if (rst == AS_ECODE_OK)
-    {
-      sendResult(AUDRLT_INITI2SPARAMCMPLT, cmd.header.sub_code);
-    }
-  else
-    {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
-    }
+  sendResult(AUDRLT_INITI2SPARAMCMPLT, cmd.header.sub_code);
 }
 
 /*--------------------------------------------------------------------------*/

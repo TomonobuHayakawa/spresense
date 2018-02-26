@@ -75,8 +75,8 @@ public:
     m_es_sampling_rate(0),
     m_codec_type(InvalidCodecType)
     {
-      m_clock_mode = GetClkMode();
-      if (AS_CLK_MODE_HIRES == m_clock_mode)
+      m_clock_mode = cxd56_audio_get_clkmode();
+      if (CXD56_AUDIO_CLKMODE_HIRES == m_clock_mode)
         {
           m_cur_wav_au_sample_num = 1024;
         }
@@ -150,7 +150,7 @@ public:
 protected:
   uint32_t    m_es_sampling_rate;
   AudioCodec  m_codec_type;
-  AsClkModeId m_clock_mode;
+  cxd56_audio_clkmode_t m_clock_mode;
   uint16_t    m_cur_wav_au_sample_num;
   uint8_t     m_ch_num;
   uint8_t     m_init_player_api_codec_type;

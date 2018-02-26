@@ -36,12 +36,21 @@ ifeq ($(CONFIG_CXD56_AUDIO),y)
 
 VPATH += src/audio
 
-CHIP_CSRCS += cxd56_audio_drv.c
-CHIP_CSRCS += ac_drv_api.c ac_drv_sub_func.c  ac_reg_map.c  ac_drv_reg.c  ac_drv_path.c ac_drv_volume.c
-CHIP_CSRCS += aca_drv_api.c
-CHIP_CSRCS += bca_drv_sub_func.c bca_drv_api.c bca_drv_reg.c bca_reg_map.c
-CHIP_CSRCS += audio_io_config.c
-CHIP_CSRCS += audio_dma.c
+CHIP_CSRCS += cxd56_audio.c
+CHIP_CSRCS += cxd56_audio_config.c
+CHIP_CSRCS += cxd56_audio_analog.c
+CHIP_CSRCS += cxd56_audio_power.c
+CHIP_CSRCS += cxd56_audio_filter.c
+CHIP_CSRCS += cxd56_audio_mic.c
+CHIP_CSRCS += cxd56_audio_volume.c
+CHIP_CSRCS += cxd56_audio_digital.c
+CHIP_CSRCS += cxd56_audio_beep.c
+CHIP_CSRCS += cxd56_audio_irq.c
+CHIP_CSRCS += cxd56_audio_dma.c
+CHIP_CSRCS += cxd56_audio_ac_reg.c
+CHIP_CSRCS += cxd56_audio_bca_reg.c
+CHIP_CSRCS += cxd56_audio_aca.c
+CHIP_CSRCS += cxd56_audio_pin.c
 
 CFLAGS += -std=gnu99
 CFLAGS += -D_POSIX
