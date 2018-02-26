@@ -478,44 +478,44 @@ void board_alt1160_gpio_int_control(uint32_t pin, bool en);
 #endif
 
 /****************************************************************************
- * Name: board_sdcard_initialize
+ * Name: board_sdcard_pin_initialize
  *
  * Description:
- *   Initialize SD Card on the board.
+ *   Initialize SD Card pins on the board.
  *
  ****************************************************************************/
 
-#define board_sdcard_initialize()
+#define board_sdcard_pin_initialize()
 
 /****************************************************************************
- * Name: board_sdcard_finalize
+ * Name: board_sdcard_pin_finalize
  *
  * Description:
- *   Finalize SD Card on the board.
+ *   Finalize SD Card pins on the board.
  *
  ****************************************************************************/
 
-#define board_sdcard_finalize()
+#define board_sdcard_pin_finalize()
 
 /****************************************************************************
- * Name: board_sdcard_enable
+ * Name: board_sdcard_pin_enable
  *
  * Description:
- *   Enable SD Card on the board.
+ *   Enable SD Card pins on the board.
  *
  ****************************************************************************/
 
-#define board_sdcard_enable()
+#define board_sdcard_pin_enable()
 
 /****************************************************************************
- * Name: board_sdcard_disable
+ * Name: board_sdcard_pin_disable
  *
  * Description:
- *   Disable SD Card on the board.
+ *   Disable SD Card pins on the board.
  *
  ****************************************************************************/
 
-#define board_sdcard_disable()
+#define board_sdcard_pin_disable()
 
 /****************************************************************************
  * Name: board_sdcard_set_high_voltage

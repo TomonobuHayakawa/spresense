@@ -474,52 +474,52 @@ void board_alt1160_gpio_int_control(uint32_t pin, bool en);
 #endif
 
 /****************************************************************************
- * Name: board_sdcard_initialize
+ * Name: board_sdcard_pin_initialize
  *
  * Description:
- *   Initialize SD Card on the board.
+ *   Initialize SD Card pins on the board.
  *
  ****************************************************************************/
 
-void board_sdcard_initialize(void);
+void board_sdcard_pin_initialize(void);
 
 /****************************************************************************
- * Name: board_sdcard_finalize
+ * Name: board_sdcard_pin_finalize
  *
  * Description:
- *   Finalize SD Card on the board.
+ *   Finalize SD Card pins on the board.
  *
  ****************************************************************************/
 
-void board_sdcard_finalize(void);
+void board_sdcard_pin_finalize(void);
 /****************************************************************************
- * Name: board_sdcard_configuraton
+ * Name: board_sdcard_pin_configuraton
  *
  * Description:
- *   Configure SD Card on the board.
+ *   Configure SD Card pins on the board.
  *
  ****************************************************************************/
 
-void board_sdcard_configuraton(void);
+void board_sdcard_pin_configuraton(void);
 /****************************************************************************
- * Name: board_sdcard_enable
+ * Name: board_sdcard_pin_enable
  *
  * Description:
- *   Enable SD Card on the board.
+ *   Enable SD Card pins on the board.
  *
  ****************************************************************************/
 
-void board_sdcard_enable(void);
+void board_sdcard_pin_enable(void);
 
 /****************************************************************************
- * Name: board_sdcard_disable
+ * Name: board_sdcard_pin_disable
  *
  * Description:
- *   Disable SD Card on the board.
+ *   Disable SD Card pins on the board.
  *
  ****************************************************************************/
 
-void board_sdcard_disable(void);
+void board_sdcard_pin_disable(void);
 
 /****************************************************************************
  * Name: board_sdcard_set_high_voltage
