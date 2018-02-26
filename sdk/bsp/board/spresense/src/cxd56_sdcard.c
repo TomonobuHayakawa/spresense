@@ -52,6 +52,7 @@
 #include <nuttx/arch.h>
 #include <nuttx/mmcsd.h>
 #include <nuttx/sdio.h>
+#include <nuttx/wqueue.h>
 
 #include "chip.h"
 #include "up_arch.h"
@@ -61,6 +62,10 @@
 #include "cxd56_pinconfig.h"
 #include "cxd56_sdhci.h"
 
+#ifdef CONFIG_MMCSD_HAVECARDDETECT
+#  include "cxd56_gpioint.h"
+#endif
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -68,6 +73,220 @@
 /* TXS02612RTWR: SDIO port expander with voltage level translation */
 
 #define SDCARD_TXS02612_SEL PIN_AP_CLK
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+struct cxd56_sdhci_state_s
+{
+  struct sdio_dev_s *sdhci;   /* R/W device handle */
+  bool initialized;           /* TRUE: SDHCI block driver is initialized */
+  bool inserted;              /* TRUE: card is inserted */
+};
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static struct cxd56_sdhci_state_s g_sdhci;
+#ifdef CONFIG_MMCSD_HAVECARDDETECT
+static struct work_s g_sdcard_work;
+#endif
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: board_sdcard_enable
+ *
+ * Description:
+ *   Enable SD Card on the board.
+ *
+ ****************************************************************************/
+
+static void board_sdcard_enable(FAR void *arg)
+{
+  struct stat stat_sdio;
+  int ret = OK;
+
+  if(!g_sdhci.initialized)
+    {
+      /* Mount the SDHC-based MMC/SD block driver */
+      /* This should be used with 3.3V */
+      /* First, get an instance of the SDHC interface */
+
+      finfo("Initializing SDHC slot 0\n");
+
+      g_sdhci.sdhci = cxd56_sdhci_initialize(0);
+      if (!g_sdhci.sdhci)
+        {
+          _err("ERROR: Failed to initialize SDHC slot 0\n");
+          return;
+        }
+
+      /* If not initialize SD slot */
+
+      if (!stat("/dev/mmcsd0", &stat_sdio) == 0)
+        {
+          /* Now bind the SDHC interface to the MMC/SD driver */
+
+          finfo("Bind SDHC to the MMC/SD driver, minor=0\n");
+
+          ret = mmcsd_slotinitialize(0, g_sdhci.sdhci);
+          if (ret != OK)
+            {
+              _err("ERROR: Failed to bind SDHC to the MMC/SD driver: %d\n", ret);
+              return;
+            }
+
+          finfo("Successfully bound SDHC to the MMC/SD driver\n");
+        }
+
+      /* Handle the initial card state */
+
+      cxd56_sdhci_mediachange(g_sdhci.sdhci);
+
+      if (stat("/dev/mmcsd0", &stat_sdio) == 0)
+        {
+          if (S_ISBLK(stat_sdio.st_mode))
+            {
+              ret = mount("/dev/mmcsd0", "/mnt/sd0", "vfat", 0, NULL);
+              if (ret == 0)
+                {
+                  finfo("Successfully mount a SDCARD via the MMC/SD driver\n");
+                }
+              else
+                {
+                  _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
+                }
+            }
+        }
+
+      g_sdhci.initialized = true;
+    }
+}
+
+/****************************************************************************
+ * Name: board_sdcard_disable
+ *
+ * Description:
+ *   Disable SD Card on the board.
+ *
+ ****************************************************************************/
+
+static void board_sdcard_disable(FAR void *arg)
+{
+  int ret;
+
+  if(g_sdhci.initialized)
+    {
+      /* un-mount */
+
+      ret = umount("/mnt/sd0");
+      if (ret < 0)
+        {
+          ferr("ERROR: Failed to unmount the SD Card: %d\n", errno);
+        }
+
+      /* Report the new state to the SDIO driver */
+
+      cxd56_sdhci_mediachange(g_sdhci.sdhci);
+
+      cxd56_sdhci_finalize(0);
+
+      g_sdhci.initialized = false;
+    }
+}
+
+#ifdef CONFIG_MMCSD_HAVECARDDETECT
+/****************************************************************************
+ * Name: board_sdcard_inserted
+ *
+ * Description:
+ *   Check if a card is inserted into the selected SDHCI slot
+ *
+ ****************************************************************************/
+
+static bool board_sdcard_inserted(int slotno)
+{
+  bool removed;
+
+  /* Get the state of the GPIO pin */
+
+  removed = cxd56_gpio_read(PIN_SDIO_CD);
+  finfo("Slot %d inserted: %s\n", slotno, removed ? "NO" : "YES");
+
+  return !removed;
+}
+
+/****************************************************************************
+ * Name: board_sdcard_detect_int
+ *
+ * Description:
+ *   Card detect interrupt handler
+ *
+ * TODO: Any way to automatically moun/unmount filesystem based on card
+ * detect status?  Yes... send a message or signal to an application.
+ *
+ ****************************************************************************/
+
+static int board_sdcard_detect_int(int irq, FAR void *context, FAR void *arg)
+{
+  bool inserted;
+
+  /* Get the state of the GPIO pin */
+
+  inserted = board_sdcard_inserted(0);
+
+  /* Has the card detect state changed? */
+
+  if (inserted != g_sdhci.inserted)
+    {
+      /* Yes... remember that new state and inform the SDHCI driver */
+
+      g_sdhci.inserted = inserted;
+
+      /* Check context */
+
+      if (up_interrupt_context())
+        {
+          DEBUGASSERT(work_available(&g_sdcard_work));
+          if (inserted)
+            {
+              work_queue(LPWORK, &g_sdcard_work, board_sdcard_enable, NULL, 0);
+            }
+          else
+            {
+              work_queue(LPWORK, &g_sdcard_work, board_sdcard_disable, NULL, 0);
+            }
+        }
+      else
+        {
+          if (inserted)
+            {
+              board_sdcard_enable(NULL);
+            }
+          else
+            {
+              board_sdcard_disable(NULL);
+            }
+        }
+
+      /* Re-configure Interrupt pin */
+
+      cxd56_gpioint_config(PIN_SDIO_CD,
+                           inserted ?
+                           GPIOINT_PSEUDO_EDGE_RISE :
+                           GPIOINT_PSEUDO_EDGE_FALL,
+                           board_sdcard_detect_int);
+
+    }
+
+   return OK;
+}
+#endif
 
 /****************************************************************************
  * Public Functions
@@ -83,55 +302,63 @@
 
 int board_sdcard_initialize(void)
 {
-  FAR struct sdio_dev_s *sdhci0;
-  struct stat stat_sdio;
   int ret = OK;
 
-  /* Mount the SDHC-based MMC/SD block driver */
-  /* This should be used with 3.3V */
-  /* First, get an instance of the SDHC interface */
+#ifdef CONFIG_MMCSD_HAVECARDDETECT
+  /* Initialize Card insert status */
 
-  finfo("Initializing SDHC slot 0\n");
+  g_sdhci.inserted = false;
 
-  sdhci0 = cxd56_sdhci_initialize(0);
-  if (!sdhci0)
+  /* Configure Interrupt pin */
+
+  ret = cxd56_gpioint_config(PIN_SDIO_CD,
+                             GPIOINT_PSEUDO_EDGE_FALL,
+                             board_sdcard_detect_int);
+  if (ret < 0)
     {
-      _err("ERROR: Failed to initialize SDHC slot 0\n");
-      return -ENODEV;
+      _err("ERROR: Failed to configure GPIO int. \n");
     }
 
-  /* Now bind the SDHC interface to the MMC/SD driver */
+  /* Enabling Interrupt */
 
-  finfo("Bind SDHC to the MMC/SD driver, minor=0\n");
+  cxd56_gpioint_enable(PIN_SDIO_CD);
+#else
+  /* Initialize Card insert status */
 
-  ret = mmcsd_slotinitialize(0, sdhci0);
-  if (ret != OK)
+  g_sdhci.inserted = true;
+
+  /* Enable SDC */
+
+  board_sdcard_enable(NULL);
+#endif
+
+  return ret;
+}
+
+/****************************************************************************
+ * Name: board_sdcard_finalize
+ *
+ * Description:
+ *   Finalize SD Card on the board.
+ *
+ ****************************************************************************/
+
+int board_sdcard_finalize(void)
+{
+  int ret = OK;
+
+  if (g_sdhci.inserted)
     {
-      _err("ERROR: Failed to bind SDHC to the MMC/SD driver: %d\n", ret);
-      return ret;
+      board_sdcard_disable(NULL);
     }
 
-  finfo("Successfully bound SDHC to the MMC/SD driver\n");
+  g_sdhci.inserted = false;
 
-  /* Handle the initial card state */
+#ifdef CONFIG_MMCSD_HAVECARDDETECT
+  /* Disabling Interrupt */
 
-  cxd56_sdhci_mediachange(sdhci0);
-
-  if (stat("/dev/mmcsd0", &stat_sdio) == 0)
-    {
-      if (S_ISBLK(stat_sdio.st_mode))
-        {
-          ret = mount("/dev/mmcsd0", "/mnt/sd0", "vfat", 0, NULL);
-          if (ret == 0)
-            {
-              _info("Successfully mount a SDCARD via the MMC/SD driver\n");
-            }
-          else
-            {
-              _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
-            }
-        }
-    }
+  cxd56_gpioint_disable(PIN_SDIO_CD);
+#endif
 
   return ret;
 }
