@@ -35,7 +35,8 @@
 
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
-include $(APPDIR)/Make.defs
+include $(SDKDIR)/Make.defs
+include $(SDKDIR)/system/Make.defs
 
 # Stack Monitor Application
 
@@ -44,7 +45,9 @@ STACKSIZE = 2048
 
 ASRCS =
 CSRCS =
+ifeq ($(CONFIG_SYSTEM_STACKMONITOR),y)
 MAINSRC = stackmonitor.c
+endif
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -58,12 +61,12 @@ ifneq ($(CONFIG_BUILD_KERNEL),y)
 endif
 
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-  BIN = ..\..\libapps$(LIBEXT)
+  BIN = ..\libsystem$(LIBEXT)
 else
 ifeq ($(WINTOOL),y)
-  BIN = ..\\..\\libapps$(LIBEXT)
+  BIN = ..\\libsystem$(LIBEXT)
 else
-  BIN = ../../libapps$(LIBEXT)
+  BIN = ../libsystem$(LIBEXT)
 endif
 endif
 
@@ -84,7 +87,7 @@ VPATH =
 
 all: .built
 .PHONY: context depend clean distclean preconfig
-.PRECIOUS: ../../libapps$(LIBEXT)
+.PRECIOUS: ../libsystem$(LIBEXT)
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
@@ -111,6 +114,7 @@ endif
 
 # Register application
 
+ifeq ($(CONFIG_SYSTEM_STACKMONITOR),y)
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
 $(BUILTIN_REGISTRY)$(DELIM)stackmonitor_start.bdat: $(DEPCONFIG) Makefile
 	$(call REGISTER,"stkmon_start",$(PRIORITY),$(STACKSIZE),stackmonitor_start)
@@ -122,6 +126,7 @@ context: $(BUILTIN_REGISTRY)$(DELIM)stackmonitor_start.bdat $(BUILTIN_REGISTRY)$
 else
 context:
 
+endif
 endif
 
 # Create dependencies
