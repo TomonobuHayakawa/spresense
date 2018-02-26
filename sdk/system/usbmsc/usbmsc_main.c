@@ -552,6 +552,7 @@ int msconn_main(int argc, char *argv[])
 #endif
 #endif
 
+#if !defined(CONFIG_USBDEV_COMPOSITE) || !defined(CONFIG_USBMSC_COMPOSITE)
   ret = usbmsc_exportluns(handle);
   if (ret < 0)
     {
@@ -561,6 +562,7 @@ int msconn_main(int argc, char *argv[])
     }
 
   check_test_memory_usage("After usbmsc_exportluns()");
+#endif
 
   /* It this program was configured as an NSH command, then just exit now.
    * Also, if signals are not enabled (and, hence, sleep() is not supported.
