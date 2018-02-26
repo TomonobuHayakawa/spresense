@@ -6,7 +6,6 @@
 menuconfig SYSTEM_STACKMONITOR
 	bool "Stack Monitor"
 	default n
-	depends on STACK_COLORATION && !KERNEL_BUILD
 	---help---
 		If the stack coloration feature is enabled (STACK_COLORATION) this
 		option will select the Stack Monitor.  The stack monitor is a daemon
