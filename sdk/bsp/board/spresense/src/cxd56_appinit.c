@@ -454,10 +454,10 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_AK09912
-  ret = cxd56_ak09912initialize("/dev/accel", i2c0);
+  ret = cxd56_ak09912initialize("/dev/mag", i2c0);
   if (ret < 0)
     {
-      _err("ERROR: Failed to initialize KX022.\n");
+      _err("ERROR: Failed to initialize AK09912.\n");
     }
 #endif
 
