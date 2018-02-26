@@ -6,7 +6,6 @@
 menuconfig SYSTEM_USBMSC
 	bool "USB Mass Storage Device Commands"
 	default n
-	depends on LIB_BOARDCTL && USBMSC && !KERNEL_BUILD
 	select BOARDCTL_USBDEVCTRL
 	---help---
 		Enable the USB mass storage class controls.  These controls include:
@@ -78,7 +77,6 @@ config SYSTEM_USBMSC_DEBUGMM
 config SYSTEM_USBMSC_TRACE
 	bool "Trace USB activity"
 	default n
-	depends on (USBDEV_TRACE || DEBUG_USB) && !NSH_BUILTIN_APPS
 	---help---
 		If this add-on is built as a standalone task and if USB device tracing is
 		enabled, then this add-on can be configured to unobtrusively monitor
