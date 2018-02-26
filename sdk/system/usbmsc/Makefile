@@ -35,13 +35,16 @@
 
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
-include $(APPDIR)/Make.defs
+include $(SDKDIR)/Make.defs
+include $(SDKDIR)/system/Make.defs
 
 # USB device mass storage add-on
 
 ASRCS =
 CSRCS =
+ifeq ($(CONFIG_SYSTEM_USBMSC),y)
 MAINSRC = usbmsc_main.c
+endif
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -55,12 +58,12 @@ ifneq ($(CONFIG_BUILD_KERNEL),y)
 endif
 
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-  BIN = ..\..\libapps$(LIBEXT)
+  BIN = ..\libsystem$(LIBEXT)
 else
 ifeq ($(WINTOOL),y)
-  BIN = ..\\..\\libapps$(LIBEXT)
+  BIN = ..\\libsystem$(LIBEXT)
 else
-  BIN = ../../libapps$(LIBEXT)
+  BIN = ../libsystem$(LIBEXT)
 endif
 endif
 
@@ -94,7 +97,7 @@ VPATH =
 
 all: .built
 .PHONY: context clean depend distclean preconfig
-.PRECIOUS: ../../libapps$(LIBEXT)
+.PRECIOUS: ../libsystem$(LIBEXT)
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
@@ -119,6 +122,7 @@ install:
 
 endif
 
+ifeq ($(CONFIG_SYSTEM_USBMSC),y)
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
 $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME1)_main.bdat: $(DEPCONFIG) Makefile
 	$(call REGISTER,$(APPNAME1),$(PRIORITY1),$(STACKSIZE1),$(APPNAME1)_main)
@@ -129,6 +133,7 @@ $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME2)_main.bdat: $(DEPCONFIG) Makefile
 context: $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME1)_main.bdat $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME2)_main.bdat
 else
 context:
+endif
 endif
 
 .depend: Makefile $(SRCS)
