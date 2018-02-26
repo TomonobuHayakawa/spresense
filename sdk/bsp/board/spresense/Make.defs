@@ -53,10 +53,6 @@ ifeq ($(CONFIG_ARCH_BUTTONS),y)
 CSRCS += cxd56_buttons.c
 endif
 
-ifeq ($(CONFIG_USBMSC_COMPOSITE),y)
-CSRCS += cxd56_composite.c
-endif
-
 ifeq ($(CONFIG_CXD56_AUDIO), y)
 CSRCS += cxd56_audio.c
 endif

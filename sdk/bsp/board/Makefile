@@ -61,7 +61,7 @@ ifeq ($(CONFIG_USBMSC),y)
 CSRCS += cxd56_usbmsc.c
 endif
 
-ifeq ($(CONFIG_USBMSC_COMPOSITE),y)
+ifeq ($(CONFIG_USBDEV_COMPOSITE),y)
 CSRCS += cxd56_composite.c
 endif
 
