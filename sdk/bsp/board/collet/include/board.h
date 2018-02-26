@@ -478,6 +478,16 @@ void board_alt1160_gpio_int_control(uint32_t pin, bool en);
 #endif
 
 /****************************************************************************
+ * Name: board_sdcard_initialize
+ *
+ * Description:
+ *   Initialize SD Card on the board.
+ *
+ ****************************************************************************/
+
+#define board_sdcard_initialize() (OK)
+
+/****************************************************************************
  * Name: board_sdcard_pin_initialize
  *
  * Description:

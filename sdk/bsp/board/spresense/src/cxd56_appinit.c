@@ -89,12 +89,6 @@
 #  endif
 #endif
 
-#ifdef CONFIG_CXD56_SDIO
-#  include <nuttx/sdio.h>
-#  include <nuttx/mmcsd.h>
-#  include "cxd56_sdhci.h"
-#endif
-
 #ifdef CONFIG_CXD56_SPISD
 #  include "cxd56_spisd.h"
 #endif
@@ -277,10 +271,6 @@ int board_app_initialize(uintptr_t arg)
 #endif
 #ifdef CONFIG_CXD56_SPI5
   FAR struct spi_dev_s *spi5;
-#endif
-#if defined(CONFIG_CXD56_SDIO) && !defined(CONFIG_CXD56_SPISD)
-  FAR struct sdio_dev_s *sdhci0;
-  struct stat stat_sdio;
 #endif
   int ret;
 
@@ -516,50 +506,10 @@ int board_app_initialize(uintptr_t arg)
   ret = nsh_sfc_initialize();
 
 #if defined(CONFIG_CXD56_SDIO) && !defined(CONFIG_CXD56_SPISD)
-  /* Mount the SDHC-based MMC/SD block driver */
-  /* This should be used with 3.3V */
-  /* First, get an instance of the SDHC interface */
-
-  finfo("Initializing SDHC slot 0\n");
-
-  sdhci0 = cxd56_sdhci_initialize(0);
-  if (!sdhci0)
+  ret = board_sdcard_initialize();
+  if (ret < 0)
     {
-      _err("ERROR: Failed to initialize SDHC slot 0\n");
-      return -ENODEV;
-    }
-
-  /* Now bind the SDHC interface to the MMC/SD driver */
-
-  finfo("Bind SDHC to the MMC/SD driver, minor=0\n");
-
-  ret = mmcsd_slotinitialize(0, sdhci0);
-  if (ret != OK)
-    {
-      ferr("ERROR: Failed to bind SDHC to the MMC/SD driver: %d\n", ret);
-      return ret;
-    }
-
-  finfo("Successfully bound SDHC to the MMC/SD driver\n");
-
-  /* Handle the initial card state */
-
-  cxd56_sdhci_mediachange(sdhci0);
-
-  if (stat("/dev/mmcsd0", &stat_sdio) == 0)
-    {
-      if (S_ISBLK(stat_sdio.st_mode))
-        {
-          ret = mount("/dev/mmcsd0", "/mnt/sd0", "vfat", 0, NULL);
-          if (ret == 0)
-            {
-              _err("Successfully mount a SDCARD via the MMC/SD driver\n");
-            }
-          else
-            {
-              _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
-            }
-        }
+      _err("ERROR: Failed to initialze sdhci. \n");
     }
 #endif
 

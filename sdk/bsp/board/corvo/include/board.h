@@ -614,6 +614,16 @@ void board_isx012_release_sleep(void);
 #endif /* CONFIG_IMAGER_ISX012 */
 
 /****************************************************************************
+ * Name: board_sdcard_initialize
+ *
+ * Description:
+ *   Initialize SD Card on the board.
+ *
+ ****************************************************************************/
+
+#define board_sdcard_initialize() (OK)
+
+/****************************************************************************
  * Name: board_sdcard_pin_initialize
  *
  * Description:

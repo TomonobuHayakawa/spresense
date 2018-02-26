@@ -40,6 +40,8 @@
 #include <nuttx/config.h>
 #include <sdk/config.h>
 
+#include <sys/mount.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -48,6 +50,8 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
+#include <nuttx/mmcsd.h>
+#include <nuttx/sdio.h>
 
 #include "chip.h"
 #include "up_arch.h"
@@ -68,6 +72,69 @@
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
+/****************************************************************************
+ * Name: board_sdcard_initialize
+ *
+ * Description:
+ *   Initialize SD Card on the board.
+ *
+ ****************************************************************************/
+
+int board_sdcard_initialize(void)
+{
+  FAR struct sdio_dev_s *sdhci0;
+  struct stat stat_sdio;
+  int ret = OK;
+
+  /* Mount the SDHC-based MMC/SD block driver */
+  /* This should be used with 3.3V */
+  /* First, get an instance of the SDHC interface */
+
+  finfo("Initializing SDHC slot 0\n");
+
+  sdhci0 = cxd56_sdhci_initialize(0);
+  if (!sdhci0)
+    {
+      _err("ERROR: Failed to initialize SDHC slot 0\n");
+      return -ENODEV;
+    }
+
+  /* Now bind the SDHC interface to the MMC/SD driver */
+
+  finfo("Bind SDHC to the MMC/SD driver, minor=0\n");
+
+  ret = mmcsd_slotinitialize(0, sdhci0);
+  if (ret != OK)
+    {
+      _err("ERROR: Failed to bind SDHC to the MMC/SD driver: %d\n", ret);
+      return ret;
+    }
+
+  finfo("Successfully bound SDHC to the MMC/SD driver\n");
+
+  /* Handle the initial card state */
+
+  cxd56_sdhci_mediachange(sdhci0);
+
+  if (stat("/dev/mmcsd0", &stat_sdio) == 0)
+    {
+      if (S_ISBLK(stat_sdio.st_mode))
+        {
+          ret = mount("/dev/mmcsd0", "/mnt/sd0", "vfat", 0, NULL);
+          if (ret == 0)
+            {
+              _info("Successfully mount a SDCARD via the MMC/SD driver\n");
+            }
+          else
+            {
+              _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
+            }
+        }
+    }
+
+  return ret;
+}
 
 /****************************************************************************
  * Name: board_sdcard_pin_initialize
