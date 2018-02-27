@@ -360,22 +360,44 @@ static int pwm_start(FAR struct pwm_lowerhalf_s *dev,
   uint32_t param;
   int ret;
 
-  ret = convert_freq2period(info->frequency, info->duty, &param);
-  if (ret < 0)
+  if (info->duty <= 0)
     {
-      return -EINVAL;
-    }
+      /* Output low level if duty cycle is almost 0% */
 
-  if (PWM_REG(priv->ch)->EN & 1) /* running */
+      PWM_REG(priv->ch)->EN = 0x0;
+    }
+  else if (info->duty >= 65536)
     {
+      /* Output high level if duty cycle is almost 100% */
+
+      PWM_REG(priv->ch)->PARAM = 1;
+      PWM_REG(priv->ch)->EN = 0x1;
+    }
+  else
+    {
+      ret = convert_freq2period(info->frequency, info->duty, &param);
+      if (ret < 0)
+	{
+	  return -EINVAL;
+	}
+
+      if (PWM_REG(priv->ch)->EN & 1)
+        {
+          /* Change duty cycle dynamically if already running */ 
+
+          PWM_REG(priv->ch)->PARAM = param;
+          return OK;
+        }
+
+      PWM_REG(priv->ch)->EN = 0x0;
       PWM_REG(priv->ch)->PARAM = param;
-      return OK;
-    }
 
-  PWM_REG(priv->ch)->EN = 0x0;
-  PWM_REG(priv->ch)->PARAM = param;
-  PWM_PHASE_REG(priv->ch)->PHASE = 0x0;  /* prescale=0 */
-  PWM_REG(priv->ch)->EN = 0x1;
+      /* Since prescale is not supported, always set to a fixed value '0' */
+
+      PWM_PHASE_REG(priv->ch)->PHASE = 0x0;
+
+      PWM_REG(priv->ch)->EN = 0x1;
+    }
 
   return OK;
 }
