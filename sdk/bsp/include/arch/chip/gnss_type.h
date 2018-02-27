@@ -87,7 +87,7 @@ extern "C" {
 #define CXD56_GNSS_SAT_SBAS    (1U << 2) /**< SBAS */
 #define CXD56_GNSS_SAT_QZ_L1CA (1U << 3) /**< QZSS/L1CA */
 #define CXD56_GNSS_SAT_IMES    (1U << 4) /**< IMES */
-#define CXD56_GNSS_SAT_QZ_SAIF (1U << 5) /**< QZSS/SAIF */
+#define CXD56_GNSS_SAT_QZ_L1S  (1U << 5) /**< QZSS/L1S */
 #define CXD56_GNSS_SAT_BEIDOU  (1U << 6) /**< BeiDou */
 #define CXD56_GNSS_SAT_GALILEO (1U << 7) /**< Galileo */
 
@@ -271,11 +271,11 @@ struct cxd56_gnss_time_s
  */
 struct cxd56_gnss_wntow_s
 {
-  uint32_t tow;     /**< truncated TOW (1 = 6sec, 0 ... 100799) */
-  uint16_t weeknumber;       /**< week number (0 ... 1023) */
-  uint8_t  sec;      /**< offset (0 ... 5) */
-  uint8_t  rollover; /**< Number of WN Roll Over (0 ... 255) */
-  double   frac;     /**< fraction */
+  uint32_t tow;        /**< truncated TOW (1 = 6sec, 0 ... 100799) */
+  uint16_t weeknumber; /**< week number (0 ... 1023) */
+  uint8_t  sec;        /**< offset (0 ... 5) */
+  uint8_t  rollover;   /**< Number of WN Roll Over (0 ... 255) */
+  double   frac;       /**< fraction */
 };
 
 /**
@@ -283,12 +283,15 @@ struct cxd56_gnss_wntow_s
  */
 struct cxd56_gnss_dop_s
 {
-  float pdop;  /**< Position DOP */
-  float hdop;  /**< Horizontal DOP */
-  float vdop;  /**< Vertical DOP */
-  float tdop;  /**< Time DOP */
-  float ewdop; /**< East-West DOP */
-  float nsdop; /**< North-South DOP */
+  float pdop;   /**< Position DOP */
+  float hdop;   /**< Horizontal DOP */
+  float vdop;   /**< Vertical DOP */
+  float tdop;   /**< Time DOP */
+  float ewdop;  /**< East-West DOP */
+  float nsdop;  /**< North-South DOP */
+  float majdop; /**< Stdev of semi-major axis */
+  float mindop; /**< Stdev of semi-minor axis */
+  float oridop; /**< Orientation of semi-major axis [deg] */
 };
 
 /**
