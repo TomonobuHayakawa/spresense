@@ -185,12 +185,26 @@ static int cxd56_dmac_interrupt(int irq, void *context, FAR void *arg)
 {
   struct dma_channel_s *dmach;
   unsigned int chndx;
+  int done, err, mask;
+  int result = OK;
 
   chndx = irq - CXD56_IRQ_DMA_A_0;
 
-  /* Clear DMA done status */
+  mask = 1 << chndx;
+  done = getreg32(CXD56_DMA_DONE);
+  err  = getreg32(CXD56_DMA_ERR);
+  if (err & mask)
+    {
+      putreg32(mask, CXD56_DMA_ERR);
+      result = EIO;
+    }
+  if (done & mask)
+    {
 
-  putreg32(1 << chndx, CXD56_DMA_DONE);
+      /* Clear DMA done status */
+
+      putreg32(mask, CXD56_DMA_DONE);
+    }
 
   dmach = &g_dmach[chndx];
 
@@ -202,7 +216,7 @@ static int cxd56_dmac_interrupt(int irq, void *context, FAR void *arg)
 
   if (dmach->callback)
     {
-      dmach->callback((DMA_HANDLE)dmach, OK, dmach->arg);
+      dmach->callback((DMA_HANDLE)dmach, result, dmach->arg);
       dmach->callback = NULL;
     }
 

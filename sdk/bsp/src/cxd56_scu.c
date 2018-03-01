@@ -58,6 +58,7 @@
 #include "cxd56_adc.h"
 #ifdef CONFIG_CXD56_UDMAC
 #  include "cxd56_udmac.h"
+#  include <arch/chip/pm.h>
 #endif
 
 #include "chip/cxd56_scu.h"
@@ -146,6 +147,7 @@ struct scufifo_s
 #ifdef CONFIG_CXD56_UDMAC
   DMA_HANDLE dma; /* DMA for reading sensing data */
   sem_t dmawait;  /* Wait semaphore for DMA complete */
+  int dmaresult;  /* DMA result */
 #endif
 };
 
@@ -1969,6 +1971,7 @@ static int seq_fifoinit(FAR struct seq_s *seq, int fifoid, uint16_t fsize)
   /* Initialize DMA done wait semaphore */
 
   sem_init(&fifo->dmawait, 0, 0);
+  fifo->dmaresult = -1;
 #endif
 
   if (seq->type & SEQ_TYPE_DECI)
@@ -2830,6 +2833,7 @@ void seq_setaddress(FAR struct seq_s *seq, uint32_t slave_addr)
 static void seq_fifodmadone(DMA_HANDLE handle, uint8_t status, void *arg)
 {
   struct scufifo_s *fifo = (struct scufifo_s *)arg;
+  fifo->dmaresult = status;
   seq_semgive(&fifo->dmawait);
 }
 #else
@@ -2902,6 +2906,10 @@ int seq_read(FAR struct seq_s *seq, int fifoid, FAR char *buffer, int length)
   dma_config_t config;
   uint32_t dstbuf;
   char *dst;
+  int need_wakelock=0;
+  struct pm_cpu_wakelock_s wlock;
+  wlock.info = PM_CPUWAKELOCK_TAG('S', 'C', 0);
+  wlock.count = 0;
 #else
   int i;
 #endif
@@ -2961,13 +2969,29 @@ int seq_read(FAR struct seq_s *seq, int fifoid, FAR char *buffer, int length)
       config |= CXD56_UDMA_XFERSIZE_WORD;
     }
 
+  if (((uint32_t)dst >= CXD56_RAM_BASE)
+  && ((uint32_t)dst <= (CXD56_RAM_BASE + CXD56_RAM_SIZE)))
+     {
+       need_wakelock = 1;
+       up_pm_acquire_wakelock(&wlock);
+     }
+
   cxd56_rxudmasetup(fifo->dma, outlet, (uintptr_t)dst, length, config);
   cxd56_udmastart(fifo->dma, seq_fifodmadone, fifo);
 
   /* Wait for DMA is done */
 
   seq_semtake(&fifo->dmawait);
+  if (fifo->dmaresult)
+    {
+      /* ERROR */
 
+      length = 0;
+    }
+  if (need_wakelock)
+    {
+      up_pm_release_wakelock(&wlock);
+    }
 #else
   /* Get sensor data from FIFO by PIO */
 
