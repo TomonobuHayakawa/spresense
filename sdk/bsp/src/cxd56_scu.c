@@ -2897,6 +2897,7 @@ static inline void seq_read32(uint32_t addr, FAR uint32_t *buffer, int length)
  *
  ****************************************************************************/
 
+
 int seq_read(FAR struct seq_s *seq, int fifoid, FAR char *buffer, int length)
 {
   struct scufifo_s *fifo;
@@ -2906,6 +2907,9 @@ int seq_read(FAR struct seq_s *seq, int fifoid, FAR char *buffer, int length)
   dma_config_t config;
   uint32_t dstbuf;
   char *dst;
+  int maxlen = 1024;
+  int dmalen;
+  int rest;
   int need_wakelock=0;
   struct pm_cpu_wakelock_s wlock;
   wlock.info = PM_CPUWAKELOCK_TAG('S', 'C', 0);
@@ -2916,7 +2920,6 @@ int seq_read(FAR struct seq_s *seq, int fifoid, FAR char *buffer, int length)
 #ifdef CONFIG_CXD56_SCU_DEBUG
   uint32_t status;
 #endif
-
   DEBUGASSERT(seq);
   DEBUGASSERT(fifoid >= 0 && fifoid < 3);
 
@@ -2932,7 +2935,6 @@ int seq_read(FAR struct seq_s *seq, int fifoid, FAR char *buffer, int length)
   status = getreg32(SCUFIFO_R_STATUS1(fifo->rid));
   scudbg("Status: %08x\n", status);
 #endif
-
   avail *= seq->sample;
   length = MIN(avail, length);
   if (length == 0)
@@ -2963,35 +2965,43 @@ int seq_read(FAR struct seq_s *seq, int fifoid, FAR char *buffer, int length)
   else if (length & 2)
     {
       config |= CXD56_UDMA_XFERSIZE_HWORD;
+      maxlen = 2048;
     }
   else
     {
       config |= CXD56_UDMA_XFERSIZE_WORD;
+      maxlen = 4096;
     }
-
   if (((uint32_t)dst >= CXD56_RAM_BASE)
-  && ((uint32_t)dst <= (CXD56_RAM_BASE + CXD56_RAM_SIZE)))
-     {
-       need_wakelock = 1;
-       up_pm_acquire_wakelock(&wlock);
-     }
-
-  cxd56_rxudmasetup(fifo->dma, outlet, (uintptr_t)dst, length, config);
-  cxd56_udmastart(fifo->dma, seq_fifodmadone, fifo);
-
-  /* Wait for DMA is done */
-
-  seq_semtake(&fifo->dmawait);
-  if (fifo->dmaresult)
+   && ((uint32_t)dst <= (CXD56_RAM_BASE + CXD56_RAM_SIZE)))
     {
-      /* ERROR */
-
-      length = 0;
+      need_wakelock = 1;
+      up_pm_acquire_wakelock(&wlock);
     }
-  if (need_wakelock)
+  rest = length;
+  while (rest > 0)
     {
-      up_pm_release_wakelock(&wlock);
+      dmalen = MIN(rest, maxlen);
+      cxd56_rxudmasetup(fifo->dma, outlet, (uintptr_t)dst, dmalen, config);
+      cxd56_udmastart(fifo->dma, seq_fifodmadone, fifo);
+
+      /* Wait for DMA is done */
+
+      seq_semtake(&fifo->dmawait);
+      if (fifo->dmaresult)
+        {
+          /* ERROR */
+
+          length = length - rest;
+          break;
+        }
+      dst += dmalen;
+      rest -= dmalen;
     }
+    if (need_wakelock)
+      {
+        up_pm_release_wakelock(&wlock);
+      }
 #else
   /* Get sensor data from FIFO by PIO */
 
