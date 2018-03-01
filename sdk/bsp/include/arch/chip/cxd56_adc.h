@@ -81,6 +81,24 @@
 
 #define ANIOC_CXD56_STOP           _ANIOC(ANIOC_USER + 1)
 
+/**
+ * Set sampling frequency
+ *
+ * @param None
+ * @return ioctl return value provides success/failure indication
+ */
+
+#define ANIOC_CXD56_FREQ           _ANIOC(ANIOC_USER + 2)
+
+/**
+ * Set fifo size
+ *
+ * @param None
+ * @return ioctl return value provides success/failure indication
+ */
+
+#define ANIOC_CXD56_FIFOSIZE       _ANIOC(ANIOC_USER + 3)
+
 /** @} adc_ioctl */
 
 /****************************************************************************

@@ -145,12 +145,16 @@ typedef enum adc_ch
 
 struct cxd56adc_dev_s
 {
-  adc_ch_t         ch;       /* adc cnannel number */
-  FAR struct seq_s *seq;     /* sequencer */
-  uint8_t          freq;     /* coefficient of adc sampling frequency */
-  uint16_t         fsize;    /* SCU FIFO size */
-  uint16_t         ofst;     /* offset */
-  uint16_t         gain;     /* gain */
+  adc_ch_t         ch;            /* adc cnannel number */
+  FAR struct seq_s *seq;          /* sequencer */
+  uint8_t          freq;          /* coefficient of adc sampling frequency */
+  uint16_t         fsize;         /* SCU FIFO size */
+  uint16_t         ofst;          /* offset */
+  uint16_t         gain;          /* gain */
+  uint8_t          fifomode;      /* fifo mode */
+  struct scufifo_wm_s *wm;        /* water mark */
+  struct math_filter_s *filter;   /* math filter */
+  struct scuev_notify_s * notify; /* notify */
 };
 
 /****************************************************************************
@@ -194,6 +198,9 @@ static struct cxd56adc_dev_s g_lpadc0priv =
   .fsize  = CONFIG_CXD56_LPADC0_FSIZE,
   .ofst   = CONFIG_CXD56_LPADC0_OFFSET,
   .gain   = CONFIG_CXD56_LPADC0_GAIN,
+  .wm     = NULL,
+  .filter = NULL,
+  .notify = NULL,
 };
 #endif
 
@@ -206,6 +213,9 @@ static struct cxd56adc_dev_s g_lpadc1priv =
   .fsize  = CONFIG_CXD56_LPADC1_FSIZE,
   .ofst   = CONFIG_CXD56_LPADC1_OFFSET,
   .gain   = CONFIG_CXD56_LPADC1_GAIN,
+  .wm     = NULL,
+  .filter = NULL,
+  .notify = NULL,
 };
 #endif
 
@@ -218,6 +228,9 @@ static struct cxd56adc_dev_s g_lpadc2priv =
   .fsize  = CONFIG_CXD56_LPADC2_FSIZE,
   .ofst   = CONFIG_CXD56_LPADC2_OFFSET,
   .gain   = CONFIG_CXD56_LPADC2_GAIN,
+  .wm     = NULL,
+  .filter = NULL,
+  .notify = NULL,
 };
 #endif
 
@@ -230,6 +243,9 @@ static struct cxd56adc_dev_s g_lpadc3priv =
   .fsize  = CONFIG_CXD56_LPADC3_FSIZE,
   .ofst   = CONFIG_CXD56_LPADC3_OFFSET,
   .gain   = CONFIG_CXD56_LPADC3_GAIN,
+  .wm     = NULL,
+  .filter = NULL,
+  .notify = NULL,
 };
 #endif
 
@@ -242,6 +258,9 @@ static struct cxd56adc_dev_s g_hpadc0priv =
   .fsize  = CONFIG_CXD56_HPADC0_FSIZE,
   .ofst   = CONFIG_CXD56_HPADC0_OFFSET,
   .gain   = CONFIG_CXD56_HPADC0_GAIN,
+  .wm     = NULL,
+  .filter = NULL,
+  .notify = NULL,
 };
 #endif
 
@@ -254,6 +273,9 @@ static struct cxd56adc_dev_s g_hpadc1priv =
   .fsize  = CONFIG_CXD56_HPADC1_FSIZE,
   .ofst   = CONFIG_CXD56_HPADC1_OFFSET,
   .gain   = CONFIG_CXD56_HPADC1_GAIN,
+  .wm     = NULL,
+  .filter = NULL,
+  .notify = NULL,
 };
 #endif
 
@@ -317,7 +339,11 @@ static int set_ofstgain(FAR struct cxd56adc_dev_s *priv)
  *
  ****************************************************************************/
 
-static int adc_start(adc_ch_t ch, uint8_t freq, FAR struct seq_s *seq)
+static int adc_start(adc_ch_t ch, uint8_t freq, FAR struct seq_s *seq,
+        int fsize, int fifomode,
+        struct scufifo_wm_s *wm,
+        struct math_filter_s *filter,
+        struct scuev_notify_s *notify)
 {
   uint32_t *addr;
   uint32_t val;
@@ -330,6 +356,45 @@ static int adc_start(adc_ch_t ch, uint8_t freq, FAR struct seq_s *seq)
       return OK;
     }
 
+  ret = seq_ioctl(seq, 0, SCUIOC_SETFIFO, fsize);
+  if (ret < 0)
+    {
+      aerr("SETFIFO failed. %d\n", ret);
+      return ret;
+    }
+  ret = seq_ioctl(seq, 0, SCUIOC_SETFIFOMODE, fifomode);
+  if (ret < 0)
+    {
+      aerr("SETFIFOMODE failed. %d\n", ret);
+      return ret;
+    }
+    if (wm)
+      {
+        ret = seq_ioctl(seq, 0, SCUIOC_SETWATERMARK, (unsigned long)wm);
+        if (ret < 0)
+          {
+            aerr("SETWATERMARK failed. %d\n", ret);
+            return ret;
+          }
+      }
+    if (filter)
+      {
+        ret = seq_ioctl(seq, 0, SCUIOC_SETFILTER, (unsigned long)filter);
+        if (ret < 0)
+          {
+            aerr("SETFILTER failed. %d\n", ret);
+            return ret;
+          }
+      }
+    if (notify)
+      {
+        ret = seq_ioctl(seq, 0, SCUIOC_SETNOTIFY, (unsigned long)notify);
+        if (ret < 0)
+          {
+            aerr("SETNOTIFY failed. %d\n", ret);
+            return ret;
+          }
+      }
   if (ch <= CH3)
     {
       /* LPADC.A1 LPADC_CH : todo: GPS ch */
@@ -615,16 +680,6 @@ static int cxd56_adc_open(FAR struct file *filep)
     {
       return ret;
     }
-
-  /* Set SCU FIFO size */
-
-  ret = seq_ioctl(priv->seq, 0, SCUIOC_SETFIFO, priv->fsize);
-  if (ret < 0)
-    {
-      aerr("SETFIFO failed. %d\n", ret);
-      return ret;
-    }
-
   ainfo("open ch%d freq%d scufifo%d\n", priv->ch, priv->freq, priv->fsize);
 
   return OK;
@@ -651,6 +706,22 @@ static int cxd56_adc_close(FAR struct file *filep)
 
   seq_close(priv->seq);
   priv->seq = NULL;
+
+  if (priv->wm)
+    {
+      kmm_free(priv->wm);
+      priv->wm = NULL;
+    }
+  if (priv->filter)
+    {
+      kmm_free(priv->filter);
+      priv->filter = NULL;
+    }
+  if (priv->notify)
+    {
+      kmm_free(priv->notify);
+      priv->notify = NULL;
+    }
 
   return OK;
 }
@@ -694,7 +765,6 @@ static int cxd56_adc_ioctl(FAR struct file *filep, int cmd,
   FAR struct inode *inode = filep->f_inode;
   FAR struct cxd56adc_dev_s *priv = inode->i_private;
   int ret = OK;
-
   DEBUGASSERT(priv != NULL);
   DEBUGASSERT(priv->seq != NULL);
   DEBUGASSERT(priv->ch < CH_MAX);
@@ -703,11 +773,67 @@ static int cxd56_adc_ioctl(FAR struct file *filep, int cmd,
     {
       case ANIOC_TRIGGER:
       case ANIOC_CXD56_START:
-        ret = adc_start(priv->ch, priv->freq, priv->seq);
+        ret = adc_start(priv->ch, priv->freq, priv->seq,
+                priv->fsize, priv->fifomode,
+                priv->wm, priv->filter, priv->notify);
         break;
 
       case ANIOC_CXD56_STOP:
         ret = adc_stop(priv->ch, priv->seq);
+        break;
+
+      case ANIOC_CXD56_FREQ:
+        priv->freq = arg;
+        break;
+
+      case ANIOC_CXD56_FIFOSIZE:
+        priv->fsize = arg;
+        break;
+
+      case SCUIOC_SETFIFOMODE:
+        priv->fifomode = arg;
+        break;
+
+      case SCUIOC_SETWATERMARK:
+        if (adc_active[priv->ch] == false) /* before start */
+          {
+            struct scufifo_wm_s *wm = (struct scufifo_wm_s *)arg;
+            priv->wm = (struct scufifo_wm_s *)
+              kmm_malloc(sizeof(struct scufifo_wm_s));
+            *(priv->wm) = *wm;
+          }
+        else
+          {
+            ret = seq_ioctl(priv->seq, 0, cmd, arg);
+          }
+        break;
+
+      case SCUIOC_SETFILTER:
+        if (adc_active[priv->ch] == false) /* before start */
+          {
+            struct math_filter_s *filter = (struct math_filter_s *)arg;
+            priv->filter = (struct math_filter_s *)
+              kmm_malloc(sizeof(struct math_filter_s));
+            *(priv->filter) = *filter;
+          }
+        else
+          {
+            ret = seq_ioctl(priv->seq, 0, cmd, arg);
+          }
+        break;
+
+      case SCUIOC_SETNOTIFY:
+        if (adc_active[priv->ch] == false) /* before start */
+          {
+            struct scuev_notify_s *notify = (struct scuev_notify_s *)arg;
+            priv->notify = (struct scuev_notify_s *)
+              kmm_malloc(sizeof(struct scuev_notify_s));
+            *(priv->notify) = *notify;
+          }
+        else
+          {
+            ret = seq_ioctl(priv->seq, 0, cmd, arg);
+          }
         break;
 
       default:
@@ -872,8 +998,6 @@ void cxd56_adc_getinterval(int adctype, uint32_t *interval, uint16_t *adjust)
 int cxd56_adcinitialize(void)
 {
   int ret;
-
-  (void) ret;
 
 #if defined (CONFIG_CXD56_LPADC0) || defined (CONFIG_CXD56_LPADC0_1) || defined (CONFIG_CXD56_LPADC_ALL)
   ret = register_driver("/dev/lpadc0", &g_adcops, 0666, &g_lpadc0priv);
