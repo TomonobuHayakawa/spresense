@@ -50,27 +50,27 @@
 
 /* Decoder Version. */
 
-#define DSP_AACDEC_VERSION    0x010203    /* 01.02.03 */
-#define DSP_MP3DEC_VERSION    0x010203    /* 01.02.03 */
-#define DSP_OPUSDEC_VERSION   0x010203    /* 01.02.03 */
-#define DSP_WAVDEC_VERSION    0x010203    /* 01.02.03 */
+#define DSP_AACDEC_VERSION    0x010204    /* 01.02.04 */
+#define DSP_MP3DEC_VERSION    0x010204    /* 01.02.04 */
+#define DSP_OPUSDEC_VERSION   0x010204    /* 01.02.04 */
+#define DSP_WAVDEC_VERSION    0x010204    /* 01.02.04 */
 
 /* Encoder Version. */
 
-#define DSP_MP3ENC_VERSION    0x020101    /* 02.01.01 */
-#define DSP_OPUSENC_VERSION   0x010304    /* 01.03.04 */
+#define DSP_MP3ENC_VERSION    0x020102    /* 02.01.02 */
+#define DSP_OPUSENC_VERSION   0x010305    /* 01.03.05 */
 
 /* Filter Version. */
 
-#define DSP_MFESRC_VERSION    0x010202    /* 01.02.02 */
-#define DSP_SRC_VERSION       0x020101    /* 02.01.01 */
-#define DSP_MPPEAX_VERSION    0x010202    /* 01.02.02 */
+#define DSP_MFESRC_VERSION    0x010203    /* 01.02.03 */
+#define DSP_SRC_VERSION       0x020102    /* 02.01.02 */
+#define DSP_MPPEAX_VERSION    0x010203    /* 01.02.03 */
 
 /* Recognizer Version. */
 
 #define DSP_FREQDET_VERSION   0x010202    /* 01.02.02 */
 #define DSP_MEASURE_VERSION   0x010202    /* 01.02.02 */
-#define DSP_VADWUW_VERSION    0x010202    /* 01.02.02 */
+#define DSP_VADWUW_VERSION    0x010203    /* 01.02.03 */
 
 /****************************************************************************
  * Public Types

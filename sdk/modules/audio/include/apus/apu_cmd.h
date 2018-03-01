@@ -715,24 +715,13 @@ struct Wien2ApuCmd
 #endif
 
 /****************************************************************************/
-class SetErrorInfo
-{
-
-public:
-  SetErrorInfo() {}
-  ~SetErrorInfo() {}
-
-  void set_error_info(FAR Wien2ApuCmd *cmd,
-                      ApuInternalErrorSource res_src,
-                      ApuInternalErrorCode code,
-                      uint32_t debug_value)
-    {
-      cmd->result.exec_result = ApuExecError;
-      cmd->result.internal_result[0].res_src = res_src;
-      cmd->result.internal_result[0].code    = code;
-      cmd->result.internal_result[0].value   = debug_value;
-    }
-};
+#define SET_ERROR_INF(_CMD_, _RES_, _CODE_, _VALUE_) \
+{ \
+  _CMD_->result.exec_result = ApuExecError; \
+  _CMD_->result.internal_result[0].res_src = _RES_; \
+  _CMD_->result.internal_result[0].code = _CODE_; \
+  _CMD_->result.internal_result[0].value = _VALUE_; \
+}
 
 /****************************************************************************
  * Public Data
