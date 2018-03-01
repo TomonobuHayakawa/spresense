@@ -95,12 +95,22 @@ all: $(BIN)
 # If nsh disabled at NuttX configuration, then our builtin_list will be removed
 # automatically.
 
-buildkernel:
-ifneq ($(KERNCONF),)
-	$(Q) $(SDKDIR)/tools/config.py --kernel $(KERNCONF)
-endif
+.kernel.built:
 	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
-PHONY += buildkernel
+	$(Q) touch $@
+
+ifneq ($(KERNCONF),)
+rebuildkernel:
+	$(Q) if [ -f $(TOPDIR)/.config ]; then $(MAKE) -C $(TOPDIR) distclean; fi
+	$(Q) $(SDKDIR)/tools/config.py --kernel $(KERNCONF)
+	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
+	$(Q) touch .kernel.built
+PHONY += rebuildkernel
+
+buildkernel: rebuildkernel
+else
+buildkernel: .kernel.built
+endif
 
 # installkernel
 #
@@ -109,7 +119,7 @@ PHONY += buildkernel
 # Additionally, remove links to board directory for avoid conflict the same name header
 # inclusion.
 
-installkernel:
+installkernel: .kernel.built
 	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
 	$(Q) if [ -f lib/libapps.a ]; then $(ARCROSSDEV)ar d lib/libapps.a builtin_list.o; fi
 	$(Q) if [ -f lib/libarch.a ]; then $(ARCROSSDEV)ar d lib/libarch.a cxd56_allocateheap.o; fi
@@ -160,7 +170,7 @@ bsp/include/arch/board: .config
 dirlinks: bsp/include/arch/board
 PHONY += dirlinks
 
-context: check_context bsp/include/sdk/config.h dirlinks
+context: check_context $(TOPDIR)/include/nuttx/config.h dirlinks
 	$(Q) $(DIRUNLINK) $(TOPDIR)/include/arch/board
 	$(Q) $(DIRUNLINK) $(TOPDIR)/$(ARCH_SRC)/board
 	$(Q) for dir in $(CONTEXTDIRS) ; do \
@@ -193,7 +203,6 @@ check_context:
 	fi
 
 clean_context:
-	$(call DELFILE, bsp/include/sdk/config.h)
 	$(Q) $(DIRUNLINK) bsp/include/arch/board
 
 PHONY += clean_context
@@ -224,7 +233,6 @@ PHONY += subdir_clean
 
 clean: subdir_clean
 	$(call DELFILE, .kconfig.tmp)
-	$(call DELFILE, bsp/include/sdk/config.h)
 	$(call DELFILE, bsp/include/sdk/version.h)
 	$(call DELFILE, $(SDKLIBS))
 PHONY += clean
@@ -239,8 +247,9 @@ distclean: clean subdir_distclean clean_context
 	$(call DELFILE, .config)
 	$(call DELFILE, .config.old)
 
-bsp/include/sdk/config.h: $(SDKDIR)/.config tools/mkconfig.py
-	$(Q) tools/mkconfig.py > $@
+$(TOPDIR)/include/nuttx/config.h: .kernel.built $(SDKDIR)/.config tools/mergeconfig.py
+	$(Q) tools/mergeconfig.py $(TOPDIR)/.config $(SDKDIR)/.config $(SDKDIR)/.config.tmp
+	$(Q) $(TOPDIR)/tools/mkconfig $(SDKDIR)/.config.tmp > $@
 
 bsp/include/sdk/version.h: $(SDKDIR)/.version
 # TBD
