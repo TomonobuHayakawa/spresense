@@ -22,10 +22,6 @@ config CXD56_GNSS_WORKER_THREAD_PRIORITY
   int "GNSS worker thread priority"
   default 255
 
-config CXD56_GNSS_HOT_SLEEP
-	bool "Enable GNSS HOT Sleep"
-	default n
-
 config CXD56_GNSS_BACKUP_FILENAME
 	string "GNSS backup file name"
 	default "/mnt/spif/gnss_backup.bin"
