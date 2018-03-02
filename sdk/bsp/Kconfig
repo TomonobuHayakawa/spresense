@@ -1068,7 +1068,7 @@ config CXD56_PWM3
 
 config CXD56_GPIO_IRQ
 	bool "GPIO interrupt support"
-	default n
+	default y
 	---help---
 		Enable support for GPIO interrupts
 
