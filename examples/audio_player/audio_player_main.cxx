@@ -83,6 +83,7 @@ using namespace MemMgrLite;
 #define FIFO_RESULT_OK  0
 #define FIFO_RESULT_ERR 1
 #define FIFO_RESULT_EOF 2
+#define FIFO_RESULT_FUL 3
 
 /* Default Volume. -20dB */
 
@@ -312,8 +313,7 @@ static int app_push_simple_fifo(int fd)
 
   if (CMN_SimpleFifoOffer(&s_player_info.fifo.handle, (const void*)(s_player_info.fifo.read_buf), ret) == 0)
     {
-      printf("Error: Simple FIFO is full!\n");
-      return FIFO_RESULT_ERR;
+      return FIFO_RESULT_FUL;
     }
   s_player_info.file.size = (s_player_info.file.size - ret);
   if (s_player_info.file.size == 0)
@@ -336,7 +336,7 @@ static bool app_first_push_simple_fifo(int fd)
         }
     }
 
-  return (ret == FIFO_RESULT_OK) ? true : false;
+  return (ret != FIFO_RESULT_ERR) ? true : false;
 }
 
 static bool app_refill_simple_fifo(int fd)
@@ -367,7 +367,7 @@ static bool app_refill_simple_fifo(int fd)
         }
     }
 
-  return (ret == FIFO_RESULT_OK) ? true : false;
+  return (ret != FIFO_RESULT_ERR) ? true : false;
 }
 
 static bool printAudCmdResult(uint8_t command_code, AudioResult& result)
