@@ -555,6 +555,69 @@ public:
 } __attribute__((transparent_union));
 #endif
 
+/****************************************************************************/
+/**
+ *    Apu command for postfilter control
+ */
+/**
+ * Initializing processing
+ */
+
+struct ApuInitPostFilterCmd
+{
+public:
+  uint32_t         ch_num;    /**< Number of channel */
+  AudioPcmBitWidth bit_width; /**< Bit width per sample */
+  uint32_t         sample;    /**< Number of samples */
+#if !defined(__CC_ARM)
+};
+#else
+} __attribute__((transparent_union));
+#endif
+
+/**
+ * Executing processing
+ */
+
+struct ApuExecPostFilterCmd
+{
+public:
+  BufferHeader  input_buffer;  /**< Input buffer information */
+                               /**<  (including at least buffer address */
+                               /**<  or pointer and buffer size) */
+  BufferHeader  output_buffer; /**< Output buffer information */
+                               /**<  (including at least buffer address */
+                               /**<  or pointer and buffer size) */
+#if !defined(__CC_ARM)
+};
+#else
+} __attribute__((transparent_union));
+#endif
+
+/**
+ * Flushing processing
+ */
+
+struct ApuFlushPostFilterCmd
+{
+public:
+  BufferHeader  output_buffer; /**< Output buffer information */
+                               /**<  (including at least buffer address */
+                               /**<  or pointer and buffer size) */
+#if !defined(__CC_ARM)
+};
+#else
+} __attribute__((transparent_union));
+#endif
+
+/**
+ * Set paramter processing
+ */
+
+struct ApuSetParamPostFilterCmd
+{
+public:
+};
 
 /****************************************************************************/
 /**
@@ -688,6 +751,8 @@ struct Wien2ApuCmd
                                                    /**<  decoder processing */
     ApuInitFilterCmd        init_filter_cmd;       /**< Parameters for initializing */
                                                    /**<  filter processing */
+    ApuInitPostFilterCmd    init_postfilter_cmd;   /**< Parameters for initializing */
+                                                   /**<  Postfilter processing */
     ApuInitEncCmd           init_enc_cmd;          /**< Parameters for initializing */
                                                    /**<  encoder processing */
     ApuInitRecognitionCmd   init_recognition_cmd;  /**< Parameters for initializing */
@@ -697,6 +762,8 @@ struct Wien2ApuCmd
                                                    /**<  decoder processing */
     ApuExecFilterCmd        exec_filter_cmd;       /**< Parameters for executing */
                                                    /**<  filter processing */
+    ApuExecPostFilterCmd    exec_postfilter_cmd;   /**< Parameters for executing */
+                                                   /**<  Postfilter processing */
     ApuExecEncCmd           exec_enc_cmd;          /**< Parameters for executing */
                                                    /**<  encoder processing */
     ApuExecRecognitionCmd   exec_recognition_cmd;  /**< Parameters for executing */
@@ -706,18 +773,22 @@ struct Wien2ApuCmd
                                                    /**<  decoder processing */
     ApuFlushFilterCmd       flush_filter_cmd;      /**< Parameters for flushing */
                                                    /**<  filter processing */
+    ApuFlushPostFilterCmd   flush_postfilter_cmd;  /**< Parameters for flushing */
+                                                   /**<  Postfilter processing */
     ApuFlushEncCmd          flush_enc_cmd;         /**< Parameters for flushing */
                                                    /**<  encoder processing */
     ApuFlushRecognitionCmd  flush_recognition_cmd; /**< Parameters for flushing */
                                                    /**<  recognition processing */
 
-    ApuSetParamDecCmd       setparam_dec_cmd;      /**< Parameters for setting */
-                                                   /**<  decoder processing */
-    ApuSetParamFilterCmd    setparam_filter_cmd;   /**< Parameters for setting */
-                                                   /**<  filter processing */
+    ApuSetParamDecCmd        setparam_dec_cmd;        /**< Parameters for setting */
+                                                      /**<  decoder processing */
+    ApuSetParamFilterCmd     setparam_filter_cmd;     /**< Parameters for setting */
+                                                      /**<  filter processing */
+    ApuSetParamPostFilterCmd setparam_postfilter_cmd; /**< Parameters for setting */
+                                                      /**<  Postfilter processing */
 
-    ApuTuningFilterCmd      tuning_filter_cmd;     /**< Parameters for tuning */
-                                                   /**<  filter processing */
+    ApuTuningFilterCmd       tuning_filter_cmd;       /**< Parameters for tuning */
+                                                      /**<  filter processing */
   };
   ApuResult  result;  /**< Retrun value of current command */
 #if !defined(__CC_ARM)

@@ -49,6 +49,7 @@
 #include "wien2_internal_packet.h"
 #include "wien2_common_defs.h"
 #include "components/renderer/renderer_component.h"
+#include "components/postfilter/postfilter_api.h"
 #include "objects/stream_parser/ram_lpcm_data_source.h"
 #include "objects/stream_parser/mp3_stream_mng.h"
 
@@ -72,7 +73,9 @@ public:
     m_adjustment_times(0)
     {}
 
-    MsgQueId m_self_dtq, m_requester_dtq;
+    MsgQueId m_self_dtq, m_requester_dtq, m_apu_dtq;
+    MemMgrLite::PoolId m_apu_pool_id;
+    MemMgrLite::PoolId m_pcm_pool_id;
     int m_self_handle;
 
   ~OutputMixToHPI2S() {}
@@ -85,6 +88,18 @@ public:
   void set_self_dtq(MsgQueId dtqid)
     {
       m_self_dtq = dtqid;
+    }
+  void set_apu_dtq(MsgQueId dtqid)
+    {
+      m_apu_dtq = dtqid;
+    }
+  void set_pcm_pool_id(MemMgrLite::PoolId poolid)
+    {
+      m_pcm_pool_id = poolid;
+    }
+  void set_apu_pool_id(MemMgrLite::PoolId poolid)
+    {
+      m_apu_pool_id = poolid;
     }
 
 private:
@@ -106,6 +121,7 @@ private:
   typedef s_std::Queue<AsPcmDataParam, 10> RenderDataQueue;
   RenderDataQueue m_render_data_queue;
 
+  void *m_p_postfliter_instance;
   RenderComponentHandler m_render_comp_handler;
 
   OutputMixerCallback m_callback;
@@ -121,6 +137,9 @@ private:
   void input_data_on_ready(MsgPacket *msg);
   void input_data_on_active(MsgPacket *msg);
   void input_data_on_under(MsgPacket *msg);
+
+  void postdone_on_active(MsgPacket *msg);
+  void postdone_on_stopping(MsgPacket *msg);
 
   void illegal_done(MsgPacket *msg);
   void done_on_active(MsgPacket *msg);

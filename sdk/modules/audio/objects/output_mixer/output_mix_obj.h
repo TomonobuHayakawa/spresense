@@ -41,6 +41,7 @@
 
 #include "memutils/message/Message.h"
 #include "memutils/message/MsgPacket.h"
+#include "memutils/memory_manager/MemHandle.h"
 #include "common/audio_message_types.h"
 #include "output_mix_sink_device.h"
 #include "wien2_common_defs.h"
@@ -58,8 +59,21 @@ __WIEN2_BEGIN_NAMESPACE
 class OutputMixObjectTask
 {
 public:
-  static void create(MsgQueId self_dtq);
-  OutputMixObjectTask(MsgQueId self_dtq);
+  static void create(MsgQueId self_dtq,
+                     MsgQueId dev0_apu_dtq,
+                     MsgQueId dev1_apu_dtq,
+                     MemMgrLite::PoolId dev0_pcm_pool_id,
+                     MemMgrLite::PoolId dev1_pcm_pool_id,
+                     MemMgrLite::PoolId dev0_apu_pool_id,
+                     MemMgrLite::PoolId dev1_apu_pool_id);
+
+  OutputMixObjectTask(MsgQueId self_dtq,
+                      MsgQueId dev0_apu_dtq,
+                      MsgQueId dev1_apu_dtq,
+                      MemMgrLite::PoolId dev0_pcm_pool_id,
+                      MemMgrLite::PoolId dev1_pcm_pool_id,
+                      MemMgrLite::PoolId dev0_apu_pool_id,
+                      MemMgrLite::PoolId dev1_apu_pool_id);
 
 private:
   MsgQueId m_self_dtq;

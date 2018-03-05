@@ -65,6 +65,10 @@
 #define DSP_SRC_VERSION       0x020102    /* 02.01.02 */
 #define DSP_MPPEAX_VERSION    0x010203    /* 01.02.03 */
 
+/* Postfilter Version. */
+
+#define DSP_POSTFLTR_VERSION  0x010101    /* 01.01.01 */
+
 /* Recognizer Version. */
 
 #define DSP_FREQDET_VERSION   0x010202    /* 01.02.02 */

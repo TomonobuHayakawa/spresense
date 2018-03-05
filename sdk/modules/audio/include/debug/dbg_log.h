@@ -205,6 +205,18 @@
                                              fmt, \
                                              ##__VA_ARGS__)
 
+#define POSTFILTER_FATAL(code)   DBG_LOGF_FATAL(AS_MODULE_ID_POSTFILTER_CMP, \
+                                            code)
+#define POSTFILTER_ERR(code)     DBG_LOGF_ERROR(AS_MODULE_ID_POSTFILTER_CMP, \
+                                            code)
+#define POSTFILTER_WARN(code)    DBG_LOGF_WARN(AS_MODULE_ID_POSTFILTER_CMP, \
+                                           code)
+#define POSTFILTER_INF(code)     DBG_LOGF_DEBUG(AS_MODULE_ID_POSTFILTER_CMP, \
+                                            code)
+#define POSTFILTER_DBG(fmt, ...) AUDIO_LOG_EVENT(AS_MODULE_ID_POSTFILTER_CMP, \
+                                             fmt, \
+                                             ##__VA_ARGS__)
+
 #define SOUNDFX_FATAL(code)   DBG_LOGF_FATAL(AS_MODULE_ID_SOUND_EFFECT_OBJ, \
                                              code)
 #define SOUNDFX_ERR(code)     DBG_LOGF_ERROR(AS_MODULE_ID_SOUND_EFFECT_OBJ, \

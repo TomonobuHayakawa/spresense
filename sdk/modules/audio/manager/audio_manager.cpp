@@ -1805,6 +1805,7 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
       omix_cmd.handle                  = OutputMixer0;
       omix_cmd.act_param.output_device = HPOutputDevice;
       omix_cmd.act_param.mixer_type    = MainOnly;
+      omix_cmd.act_param.pf_enable     = PostFilterDisable;
       omix_cmd.act_param.cb            = outputmixer0_done_callback;
       omix_cmd.act_param.error_cb      = outputmixer_error_callback;
 
@@ -1841,6 +1842,7 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
       omix_cmd.handle                  = OutputMixer1;
       omix_cmd.act_param.output_device = HPOutputDevice;
       omix_cmd.act_param.mixer_type    = MainOnly;
+      omix_cmd.act_param.pf_enable     = PostFilterDisable;
       omix_cmd.act_param.cb            = outputmixer1_done_callback;
       omix_cmd.act_param.error_cb      = outputmixer_error_callback;
 

@@ -1437,6 +1437,10 @@ typedef enum
   /*! \brief Renderer Component ID */
 
   AS_MODULE_ID_RENDERER_CMP,
+
+  /*! \brief Postfilter Component ID */
+
+  AS_MODULE_ID_POSTFILTER_CMP,
   AS_MODULE_ID_NUM,
 } AsModuleId;
 

@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/include/wien2_internal_packet.h
+ * modules/audio/dsp/worker/dsp_audio_version.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *
@@ -32,92 +32,28 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_AUDIO_INCLUDE_WIEN2_INTERNAL_PACKET_H
-#define __MODULES_AUDIO_INCLUDE_WIEN2_INTERNAL_PACKET_H
+#ifndef __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H
+#define __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include "wien2_common_defs.h"
-#include "memutils/memory_manager/MemHandle.h"
-#include "audio/audio_high_level_api.h"
-#include "apus/apu_cmd.h"
-
-__WIEN2_BEGIN_NAMESPACE
-
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
+/* Version rule:
+ * (change library).(change of DSP interface).(change of internal processing)
+ */
+
+/* Postfilter Version. */
+
+#define DSP_POSTFLTR_VERSION  0x010101    /* 01.01.01 */
+
 /****************************************************************************
  * Public Types
  ****************************************************************************/
-
-struct AudioMngCmdCmpltResult
-{
-  /* TODO: 直接にリザルトコードを返すかどうか、迷い中 */
-  /* Sub-stateも一緒にobject layer->audio managerに返してあげたほうがよいかも */
-  uint8_t    command_code;  /**< command code of high level API */
-  uint8_t    sub_code;      /**< sub code of high level API */
-  uint8_t    module_id;     /**< module id of high level API */
-  uint8_t    reserved;
-  uint32_t   result;        /**< result code of high level API */
-  uint32_t   sub_result;
-
-  AudioMngCmdCmpltResult():
-    command_code(0xFF),
-    sub_code(0xFF),
-    module_id(0xFF),
-    result(0xFFFFFFFF),
-    sub_result(0xFFFFFFFF)
-  {}
-
-  AudioMngCmdCmpltResult(uint8_t arg_command_code,
-                         uint8_t arg_sub_code,
-                         uint32_t arg_result,
-                         uint8_t arg_module_id,
-                         uint32_t arg_sub_result = 0):
-    command_code(arg_command_code),
-    sub_code(arg_sub_code),
-    module_id(arg_module_id),
-    result(arg_result),
-    sub_result(arg_sub_result)
-  {}
-};
-
-/*--------------------------------------------------------------------*/
-/* Internal parameters between output-mix object and its user.        */
-/*--------------------------------------------------------------------*/
-
-struct OutputMixObjPostfilterDoneCmd
-{
-  Apu::ApuEventType event_type;
-};
-
-/**< Parameters for render done notify to output-mix object. */
-struct OutputMixObjRenderDoneCmd
-{
-  bool end_flag;
-  bool error_flag;
-};
-
-struct OutputMixObjParam
-{
-  int handle;
-
-  union
-  {
-    OutputMixObjPostfilterDoneCmd postfilterdone_param;
-    OutputMixObjRenderDoneCmd     renderdone_param;
-  };
-};
-
-struct DspResult
-{
-  Apu::ExecResult  exec_result;
-  Apu::InternalResult  internal_result;
-};
 
 /****************************************************************************
  * Public Data
@@ -131,7 +67,5 @@ struct DspResult
  * Public Function Prototypes
  ****************************************************************************/
 
-__WIEN2_END_NAMESPACE
-
-#endif /* __MODULES_AUDIO_INCLUDE_WIEN2_INTERNAL_PACKET_H */
+#endif /* __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H */
 

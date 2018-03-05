@@ -63,6 +63,12 @@ using namespace MemMgrLite;
 
 static pid_t    s_omix_pid = -1;
 static MsgQueId s_self_dtq;
+static MsgQueId s_render_path0_filter_apu_dtq;
+static MsgQueId s_render_path1_filter_apu_dtq;
+static PoolId   s_render_path0_filter_pcm_pool_id;
+static PoolId   s_render_path1_filter_pcm_pool_id;
+static PoolId   s_render_path0_filter_apu_pool_id;
+static PoolId   s_render_path1_filter_apu_pool_id;
 static OutputMixObjectTask *s_omix_ojb = NULL;
 
 /****************************************************************************
@@ -73,7 +79,13 @@ static OutputMixObjectTask *s_omix_ojb = NULL;
  * Private Functions
  ****************************************************************************/
 
-OutputMixObjectTask::OutputMixObjectTask(MsgQueId self_dtq) :
+OutputMixObjectTask::OutputMixObjectTask(MsgQueId self_dtq,
+                                         MsgQueId render_path0_filter_apu_dtq,
+                                         MsgQueId render_path1_filter_apu_dtq,
+                                         PoolId render_path0_filter_pcm_pool_id,
+                                         PoolId render_path1_filter_pcm_pool_id,
+                                         PoolId render_path0_filter_apu_pool_id,
+                                         PoolId render_path1_filter_apu_pool_id) :
   m_self_dtq(self_dtq),
   m_output_device(HPOutputDevice)
   {
@@ -81,6 +93,15 @@ OutputMixObjectTask::OutputMixObjectTask(MsgQueId self_dtq) :
       {
         m_output_mix_to_hpi2s[i].set_self_dtq(self_dtq);
       }
+
+    m_output_mix_to_hpi2s[0].set_apu_dtq(render_path0_filter_apu_dtq);
+    m_output_mix_to_hpi2s[1].set_apu_dtq(render_path1_filter_apu_dtq);
+
+    m_output_mix_to_hpi2s[0].set_pcm_pool_id(render_path0_filter_pcm_pool_id);
+    m_output_mix_to_hpi2s[1].set_pcm_pool_id(render_path1_filter_pcm_pool_id);
+
+    m_output_mix_to_hpi2s[0].set_apu_pool_id(render_path0_filter_apu_pool_id);
+    m_output_mix_to_hpi2s[1].set_apu_pool_id(render_path1_filter_apu_pool_id);
   }
 
 /*--------------------------------------------------------------------------*/
@@ -173,7 +194,13 @@ extern "C"
 /*--------------------------------------------------------------------------*/
 int AS_OutputMixObjEntry(int argc, char *argv[])
 {
-  OutputMixObjectTask::create(s_self_dtq);
+  OutputMixObjectTask::create(s_self_dtq,
+                              s_render_path0_filter_apu_dtq,
+                              s_render_path1_filter_apu_dtq,
+                              s_render_path0_filter_pcm_pool_id,
+                              s_render_path1_filter_pcm_pool_id,
+                              s_render_path0_filter_apu_pool_id,
+                              s_render_path1_filter_apu_pool_id);
   return 0;
 }
 
@@ -181,6 +208,12 @@ int AS_OutputMixObjEntry(int argc, char *argv[])
 bool AS_CreateOutputMixer(FAR AsCreateOutputMixParam_t *param)
 {
   s_self_dtq    = param->msgq_id.mixer;
+  s_render_path0_filter_apu_dtq     = param->msgq_id.render_path0_filter_dsp;
+  s_render_path1_filter_apu_dtq     = param->msgq_id.render_path1_filter_dsp;
+  s_render_path0_filter_pcm_pool_id = param->pool_id.render_path0_filter_pcm;
+  s_render_path1_filter_pcm_pool_id = param->pool_id.render_path1_filter_pcm;
+  s_render_path0_filter_apu_pool_id = param->pool_id.render_path0_filter_dsp;
+  s_render_path1_filter_apu_pool_id = param->pool_id.render_path1_filter_dsp;
 
   s_omix_pid = task_create("OMIX_OBJ",
                            150, 1024 * 3,
@@ -288,11 +321,23 @@ bool AS_DeleteOutputMix(void)
 } /* extern "C" */
 
 /*--------------------------------------------------------------------------*/
-void OutputMixObjectTask::create(MsgQueId self_dtq)
+void OutputMixObjectTask::create(MsgQueId self_dtq,
+                                 MsgQueId render_path0_filter_apu_dtq,
+                                 MsgQueId render_path1_filter_apu_dtq,
+                                 PoolId render_path0_filter_pcm_pool_id,
+                                 PoolId render_path1_filter_pcm_pool_id,
+                                 PoolId render_path0_filter_apu_pool_id,
+                                 PoolId render_path1_filter_apu_pool_id)
 {
   if (s_omix_ojb == NULL)
     {
-      s_omix_ojb = new OutputMixObjectTask(self_dtq);
+      s_omix_ojb = new OutputMixObjectTask(self_dtq,
+                                           render_path0_filter_apu_dtq,
+                                           render_path1_filter_apu_dtq,
+                                           render_path0_filter_pcm_pool_id,
+                                           render_path1_filter_pcm_pool_id,
+                                           render_path0_filter_apu_pool_id,
+                                           render_path1_filter_apu_pool_id);
       if (s_omix_ojb == NULL)
         {
           OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);

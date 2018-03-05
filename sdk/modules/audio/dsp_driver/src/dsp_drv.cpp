@@ -178,6 +178,13 @@ int DspDrv::init(FAR const char  *pfilename,
       goto dsp_drv_errout_with_mptask_destroy;
     }
 
+  ret = mptask_bindobj(&m_mptask, &m_mq);
+  if (ret < 0)
+    {
+      err("mptask_bindobj() failure. %d\n", ret);
+      return ret;
+    }
+
   /* Create receive thread. */
 
   (void)pthread_attr_init(&attr);
@@ -234,7 +241,7 @@ dsp_drv_errout_with_mptask_destroy:
 }
 
 /*--------------------------------------------------------------------------*/
-int DspDrv::destroy()
+int DspDrv::destroy(bool force)
 {
 
   int ret;
@@ -257,7 +264,7 @@ int DspDrv::destroy()
 
   /* Destroy worker. */
 
-  ret = mptask_destroy(&m_mptask, false, NULL);
+  ret = mptask_destroy(&m_mptask, force, NULL);
   if (ret < 0)
     {
       err("mptask_destroy() failure. %d\n", ret);
@@ -441,7 +448,7 @@ int DD_Unload(FAR const void *p_instance)
       return DSPDRV_INVALID_VALUE;
     }
 
-  int ret = ((FAR DspDrv*)p_instance)->destroy();
+  int ret = ((FAR DspDrv*)p_instance)->destroy(false);
   if (ret == DSPDRV_NOERROR)
     {
       delete ((FAR DspDrv*)p_instance);
@@ -449,3 +456,21 @@ int DD_Unload(FAR const void *p_instance)
 
   return ret;
 }
+
+/*--------------------------------------------------------------------------*/
+int DD_force_Unload(FAR const void *p_instance)
+{
+  if (p_instance == NULL)
+    {
+      return DSPDRV_INVALID_VALUE;
+    }
+
+  int ret = ((FAR DspDrv*)p_instance)->destroy(true);
+  if (ret == DSPDRV_NOERROR)
+    {
+      delete ((FAR DspDrv*)p_instance);
+    }
+
+  return ret;
+}
+

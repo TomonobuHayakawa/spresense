@@ -70,7 +70,7 @@ static void send_renderer(RenderComponentHandler handle,
                           int8_t adjust,
                           bool is_valid,
                           uint8_t bit_length);
-static bool check_sample(AsPcmDataParam* input);
+static bool check_sample(AsPcmDataParam* data);
 
 /****************************************************************************
  * Private Data
@@ -83,7 +83,28 @@ static bool check_sample(AsPcmDataParam* input);
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+static bool postfilter_done_callback(PostfilterCbParam *p_param,
+                                     void* p_requester)
+{
+  err_t er;
+  OutputMixObjParam outmix_param;
+  outmix_param.handle =
+    (static_cast<OutputMixToHPI2S*>(p_requester))->m_self_handle;
+  outmix_param.postfilterdone_param.event_type = p_param->event_type;
 
+  er = MsgLib::send<OutputMixObjParam>((static_cast<OutputMixToHPI2S*>
+                                        (p_requester))->m_self_dtq,
+                                       MsgPriNormal,
+                                       MSG_AUD_MIX_CMD_PSTFLT_DONE,
+                                       (static_cast<OutputMixToHPI2S*>
+                                        (p_requester))->m_self_dtq,
+                                       outmix_param);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
 static void render_done_callback(FAR AudioDrvDmaResult *p_param,
                                  void* p_requester)
 {
@@ -160,6 +181,16 @@ OutputMixToHPI2S::MsgProc OutputMixToHPI2S::MsgProcTbl[AUD_MIX_MSG_NUM][StateNum
     &OutputMixToHPI2S::illegal                /*  Underflow              */
   },
 
+  /* Message type: PFDONE */
+
+  {                                           /* OutputMixToHPI2S State: */
+    &OutputMixToHPI2S::illegal_done,          /*  Booted                 */
+    &OutputMixToHPI2S::illegal_done,          /*  Ready                  */
+    &OutputMixToHPI2S::postdone_on_active,    /*  Active                 */
+    &OutputMixToHPI2S::postdone_on_stopping,  /*  Stopping               */
+    &OutputMixToHPI2S::illegal_done           /*  Underflow              */
+  },
+
   /* Message type: DONE */
 
   {                                           /* OutputMixToHPI2S State: */
@@ -231,9 +262,10 @@ void OutputMixToHPI2S::act(MsgPacket* msg)
   OutputMixerCommand cmd = msg->moveParam<OutputMixerCommand>();
 
 
-  OUTPUT_MIX_DBG("ACT: dev %d, type %d\n",
+  OUTPUT_MIX_DBG("ACT: dev %d, type %d, pf %d\n",
                  cmd.act_param.output_device,
-                 cmd.act_param.mixer_type);
+                 cmd.act_param.mixer_type,
+                 cmd.act_param.pf_enable);
 
   switch(cmd.act_param.mixer_type)
     {
@@ -284,6 +316,15 @@ void OutputMixToHPI2S::act(MsgPacket* msg)
 
   m_error_callback = cmd.act_param.error_cb;
 
+  uint32_t dsp_inf = 0;
+
+  AS_postfilter_activate(&m_p_postfliter_instance,
+                         m_apu_pool_id,
+                         m_apu_dtq,
+                         &dsp_inf,
+                         (cmd.act_param.pf_enable == PostFilterEnable) ?
+                           false : true);
+
   /* Reply */
 
   done_param.handle    = cmd.handle;
@@ -307,6 +348,8 @@ void OutputMixToHPI2S::deact(MsgPacket* msg)
       return;
     }
 
+  AS_postfilter_deactivate(m_p_postfliter_instance);
+
   /* Replay */
 
   done_param.handle    = handle;
@@ -324,13 +367,42 @@ void OutputMixToHPI2S::input_data_on_ready(MsgPacket* msg)
   AsPcmDataParam input =
     msg->moveParam<AsPcmDataParam>();
 
-  /* Keep the resource until render done has been received. */
+  /* Init post filter */
 
-  if (!m_render_data_queue.push(input))
+  InitPostfilterParam init;
+  uint32_t dsp_info;
+
+  init.channel_num = AS_CHANNEL_STEREO;
+  init.bit_width   = AS_BITLENGTH_16;
+  init.sample_num  = input.sample;
+  init.callback    = postfilter_done_callback;
+  init.p_requester = static_cast<void*>(this);
+
+  if (AS_ECODE_OK != AS_postfilter_init(&init,
+                                        m_p_postfliter_instance,
+                                        &dsp_info))
     {
-      OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       return;
     }
+
+  if (!AS_postfilter_recv_done(m_p_postfliter_instance, NULL))
+    {
+      return;
+    }
+
+  /* Exec postfilter */
+
+  ExecPostfilterParam exec;
+
+  exec.input     = input;
+  exec.output_mh = input.mh;
+
+  if (!AS_postfilter_exec(&exec, m_p_postfliter_instance))
+    {
+      /* Do nothing */
+    }
+
+  /* Init renderer */
 
   if (!AS_init_renderer(m_render_comp_handler,
                         &render_done_callback,
@@ -341,13 +413,6 @@ void OutputMixToHPI2S::input_data_on_ready(MsgPacket* msg)
       return;
     }
 
-  send_renderer(m_render_comp_handler,
-                input.mh.getPa(),
-                input.size,
-                get_period_adjustment(),
-                input.is_valid,
-                input.bit_length);
-
   m_state = Active;
 }
 
@@ -357,27 +422,72 @@ void OutputMixToHPI2S::input_data_on_active(MsgPacket* msg)
   AsPcmDataParam input =
     msg->moveParam<AsPcmDataParam>();
 
-  if(check_sample(&input))
-    {
-      /* Keep the resource until render done has been received. */
+  /* Exec postfilter */
 
-      if (!m_render_data_queue.push(input))
+  ExecPostfilterParam exec;
+
+  exec.input     = input;
+  exec.output_mh = input.mh;
+
+  if (!AS_postfilter_exec(&exec, m_p_postfliter_instance))
+    {
+      /* Do nothing */
+    }
+
+  /* If last frame, send flush command */
+
+  if (input.is_end)
+    {
+      FlushPostfilterParam flush_param;
+
+      uint32_t size = (MemMgrLite::Manager::getPoolSize(m_pcm_pool_id)) /
+                      (MemMgrLite::Manager::getPoolNumSegs(m_pcm_pool_id));
+
+      if (ERR_OK != flush_param.output_mh.allocSeg(m_pcm_pool_id, size))
+        {
+          OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
+        }
+
+      if (!AS_postfilter_flush(&flush_param, m_p_postfliter_instance))
+        {
+          return;
+        }
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+void OutputMixToHPI2S::postdone_on_active(MsgPacket* msg)
+{
+  OutputMixObjPostfilterDoneCmd post_done =
+    msg->moveParam<OutputMixObjParam>().postfilterdone_param;
+
+  /* Get postfilter result */
+
+  PostfilterCmpltParam cmplt;
+
+  AS_postfilter_recv_done(m_p_postfliter_instance, &cmplt);
+
+  /* Check minimum trans size and send filtered data to renderer */
+
+  if (check_sample(&cmplt.output))
+    {
+      send_renderer(m_render_comp_handler,
+                    cmplt.output.mh.getPa(),
+                    cmplt.output.size,
+                    get_period_adjustment(),
+                    cmplt.output.is_valid,
+                    cmplt.output.bit_length);
+
+      if (!m_render_data_queue.push(cmplt.output))
         {
           OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
           return;
         }
-
-      send_renderer(m_render_comp_handler,
-                    input.mh.getPa(),
-                    input.size,
-                    get_period_adjustment(),
-                    input.is_valid,
-                    input.bit_length);
     }
 
-  /* If end-data, publish render stop */
+  /* If flust event done, stop renderer */
 
-  if (input.is_end)
+  if (post_done.event_type == Apu::FlushEvent)
     {
       if (!AS_stop_renderer(m_render_comp_handler, AS_DMASTOPMODE_NORMAL))
         {
@@ -386,6 +496,14 @@ void OutputMixToHPI2S::input_data_on_active(MsgPacket* msg)
 
       m_state = Stopping;
     }
+
+  return;
+}
+
+/*--------------------------------------------------------------------------*/
+void OutputMixToHPI2S::postdone_on_stopping(MsgPacket* msg)
+{
+  postdone_on_active(msg);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -613,13 +731,15 @@ static void send_renderer(RenderComponentHandler handle,
 }
 
 /*--------------------------------------------------------------------------*/
-static bool check_sample(AsPcmDataParam *input)
+static bool check_sample(AsPcmDataParam *data)
 {
   bool res = true;
-  if (input->size < DMA_MIN_SAMPLE*BYTE_SIZE_PER_SAMPLE)
+
+  if (data->size < DMA_MIN_SAMPLE * BYTE_SIZE_PER_SAMPLE)
     {
       res = false;
     }
+
   return res;
 }
 

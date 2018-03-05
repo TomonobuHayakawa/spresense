@@ -90,7 +90,7 @@ public:
            DspDoneCallback p_cbfunc,
            FAR void        *p_parent_instance,
            bool            is_secure);
-  int destroy();
+  int destroy(bool force);
   int send(FAR const DspDrvComPrm_t *p_param);
   int receive();
 
@@ -126,5 +126,7 @@ extern int DD_SendCommand(FAR const void           *p_instance,
                           FAR const DspDrvComPrm_t *p_param);
 
 extern int DD_Unload(FAR const void *p_instance);
+
+extern int DD_force_Unload(FAR const void *p_instance);
 
 #endif /* __MODULES_AUDIO_DSP_DRIVER_INCLUDE_DSP_DRV_H */

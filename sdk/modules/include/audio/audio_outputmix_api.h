@@ -111,6 +111,19 @@ enum AsOutputMixerType
   OutputMixerTypeNum
 };
 
+/**< PostFilter Enable */
+
+enum AsOutputMixerPostFilter
+{
+  /*! Disable */
+
+  PostFilterDisable = 0,
+
+  /*! Enable */
+
+  PostFilterEnable,
+};
+
 /**< Completion of output-mix object task. */
 enum AsOutputMixDoneCmdType
 {
@@ -137,7 +150,35 @@ typedef struct
 
   uint8_t mixer;
 
+  /*! \brief [in] Message queue id of dsp
+   *              Effective only when use postfilter
+   */
+
+  uint8_t render_path0_filter_dsp;
+  uint8_t render_path1_filter_dsp;
+
 } AsOutputMixMsgQueId_t;
+
+/** Pool ID parameter of activate function */
+
+typedef struct
+{
+  /*! \brief [in] Memory pool id of pcm data
+   *              Effective only when use postfilter
+   */
+
+  uint8_t render_path0_filter_pcm;
+  uint8_t render_path1_filter_pcm;
+
+  /*! \brief [in] Memory pool id of dsp command data
+   *              Effective only when use postfilter
+   */
+
+  uint8_t render_path0_filter_dsp;
+  uint8_t render_path1_filter_dsp;
+
+} AsOutputMixPoolId_t;
+
 
 /** Activate function parameter */
 
@@ -146,6 +187,10 @@ typedef struct
   /*! \brief [in] ID for sending messages to each function */
 
   AsOutputMixMsgQueId_t msgq_id;
+
+  /*! \brief [in] ID of memory pool for processing data */
+
+  AsOutputMixPoolId_t   pool_id;
 
 } AsCreateOutputMixParam_t;
 
@@ -177,6 +222,13 @@ typedef struct
    */
 
   uint8_t mixer_type;
+
+   /*! \brief [in] Enable postfilter
+   *
+   * Use #AsOutputMixerPostFilter enum type
+   */
+
+  uint8_t pf_enable;
 
   /*! \brief [in] Done callback */
 
@@ -230,7 +282,7 @@ typedef struct
 
 /** Clock recovery function parameter */
 
-typedef struct 
+typedef struct
 {
   uint8_t handle;
 
