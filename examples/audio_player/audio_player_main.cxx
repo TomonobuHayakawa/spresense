@@ -751,7 +751,7 @@ static int app_play_file_open(FAR const char *file_path, FAR int32_t *file_size)
   return fd;
 }
 
-static bool app_start_player(void)
+static bool app_start(void)
 {
   Track track;
 
@@ -816,6 +816,25 @@ static bool app_start_player(void)
     }
 
   return true;
+}
+
+static bool app_stop(void)
+{
+  bool result = true;
+
+  if (!app_stop_player())
+    {
+      printf("Error: app_stop_player() failure.\n");
+      result = false;
+    }
+
+  if (close(s_player_info.file.fd) != 0)
+    {
+      printf("Error: close() failure.\n");
+      result = false;
+    }
+
+  return result;
 }
 
 /****************************************************************************
@@ -918,7 +937,7 @@ extern "C" int player_main(int argc, char *argv[])
 
   /* Start player operation. */
 
-  if (!app_start_player())
+  if (!app_start())
     {
       printf("Error: app_start_player() failure.\n");
       return 1;
@@ -939,9 +958,9 @@ extern "C" int player_main(int argc, char *argv[])
 
   /* Stop player operation. */
 
-  if (!app_stop_player())
+  if (!app_stop())
     {
-      printf("Error: app_stop_player() failure.\n");
+      printf("Error: app_stop() failure.\n");
       return 1;
     }
 
