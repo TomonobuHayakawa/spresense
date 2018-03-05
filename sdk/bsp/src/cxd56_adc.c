@@ -999,6 +999,10 @@ int cxd56_adcinitialize(void)
 {
   int ret;
 
+  /* Avoid warnings when no ADC options enabled */
+
+  (void) ret;
+
 #if defined (CONFIG_CXD56_LPADC0) || defined (CONFIG_CXD56_LPADC0_1) || defined (CONFIG_CXD56_LPADC_ALL)
   ret = register_driver("/dev/lpadc0", &g_adcops, 0666, &g_lpadc0priv);
   if (ret < 0)
