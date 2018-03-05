@@ -61,7 +61,7 @@ def apply_defconfig(configname, configlist, topdir, sdkdir, kernel):
         src = os.path.join(kconfigdir, defconfigs[0])
         dest = os.path.join(topdir, '.config')
         install(src, dest)
-        postproc = 'make -C %s olddefconfig' % topdir
+        postproc = 'make olddefconfigkernel'
     else:
         dest = os.path.join(sdkdir, '.config')
 
@@ -200,7 +200,7 @@ if __name__ == "__main__":
             d = sdkdir
 
         apply_spices(spices, "%s/.config" % d)
-        ret = os.system('make -C %s olddefconfig 2>&1 >/dev/null' % d)
+        ret = os.system('make olddefconfigkernel 2>&1 >/dev/null')
         if ret != 0:
             sys.exit(ret)
 
