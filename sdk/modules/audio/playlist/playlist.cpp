@@ -1,9 +1,7 @@
 /****************************************************************************
- * apps/audioutils/playlist/playlist.cpp
+ * modules/audio/playlist/playlist.cpp
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Ryuta Sakane <Ryuuta.Sakane@sony.com>
- *           Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -102,10 +100,13 @@ bool Playlist::open(FAR const char *mode)
 /*--------------------------------------------------------------------------*/
 bool Playlist::close(void)
 {
-  if (fclose(this->m_track_db_fp) == -1)
-    {
-      return false;
-    }
+  if (this->m_track_db_fp != NULL)
+  {
+    if (fclose(this->m_track_db_fp) != 0)
+      {
+        return false;
+      }
+  }
 
   return true;
 }

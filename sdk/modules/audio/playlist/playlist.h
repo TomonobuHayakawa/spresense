@@ -1,9 +1,7 @@
 /****************************************************************************
- * apps/audioutils/playlist/playlist.h
+ * modules/audio/playlist/playlist.h
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Ryuta Sakane <Ryuuta.Sakane@sony.com>
- *           Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef _PLAYLIST_H_
-#define _PLAYLIST_H_
+#ifndef MODULES_AUDIO_PLAYLIST_PLAYLIST_H
+#define MODULES_AUDIO_PLAYLIST_PLAYLIST_H
 
 #include "memutils/s_stl/queue.h"
 #include "audio/audio_high_level_api.h"
@@ -83,13 +81,15 @@ public:
     m_play_mode(PlayModeNormal),
     m_repeat_mode(RepeatModeOff),
     m_list_type(ListTypeAllTrack),
-    m_play_idx(0)
+    m_play_idx(0),
+    m_track_db_fp(NULL)
   {
     strncpy(m_track_db_file_name, file_name, sizeof(m_track_db_file_name));
   }
 
   ~Playlist()
   {
+    close();
   }
 
   bool init(void);
@@ -138,5 +138,5 @@ private:
   s_std::Queue<uint32_t, 256> m_alias_list;
 };
 
-#endif /* _PLAYLIST_H_ */
+#endif /* MODULES_AUDIO_PLAYLIST_PLAYLIST_H */
 
