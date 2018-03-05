@@ -219,10 +219,12 @@ PHONY += depend
 
 cleankernel:
 	$(Q) $(MAKE) -C $(TOPDIR) clean
+	$(Q) $(call DELFILE, .kernel.built)
 PHONY += cleankernel
 
 distcleankernel:
 	$(Q) $(MAKE) -C $(TOPDIR) distclean
+	$(Q) $(call DELFILE, .kernel.built)
 PHONY += distcleankernel
 
 subdir_clean:
@@ -233,6 +235,7 @@ PHONY += subdir_clean
 
 clean: subdir_clean
 	$(call DELFILE, .kconfig.tmp)
+	$(DIRUNLINK, .config.tmp)
 	$(call DELFILE, bsp/include/sdk/version.h)
 	$(call DELFILE, $(SDKLIBS))
 PHONY += clean
@@ -258,6 +261,7 @@ bsp/include/sdk/version.h: $(SDKDIR)/.version
 
 configkernel oldconfigkernel olddefconfigkernel menuconfigkernel qconfigkernel gconfigkernel:
 	$(Q) $(MAKE) -C $(TOPDIR) $(patsubst %kernel,%,$@)
+	$(Q) $(call DELFILE, .kernel.built)
 PHONY += configkernel oldconfigkernel olddefconfigkernel menuconfigkernel qconfigkernel gconfigkernel
 
 # config targets
