@@ -35,8 +35,7 @@
 
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
-include $(SDKDIR)/Make.defs
-include $(SDKDIR)/system/Make.defs
+include $(APPDIR)/Make.defs
 
 # Zmodem sz and rz commands
 
@@ -91,12 +90,6 @@ ROOTDEPPATH = --dep-path .
 # Common build
 
 VPATH =
-
-ifeq ($(WINTOOL),y)
-CFLAGS += -isystem "$(shell cygpath -w $(SDKDIR)/system/zmodem/include)"
-else
-CFLAGS += -isystem $(SDKDIR)/system/zmodem/include
-endif
 
 all: .built
 .PHONY: context depend clean distclean preconfig
