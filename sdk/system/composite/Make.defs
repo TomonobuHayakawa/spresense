@@ -35,6 +35,6 @@
 ############################################################################
 
 ifeq ($(CONFIG_SYSTEM_COMPOSITE),y)
-CONFIGURED_APPS += system/composite
+CONFIGURED_APPS += composite
 endif
 
