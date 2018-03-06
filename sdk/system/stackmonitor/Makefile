@@ -44,9 +44,7 @@ STACKSIZE = 2048
 
 ASRCS =
 CSRCS =
-ifeq ($(CONFIG_SYSTEM_STACKMONITOR),y)
 MAINSRC = stackmonitor.c
-endif
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -113,7 +111,6 @@ endif
 
 # Register application
 
-ifeq ($(CONFIG_SYSTEM_STACKMONITOR),y)
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
 $(BUILTIN_REGISTRY)$(DELIM)stackmonitor_start.bdat: $(DEPCONFIG) Makefile
 	$(call REGISTER,"stkmon_start",$(PRIORITY),$(STACKSIZE),stackmonitor_start)
@@ -125,7 +122,6 @@ context: $(BUILTIN_REGISTRY)$(DELIM)stackmonitor_start.bdat $(BUILTIN_REGISTRY)$
 else
 context:
 
-endif
 endif
 
 # Create dependencies
