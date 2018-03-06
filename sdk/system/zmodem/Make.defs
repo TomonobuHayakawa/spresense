@@ -35,6 +35,6 @@
 ############################################################################
 
 ifeq ($(CONFIG_SYSTEM_ZMODEM),y)
-CONFIGURED_APPS += system/zmodem
+CONFIGURED_APPS += zmodem
 endif
 
