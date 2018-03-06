@@ -2,7 +2,6 @@
  * modules/audio/manager/audio_manager.h
  *
  *   Copyright (C) 2015-2017 Sony Corporation. All rights reserved.
- *   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

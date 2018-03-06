@@ -3,7 +3,6 @@
  * Hardware Semaphore Driver
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

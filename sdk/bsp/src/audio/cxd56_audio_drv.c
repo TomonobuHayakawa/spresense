@@ -2,8 +2,6 @@
  * nuttx/arch/arm/src/cxd56xx/audio/drivers/baseband/src/cxd56_audio_drv.c
  *
  *   Copyright (C) 2016, 2017 Sony Corporation
- *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
- *           Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

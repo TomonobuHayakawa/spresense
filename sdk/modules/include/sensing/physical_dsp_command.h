@@ -2,7 +2,6 @@
  * include/sensing/physical_dsp_command.h
  *
  *   Copyright (C) 2016-2017 Sony Corporation
- *   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

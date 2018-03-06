@@ -2,8 +2,6 @@
  * modules/audio/stream_parser/mp3/Mp3Parser.cpp
  *
  *   Copyright (C) 2015-2017 Sony Corporation. All rights reserved.
- *   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
- *   Author: Meguro Kazuhiro <Kazuhiro.x.Meguro@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

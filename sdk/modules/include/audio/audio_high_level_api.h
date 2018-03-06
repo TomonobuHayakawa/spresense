@@ -2,7 +2,6 @@
  * modules/include/audio/audio_high_level_api.h
  *
  *   Copyright (C) 2015, 2016, 2017 Sony Corporation
- *   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -2,7 +2,6 @@
  * arch/arm/src/cxd56xx/chip/cxd56_sph.h
  *
  *   Copyright (C) 2016 Nobuto Kobayshi. All rights reserved.
- *   Author: Nobuto Kobayashi <Nobuto.Kobayashi@jp.sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

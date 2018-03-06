@@ -2,8 +2,6 @@
  * modules/audio/components/renderer/level_ctrl.h
  *
  *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Ryuuta Sakane <Ryuuta.Sakane@sony.com>
- *           Hayakawa Tomonobu <Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

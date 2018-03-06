@@ -2,7 +2,6 @@
  * arch/arm/src/cxd56xx/cxd56_cpu_context.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Yasuyuki Inoue <Yasuyuki.Inoue@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -2,7 +2,6 @@
  * arch/arm/src/cxd56xx/audio/drivers/baseband/include/common_assert.h
  *
  *   Copyright (C) 2010-2012, 2017 Sony Corporation
- *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

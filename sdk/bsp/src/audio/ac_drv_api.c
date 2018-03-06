@@ -2,7 +2,6 @@
  * arch/arm/src/cxd56xx/audio/drivers/baseband/src/ac_drv_api.c
  *
  *   Copyright (C) 2014, 2017 Sony Corporation
- *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

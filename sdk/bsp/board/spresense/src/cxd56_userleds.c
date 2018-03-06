@@ -2,7 +2,6 @@
  * configs/spresense/src/cxd56_userleds.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Hitoshi Fukuda <Hitoshi.Fukuda@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

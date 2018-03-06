@@ -2,7 +2,6 @@
  * modules/audio/objects/output_mixer/output_mix_sink_device.h
  *
  *   Copyright (C) 2017 Sony Corporation
- *   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

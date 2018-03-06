@@ -2,7 +2,6 @@
  * arch/arm/include/cxd56xx/usbdev.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Daisuke Sonoda <Daisuke.xA.Sonoda@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

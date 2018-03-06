@@ -2,7 +2,6 @@
  * config/collet/src/cxd56_power.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
- *   Author: Kazuya Hioki <Kazuya.Hioki@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

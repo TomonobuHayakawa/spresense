@@ -2,7 +2,6 @@
  * arch/arm/src/cxd56xx/sensor/manager/sensor_manager.cpp
  *
  *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -2,7 +2,6 @@
  * modules/audio/dma_controller/audo_dma_buffer.c
  *
  *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Naoya Haneda <Naoya.Haneda@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

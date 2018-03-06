@@ -2,8 +2,6 @@
  * audioutils/components/renderer/renderer_component.cpp
  *
  *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Suzunosuke Hida <Suzunosuke.Hida@sony.com>
- *           Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

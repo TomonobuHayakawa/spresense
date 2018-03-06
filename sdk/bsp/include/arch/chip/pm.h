@@ -2,8 +2,6 @@
  * arch/arm/include/cxd56xx/pm.h
  *
  *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
- *   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
- *           Kazuya Hioki <Kazuya.Hioki@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

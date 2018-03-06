@@ -2,7 +2,6 @@
  * arch/arm/src/cxd56xx/audio/drivers/baseband/src/audio_io_config.c
  *
  *   Copyright (C) 2015, 2017 Sony Corporation
- *   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -2,7 +2,6 @@
  * modules/audio/objects/media_recorder/media_recorder_obj.h
  *
  *   Copyright (C) 2017 Sony Corporation
- *   Author: Tomonobu Hayakawa <Tomonobu.Hayakawa@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -2,7 +2,6 @@
  * asmp/supervisor/rawelf/rawelf.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
 
  *   Copyright (C) 2012, 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

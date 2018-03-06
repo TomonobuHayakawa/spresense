@@ -2,7 +2,6 @@
  * configs/cxd56xx/src/cxd56_composite.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Yuchi.Wen <Yuchi.Wen@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
