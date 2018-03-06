@@ -54,10 +54,17 @@
 #define STANDBY_TIME                (600*1000) /* TODO: (max100ms/30fps)*/
 #define DEVICE_STARTUP_TIME           (6*1000) /* ms */
 #define SLEEP_CANCEL_TIME            (13*1000) /* ms */
+#define POWER_CHECK_TIME             (1*1000)  /* ms */
+
+#define ALL_POWERON                 (7)
+#define ALL_POWEROFF                (0)
+#define POWER_CHECK_RETRY           (10)
 
 int board_isx012_power_on(void)
 {
   int ret;
+  uint32_t stat;
+  int i;
 
   /* 'POWER_IMAGE_SENSOR==PMIC_GPO(4/5/7)' */
 
@@ -68,12 +75,29 @@ int board_isx012_power_on(void)
       return -ENODEV;
     }
 
+  ret = -ETIMEDOUT;
+  for (i = 0; i < POWER_CHECK_RETRY; i++)
+    {
+      stat = 0;
+      stat |= (uint32_t)board_power_monitor(PMIC_GPO(4)) << 0;
+      stat |= (uint32_t)board_power_monitor(PMIC_GPO(5)) << 1;
+      stat |= (uint32_t)board_power_monitor(PMIC_GPO(7)) << 2;
+      if (stat == ALL_POWERON)
+        {
+          ret = OK;
+          break;
+        }
+
+      usleep(POWER_CHECK_TIME);
+    }
   return ret;
 }
 
 int board_isx012_power_off(void)
 {
   int ret;
+  uint32_t stat;
+  int i;
 
   /* 'POWER_IMAGE_SENSOR==PMIC_GPO(4/5/7)' */
 
@@ -82,6 +106,22 @@ int board_isx012_power_off(void)
     {
       _err("ERROR: Failed to power off ImageSensor. %d\n", ret);
       return -ENODEV;
+    }
+
+  ret = -ETIMEDOUT;
+  for (i = 0; i < POWER_CHECK_RETRY; i++)
+    {
+      stat = 0;
+      stat |= (uint32_t)board_power_monitor(PMIC_GPO(4)) << 0;
+      stat |= (uint32_t)board_power_monitor(PMIC_GPO(5)) << 1;
+      stat |= (uint32_t)board_power_monitor(PMIC_GPO(7)) << 2;
+      if (stat == ALL_POWEROFF)
+        {
+          ret = OK;
+          break;
+        }
+
+      usleep(POWER_CHECK_TIME);
     }
 
   return ret;
