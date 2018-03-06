@@ -125,6 +125,11 @@
 #  include <nuttx/spi/spi_transfer.h>
 #endif
 
+#ifdef CONFIG_VIDEO_ISX012
+#  include "cxd56_gpio.h"
+#  include <nuttx/video/isx012.h>
+#endif
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -670,6 +675,10 @@ int board_app_initialize(uintptr_t arg)
 
 #if (defined(CONFIG_LIBNFC) || defined(CONFIG_NFC_SEQUENCER)) && defined(CONFIG_CXD56_I2C1)
   cxd224x_initialize("/dev/cxd224x-i2c", i2c1);
+#endif
+
+#ifdef CONFIG_VIDEO_ISX012
+  cxd56_isx012initialize("/dev/imager", i2c1);
 #endif
 
   ret = nsh_sfc_initialize();
