@@ -35,6 +35,6 @@
 ############################################################################
 
 ifeq ($(CONFIG_SYSTEM_USBMSC),y)
-CONFIGURED_APPS += system/usbmsc
+CONFIGURED_APPS += usbmsc
 endif
 
