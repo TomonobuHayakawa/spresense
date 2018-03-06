@@ -46,10 +46,8 @@ ASRCS  =
 
 CSRCS  = zm_send.c zm_receive.c zm_state.c zm_proto.c zm_watchdog.c
 CSRCS += zm_utils.c zm_dumpbuffer.c
-ifeq ($(CONFIG_SYSTEM_ZMODEM),y)
 SZ_MAINSRC = sz_main.c
 RZ_MAINSRC = rz_main.c
-endif
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -125,7 +123,6 @@ endif
 
 # Register application
 
-ifeq ($(CONFIG_SYSTEM_ZMODEM),y)
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
 $(BUILTIN_REGISTRY)$(DELIM)sz.bdat: $(DEPCONFIG) Makefile
 	$(call REGISTER,"sz",$(PRIORITY),$(STACKSIZE),sz_main)
@@ -136,7 +133,6 @@ $(BUILTIN_REGISTRY)$(DELIM)rz.bdat: $(DEPCONFIG) Makefile
 context: $(BUILTIN_REGISTRY)$(DELIM)sz.bdat $(BUILTIN_REGISTRY)$(DELIM)rz.bdat
 else
 context:
-endif
 endif
 
 # Create dependencies
