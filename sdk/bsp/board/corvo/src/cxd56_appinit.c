@@ -661,14 +661,6 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#ifdef CONFIG_MODEM_ALT_1160
-  ret = cxd56_alt1160initialize("/dev/alt1160", spi5);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize Alt1160.\n");
-    }
-#endif
-
 #ifdef CONFIG_ASMP
   asmp_initialize();
 #endif

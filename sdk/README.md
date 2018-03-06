@@ -30,7 +30,6 @@ sdk
 |   |-- audio      - Audio library
 |   |-- bluetooth  - Bluetooth
 |   |-- include    - Library headers
-|   |-- lte        - LTE library
 |   |-- nfc        - NFC library
 |   |-- sensing    - Smart sensing library
 |   |   |-- arm_gesture   - Arm gesture detection
@@ -85,7 +84,7 @@ You can specify multiple predefines, it allows combination of predefines.
 
 e.g.
 ```
-$ tools/config.py audio lte
+$ tools/config.py audio gnss
 ```
 
 `tools/config.py` can be invoked menu style configuration UI by following

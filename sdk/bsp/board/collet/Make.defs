@@ -54,6 +54,3 @@ ifeq ($(CONFIG_CXD56_AUDIO), y)
 CSRCS += cxd56_audio.c
 endif
 
-ifeq ($(CONFIG_MODEM_ALT_1160), y)
-CSRCS += cxd56_alt1160.c
-endif

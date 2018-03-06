@@ -77,6 +77,3 @@ ifeq ($(CONFIG_VIDEO_ISX012),y)
 CSRCS += cxd56_isx012.c
 endif
 
-ifeq ($(CONFIG_MODEM_ALT_1160), y)
-CSRCS += cxd56_alt1160.c
-endif

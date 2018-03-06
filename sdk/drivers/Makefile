@@ -42,7 +42,6 @@ DEPPATH =
 
 include sensors$(DELIM)Make.defs
 include lcd$(DELIM)Make.defs
-include modem$(DELIM)Make.defs
 include video$(DELIM)Make.defs
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))

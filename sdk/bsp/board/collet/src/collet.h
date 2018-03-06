@@ -280,16 +280,4 @@ int cxd56_userled_initialize(FAR const char *devname);
 int cxd56_geofenceinitialize(FAR const char *devpath);
 #endif
 
-/****************************************************************************
- * Name: cxd56_alt1160initialize
- *
- * Description:
- *   Called to configure an SPI and to register ALT1160 for the collet board.
- *
- ****************************************************************************/
-
-#ifdef CONFIG_MODEM_ALT_1160
-int cxd56_alt1160initialize(FAR const char *devpath, FAR struct spi_dev_s* spi);
-#endif
-
 #endif /* __CONFIGS_COLLET_SRC_COLLET_H */
