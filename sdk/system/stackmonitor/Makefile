@@ -35,8 +35,7 @@
 
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
-include $(SDKDIR)/Make.defs
-include $(SDKDIR)/system/Make.defs
+include $(APPDIR)/Make.defs
 
 # Stack Monitor Application
 

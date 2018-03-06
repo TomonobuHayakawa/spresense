@@ -35,6 +35,6 @@
 ############################################################################
 
 ifeq ($(CONFIG_SYSTEM_STACKMONITOR),y)
-CONFIGURED_APPS += system/stackmonitor
+CONFIGURED_APPS += stackmonitor
 endif
 
