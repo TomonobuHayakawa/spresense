@@ -63,21 +63,21 @@ all: $(BIN)
 
 define SDIR_template
 $(1)_$(2):
-	$(Q) $(MAKE) -C $(1) $(2) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)"
+	$(Q) $(MAKE) -C $(1) $(2) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(SDKDIR)$(DELIM)system"
 endef
 
-$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),all)))
+$(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),all)))
+$(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),context)))
+$(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),depend)))
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),preconfig)))
-$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),context)))
-$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),depend)))
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),clean)))
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
 
-$(BIN): $(foreach SDIR, $(SUBDIRS), $(SDIR)_all)
+$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 
-context: $(foreach SDIR, $(SUBDIRS), $(SDIR)_context)
+context: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_context)
 
-depend: $(foreach SDIR, $(SUBDIRS), $(SDIR)_depend)
+depend: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_depend)
 
 clean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_clean)
 	$(call CLEAN)
