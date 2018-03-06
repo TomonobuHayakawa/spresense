@@ -2,7 +2,6 @@
  * examples/gnss/gnss_main.c
  *
  *   Copyright (C) 2016,2017 Sony. All rights reserved.
- *   Author: Tomoyuki Takahashi <Tomoyuki.A.Takahashi@sony.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -2,7 +2,6 @@
 # examples/voice_command/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
-#   Author: Tomonobu Hayakawa<Tomonobu.Hayakawa@sony.com>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions

@@ -2,7 +2,6 @@
 # examples/gnss_pvtlog/Makefile
 #
 #   Copyright (C) 2017 Sony. All rights reserved.
-#   Author: Sony Spritzer support team <dsbg-spritzer-sw-support@jp.sony.com>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
