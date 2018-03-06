@@ -54,6 +54,14 @@ define REGISTER
 endef
 endif
 
+# Tools
+
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+  MKKCONFIG = $(SDKDIR)\tools\mkkconfig.bat
+else
+  MKKCONFIG = $(SDKDIR)/tools/mkkconfig.sh
+endif
+
 ifeq ($(WINTOOL),y)
   INCDIROPT = -w
 endif

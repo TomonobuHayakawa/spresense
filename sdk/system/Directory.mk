@@ -1,7 +1,8 @@
 ############################################################################
-# system/Makefile
+# apps/Directory.mk
 #
-#   Copyright (C) 2017 Sony Corporation. All rights reserved.
+#   Copyright (C) 2011-2015 Gregory Nutt. All rights reserved.
+#   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,55 +32,42 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
--include $(TOPDIR)/Make.defs
-include $(SDKDIR)/Make.defs
-include $(SDKDIR)/system/Make.defs
 
-DELIM ?= $(strip /)
-
-MENUDESC = "System tools"
-
-BIN = libsystem$(LIBEXT)
+-include $(TOPDIR)/.config # Current configuration
+include $(APPDIR)/Make.defs
 
 # Sub-directories
 
-SUBDIRS = $(dir $(wildcard */Make.defs))
+SUBDIRS = $(dir $(wildcard */Makefile))
 
-CONFIGURED_APPS =
+all: nothing
 
-define Add_Application
-  include $(1)Make.defs
-endef
-
-$(foreach SDIR, $(SUBDIRS), $(eval $(call Add_Application,$(SDIR))))
-
-all: $(BIN)
-
-.PHONY: context depend clean distclean
+.PHONY: nothing context depend clean distclean
 
 define SDIR_template
 $(1)_$(2):
-	$(Q) $(MAKE) -C $(1) $(2) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(SDKDIR)$(DELIM)system"
+	$(Q) cd $(1) && $(MAKE) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 endef
 
-$(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),all)))
-$(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),context)))
-$(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),depend)))
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),preconfig)))
+$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),context)))
+$(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),depend)))
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),clean)))
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
 
-$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+nothing:
 
-context: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_context)
-
-depend: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_depend)
-
-clean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_clean)
-	$(call CLEAN)
-
-distclean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_distclean)
-	$(call CLEAN)
+install:
 
 preconfig: $(foreach SDIR, $(SUBDIRS), $(SDIR)_preconfig)
 	$(Q) $(MKKCONFIG) -m $(MENUDESC)
+
+context: $(foreach SDIR, $(SUBDIRS), $(SDIR)_context)
+
+depend: $(foreach SDIR, $(SUBDIRS), $(SDIR)_depend)
+
+clean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_clean)
+
+distclean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_distclean)
+
+-include Make.dep
