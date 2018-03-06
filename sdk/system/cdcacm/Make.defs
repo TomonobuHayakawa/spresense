@@ -35,6 +35,6 @@
 ############################################################################
 
 ifeq ($(CONFIG_SYSTEM_CDCACM),y)
-CONFIGURED_APPS += system/cdcacm
+CONFIGURED_APPS += cdcacm
 endif
 

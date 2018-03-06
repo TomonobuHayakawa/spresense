@@ -35,16 +35,13 @@
 
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
-include $(SDKDIR)/Make.defs
-include $(SDKDIR)/system/Make.defs
+include $(APPDIR)/Make.defs
 
 # USB CDC/ACM serial mass storage add-on
 
 ASRCS =
 CSRCS =
-ifeq ($(CONFIG_SYSTEM_CDCACM),y)
 MAINSRC = cdcacm_main.c
-endif
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -119,7 +116,6 @@ install:
 
 endif
 
-ifeq ($(CONFIG_SYSTEM_CDCACM),y)
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
 $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME1)_main.bdat: $(DEPCONFIG) Makefile
 	$(call REGISTER,$(APPNAME1),$(PRIORITY1),$(STACKSIZE1),$(APPNAME1)_main)
@@ -130,7 +126,6 @@ $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME2)_main.bdat: $(DEPCONFIG) Makefile
 context: $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME1)_main.bdat $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME2)_main.bdat
 else
 context:
-endif
 endif
 
 .depend: Makefile $(SRCS)
