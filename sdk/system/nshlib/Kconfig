@@ -173,7 +173,6 @@ endmenu # Command Line Configuration
 config NSH_BUILTIN_APPS
 	bool "Enable built-in applications"
 	default n
-	depends on BUILTIN
 	---help---
 		Support external registered, "built-in" applications that can be
 		executed from the NSH command line (see apps/README.txt for
