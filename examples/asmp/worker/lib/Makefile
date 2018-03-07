@@ -1,5 +1,6 @@
 
 -include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
 
 BIN = libasmpw$(LIBEXT)
 WORKER_DIR = $(SDKDIR)$(DELIM)modules$(DELIM)asmp$(DELIM)worker

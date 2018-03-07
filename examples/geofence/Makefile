@@ -33,6 +33,7 @@
 ############################################################################
 
 -include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
 
 # GEOFENCE(simple) built-in application info
 

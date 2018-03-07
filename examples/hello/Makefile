@@ -34,6 +34,7 @@
 ############################################################################
 
 -include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
 
 # Hello, World! built-in application info
 
