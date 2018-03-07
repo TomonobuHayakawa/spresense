@@ -5,7 +5,7 @@
 
 config HAVE_CXXINITIALIZE
 	bool "Have C++ initialization"
-	default n
+	default y
 #	depends on HAVE_CXX
 	---help---
 		The platform-specific logic includes support for initialization

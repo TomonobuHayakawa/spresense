@@ -28,7 +28,7 @@ if READLINE_ECHO
 
 config READLINE_TABCOMPLETION
 	bool "Tab completion"
-	default n
+	default y
 	depends on (BUILD_FLAT && BUILTIN) || READLINE_HAVE_EXTMATCH
 	---help---
 		Build in support for Unix-style tab completion.  This feature was
@@ -56,7 +56,7 @@ endif # READLINE_TABCOMPLETION
 
 config READLINE_CMD_HISTORY
 	bool "Command line history"
-	default n
+	default y
 	---help---
 		Build in support for Unix-style command history using up and down
 		arrow keys.  This feature was originally provided by Nghia Ho.

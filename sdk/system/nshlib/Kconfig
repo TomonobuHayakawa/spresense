@@ -65,8 +65,9 @@ menu "Command Line Configuration"
 
 choice
 	prompt "Command Line Editor"
-	default NSH_READLINE if DEFAULT_SMALL
-	default NSH_CLE if !DEFAULT_SMALL
+	default NSH_READLINE
+#	default NSH_READLINE if DEFAULT_SMALL
+#	default NSH_CLE if !DEFAULT_SMALL
 
 config NSH_READLINE
 	bool "Minimal readline()"
@@ -172,7 +173,7 @@ endmenu # Command Line Configuration
 
 config NSH_BUILTIN_APPS
 	bool "Enable built-in applications"
-	default n
+	default y
 	---help---
 		Support external registered, "built-in" applications that can be
 		executed from the NSH command line (see apps/README.txt for
@@ -238,8 +239,9 @@ config NSH_DISABLE_CMP
 
 config NSH_DISABLE_DATE
 	bool "Disable date"
-	default n if RTC
-	default y if !RTC
+	default n
+#	default n if RTC
+#	default y if !RTC
 
 config NSH_DISABLE_DD
 	bool "Disable dd"
@@ -282,8 +284,9 @@ config NSH_DISABLE_FREE
 
 config NSH_DISABLE_GET
 	bool "Disable get"
-	default y if DEFAULT_SMALL
-	default n if !DEFAULT_SMALL
+	default y
+#	default y if DEFAULT_SMALL
+#	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_HELP
 	bool "Disable help"
@@ -409,12 +412,13 @@ config NSH_DISABLE_POWEROFF
 
 config NSH_DISABLE_PRINTF
 	bool "Disable printf"
-	default y
+	default n
 
 config NSH_DISABLE_PS
 	bool "Disable ps"
-	default y if !FS_PROCFS || FS_PROCFS_EXCLUDE_PROCESS
-	default n if FS_PROCFS && !FS_PROCFS_EXCLUDE_PROCESS
+	default n
+#	default y if !FS_PROCFS || FS_PROCFS_EXCLUDE_PROCESS
+#	default n if FS_PROCFS && !FS_PROCFS_EXCLUDE_PROCESS
 
 config NSH_DISABLE_PSSTACKUSAGE
 	bool "Disable ps stack usage"
@@ -430,8 +434,9 @@ config NSH_DISABLE_PING
 
 config NSH_DISABLE_PUT
 	bool "Disable put"
-	default y if DEFAULT_SMALL
-	default n if !DEFAULT_SMALL
+	default y
+#	default y if DEFAULT_SMALL
+#	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_PWD
 	bool "Disable pwd"
@@ -492,8 +497,9 @@ config NSH_DISABLE_TEST
 
 config NSH_DISABLE_TELNETD
 	bool "Disable telnetd"
-	default n if !NSH_NETLOCAL
-	default y if NSH_NETLOCAL
+	default y
+#	default n if !NSH_NETLOCAL
+#	default y if NSH_NETLOCAL
 
 config NSH_DISABLE_UMOUNT
 	bool "Disable umount"
@@ -536,8 +542,9 @@ config NSH_DISABLE_USLEEP
 
 config NSH_DISABLE_WGET
 	bool "Disable wget"
-	default y if DEFAULT_SMALL
-	default n if !DEFAULT_SMALL
+	default y
+#	default y if DEFAULT_SMALL
+#	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_XD
 	bool "Disable xd"
@@ -1001,7 +1008,7 @@ endmenu # USB Device Trace Support
 
 config NSH_ARCHINIT
 	bool "Have architecture-specific initialization"
-	default n
+	default y
 	select LIB_BOARDCTL
 	---help---
 		Set if your board provides architecture specific initialization

@@ -5,7 +5,7 @@
 
 config EXAMPLES_NSH
 	bool "NuttShell (NSH) example"
-	default n
+	default y
 	select NSH_LIBRARY
 	select SYSTEM_READLINE
 	---help---
@@ -23,7 +23,7 @@ config EXAMPLES_NSH_PROGNAME
 
 config EXAMPLES_NSH_CXXINITIALIZE
 	bool "C++ Initialization"
-	default n
+	default y
 	depends on HAVE_CXX && HAVE_CXXINITIALIZE
 	---help---
 		If HAVE_CXX and HAVE_CXXINITIALIZE are slected, then this NSH
