@@ -49,7 +49,7 @@ sdk
 Getting started
 
 ```
-$ make buildkernel KERNCONF=nsh
+$ make buildkernel KERNCONF=release
 $ tools/config.py default
 $ make
 ```
@@ -102,7 +102,7 @@ Additionally, you can use menu invokation with predefined configs like this:
 $ tools/config.py --menuconfig default
 ```
 
-This command replaces configration to "nsh" config and invoke menuconfig.
+This command replaces configration to "default" config and invoke menuconfig.
 
 # Build
 
