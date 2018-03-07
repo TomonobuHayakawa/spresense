@@ -34,12 +34,12 @@
 ############################################################################
 
 -include $(TOPDIR)/Make.defs
-include $(SDKDIR)/Make.defs
+include $(APPDIR)/Make.defs
 
 # Source and object files
 
 ASRCS		=
-CSRCS		= builtin_list.c
+CSRCS		= builtin_forindex.c builtin_list.c exec_builtin.c
 
 AOBJS		= $(ASRCS:.S=$(OBJEXT))
 COBJS		= $(CSRCS:.c=$(OBJEXT))
@@ -64,7 +64,7 @@ VPATH		=
 
 all:	.built
 .PHONY: context depend clean distclean preconfig
-.PRECIOUS:
+.PRECIOUS: ../libsystem$(LIBEXT)
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
@@ -73,7 +73,7 @@ $(COBJS): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
 registry$(DELIM).updated:
-	$(Q) $(MAKE) -C registry .updated TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)"
+	$(Q) $(MAKE) -C registry .updated TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 builtin_list$(OBJEXT): builtin_list.h builtin_proto.h
 
@@ -114,7 +114,7 @@ endif
 install:
 
 context:
-	$(Q) $(MAKE) -C registry context TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)"
+	$(Q) $(MAKE) -C registry context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 .depend: Makefile $(SRCS) builtin_list.h builtin_proto.h
 	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
@@ -123,14 +123,14 @@ context:
 depend: .depend
 
 clean:
-	$(Q) $(MAKE) -C registry clean TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)"
+	$(Q) $(MAKE) -C registry clean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 	$(call DELFILE, .built)
 	$(call DELFILE, .xx_builtin_list.h)
 	$(call DELFILE, .xx_builtin_proto.h)
 	$(call CLEAN)
 
 distclean: clean
-	$(Q) $(MAKE) -C registry distclean TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)"
+	$(Q) $(MAKE) -C registry distclean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
 	$(call DELFILE, builtin_list.h)

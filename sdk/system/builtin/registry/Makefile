@@ -34,7 +34,7 @@
 ############################################################################
 
 -include $(TOPDIR)/Make.defs
-include $(SDKDIR)/Make.defs
+include $(APPDIR)/Make.defs
 
 APPSREGISTRY = $(TOPDIR)/../apps/builtin/registry
 APPSBUILTIN_ENTRY = $(wildcard $(APPSREGISTRY)/*.bdat)
