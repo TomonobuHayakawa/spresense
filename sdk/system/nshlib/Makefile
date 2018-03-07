@@ -144,12 +144,12 @@ SRCS = $(ASRCS) $(CSRCS)
 OBJS = $(AOBJS) $(COBJS)
 
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-  BIN		= ..\libapps$(LIBEXT)
+  BIN		= ..\libsystem$(LIBEXT)
 else
 ifeq ($(WINTOOL),y)
-  BIN		= ..\\libapps$(LIBEXT)
+  BIN		= ..\\libsystem$(LIBEXT)
 else
-  BIN		= ../libapps$(LIBEXT)
+  BIN		= ../libsystem$(LIBEXT)
 endif
 endif
 
@@ -160,7 +160,7 @@ VPATH =
 
 all: .built
 .PHONY: context .depend depend clean distclean preconfig
-.PRECIOUS: ../libapps$(LIBEXT)
+.PRECIOUS: ../libsystem$(LIBEXT)
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
