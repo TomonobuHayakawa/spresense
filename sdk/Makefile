@@ -121,7 +121,11 @@ endif
 
 installkernel: .kernel.built
 	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
-	$(Q) if [ -f lib/libapps.a ]; then $(ARCROSSDEV)ar d lib/libapps.a builtin_list.o; fi
+	$(Q) if [ -f lib/libapps.a ]; then \
+		$(ARCROSSDEV)ar d lib/libapps.a builtin_list.o; \
+		$(ARCROSSDEV)ar d lib/libapps.a builtin_forindex.o; \
+		$(ARCROSSDEV)ar d lib/libapps.a exec_builtin.o; \
+	fi
 	$(Q) if [ -f lib/libarch.a ]; then $(ARCROSSDEV)ar d lib/libarch.a cxd56_allocateheap.o; fi
 PHONY += installkernel
 
