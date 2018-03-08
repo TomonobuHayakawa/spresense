@@ -98,10 +98,6 @@ ifeq ($(CONFIG_CXD56_AUDIO),y)
 CHIP_CSRCS += cxd56_audio_baseband.c
 endif
 
-ifeq ($(CONFIG_CXD56_SECURE_ELEMENT),y)
-CHIP_CSRCS += cxd56_secure.c
-endif
-
 ifeq ($(CONFIG_CXD56_CISIF),y)
 CHIP_CSRCS += cxd56_cisif.c
 endif
