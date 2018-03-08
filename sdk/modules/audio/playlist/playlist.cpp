@@ -117,7 +117,7 @@ bool Playlist::setPlayMode(PlayMode play_mode)
   _info("Set play mode [%d]\n", play_mode);
 
   this->m_play_mode = play_mode;
-  this->m_play_idx = 0;
+  this->m_play_idx = -1;
 
   if (play_mode == PlayModeShuffle)
     {
@@ -172,11 +172,11 @@ bool Playlist::getNextTrack(FAR Track *track)
 
   /* Get track info, according to active list. */
 
-  if (this->m_play_idx >= this->m_alias_list.size())
+  if (this->m_play_idx >= (this->m_alias_list.size() - 1))
     {
       if (this->m_repeat_mode == RepeatModeOn)
         {
-          this->m_play_idx = 0;
+          this->m_play_idx = -1;
 
           if (this->m_play_mode == PlayModeShuffle)
             {
@@ -193,6 +193,10 @@ bool Playlist::getNextTrack(FAR Track *track)
 
   clearerr(this->m_track_db_fp);
 
+  /* Increment index. */
+
+  this->m_play_idx++;
+
   /* Move a file pointer of track database to the head of next track. */
 
   int seek_rst = fseek(this->m_track_db_fp,
@@ -200,9 +204,10 @@ bool Playlist::getNextTrack(FAR Track *track)
                        SEEK_SET);
   if (seek_rst != 0)
     {
+      this->m_play_idx--;
       return false;
     }
-  this->m_play_idx++;
+
 
   /* Get track info. */
 
@@ -210,6 +215,7 @@ bool Playlist::getNextTrack(FAR Track *track)
   bool ret = this->readLine(line, sizeof(line));
   if (ret != true)
     {
+      this->m_play_idx--;
       return false;
     }
 
@@ -227,11 +233,11 @@ bool Playlist::getPrevTrack(Track *track)
 
   /* Get track info, according to active list. */
 
-  if (this->m_play_idx < 0)
+  if (this->m_play_idx <= 0)
     {
       if (this->m_repeat_mode == RepeatModeOn)
         {
-          this->m_play_idx = this->m_alias_list.size() - 1;
+          this->m_play_idx = this->m_alias_list.size();
 
           if (this->m_play_mode == PlayModeShuffle)
             {
@@ -248,6 +254,10 @@ bool Playlist::getPrevTrack(Track *track)
 
   clearerr(this->m_track_db_fp);
 
+  /* Decrement index. */
+
+  this->m_play_idx--;
+
   /* Move a file pointer of track database to the head of next track. */
 
   int seek_rst = fseek(this->m_track_db_fp,
@@ -255,9 +265,9 @@ bool Playlist::getPrevTrack(Track *track)
                        SEEK_SET);
   if (seek_rst != 0)
     {
+      this->m_play_idx++;
       return false;
     }
-  this->m_play_idx--;
 
   /* Get track info. */
 
@@ -268,6 +278,7 @@ bool Playlist::getPrevTrack(Track *track)
   bool ret = this->readLine(line, sizeof(line));
   if (ret != true)
     {
+      this->m_play_idx++;
       return false;
     }
 

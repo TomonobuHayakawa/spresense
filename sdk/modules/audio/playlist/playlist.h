@@ -81,7 +81,7 @@ public:
     m_play_mode(PlayModeNormal),
     m_repeat_mode(RepeatModeOff),
     m_list_type(ListTypeAllTrack),
-    m_play_idx(0),
+    m_play_idx(-1),
     m_track_db_fp(NULL)
   {
     strncpy(m_track_db_file_name, file_name, sizeof(m_track_db_file_name));
