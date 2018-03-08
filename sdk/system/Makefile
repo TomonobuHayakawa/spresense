@@ -76,9 +76,14 @@ context: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_context)
 depend: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_depend)
 
 clean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_clean)
+	$(call DELFILE, $(BIN))
+	$(call DELFILE, Kconfig)
 	$(call CLEAN)
 
 distclean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_distclean)
+	$(call DELFILE, .depend)
+	$(call DELFILE, $(BIN))
+	$(call DELFILE, Kconfig)
 	$(call CLEAN)
 
 preconfig: $(foreach SDIR, $(SUBDIRS), $(SDIR)_preconfig)
