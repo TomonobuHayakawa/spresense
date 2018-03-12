@@ -80,6 +80,10 @@ def apply_defconfig(configname, configlist, topdir, sdkdir, kernel):
     ret = os.system(postproc)
     if ret != 0:
         print('Post process failed. %d' % ret)
+        if kernel:
+            print('Try \'make distcleankernel\' first.' )
+        else:
+            print('Try \'make clean\' first.' )
     return ret
 
 def apply_spices(spices, configfile):
@@ -196,11 +200,13 @@ if __name__ == "__main__":
     if len(spices) > 0:
         if opts.kernel:
             d = topdir
+            target = 'olddefconfigkernel'
         else:
             d = sdkdir
+            target = 'olddefconfig'
 
         apply_spices(spices, "%s/.config" % d)
-        ret = os.system('make olddefconfigkernel 2>&1 >/dev/null')
+        ret = os.system('make %s 2>&1 >/dev/null' % target)
         if ret != 0:
             sys.exit(ret)
 
