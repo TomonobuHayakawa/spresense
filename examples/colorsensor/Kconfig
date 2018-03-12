@@ -6,7 +6,7 @@
 config EXAMPLES_COLORSENSOR
 	bool "Color sensor example"
 	default n
-    depends on CXD56_SCU && BH1745NUC
+    depends on BH1745NUC
 	---help---
 		Enable the sensor via SCU example
 

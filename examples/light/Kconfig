@@ -6,7 +6,7 @@
 config EXAMPLES_LIGHT
 	bool "Light sensor example"
 	default n
-    depends on CXD56_SCU && (APDS9930 || LT1PA01 || BH1721FVC || RPR0521RS)
+    depends on APDS9930 || LT1PA01 || BH1721FVC || RPR0521RS
 	---help---
 		Enable the sensor via SCU example
 
