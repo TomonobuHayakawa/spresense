@@ -6,7 +6,6 @@
 config EXAMPLES_DECIMATOR
 	bool "SCU decimator example"
 	default n
-    depends on CXD56_SCU
 	---help---
 		This is a example of SCU decimator. This example needs the sensor
 		is assigned to decimator. See SCU Decimator assignments option.

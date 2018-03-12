@@ -6,7 +6,7 @@
 config EXAMPLES_PRESS
 	bool "Pressure sensor example"
 	default n
-    depends on BMP280 || (CXD56_SCU && BM1383GLV)
+    depends on BMP280 || BM1383GLV
 	---help---
 		Enable the sensor via SCU example
 
@@ -40,24 +40,20 @@ config EXAMPLES_TEMP_DEVNAME
     string "Temperature sensor device name"
     default "/dev/temp0"
     depends on BMP280
-    depends on CXD56_SCU
 
 config EXAMPLES_TEMP_SIGNO
     int "Temperature sensor signal"
     default 15
     depends on BMP280
-    depends on CXD56_SCU
 
 config EXAMPLES_PRESS_NTIMES
     int "Number of sensing times"
     default 10
     depends on BMP280
-    depends on !CXD56_SCU
 
 config EXAMPLES_PRESS_INTERVAL
     int "Period of time to each sensing (ms)"
     default 100
     depends on BMP280
-    depends on !CXD56_SCU
 
 endif

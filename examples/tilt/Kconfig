@@ -6,7 +6,7 @@
 config EXAMPLES_TILT
 	bool "Tilt detection example"
 	default n
-    depends on CXD56_SCU && BMI160
+    depends on BMI160
 	---help---
 		Enable the sensor via SCU Mathfunc example
 

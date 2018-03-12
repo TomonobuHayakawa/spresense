@@ -6,7 +6,6 @@
 config EXAMPLES_ACCEL
 	bool "Accelerometer sensor example"
 	default n
-    depends on CXD56_SCU
 	---help---
 		Enable the sensor via SCU example
 

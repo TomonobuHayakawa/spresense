@@ -6,7 +6,7 @@
 config EXAMPLES_CXD56_ADC
 	bool "CXD56 ADC example"
 	default n
-	depends on CXD56_SCU && CXD56_ADC
+	depends on CXD56_ADC
 	---help---
 		Enable the CXD56 ADC example
 
