@@ -25,6 +25,7 @@ config AUDIOUTILS_PLAYER
 	select MEMUTILS_SIMPLE_FIFO
 	select AUDIOUTILS_DECODER
 	select AUDIOUTILS_RENDERER
+	select AUDIOUTILS_DSP_DRIVER
 	---help---
 		Support Player Feature
 
@@ -72,6 +73,7 @@ config AUDIOUTILS_RECORDER
 	select AUDIOUTILS_ENCODER
 	select AUDIOUTILS_FILTER
 	select AUDIOUTILS_CAPTURE
+	select AUDIOUTILS_DSP_DRIVER
 	---help---
 		Support Recorder Feature
 
@@ -101,6 +103,8 @@ config AUDIOUTILS_VOICE_CALL
 	select AUDIOUTILS_RENDERER
 	select AUDIOUTILS_FILTER
 	select AUDIOUTILS_CAPTURE
+	select AUDIOUTILS_DSP_DRIVER
+	select AUDIOUTILS_SOUND_EFFECTOR
 	---help---
 		Support Voice Call Feature
 
@@ -119,6 +123,8 @@ config AUDIOUTILS_VOICE_COMMAND
 	select AUDIOUTILS_FILTER
 	select AUDIOUTILS_CAPTURE
 	select AUDIOUTILS_RECOGNITION
+	select AUDIOUTILS_DSP_DRIVER
+	select AUDIOUTILS_SOUND_EFFECTOR
 	---help---
 		Support Voice Command Feature
 
@@ -200,6 +206,12 @@ config AUDIOUTILS_UNUSE_ORIGINAL_OPUS_FORMAT
     depends on AUDIOUTILS_PLAYER || AUDIOUTILS_RECORDER
     ---help---
         Enable Unuse Original Opus Format
+
+config AUDIOUTILS_DSP_DRIVER
+	bool
+
+config AUDIOUTILS_SOUND_EFFECTOR
+	bool
 
 endmenu # Audio Utilities
 
