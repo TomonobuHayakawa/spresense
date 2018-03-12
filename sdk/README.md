@@ -104,6 +104,29 @@ $ tools/config.py --menuconfig default
 
 This command replaces configration to "default" config and invoke menuconfig.
 
+## Save your configuration
+
+If you want to save your edited options, then try `tools/mkdefconfig.py`.
+It is for saving user configuration as predefined config.
+
+You can save current SDK configuration like this:
+
+```
+$ tools/mkdefconfig <config name>
+```
+
+And also kernel configuration too.
+
+```
+$ tools/mkdefconfig -k <config name>
+```
+
+After that, you can choose their saved default configs to specify `tools/config.py`'s
+config name.
+
+If your specified config name is already exists, `tools/mkdefconfig.py` shows
+comfirm message to overwrite.
+
 # Build
 
 SDK build system has been separated from NuttX, it to be able to build NuttX
