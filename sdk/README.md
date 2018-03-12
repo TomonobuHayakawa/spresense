@@ -28,9 +28,9 @@ sdk
 |-- modules
 |   |-- asmp       - ASMP framework
 |   |-- audio      - Audio library
-|   |-- bluetooth  - Bluetooth
+|   |-- cmdfw      - Command Framework library
+|   |-- fwuputils  - Firmware update utility
 |   |-- include    - Library headers
-|   |-- nfc        - NFC library
 |   |-- sensing    - Smart sensing library
 |   |   |-- arm_gesture   - Arm gesture detection
 |   |   |-- barometer     - Barometer
