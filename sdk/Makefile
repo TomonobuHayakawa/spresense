@@ -239,9 +239,12 @@ PHONY += subdir_clean
 
 clean: subdir_clean
 	$(call DELFILE, .kconfig.tmp)
-	$(DIRUNLINK, .config.tmp)
+	$(call DELDIR,  .config.tmp)
 	$(call DELFILE, bsp/include/sdk/version.h)
 	$(call DELFILE, $(SDKLIBS))
+	$(call DELFILE, $(BIN))
+	$(call DELFILE, $(SPK))
+	$(call DELFILE, System.map)
 PHONY += clean
 
 subdir_distclean:
