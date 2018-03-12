@@ -33,7 +33,7 @@
 #
 ############################################################################
 
--include $(TOPDIR)/.config # Current configuration
+-include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
 # Sub-directories
@@ -67,6 +67,7 @@ context: $(foreach SDIR, $(SUBDIRS), $(SDIR)_context)
 depend: $(foreach SDIR, $(SUBDIRS), $(SDIR)_depend)
 
 clean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_clean)
+	$(call DELFILE, Kconfig)
 
 distclean: $(foreach SDIR, $(SUBDIRS), $(SDIR)_distclean)
 
