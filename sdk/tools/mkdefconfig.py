@@ -6,6 +6,8 @@ import sys
 import logging
 import re
 
+CONFIG_APPS_DIR = 'CONFIG_APPS_DIR="../sdk/tools/empty_apps"'
+
 def make_savedefconfig(d):
     ''' Run 'make savedefconfig' at specified directory
     '''
@@ -46,6 +48,8 @@ def save_default_config(basedir, confpath, kernel):
     logging.debug("Output: %s\n" % (confpath))
     if kernel:
         os.replace(defconfig, confpath)
+        with open(confpath, 'a') as dest:
+            dest.write(CONFIG_APPS_DIR + "\n")
     else:
         with open(confpath, 'w') as dest:
             with open(defconfig, 'r') as src:
