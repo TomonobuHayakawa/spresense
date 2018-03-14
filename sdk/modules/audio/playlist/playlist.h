@@ -85,6 +85,7 @@ public:
     m_track_db_fp(NULL)
   {
     strncpy(m_track_db_file_name, file_name, sizeof(m_track_db_file_name));
+    memset(m_playlist_path, 0, sizeof(m_playlist_path));
   }
 
   ~Playlist()
@@ -92,14 +93,14 @@ public:
     close();
   }
 
-  bool init(void);
+  bool init(const char *playlist_path);
   bool setPlayMode(PlayMode play_mode);
   bool setRepeatMode(RepeatMode repeat_mode);
   bool select(ListType type, FAR const char *key_str);
   bool updatePlaylist(ListType type, FAR const char *key_str);
   bool addTrack(FAR const char *key_str, int track_no);
   bool removeTrack(FAR const char *key_str, uint32_t remove_pos);
-  bool updateTrackDb(void);
+  bool updateTrackDb(const char *audiofile_root_path);
   bool deleteAll(void);
   bool deleteOne(ListType type, FAR const char *key_str);
   bool getNextTrack(FAR Track *track);
@@ -121,11 +122,10 @@ private:
                    FAR char       *file_name,
                    uint8_t        max_length);
 
-  static const char PlaylistPath[];
-  static const char MusicFilePath[];
   static const int  FileNameMaxLength = 128;
   static const int  LineMaxLength     = 256;
 
+  char       m_playlist_path[FileNameMaxLength];
   PlayMode   m_play_mode;
   RepeatMode m_repeat_mode;
   ListType   m_list_type;

@@ -43,24 +43,13 @@
 
 #include "playlist.h"
 
-#ifndef CONFIG_AUDIOUTILS_PLAYLIST_PLAYLISTFILE_MOUNTPT
-#  define CONFIG_AUDIOUTILS_PLAYLIST_PLAYLISTFILE_MOUNTPT \
-            "/mnt/vfat/PLAYLIST"
-#endif
-
-const char Playlist::PlaylistPath[] =
-  CONFIG_AUDIOUTILS_PLAYLIST_PLAYLISTFILE_MOUNTPT;
-
-#ifndef CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT
-#  define CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT "/mnt/vfat/AUDIO"
-#endif
-
-const char Playlist::MusicFilePath[] =
-  CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT;
-
 /*--------------------------------------------------------------------------*/
-bool Playlist::init(void)
+bool Playlist::init(const char *playlist_path)
 {
+  /* Set playlist file path */
+
+  snprintf(m_playlist_path, sizeof(m_playlist_path), "%s", playlist_path);
+
   /* Open track database. */
 
   this->open("r");
@@ -83,7 +72,7 @@ bool Playlist::open(FAR const char *mode)
 
   snprintf(absolute_path,
            sizeof(absolute_path),
-           "%s/%s", PlaylistPath,
+           "%s/%s", m_playlist_path,
            this->m_track_db_file_name);
   this->m_track_db_fp = fopen(absolute_path, mode);
 
@@ -502,14 +491,14 @@ bool Playlist::removeTrack(FAR const char *key_str, uint32_t remove_pos)
 }
 
 /*--------------------------------------------------------------------------*/
-bool Playlist::updateTrackDb(void)
+bool Playlist::updateTrackDb(const char *audiofile_root_path)
 {
   /* Reopen track database with write mode. */
 
   this->close();
   this->open("w");
 
-  FAR DIR *dir_descriptor = opendir(MusicFilePath);
+  FAR DIR *dir_descriptor = opendir(audiofile_root_path);
   if (dir_descriptor == NULL)
     {
       printf("Cannot open folder.\n");
@@ -595,7 +584,7 @@ bool Playlist::updateTrackDb(void)
 /*--------------------------------------------------------------------------*/
 bool Playlist::deleteAll(void)
 {
-  FAR DIR *dir_descriptor = opendir(PlaylistPath);
+  FAR DIR *dir_descriptor = opendir(m_playlist_path);
   if (dir_descriptor == NULL)
     {
       printf("Cannot open folder.\n");
@@ -988,7 +977,7 @@ bool Playlist::getFileName(ListType       type,
           snprintf(file_name,
                    max_length,
                    "%s/%s%s.bin",
-                   PlaylistPath,
+                   m_playlist_path,
                    prefix,
                    "alltrack");
           break;
@@ -997,7 +986,7 @@ bool Playlist::getFileName(ListType       type,
           snprintf(file_name,
                    max_length,
                    "%s/%s%s%s.bin",
-                   PlaylistPath,
+                   m_playlist_path,
                    prefix,
                    "artist_",
                    key_str);
@@ -1007,7 +996,7 @@ bool Playlist::getFileName(ListType       type,
           snprintf(file_name,
                    max_length,
                    "%s/%s%s%s.bin",
-                   PlaylistPath,
+                   m_playlist_path,
                    prefix,
                    "album_",
                    key_str);
@@ -1017,7 +1006,7 @@ bool Playlist::getFileName(ListType       type,
           snprintf(file_name,
                    max_length,
                    "%s/%s%s%s.bin",
-                   PlaylistPath,
+                   m_playlist_path,
                    prefix,
                    "user_",
                    key_str);
@@ -1027,7 +1016,7 @@ bool Playlist::getFileName(ListType       type,
           snprintf(file_name,
                    max_length,
                    "%s/%s%s.bin",
-                   PlaylistPath,
+                   m_playlist_path,
                    prefix,
                    "alltrack");
           break;
