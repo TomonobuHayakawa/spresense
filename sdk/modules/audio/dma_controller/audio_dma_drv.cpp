@@ -65,6 +65,14 @@
 
 extern "C" uint32_t cxd56_get_cpu_baseclk(void);
 
+#ifdef CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW
+/* Underflow insertion data 
+ *  (saize: sample[UNDERFLOW_DATA_SAMPLE] * bitleng[4] * channel[2])
+ */
+
+static char under_data[UNDERFLOW_INSERT_SAMPLE * AS_DMAC_BYTE_WT_24BIT * AS_DMA_I2SO_CH] = {0};
+#endif  /* CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW */
+
 /*--------------------------------------------------------------------*/
 static E_AS syncDmacTrg(asDmacSelId dmacId, bool nointr)
 {
@@ -245,13 +253,13 @@ AsDmaDrv::dmaDrvFuncTbl AsDmaDrv::m_func_tbl[] =
   {
     EvtRun,
 
-    {                           /* DmaController status:  */
-      &AsDmaDrv::illegal,       /*   AS_DMA_STATE_BOOTED  */
-      &AsDmaDrv::runDmaOnStop,  /*   AS_DMA_STATE_STOP    */
-      &AsDmaDrv::runDmaOnReady, /*   AS_DMA_STATE_READY   */
-      &AsDmaDrv::runDma,        /*   AS_DMA_STATE_PREPARE */
-      &AsDmaDrv::runDmaOnRun,   /*   AS_DMA_STATE_RUN     */
-      &AsDmaDrv::illegal        /*   AS_DMA_STATE_FLUSH   */
+    {                             /* DmaController status:  */
+      &AsDmaDrv::illegal,         /*   AS_DMA_STATE_BOOTED  */
+      &AsDmaDrv::runDmaOnStop,    /*   AS_DMA_STATE_STOP    */
+      &AsDmaDrv::runDmaOnReady,   /*   AS_DMA_STATE_READY   */
+      &AsDmaDrv::runDmaOnPrepare, /*   AS_DMA_STATE_PREPARE */
+      &AsDmaDrv::runDma,          /*   AS_DMA_STATE_RUN     */
+      &AsDmaDrv::illegal          /*   AS_DMA_STATE_FLUSH   */
     }
   },
 
@@ -546,11 +554,25 @@ void AsDmaDrv::runDmaSplitRequest(AudioDrvDmaRunParam *pDmaParam,
 }
 
 /*--------------------------------------------------------------------*/
-bool AsDmaDrv::runDma(void *p_param)
+bool AsDmaDrv::runDmaOnPrepare(void *p_param)
+{
+  return pushRequest(p_param, true);
+}
+
+/*--------------------------------------------------------------------*/
+bool AsDmaDrv::pushRequest(void *p_param, bool use_callback)
 {
   AudioDrvDmaRunParam dmaParam;
 
   dmaParam.run_dmac_param = *(reinterpret_cast<asReadDmacParam*>(p_param));
+  if (use_callback)
+    {
+      dmaParam.p_dmadone_func = m_dmadone_func;
+    }
+  else
+    {
+      dmaParam.p_dmadone_func = NULL;
+    }
 
   uint32_t size1_cnt = 0;
   uint32_t size2_cnt = 0;
@@ -618,7 +640,7 @@ bool AsDmaDrv::runDmaOnStop(void *p_param)
   m_ready_que.clear();
   m_running_que.clear();
 
-  runDma(p_param);
+  pushRequest(p_param, true);
 
   m_state = AS_DMA_STATE_PREPARE;
 
@@ -635,7 +657,7 @@ bool AsDmaDrv::runDmaOnReady(void *p_param)
       return false;
     }
 
-  runDma(p_param);
+  pushRequest(p_param, true);
 
   m_state = AS_DMA_STATE_PREPARE;
 
@@ -645,9 +667,9 @@ bool AsDmaDrv::runDmaOnReady(void *p_param)
 }
 
 /*--------------------------------------------------------------------*/
-bool AsDmaDrv::runDmaOnRun(void *p_param)
+bool AsDmaDrv::runDma(void *p_param)
 {
-  runDma(p_param);
+  pushRequest(p_param, true);
 
   while ((m_ready_que.size() > 0)
       && (m_running_que.size() < RUNNING_QUEUE_NUM))
@@ -754,7 +776,7 @@ void AsDmaDrv::dmaCmplt(void)
 
   if (dmaParam.overlap_cnt == 0)
     {
-      if (m_dmadone_func != NULL)
+      if (dmaParam.p_dmadone_func != NULL)
         {
           AudioDrvDmaResult resultParam;
 
@@ -803,6 +825,35 @@ bool AsDmaDrv::dmaCmpltOnRun(void *p_param)
 {
   dmaCmplt();
   fadeControl();
+
+#ifdef CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW
+  if ((m_running_que.size() == 1) &&
+      (m_dmac_id == AS_DMAC_SEL_I2S_OUT ||
+       m_dmac_id == AS_DMAC_SEL_I2S2_OUT))
+    {
+      asWriteDmacParam dmac_param;
+      dmac_param.dmacId = m_dmac_id;
+      dmac_param.addr = (uint32_t)&under_data[0];
+      dmac_param.size = UNDERFLOW_INSERT_SAMPLE;
+      dmac_param.addr2 = 0;
+      dmac_param.size2 = 0;
+      dmac_param.validity = false;
+      pushRequest((void*)&dmac_param, false);
+
+      const AudioDrvDmaRunParam& reqParam = m_ready_que.top();
+      runningQuePush(reqParam);
+
+      setDmaCmd(reqParam.run_dmac_param.dmacId,
+                    reqParam.split_addr,
+                    reqParam.split_size,
+                    false,
+                    false);
+
+      readyQuePop();
+
+      dmaErrCb(E_AS_BB_DMA_UNDERFLOW);
+    }
+#endif  /* CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW */
 
   if (m_running_que.size() == 0)
     {

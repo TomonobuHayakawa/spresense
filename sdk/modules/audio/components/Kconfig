@@ -38,6 +38,15 @@ config AUDIOUTILS_RENDERER
 	default n
 	---help---
 		Enable Renderer Feature
+		
+if AUDIOUTILS_RENDERER
+config AUDIOUTILS_RENDERER_UNDERFLOW
+	bool "Insert silence data at underflow"
+	default n
+	---help---
+		Enable Insert silence data
+
+endif
 
 config AUDIOUTILS_COMPONENT_COMMON
 	bool

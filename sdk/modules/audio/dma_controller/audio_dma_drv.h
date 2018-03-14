@@ -70,8 +70,11 @@ E_AS AS_DeactivateDmac(asDmacSelId dmacId);
 } /* end of extern "C" */
 #endif /* __cplusplus */
 
+#ifdef CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW
+/* Number of silent insertion samples at dmac underflow */
 
-
+# define UNDERFLOW_INSERT_SAMPLE 1024  /* 21ms */
+#endif  /* CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW */
 
 #define READY_QUEUE_NUM 16
 #define RUNNING_QUEUE_NUM 3
@@ -166,10 +169,10 @@ private:
   void unMuteSdinVol(bool);
   bool init(void*);
   void runDmaSplitRequest(AudioDrvDmaRunParam*, uint32_t, uint16_t);
-  bool runDma(void*);
+  bool runDmaOnPrepare(void*);
   bool runDmaOnStop(void*);
   bool runDmaOnReady(void*);
-  bool runDmaOnRun(void*);
+  bool runDma(void*);
   bool startDma(void*);
   void dmaCmplt(void);
   bool dmaCmpltOnRun(void*);
@@ -186,6 +189,7 @@ private:
   void freeDmaBuffer(asDmacSelId);
   void fadeControl(void);
   void volumeCtrl(bool validity, bool is_last_frame);
+  bool pushRequest(void*, bool);
 
   static void dma_err_callback(AudioDrvDmaError *pParam)
   {
