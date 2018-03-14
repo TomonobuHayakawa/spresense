@@ -66,9 +66,8 @@ using namespace MemMgrLite;
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifndef CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT
-#  define CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT "/mnt/sd0/AUDIO"
-#endif
+#define AUDIOFILE_ROOTPATH "/mnt/sd0/AUDIO"
+#define PLAYLISTFILE_PATH "/mnt/sd0/PLAYLIST"
 
 /* PlayList file name */
 
@@ -183,7 +182,7 @@ static void app_freq_release(void)
 static bool app_open_contents_dir(void)
 {
   DIR *dirp;
-  const char *name = CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT;
+  const char *name = AUDIOFILE_ROOTPATH;
   
   dirp = opendir(name);
 
@@ -218,7 +217,7 @@ static bool app_open_playlist(void)
 
   s_player_info.playlist_ins = new Playlist(PLAY_LIST_NAME);
   
-  result = s_player_info.playlist_ins->init();
+  result = s_player_info.playlist_ins->init(PLAYLISTFILE_PATH);
   if (!result)
     {
       printf("Error: Playlist::init() failure.\n");
@@ -765,7 +764,7 @@ static bool app_start(void)
     }
 
   char full_path[128];
-  snprintf(full_path, sizeof(full_path), "%s/%s", CONFIG_AUDIOUTILS_PLAYLIST_PLAYFILE_MOUNTPT, track.title);
+  snprintf(full_path, sizeof(full_path), "%s/%s", AUDIOFILE_ROOTPATH, track.title);
 
   s_player_info.file.fd = app_play_file_open(full_path, &s_player_info.file.size);
   if (s_player_info.file.fd < 0)
