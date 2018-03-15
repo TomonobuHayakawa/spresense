@@ -36,7 +36,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <sdk/config.h>
+#include <nuttx/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -64,30 +64,11 @@
 #  include "cxd56_dmac.h"
 #endif
 
-#if defined(CONFIG_CXD56_SPI0) || defined(CONFIG_CXD56_SPI3) || defined(CONFIG_CXD56_SPI4) || defined(CONFIG_CXD56_SPI5)
+#ifdef CONFIG_CXD56_SPI
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-
-/* The following enable debug output from this file (needs CONFIG_DEBUG too).
- *
- * CONFIG_SPI_DEBUG - Define to enable basic SPI debug
- * CONFIG_SPI_VERBOSE - Define to enable verbose SPI debug
- */
-
-#ifdef CONFIG_SPI_DEBUG
-#  define spidbg  lldbg
-#  ifdef CONFIG_SPI_VERBOSE
-#    define spivdbg lldbg
-#  else
-#    define spivdbg(x...)
-#  endif
-#else
-#  undef CONFIG_SPI_VERBOSE
-#  define spidbg(x...)
-#  define spivdbg(x...)
-#endif
 
 #ifndef __unused
 #define __unused __attribute__((unused))
@@ -533,7 +514,7 @@ static uint32_t spi_setfrequency(FAR struct spi_dev_s *dev, uint32_t frequency)
   priv->frequency = frequency;
   priv->actual    = actual;
 
-  spidbg("Frequency %d->%d\n", frequency, actual);
+  spiinfo("Frequency %d->%d\n", frequency, actual);
   return actual;
 }
 
@@ -588,7 +569,7 @@ static void spi_setmode(FAR struct spi_dev_s *dev, enum spi_mode_e mode)
             break;
 
           default:
-            spidbg("Bad mode: %d\n", mode);
+            spierr("Bad mode: %d\n", mode);
             DEBUGASSERT(FALSE);
 
             /* Enable clock gating (clock disable) */
@@ -707,7 +688,7 @@ static uint16_t spi_send(FAR struct spi_dev_s *dev, uint16_t wd)
   /* Get the value from the RX FIFO and return it */
 
   regval = spi_getreg(priv, CXD56_SPI_DR_OFFSET);
-  spidbg("%04x->%04x\n", wd, regval);
+  spiinfo("%04x->%04x\n", wd, regval);
 
   if (priv->port == 3)
     {
@@ -791,7 +772,7 @@ static void spi_exchange(FAR struct spi_dev_s *dev, FAR const void *txbuffer,
        * and (3) there are more bytes to be sent.
        */
 
-      spivdbg("TX: rxpending: %d nwords: %d\n", rxpending, nwords);
+      spiinfo("TX: rxpending: %d nwords: %d\n", rxpending, nwords);
       while ((spi_getreg(priv, CXD56_SPI_SR_OFFSET) & SPI_SR_TNF) &&
              (rxpending < CXD56_SPI_FIFOSZ) && nwords)
         {
@@ -815,7 +796,7 @@ static void spi_exchange(FAR struct spi_dev_s *dev, FAR const void *txbuffer,
       /* Now, read the RX data from the RX FIFO while the RX FIFO is not empty
        */
 
-      spivdbg("RX: rxpending: %d\n", rxpending);
+      spiinfo("RX: rxpending: %d\n", rxpending);
       while (spi_getreg(priv, CXD56_SPI_SR_OFFSET) & SPI_SR_RNE)
         {
           data = spi_getreg(priv, CXD56_SPI_DR_OFFSET);
@@ -1524,7 +1505,7 @@ static void spi_dmatxcallback(DMA_HANDLE handle, uint8_t status, void *data)
 
   if ((status & CXD56_DMA_INTR_ERR) != 0)
     {
-      spidbg("dma error\n");
+      spierr("dma error\n");
     }
 
   (void)sem_post(&priv->dmasem);
@@ -1546,7 +1527,7 @@ static void spi_dmarxcallback(DMA_HANDLE handle, uint8_t status, void *data)
 
   if ((status & CXD56_DMA_INTR_ERR) != 0)
     {
-      spidbg("dma error\n");
+      spierr("dma error\n");
     }
 
   (void)sem_post(&priv->dmasem);
@@ -1612,7 +1593,7 @@ static void spi_dmatxwait(FAR struct cxd56_spidev_s *priv)
 
   if (sem_wait(&priv->dmasem) != OK)
     {
-      spidbg("dma error\n");
+      spierr("dma error\n");
     }
 
   cxd56_dmastop(priv->txdmach);
@@ -1636,7 +1617,7 @@ static void spi_dmarxwait(FAR struct cxd56_spidev_s *priv)
 
   if (sem_wait(&priv->dmasem) != OK)
     {
-      spidbg("dma error\n");
+      spierr("dma error\n");
     }
 
   cxd56_dmastop(priv->rxdmach);
@@ -1660,12 +1641,12 @@ static void spi_dmatrxwait(FAR struct cxd56_spidev_s *priv)
 
   if (sem_wait(&priv->dmasem) != OK)
     {
-      spidbg("dma error\n");
+      spierr("dma error\n");
     }
 
   if (sem_wait(&priv->dmasem) != OK)
     {
-      spidbg("dma error\n");
+      spierr("dma error\n");
     }
 
   cxd56_dmastop(priv->txdmach);
@@ -1678,4 +1659,4 @@ static void spi_dmatrxwait(FAR struct cxd56_spidev_s *priv)
 
 #endif /* CONFIG_CXD56_DMAC */
 
-#endif /* CONFIG_CXD56_SPI0/3/4/5 */
+#endif /* CONFIG_CXD56_SPI */

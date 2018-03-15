@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_scufifo.h
+ * arch/arm/src/cxd56xx/cxd56_timer.h
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,52 +32,67 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H
-
-/*-----------------------------------------------------------------------------
- * include files
- *---------------------------------------------------------------------------*/
-
-#define FIFOMEM_INVALID 0xffff
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_TIMER_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_TIMER_H
 
 /****************************************************************************
- * Name: scufifo_initialize
- *
- * Description:
- *   Initialize SCU FIFO memory management
- *
+ * Included Files
  ****************************************************************************/
 
-void scufifo_initialize(void);
+#include <nuttx/config.h>
+
+#ifdef CONFIG_TIMER
 
 /****************************************************************************
- * Name: scufifo_memalloc
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/* Channel ******************************************************************/
+
+#define CXD56_TIMER0    (0)
+#define CXD56_TIMER1    (1)
+#define CXD56_TIMER_NUM (2)
+
+#ifndef __ASSEMBLY__
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: cxd56_timer_initialize
  *
  * Description:
- *   Allocate SCU FIFO memory
+ *   Initialize the timer.  The timer is initialized and
+ *   registers as 'devpath.  The initial state of the timer is
+ *   disabled.
  *
  * Input Parameters:
- *   size - Request memory size
+ *   devpath - The full path to the timer.  This should be of the form
+ *     /dev/timer0
+ *   timer - the timer's number.
  *
- * Returned Value:
- *   Allocated FIFO memory start offset. If error, return FIFOMEM_INVALID.
- *
- ****************************************************************************/
-
-uint16_t scufifo_memalloc(uint16_t size);
-
-/****************************************************************************
- * Name: scufifo_memfree
- *
- * Description:
- *   Free allocated SCU FIFO memory
- *
- * Input Parameters:
- *   start - Start offset of FIFO memory
+ * Returned Values:
+ *   None
  *
  ****************************************************************************/
 
-void scufifo_memfree(uint16_t start);
+void cxd56_timer_initialize(FAR const char *devpath, int timer);
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H */
+#undef EXTERN
+#if defined(__cplusplus)
+}
+#endif
+
+#endif /* __ASSEMBLY__ */
+#endif /* CONFIG_TIMER */
+#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_TIMER_H */

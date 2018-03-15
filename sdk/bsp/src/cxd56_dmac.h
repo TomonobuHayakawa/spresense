@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_udmac.h
+ * arch/arm/src/cxd56xx/cxd56_dmac.h
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,11 +32,11 @@
  *
  ****************************************************************************/
 /**
- * @file       cxd56_udmac.h
+ * @file       cxd56_dmac.h
  */
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_UDMAC_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_UDMAC_H
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_DMAC_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_DMAC_H
 
 #include <stdint.h>
 
@@ -46,56 +46,20 @@
  * Pre-processor Definitions
  ************************************************************************************/
 
-/* Bit encoded input parameter to cxd56_channel().  These encodings must fit in the
- * an unsigned integer of type dma_config_t.
- *
- * Current limitations/assumptions in the encoding:
- *
- *   - RX transfers are peripheral to memory
- *   - TX transfers are memory to peripheral
- *   - Memory address is always incremented.
- */
+#define CXD56_DMA_PERIPHERAL_MASK       (0x0f)
+#  define CXD56_DMA_PERIPHERAL_UART2_TX (0)
+#  define CXD56_DMA_PERIPHERAL_UART2_RX (1)
+#  define CXD56_DMA_PERIPHERAL_SPI4_TX  (2)
+#  define CXD56_DMA_PERIPHERAL_SPI4_RX  (3)
+#  define CXD56_DMA_PERIPHERAL_SPI5_TX  (4)
+#  define CXD56_DMA_PERIPHERAL_SPI5_RX  (5)
 
-#define CXD56_UDMA_XFERSIZE_SHIFT         (10)      /* Bits 10-11: Transfer size */
-#define CXD56_UDMA_XFERSIZE_MASK          (3 << CXD56_UDMA_XFERSIZE_SHIFT)
-#  define CXD56_UDMA_XFERSIZE_BYTE        (0 << CXD56_UDMA_XFERSIZE_SHIFT)
-#  define CXD56_UDMA_XFERSIZE_HWORD       (1 << CXD56_UDMA_XFERSIZE_SHIFT)
-#  define CXD56_UDMA_XFERSIZE_WORD        (2 << CXD56_UDMA_XFERSIZE_SHIFT)
-
-#define CXD56_UDMA_SINGLE_MASK            (1 << 12) /* Bit 12: Single or Buffer full request */
-#  define CXD56_UDMA_SINGLE               (1 << 12) /*         1=Buffer full request */
-#  define CXD56_UDMA_BUFFER_FULL          (0)       /*         0=Buffer full request */
-
-#define CXD56_UDMA_MEMINCR_MASK           (1 << 13) /* Bit 13: Increment memory address */
-#  define CXD56_UDMA_MEMINCR              (1 << 13) /*         1=Increment memory address */
-#  define CXD56_UDMA_NOINCR               (0)       /*         0=No memory address increment */
+#define CXD56_DMA_INTR_ITC (1u<<0) /**< Terminal count interrupt status */
+#define CXD56_DMA_INTR_ERR (1u<<1) /**< Error interrupt status */
 
 /************************************************************************************
  * Public Types
  ************************************************************************************/
-
-#ifdef CONFIG_DEBUG_DMA
-struct cxd56_udmaregs_s
-{
-  uint32_t status;            /* DMA Status Register */
-  uint32_t ctrlbase;          /* Channel Control Data Base Pointer Register */
-  uint32_t altctrlbase;       /* Channel Alternate Control Data Base Pointer Register */
-  uint32_t chwaitstatus;      /* Channel Wait on Request Status Register */
-  uint32_t chusebursts;       /* Channel Useburst Set Register */
-  uint32_t chreqmasks;        /* Channel Request Mask Set Register */
-  uint32_t chens;             /* Channel Enable Set Register */
-  uint32_t chalts;            /* Channel Alternate Set Register */
-  uint32_t chpris;            /* Channel Priority Set Register */
-  uint32_t errorc;            /* Bus Error Clear Register */
-  uint32_t done;              /* Done status (CXD5602 only) */
-  uint32_t err;               /* Error status (CXD5602 only) */
-
-  uint32_t srcend;
-  uint32_t dstend;
-  uint32_t ctrl;
-};
-#endif
-
 
 /************************************************************************************
  * Public Data
@@ -117,17 +81,18 @@ extern "C"
  ************************************************************************************/
 
 /************************************************************************************
- * Name: cxd56_udmachannel
+ * Name: cxd56_dmachannel
  *
  * Description:
  *   Allocate a DMA channel.  This function gives the caller mutually exclusive
  *   access to a DMA channel.
  *
- *   If no DMA channel is available, then cxd56_udmachannel() will wait until the
- *   holder of a channel relinquishes the channel by calling cxd56_udmafree().
+ *   If no DMA channel is available, then cxd56_dmachannel() will wait until the
+ *   holder of a channel relinquishes the channel by calling cxd56_dmafree().
  *
  * Input parameters:
- *   None
+ *   ch      - DMA channel to use
+ *   maxsize - Max size to be transfered in bytes
  *
  * Returned Value:
  *   This function ALWAYS returns a non-NULL, void* DMA channel handle.
@@ -137,16 +102,16 @@ extern "C"
  *
  ************************************************************************************/
 
-DMA_HANDLE cxd56_udmachannel(void);
+DMA_HANDLE cxd56_dmachannel(int ch, int maxsize);
 
 /************************************************************************************
- * Name: cxd56_udmafree
+ * Name: cxd56_dmafree
  *
  * Description:
  *   Release a DMA channel.  If another thread is waiting for this DMA channel in a
- *   call to cxd56_udmachannel, then this function will re-assign the DMA channel to
+ *   call to cxd56_dmachannel, then this function will re-assign the DMA channel to
  *   that thread and wake it up.  NOTE:  The 'handle' used in this argument must
- *   NEVER be used again until cxd56_udmachannel() is called again to re-gain access
+ *   NEVER be used again until cxd56_dmachannel() is called again to re-gain access
  *   to the channel.
  *
  * Returned Value:
@@ -158,10 +123,10 @@ DMA_HANDLE cxd56_udmachannel(void);
  *
  ************************************************************************************/
 
-void cxd56_udmafree(DMA_HANDLE handle);
+void cxd56_dmafree(DMA_HANDLE handle);
 
 /************************************************************************************
- * Name: cxd56_rxudmasetup
+ * Name: cxd56_rxdmasetup
  *
  * Description:
  *   Configure an RX (peripheral-to-memory) DMA before starting the transfer.
@@ -175,14 +140,14 @@ void cxd56_udmafree(DMA_HANDLE handle);
  *
  ************************************************************************************/
 
-void cxd56_rxudmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
-                       size_t nbytes, dma_config_t config);
+void cxd56_rxdmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
+                      size_t nbytes, dma_config_t config);
 
 /************************************************************************************
- * Name: cxd56_txudmasetup
+ * Name: cxd56_txdmasetup
  *
  * Description:
- *   Configure an TX (memory-to-memory) DMA before starting the transfer.
+ *   Configure an TX (memory-to-peripheral) DMA before starting the transfer.
  *
  * Input Parameters:
  *   paddr  - Peripheral address (destination)
@@ -193,73 +158,36 @@ void cxd56_rxudmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
  *
  ************************************************************************************/
 
-void cxd56_txudmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
-                       size_t nbytes, dma_config_t config);
+void cxd56_txdmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
+                      size_t nbytes, dma_config_t config);
 
 /************************************************************************************
- * Name: cxd56_udmastart
+ * Name: cxd56_dmastart
  *
  * Description:
  *   Start the DMA transfer
  *
  * Assumptions:
- *   - DMA handle allocated by cxd56_udmachannel()
+ *   - DMA handle allocated by cxd56_dmachannel()
  *   - No DMA in progress
  *
  ************************************************************************************/
 
-void cxd56_udmastart(DMA_HANDLE handle, dma_callback_t callback, void *arg);
+void cxd56_dmastart(DMA_HANDLE handle, dma_callback_t callback, void *arg);
 
 /************************************************************************************
- * Name: cxd56_udmastop
+ * Name: cxd56_dmastop
  *
  * Description:
- *   Cancel the DMA.  After cxd56_udmastop() is called, the DMA channel is reset and
- *   cxd56_udmasetup() must be called before cxd56_udmastart() can be  called again
+ *   Cancel the DMA.  After cxd56_dmastop() is called, the DMA channel is reset and
+ *   cxd56_dmasetup() must be called before cxd56_dmastart() can be  called again
  *
  * Assumptions:
- *   - DMA handle allocated by cxd56_udmachannel()
+ *   - DMA handle allocated by cxd56_dmachannel()
  *
  ************************************************************************************/
 
-void cxd56_udmastop(DMA_HANDLE handle);
-
-/************************************************************************************
- * Name: cxd56_udmasample
- *
- * Description:
- *   Sample DMA register contents
- *
- * Assumptions:
- *   - DMA handle allocated by cxd56_udmachannel()
- *
- ************************************************************************************/
-
-#ifdef CONFIG_DEBUG_DMA
-void cxd56_udmasample(DMA_HANDLE handle, struct cxd56_udmaregs_s *regs);
-#else
-#  define cxd56_udmasample(handle,regs)
-#endif
-
-/************************************************************************************
- * Name: cxd56_udmadump
- *
- * Description:
- *   Dump previously sampled DMA register contents
- *
- * Assumptions:
- *   - DMA handle allocated by cxd56_udmachannel()
- *
- ************************************************************************************/
-
-#ifdef CONFIG_DEBUG_DMA
-void cxd56_udmadump(DMA_HANDLE handle, const struct cxd56_udmaregs_s *regs,
-                   const char *msg);
-#else
-#  define cxd56_udmadump(handle,regs,msg)
-#endif
-
-void cxd56_udmainitialize(void);
+void cxd56_dmastop(DMA_HANDLE handle);
 
 #undef EXTERN
 #if defined(__cplusplus)
@@ -268,4 +196,4 @@ void cxd56_udmainitialize(void);
 
 #endif /* __ASSEMBLY__ */
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_UDMAC_H */
+#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_DMAC_H */

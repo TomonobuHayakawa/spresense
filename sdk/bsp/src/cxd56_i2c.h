@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_scufifo.h
+ * arch/arm/src/cxd56xx/cxd56_i2c.h
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,52 +32,55 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H
-
-/*-----------------------------------------------------------------------------
- * include files
- *---------------------------------------------------------------------------*/
-
-#define FIFOMEM_INVALID 0xffff
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_I2C_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_I2C_H
 
 /****************************************************************************
- * Name: scufifo_initialize
- *
- * Description:
- *   Initialize SCU FIFO memory management
- *
+ * Included Files
  ****************************************************************************/
 
-void scufifo_initialize(void);
+#include <nuttx/config.h>
+#include <nuttx/i2c/i2c_master.h>
+#include "chip/cxd56_i2c.h"
 
 /****************************************************************************
- * Name: scufifo_memalloc
+ * Public Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: cxd56_i2cbus_initialize
  *
  * Description:
- *   Allocate SCU FIFO memory
+ *   Initialize the selected I2C port. And return a unique instance of struct
+ *   struct i2c_master_s.  This function may be called to obtain multiple
+ *   instances of the interface, each of which may be set up with a
+ *   different frequency and slave address.
  *
- * Input Parameters:
- *   size - Request memory size
+ * Input Parameter:
+ *   Port number (for hardware that has multiple I2C interfaces)
  *
  * Returned Value:
- *   Allocated FIFO memory start offset. If error, return FIFOMEM_INVALID.
+ *   Valid I2C device structure reference on succcess; a NULL on failure
  *
  ****************************************************************************/
 
-uint16_t scufifo_memalloc(uint16_t size);
+FAR struct i2c_master_s *cxd56_i2cbus_initialize(int port);
 
 /****************************************************************************
- * Name: scufifo_memfree
+ * Name: cxd56_i2cbus_uninitialize
  *
  * Description:
- *   Free allocated SCU FIFO memory
+ *   De-initialize the selected I2C port, and power down the device.
  *
- * Input Parameters:
- *   start - Start offset of FIFO memory
+ * Input Parameter:
+ *   Device structure as returned by the cxd56_i2cbus_initialize()
+ *
+ * Returned Value:
+ *   OK on success, ERROR when internal reference count mismatch or dev
+ *   points to invalid hardware device.
  *
  ****************************************************************************/
 
-void scufifo_memfree(uint16_t start);
+int cxd56_i2cbus_uninitialize(FAR struct i2c_master_s *dev);
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H */
+#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_I2C_H */

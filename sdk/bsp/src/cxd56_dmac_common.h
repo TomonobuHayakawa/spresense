@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/arm/src/cxd56xx/cxd56_dmac_common.h
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

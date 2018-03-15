@@ -1,7 +1,6 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_scufifo.h
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,52 +31,9 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_FARAPISTUB_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_FARAPISTUB_H
 
-/*-----------------------------------------------------------------------------
- * include files
- *---------------------------------------------------------------------------*/
+#define FARAPISTUB_VERSION 17038
 
-#define FIFOMEM_INVALID 0xffff
-
-/****************************************************************************
- * Name: scufifo_initialize
- *
- * Description:
- *   Initialize SCU FIFO memory management
- *
- ****************************************************************************/
-
-void scufifo_initialize(void);
-
-/****************************************************************************
- * Name: scufifo_memalloc
- *
- * Description:
- *   Allocate SCU FIFO memory
- *
- * Input Parameters:
- *   size - Request memory size
- *
- * Returned Value:
- *   Allocated FIFO memory start offset. If error, return FIFOMEM_INVALID.
- *
- ****************************************************************************/
-
-uint16_t scufifo_memalloc(uint16_t size);
-
-/****************************************************************************
- * Name: scufifo_memfree
- *
- * Description:
- *   Free allocated SCU FIFO memory
- *
- * Input Parameters:
- *   start - Start offset of FIFO memory
- *
- ****************************************************************************/
-
-void scufifo_memfree(uint16_t start);
-
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H */
+#endif

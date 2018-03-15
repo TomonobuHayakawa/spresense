@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_scufifo.h
+ * arch/arm/src/cxd56xx/cxd56_serial.h
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,52 +32,34 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H
-
-/*-----------------------------------------------------------------------------
- * include files
- *---------------------------------------------------------------------------*/
-
-#define FIFOMEM_INVALID 0xffff
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_SERIAL_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_SERIAL_H
 
 /****************************************************************************
- * Name: scufifo_initialize
- *
- * Description:
- *   Initialize SCU FIFO memory management
- *
+ * Included Files
  ****************************************************************************/
 
-void scufifo_initialize(void);
+#include <nuttx/config.h>
+#include "cxd56_uart.h"
 
 /****************************************************************************
- * Name: scufifo_memalloc
- *
- * Description:
- *   Allocate SCU FIFO memory
- *
- * Input Parameters:
- *   size - Request memory size
- *
- * Returned Value:
- *   Allocated FIFO memory start offset. If error, return FIFOMEM_INVALID.
- *
+ * Pre-processor Definitions
  ****************************************************************************/
-
-uint16_t scufifo_memalloc(uint16_t size);
 
 /****************************************************************************
- * Name: scufifo_memfree
- *
- * Description:
- *   Free allocated SCU FIFO memory
- *
- * Input Parameters:
- *   start - Start offset of FIFO memory
- *
+ * Public Types
  ****************************************************************************/
 
-void scufifo_memfree(uint16_t start);
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_SCUFIFO_H */
+/****************************************************************************
+ * Inline Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_SERIAL_H */

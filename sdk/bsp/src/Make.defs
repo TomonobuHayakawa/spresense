@@ -35,12 +35,52 @@
 #
 ############################################################################
 
-CHIP_ASRCS  =
+# libbsp.a holds duplicated objects against kernel's libarch.a.
+# Belows objects are removed from libarch.a at installkernel target in
+# the top of Makefile.
+# These files will be replaced with SDK ones, they are extended version.
+#
+# cxd56_allocheap.o
+# cxd56_serial.o
+# cxd56_uart.o
+# cxd56_timerisr.o
+# cxd56_idle.o
+#
+
+CHIP_ASRCS += cxd56_farapistub.S
 CHIP_CSRCS += cxd56_uid.c
-CHIP_CSRCS += cxd56_sysctl.c
 CHIP_CSRCS += cxd56_allocateheap.c
+CHIP_CSRCS += cxd56_idle.c
+CHIP_CSRCS += cxd56_timerisr.c
+CHIP_CSRCS += cxd56_pinconfig.c
+CHIP_CSRCS += cxd56_clock.c
+
+# Inter CPU communication
+
+CHIP_CSRCS += cxd56_cpufifo.c cxd56_icc.c cxd56_farapi.c
+CHIP_CSRCS += cxd56_sysctl.c
+
+# Power manager
+
+CHIP_CSRCS += cxd56_powermgr.c cxd56_pmic.c
+ifeq ($(CONFIG_CXD56_PM_PROCFS),y)
+CHIP_CSRCS += cxd56_powermgr_procfs.c
+endif
+
 ifeq ($(CONFIG_CXD56_HOT_SLEEP),y)
-CHIP_CSRCS += cxd56_cpu_context.c
+CMN_ASRCS  += up_cpucontext.S
+CHIP_CSRCS += cxd56_cpucontext.c
+endif
+
+# Peripherals
+
+CHIP_CSRCS += cxd56_serial.c cxd56_uart.c
+
+ifeq ($(CONFIG_CXD56_RTC),y)
+CHIP_CSRCS += cxd56_rtc.c
+ifeq ($(CONFIG_RTC_DRIVER),y)
+CHIP_CSRCS += cxd56_rtc_lowerhalf.c
+endif
 endif
 
 ifeq ($(CONFIG_DEBUG),y)
@@ -102,8 +142,43 @@ ifeq ($(CONFIG_CXD56_CISIF),y)
 CHIP_CSRCS += cxd56_cisif.c
 endif
 
-ifeq ($(CONFIG_LIBNFC),y)
-CHIP_CSRCS += cxd56_cxd224x.c
-else ifeq ($(CONFIG_NFC_SEQUENCER),y)
+ifeq ($(CONFIG_CXD56_WDT),y)
+CHIP_CSRCS += cxd56_wdt.c
+endif
+
+ifeq ($(CONFIG_CXD56_TIMER),y)
+CHIP_CSRCS += cxd56_timer.c
+endif
+
+ifeq ($(CONFIG_CXD56_SPI),y)
+CHIP_CSRCS += cxd56_spi.c
+endif
+
+ifeq ($(CONFIG_CXD56_I2C),y)
+CHIP_CSRCS += cxd56_i2c.c
+endif
+
+ifeq ($(CONFIG_CXD56_DMAC),y)
+CHIP_CSRCS += cxd56_dmac.c
+endif
+
+ifeq ($(CONFIG_CXD56_SDIO),y)
+CHIP_CSRCS += cxd56_sdhci.c
+endif
+
+ifeq ($(CONFIG_CXD56_SCU),y)
+CHIP_CSRCS += cxd56_scu.c cxd56_scufifo.c
+ifeq ($(CONFIG_CXD56_ADC),y)
+CHIP_CSRCS += cxd56_adc.c
+endif
+endif
+
+ifeq ($(CONFIG_CXD56_UDMAC),y)
+CHIP_CSRCS += cxd56_udmac.c
+endif
+
+# NFC
+
+ifeq ($(CONFIG_CXD224X),y)
 CHIP_CSRCS += cxd56_cxd224x.c
 endif

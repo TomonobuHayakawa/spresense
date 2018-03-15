@@ -1,7 +1,7 @@
-/****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_adc.h
+/********************************************************************************************
+ * arch/arm/src/cxd56xx/farapi.h
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright (C) Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,25 +30,26 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ****************************************************************************/
-/**
- * @file       cxd56_adc.h
- */
+ ********************************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_ADC_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_ADC_H
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_FARAPI_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_FARAPI_H
 
-/****************************************************************************
- * Name: cxd56_adc_getinterval
- *
- * Description:
- *
- ****************************************************************************/
-
-#ifdef CONFIG_CXD56_ADC
-void cxd56_adc_getinterval(int adctype, uint32_t *interval, uint16_t *adjust);
+#ifndef __ASSEMBLY__
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
+{
 #else
-#  define cxd56_adc_getinterval(adctype, interval, adjust)
+#define EXTERN extern
 #endif
 
+void cxd56_farapiinitialize(void);
+
+#undef EXTERN
+#ifdef __cplusplus
+}
 #endif
+#endif
+
+#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_FARAPI_H */

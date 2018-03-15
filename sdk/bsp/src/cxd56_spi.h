@@ -41,7 +41,7 @@
  * Included Files
  ************************************************************************************/
 
-#include <sdk/config.h>
+#include <nuttx/config.h>
 #include <nuttx/spi/spi.h>
 #include "chip/cxd56_spi.h"
 
@@ -122,34 +122,34 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port);
  ************************************************************************************/
 
 #ifdef CONFIG_CXD56_SPI0
-void  cxd56_spi0select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t cxd56_spi0status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+void  cxd56_spi0select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected);
+uint8_t cxd56_spi0status(FAR struct spi_dev_s *dev, uint32_t devid);
 #ifdef CONFIG_SPI_CMDDATA
-int cxd56_spi0cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
+int cxd56_spi0cmddata(FAR struct spi_dev_s *dev, uint32_t devid, bool cmd);
 #endif
 #endif
 
 #ifdef CONFIG_CXD56_SPI3
-void  cxd56_spi3select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t cxd56_spi3status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+void  cxd56_spi3select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected);
+uint8_t cxd56_spi3status(FAR struct spi_dev_s *dev, uint32_t devid);
 #ifdef CONFIG_SPI_CMDDATA
-int cxd56_spi3cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
+int cxd56_spi3cmddata(FAR struct spi_dev_s *dev, uint32_t devid, bool cmd);
 #endif
 #endif
 
 #ifdef CONFIG_CXD56_SPI4
-void  cxd56_spi4select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t cxd56_spi4status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+void  cxd56_spi4select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected);
+uint8_t cxd56_spi4status(FAR struct spi_dev_s *dev, uint32_t devid);
 #ifdef CONFIG_SPI_CMDDATA
-int cxd56_spi4cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
+int cxd56_spi4cmddata(FAR struct spi_dev_s *dev, uint32_t devid, bool cmd);
 #endif
 #endif
 
 #ifdef CONFIG_CXD56_SPI5
-void  cxd56_spi5select(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool selected);
-uint8_t cxd56_spi5status(FAR struct spi_dev_s *dev, enum spi_dev_e devid);
+void  cxd56_spi5select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected);
+uint8_t cxd56_spi5status(FAR struct spi_dev_s *dev, uint32_t devid);
 #ifdef CONFIG_SPI_CMDDATA
-int cxd56_spi5cmddata(FAR struct spi_dev_s *dev, enum spi_dev_e devid, bool cmd);
+int cxd56_spi5cmddata(FAR struct spi_dev_s *dev, uint32_t devid, bool cmd);
 #endif
 #endif
 

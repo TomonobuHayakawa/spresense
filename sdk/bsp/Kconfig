@@ -67,9 +67,371 @@ config CXD56_SFC_PAGE_SHIFT_SIZE
 
 endif # CXD56_SFC
 
+config CXD56_SDIO
+	bool "SDIO"
+	default n
+	select ARCH_HAVE_SDIO
+
+menu "SDIO Configuration"
+	depends on CXD56_SDIO
+
+config CXD56_SDIO_DMA
+	bool "Support DMA data transfers"
+	default y
+	select SDIO_DMA
+	---help---
+		Support DMA data transfers.
+		Enable SD card DMA data transfers.  This is marginally optional.
+		For most usages, SD accesses will cause data overruns if used without
+		DMA.
+
+config CXD56_SDIO_WIDTH_D1_ONLY
+	bool "Use D1 only"
+	default n
+	---help---
+		Select 1-bit transfer mode.  Default: 4-bit transfer mode.
+
+config CXD56_SDIO_DISABLE_CD_WP
+	bool "Disable the CD and WP pin for SDIO"
+	default y
+	---help---
+		Disable the CD and WP pin for Embedded SDIO.If the CD pin is not disable,
+		the SDIO initialization will be failed.
+
+config CXD56_SDIO_ENABLE_MULTIFUNCTION
+	bool "Enable SDIO multi-function"
+	default n
+	---help---
+		Support multi-function with SDIO interfaced peripheral other than SD Card.
+
+endmenu # SDIO Configuration
+
 config CXD56_EMMC
 	bool "eMMC"
 	default y if BOARD_CORVO
+
+config CXD56_PMIC
+	bool
+	default y
+
+config CXD56_CPUFIFO
+	bool
+
+config CXD56_ICC
+	bool
+	default y
+
+config CXD56_FARAPI
+	bool
+	default y
+	select CXD56_CPUFIFO
+
+config CXD56_FARAPI_VERSION_CHECK
+	bool "Far API Version Compatibility Check"
+	default y
+	---help---
+		Enable the Far API version compatibility check. If the version
+		mismatch is deteced during system bootup, the target system calls
+		PANIC(). So then it's necessary to update the nxloader firmware.
+
+config CXD56_FARAPI_DEBUG
+	bool "Debug Far API"
+
+config CXD56_RTC
+	bool "Real Time Clock (RTC)"
+	default y
+	---help---
+		Support RTC
+
+config CXD56_TIMER
+	bool "Timer"
+	default y
+
+if CXD56_TIMER
+
+choice
+	prompt "Timer divider selection"
+	default CXD56_TIMER_DIVIDER_16
+	---help---
+		Timer divider selects 1, 16 or 256. The smaller the divider, the higher
+		time resolution, but the shorter the maximum time until wrap-around.
+
+# XXX arduino needs DIVIDER_1 for high resolusion timer!
+
+config CXD56_TIMER_DIVIDER_1
+	bool "Divider 1"
+
+config CXD56_TIMER_DIVIDER_16
+	bool "Divider 16"
+
+config CXD56_TIMER_DIVIDER_256
+	bool "Divider 256"
+
+endchoice
+
+endif # CXD56_TIMER
+
+config CXD56_WDT
+	bool "Watchdog Timer (WDT)"
+	default y
+
+if CXD56_WDT
+
+config CXD56_WDT_INTERRUPT
+	bool "Interrupt on timeout"
+	default y
+	---help---
+		This watchdog timer run 2 laps as long as the counter is not reloaded.
+		In the first lap, the watchdog interrupt occurs. Without interrupt
+		clear, The reset signal is asserted in the second timeout. This setting
+		enables the first interrupt.
+
+config CXD56_WDT_REGDEBUG
+	bool "Register level debug"
+	default n
+	---help---
+		Enable low-level register debug output
+
+endif # CXD56_WDT
+
+config CXD56_DMAC
+	bool "DMAC support"
+	default y
+	---help---
+		Enables DMAC
+		Currently supports SPI4 TX/RX and SPI5 TX/RX
+
+config CXD56_UART1
+	bool "UART1"
+	default y
+	---help---
+		UART interface in the communication subsystem. This doesn't have any
+		hardware flow control, and is mainly used for debug console.
+
+config CXD56_UART2
+	bool "UART2"
+	default n
+	---help---
+		UART interface with hardware flow control in the application subsystem.
+
+if CXD56_UART2
+
+config CXD56_UART2_BASE_CLOCK_DIVIDER
+	int "Base clock divider"
+	default 4
+	range 2 64
+	---help---
+		>=2 in 100MHz ADSP clock
+		>=4 in 160MHz ADSP clock
+
+endif # CXD56_UART2
+
+menu "SPI port"
+
+config CXD56_SPI0
+	bool "SPI0"
+
+config CXD56_SPI3
+	bool "SPI3"
+
+config CXD56_SPI4
+	bool "SPI4"
+
+if CXD56_SPI4
+
+menu "DMAC settings for SPI4"
+
+config CXD56_DMAC_SPI4_TX
+	bool "DMAC support for SPI4 TX"
+	default n
+	select CXD56_DMAC
+	---help---
+		Enables DMAC for SPI4 TX
+
+if CXD56_DMAC_SPI4_TX
+
+config CXD56_DMAC_SPI4_TX_CH
+	int "TX channel"
+	default 2
+	range 2 6
+
+config CXD56_DMAC_SPI4_TX_MAXSIZE
+	int "Max size to be sent in bytes"
+	default 192000
+	range 1 1572864
+	---help---
+		This value should be same as RX.
+
+endif # CXD56_DMAC_SPI4_TX
+
+config CXD56_DMAC_SPI4_RX
+	bool "DMAC support for SPI4 RX"
+	default n
+	select CXD56_DMAC
+
+	---help---
+		Enables DMAC for SPI4 RX
+
+if CXD56_DMAC_SPI4_RX
+
+config CXD56_DMAC_SPI4_RX_CH
+	int "RX channel"
+	default 3
+	range 2 6
+
+config CXD56_DMAC_SPI4_RX_MAXSIZE
+	int "Max size to be received in bytes"
+	default 192000
+	range 1 1572864
+	---help---
+		This value should be same as TX.
+
+endif # CXD56_DMAC_SPI4_RX
+
+endmenu # DMAC settings for SPI4
+
+endif # CXD56_SPI4
+
+config CXD56_SPI5
+	bool "SPI5"
+
+if CXD56_SPI5
+
+config CXD56_SPI5_PINMAP_EMMC
+	bool "SPI5 pin assign to eMMC"
+	default n
+	depends on !CXD56_EMMC
+	---help---
+		SPI5 assigns to the shared pins with eMMC.
+
+config CXD56_SPI5_PINMAP_SDIO
+	bool "SPI5 pin assign to SDIO"
+	default n
+	depends on !CXD56_SDIO
+	---help---
+		SPI5 assigns to the shared pins with SDIO.
+
+menu "DMAC settings for SPI5"
+
+config CXD56_DMAC_SPI5_TX
+	bool "DMAC support for SPI5 TX"
+	default n
+	select CXD56_DMAC
+	---help---
+		Enables DMAC for SPI5 TX
+
+if CXD56_DMAC_SPI5_TX
+
+config CXD56_DMAC_SPI5_TX_CH
+	int "TX channel"
+	default 4
+	range 2 6
+
+config CXD56_DMAC_SPI5_TX_MAXSIZE
+	int "Max size to be sent in bytes"
+	default 1516
+	range 1 1572864
+	---help---
+		This value should be same as RX.
+
+endif # CXD56_DMAC_SPI5_TX
+
+config CXD56_DMAC_SPI5_RX
+	bool "DMAC support for SPI5 RX"
+	default n
+	select CXD56_DMAC
+
+	---help---
+		Enables DMAC for SPI5 RX
+
+if CXD56_DMAC_SPI5_RX
+
+config CXD56_DMAC_SPI5_RX_CH
+	int "RX channel"
+	default 5
+	range 2 6
+
+config CXD56_DMAC_SPI5_RX_MAXSIZE
+	int "Max size to be received in bytes"
+	default 1516
+	range 1 1572864
+	---help---
+		This value should be same as TX.
+
+endif # CXD56_DMAC_SPI5_RX
+
+endmenu # DMAC settings for SPI5
+
+endif # CXD56_SPI5
+
+config CXD56_SPI
+	bool
+	default y if CXD56_SPI0 || CXD56_SPI3 || CXD56_SPI4 || CXD56_SPI5
+
+endmenu
+
+menu "I2C Port Selection"
+
+config CXD56_I2C0
+	bool "I2C0"
+
+config CXD56_I2C1
+	bool "I2C1"
+
+config CXD56_I2C2
+	bool "I2C2"
+
+config CXD56_I2C
+	bool
+	default y if CXD56_I2C0 || CXD56_I2C1 || CXD56_I2C2
+
+endmenu
+
+config CXD56_SCU
+	bool "Sensor Control Unit Support"
+	default n
+
+if CXD56_SCU
+
+config CXD56_SCU_PREDIV
+	int "Sequencer Sampling Predivider"
+	default 64
+	range 1 256
+	---help---
+	  This configuration ralated to maximum sampling rate based on 32.768KHz.
+	  e.g. 32768 / 64 = 512 (samples)
+
+choice
+	prompt "SCU clock mode"
+	default CXD56_SCU_RCOSC
+
+config CXD56_SCU_32K
+	bool "Same with SCU32K"
+
+config CXD56_SCU_RCOSC
+	bool "RCOSC"
+
+config CXD56_SCU_XOSC
+	bool "XOSC"
+endchoice
+
+if CXD56_SCU_XOSC
+config CXD56_SCU_XOSC_DIV
+	int "SCU XOSC predivider"
+	default 2
+	range 1 4
+endif
+
+choice
+	prompt "SCU32K clock source"
+	default CXD56_SCU32K_RTC
+
+config CXD56_SCU32K_RCRTC
+	bool "RCRTC"
+
+config CXD56_SCU32K_RTC
+	bool "RTC"
+endchoice
 
 menu "SCU Decimator assignments"
 
@@ -95,6 +457,498 @@ config CXD56_DECI_BM1422GMV
 
 endmenu
 
+config CXD56_SCU_DEBUG
+	bool "SCU Debug"
+	default n
+
+config CXD56_UDMAC
+	bool "DMAC support"
+	default y
+	select ARCH_DMA
+	---help---
+		Use DMAC for reading sensing data from SCU FIFO.
+
+config CXD56_ADC
+	bool "ADC Support"
+	default n
+	---help---
+		Support ADC interface
+
+if CXD56_ADC
+
+config CXD56_HPADC0
+	bool "HPADC0 Support"
+	default n
+
+if CXD56_HPADC0
+
+config CXD56_HPADC0_FREQ
+	int "Coefficient of sampling frequency"
+	default 11 if CXD56_SCU_32K
+	default 7 if CXD56_SCU_RCOSC
+	default 7 if CXD56_SCU_XOSC
+	range 9 11 if CXD56_SCU_32K
+	range 7 7 if CXD56_SCU_RCOSC
+	range 6 7 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = adc clock / 2 ^ n [Hz]
+			adc clock = SCU clock     : if SCU clock is SCU32K or RCOSC.
+			adc clock = SCU clock / 3 : if SCU clock is XOSC.
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 9 to 11
+			RCOSC  : 7 (fix)
+			XOSC   : 6 to 7
+
+config CXD56_HPADC0_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_HPADC0_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_HPADC0_FSIZE
+	int "SCU FIFO size"
+	default 64
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+endif # CXD56_HPADC0
+
+config CXD56_HPADC1
+	bool "HPADC1 Support"
+	default n
+
+if CXD56_HPADC1
+
+config CXD56_HPADC1_FREQ
+	int "Coefficient of sampling frequency"
+	default 11 if CXD56_SCU_32K
+	default 7 if CXD56_SCU_RCOSC
+	default 7 if CXD56_SCU_XOSC
+	range 9 11 if CXD56_SCU_32K
+	range 7 7 if CXD56_SCU_RCOSC
+	range 6 7 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = adc clock / 2 ^ n [Hz]
+			adc clock = SCU clock     : if SCU clock is SCU32K or RCOSC.
+			adc clock = SCU clock / 3 : if SCU clock is XOSC.
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 9 to 11
+			RCOSC  : 7 (fix)
+			XOSC   : 6 to 7
+
+config CXD56_HPADC1_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_HPADC1_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_HPADC1_FSIZE
+	int "SCU FIFO size"
+	default 64
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+endif # CXD56_HPADC1
+
+config CXD56_LPADC
+	bool "LPADC Support"
+	default n
+
+if CXD56_LPADC
+
+choice
+	prompt "Select LPADC channel"
+	default CXD56_LPADC0
+
+config CXD56_LPADC0
+	bool "LPADC channel 0"
+	---help---
+		Enable LPADC channel 0.
+		Other LPADC channel can not be used.
+
+config CXD56_LPADC1
+	bool "LPADC channel 1"
+	---help---
+		Enable LPADC channel 1.
+		Other LPADC channel can not be used.
+
+config CXD56_LPADC2
+	bool "LPADC channel 2"
+	---help---
+		Enable LPADC channel 2.
+		Other LPADC channel can not be used.
+
+config CXD56_LPADC3
+	bool "LPADC channel 3"
+	---help---
+		Enable LPADC channel 3.
+		Other LPADC channel can not be used.
+
+config CXD56_LPADC0_1
+	bool "LPADC channel 0 and channel 1"
+	---help---
+		Enable LPADC channel 0 and LPADC channel 1.
+		Switch the LPADC channel 0 sampling and LPADC channel 1 sampling in time division.
+
+config CXD56_LPADC_ALL
+	bool "LPADC all channels"
+	---help---
+		Enable LPADC all channels.
+		Switch the LPADC all channels sampling in time division.
+endchoice
+
+if CXD56_LPADC0
+
+config CXD56_LPADC0_FREQ
+	int "Coefficient of sampling frequency"
+	default 12
+	range 11 15 if CXD56_SCU_32K
+	range 3 15 if CXD56_SCU_RCOSC
+	range 2 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ n [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 11 to 15
+			RCOSC  :  3 to 15
+			XOSC   :  2 to 15
+
+config CXD56_LPADC0_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC0_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC0_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+endif # CXD56_LPADC0
+
+if CXD56_LPADC1
+
+config CXD56_LPADC1_FREQ
+	int "Coefficient of sampling frequency"
+	default 12
+	range 11 15 if CXD56_SCU_32K
+	range 3 15 if CXD56_SCU_RCOSC
+	range 2 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ n [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 11 to 15
+			RCOSC  :  3 to 15
+			XOSC   :  2 to 15
+
+config CXD56_LPADC1_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC1_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC1_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+endif # CXD56_LPADC1
+
+if CXD56_LPADC2
+
+config CXD56_LPADC2_FREQ
+	int "Coefficient of sampling frequency"
+	default 12
+	range 11 15 if CXD56_SCU_32K
+	range 3 15 if CXD56_SCU_RCOSC
+	range 2 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ n [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 11 to 15
+			RCOSC  :  3 to 15
+			XOSC   :  2 to 15
+
+config CXD56_LPADC2_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC2_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC2_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+endif # CXD56_LPADC2
+
+if CXD56_LPADC3
+
+config CXD56_LPADC3_FREQ
+	int "Coefficient of sampling frequency"
+	default 12
+	range 11 15 if CXD56_SCU_32K
+	range 3 15 if CXD56_SCU_RCOSC
+	range 2 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ n [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 11 to 15
+			RCOSC  :  3 to 15
+			XOSC   :  2 to 15
+
+config CXD56_LPADC3_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC3_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC3_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+endif # CXD56_LPADC3
+
+if CXD56_LPADC0_1
+
+config CXD56_LPADC0_FREQ
+	int "[LPADC0]Coefficient of sampling frequency"
+	default 12
+	range 12 15 if CXD56_SCU_32K
+	range 6 15 if CXD56_SCU_RCOSC
+	range 6 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ (n+1) [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 12 to 15
+			RCOSC  :  6 to 15
+			XOSC   :  6 to 15
+
+config CXD56_LPADC0_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC0_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC0_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+config CXD56_LPADC1_FREQ
+	int "[LPADC1]Coefficient of sampling frequency"
+	default 12
+	range 12 15 if CXD56_SCU_32K
+	range 6 15 if CXD56_SCU_RCOSC
+	range 6 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ (n+1) [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 12 to 15
+			RCOSC  :  6 to 15
+			XOSC   :  6 to 15
+
+config CXD56_LPADC1_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC1_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC1_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+endif # CXD56_LPADC0_1
+
+if CXD56_LPADC_ALL
+
+config CXD56_LPADC0_FREQ
+	int "[LPADC0]Coefficient of sampling frequency"
+	default 12
+	range 11 15 if CXD56_SCU_32K
+	range 7 15 if CXD56_SCU_RCOSC
+	range 7 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ (n+2) [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 11 to 15
+			RCOSC  :  7 to 15
+			XOSC   :  7 to 15
+
+config CXD56_LPADC0_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC0_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC0_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+config CXD56_LPADC1_FREQ
+	int "[LPADC1]Coefficient of sampling frequency"
+	default 12
+	range 11 15 if CXD56_SCU_32K
+	range 7 15 if CXD56_SCU_RCOSC
+	range 7 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ (n+2) [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 11 to 15
+			RCOSC  :  7 to 15
+			XOSC   :  7 to 15
+
+config CXD56_LPADC1_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC1_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC1_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+config CXD56_LPADC2_FREQ
+	int "[LPADC2]Coefficient of sampling frequency"
+	default 12
+	range 11 15 if CXD56_SCU_32K
+	range 7 15 if CXD56_SCU_RCOSC
+	range 7 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ (n+2) [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 11 to 15
+			RCOSC  :  7 to 15
+			XOSC   :  7 to 15
+
+config CXD56_LPADC2_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC2_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC2_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+config CXD56_LPADC3_FREQ
+	int "[LPADC3]Coefficient of sampling frequency"
+	default 12
+	range 11 15 if CXD56_SCU_32K
+	range 7 15 if CXD56_SCU_RCOSC
+	range 7 15 if CXD56_SCU_XOSC
+	---help---
+		This configuration set to sampling frequency calculated by the following formula.
+			Sampling frequency = SCU32K / 2 ^ (n+2) [Hz]
+		Note. Setable range depends on the SCU clock mode.
+			SCU32K : 11 to 15
+			RCOSC  :  7 to 15
+			XOSC   :  7 to 15
+
+config CXD56_LPADC3_OFFSET
+	int "Offset"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC3_GAIN
+	int "Gain"
+	default 0
+	range 0 65535
+
+config CXD56_LPADC3_FSIZE
+	int "SCU FIFO size"
+	default 16
+	range 2 40960
+	---help---
+		SCU FIFO size
+
+endif # CXD56_LPADC_ALL
+
+endif # CXD56_LPADC
+
+endif # CXD56_ADC
+
+endif # CXD56_SCU
+
 config CXD56_AUDIO
 	bool "Audio"
 	default n
@@ -110,7 +964,6 @@ config CXD56_I2S0
 config CXD56_I2S1
 	bool "I2S1"
 	default n
-	depends on CXD56_FCBGA
 	---help---
 		Enable I2S channel 1
 
@@ -502,6 +1355,11 @@ endmenu
 
 endif # CXD56_AUDIO
 
+config CXD56_PWM
+    bool "PWM"
+
+if CXD56_PWM
+
 config CXD56_PWM0
 	bool "PWM0"
 	default n
@@ -530,6 +1388,8 @@ config CXD56_PWM3
 	---help---
 		Enable PWM channel 3
 
+endif
+
 config CXD56_GPIO_IRQ
 	bool "GPIO interrupt support"
 	default y
@@ -541,5 +1401,43 @@ config CXD56_CISIF
 	default n
 	---help---
 		TODO
+
+config CPUFREQ_RELEASE_LOCK
+	bool "Release CPU frequency lock"
+	default n
+	---help---
+		Release CPU frequency lock when finish board_app_initialize().
+
+config CXD56_HOT_SLEEP
+	bool "Enable HOT Sleep"
+	default n
+	---help---
+		Enable HOT Sleep
+
+if CXD56_HOT_SLEEP
+
+config CXD56_HOT_SLEEP_WAIT_COUNT
+	int "HOT Sleep wait counter"
+	default 20
+
+config CXD56_HOT_SLEEP_THRESHOLD
+	int "HOT Sleep threshold"
+	default 1000
+
+config CXD56_GNSS_HOT_SLEEP
+	bool "Enable GNSS HOT Sleep"
+	default n
+
+endif #CXD56_HOT_SLEEP
+
+config CXD56_PM_PROCFS
+	bool "Power Management PROCFS support"
+	default n
+
+config DEBUG_PM
+	bool "Power Manager Debug Output"
+	default n
+	---help---
+		Enable Power Manager debug SYSLOG output (disabled by default)
 
 endmenu

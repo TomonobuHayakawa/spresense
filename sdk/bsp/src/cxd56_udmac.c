@@ -1,9 +1,10 @@
 /****************************************************************************
  * arch/arm/src/cxd56xx/cxd56_udmac.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,7 +38,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <sdk/config.h>
+#include <nuttx/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>

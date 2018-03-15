@@ -1,7 +1,9 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_scufifo.c
+ * arch/arm/src/cxd56xx/cxd56_uart.h
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright (C) 2012, 2015 Gregory Nutt. All rights reserved.
+ *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,182 +34,109 @@
  *
  ****************************************************************************/
 
-/*-----------------------------------------------------------------------------
- * include files
- *---------------------------------------------------------------------------*/
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_UART_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_UART_H
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
 
 #include <nuttx/config.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <debug.h>
-
-#include <arch/chip/cxd56_scu.h>
-
 #include "chip.h"
-#include "up_arch.h"
-
-#include "cxd56_scufifo.h"
-#include "chip/cxd56_scufifo.h"
+#include "chip/cxd56_uart.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define FIFOMEMSIZE 40960
-
-#define __unused __attribute__((unused))
-
 /****************************************************************************
- * Private Types
+ * Public Types
  ****************************************************************************/
 
-struct memchunk
-{
-  struct memchunk *next;
-  uint16_t start;
-  uint16_t size;
-};
-
-struct fifomem
-{
-  struct memchunk chunk[14];
-  struct memchunk *allocated;
-  struct memchunk *freelist;
-  uint16_t size;
-};
-
 /****************************************************************************
- * Private Variables
+ * Public Data
  ****************************************************************************/
 
-struct fifomem g_fifomem;
+#ifndef __ASSEMBLY__
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
 /****************************************************************************
- * Name: fifomem_alloc
+ * Name: cxd56_lowsetup
  *
  * Description:
- *  Allocate FIFO memory
+ *   Called at the very beginning of _start.  Performs low level
+ *   initialization of the serial console.
  *
  ****************************************************************************/
 
-uint16_t scufifo_memalloc(uint16_t size)
-{
-  struct memchunk *c;
-  struct memchunk *last;
-  uint16_t start;
-
-  if (g_fifomem.size < size)
-    {
-      return FIFOMEM_INVALID;
-    }
-
-  if (g_fifomem.freelist == NULL)
-    {
-      return FIFOMEM_INVALID;
-    }
-
-  start = 0;
-  last  = NULL;
-  for (c = g_fifomem.allocated; c; c = c->next)
-    {
-      start = c->start + c->size;
-      last  = c;
-      if (c->next && c->next->start - start > size)
-        {
-          break;
-        }
-    }
-
-  if (start + size > g_fifomem.size)
-    {
-      return FIFOMEM_INVALID;
-    }
-
-  /* Remove from free list */
-
-  c                  = g_fifomem.freelist;
-  g_fifomem.freelist = c->next;
-
-  /* Append file chunk */
-
-  if (last == NULL)
-    {
-      g_fifomem.allocated = c;
-      c->next             = NULL;
-    }
-  else
-    {
-      c->next    = last->next;
-      last->next = c;
-    }
-
-  c->start = start;
-  c->size  = size;
-
-  return start;
-}
+void cxd56_lowsetup(void);
 
 /****************************************************************************
- * Name: scufifo_memfree
+ * Name: cxd56_uart_reset
  *
  * Description:
- *  Free allocated FIFO memory
+ *   Reset a U[S]ART.  These functions are used by the serial driver when a
+ *   U[S]ART is closed.
  *
  ****************************************************************************/
 
-void scufifo_memfree(uint16_t start)
-{
-  struct memchunk *c;
-  struct memchunk *prev;
-
-  prev = g_fifomem.allocated;
-  for (c = g_fifomem.allocated; c; c = c->next)
-    {
-      if (c->start == start)
-        {
-          if (g_fifomem.allocated == c)
-            {
-              g_fifomem.allocated = c->next;
-            }
-          else
-            {
-              prev->next = c->next;
-            }
-
-          c->next            = g_fifomem.freelist;
-          g_fifomem.freelist = c;
-          break;
-        }
-      prev = c;
-    }
-}
+void cxd56_uart_reset(int ch);
 
 /****************************************************************************
- * Name: scufifo_initialize
+ * Name: cxd56_uart_setup
  *
  * Description:
- *  Initialize FIFO memory allocator
+ *   Configure the UART.  This involves:
+ *
+ *   1. Connecting the input clock to the UART as specified in the
+ *      board.h file,
+ *   2. Configuring the UART pins
  *
  ****************************************************************************/
 
-void scufifo_initialize(void)
-{
-  struct memchunk *c;
-  int i;
+void cxd56_uart_setup(int);
 
-  g_fifomem.allocated = NULL;
-  g_fifomem.freelist  = g_fifomem.chunk;
-  g_fifomem.size      = FIFOMEMSIZE;
+/****************************************************************************
+ * Name: cxd56_setbaud
+ *
+ * Description:
+ *   Configure the U[S]ART divisors to accomplish the desired BAUD given the
+ *   U[S]ART base frequency.
+ *
+ *   This computationally intensive algorithm is based on the same logic
+ *   used in the NXP sample code.
+ *
+ ****************************************************************************/
 
-  for (i = 1, c = g_fifomem.freelist; i < 14; i++, c = c->next)
-    {
-      c->size = 0;
-      c->next = &g_fifomem.chunk[i];
-    }
-  c->next = NULL;
+void cxd56_setbaud(uintptr_t uartbase, uint32_t basefreq, uint32_t baud);
+
+/****************************************************************************
+ * Name: cxd56_uart_initialize
+ *
+ * Description:
+ *   Various initial registration
+ *
+ *
+ ****************************************************************************/
+
+int cxd56_uart_initialize(void);
+
+#undef EXTERN
+#if defined(__cplusplus)
 }
+#endif
+
+#endif /* __ASSEMBLY__ */
+#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_UART_H */
