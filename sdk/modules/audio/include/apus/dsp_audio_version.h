@@ -51,13 +51,13 @@
 
 #define DSP_AACDEC_VERSION    0x010301    /* 01.03.01 */
 #define DSP_MP3DEC_VERSION    0x010301    /* 01.03.01 */
-#define DSP_OPUSDEC_VERSION   0x010301    /* 01.03.01 */
+#define DSP_OPUSDEC_VERSION   0x010302    /* 01.03.02 */
 #define DSP_WAVDEC_VERSION    0x010301    /* 01.03.01 */
 
 /* Encoder Version. */
 
 #define DSP_MP3ENC_VERSION    0x020102    /* 02.01.02 */
-#define DSP_OPUSENC_VERSION   0x010305    /* 01.03.05 */
+#define DSP_OPUSENC_VERSION   0x010306    /* 01.03.06 */
 
 /* Filter Version. */
 
