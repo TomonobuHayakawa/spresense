@@ -121,12 +121,13 @@ endif
 
 installkernel: .kernel.built
 	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
-	$(Q) if [ -f lib/libapps.a ]; then \
-		$(ARCROSSDEV)ar d lib/libapps.a builtin_list.o; \
-		$(ARCROSSDEV)ar d lib/libapps.a builtin_forindex.o; \
-		$(ARCROSSDEV)ar d lib/libapps.a exec_builtin.o; \
+	$(Q) if [ -f lib/libarch.a ]; then \
+		$(ARCROSSDEV)ar d lib/libarch.a cxd56_allocateheap.o; \
+		$(ARCROSSDEV)ar d lib/libarch.a cxd56_serial.o; \
+		$(ARCROSSDEV)ar d lib/libarch.a cxd56_uart.o; \
+		$(ARCROSSDEV)ar d lib/libarch.a cxd56_timerisr.o; \
+		$(ARCROSSDEV)ar d lib/libarch.a cxd56_idle.o; \
 	fi
-	$(Q) if [ -f lib/libarch.a ]; then $(ARCROSSDEV)ar d lib/libarch.a cxd56_allocateheap.o; fi
 PHONY += installkernel
 
 SDKMODDIRS =
@@ -148,7 +149,7 @@ else
   LIBPATHS += -L"$(SDKDIR)/lib"
 endif
 
-LINKLIBS = $(patsubst lib/%,%,$(NUTTXLIBS) $(SDKLIBS) $(EXTLIBS))
+LINKLIBS = $(patsubst lib/%,%,$(SDKLIBS) $(EXTLIBS) $(NUTTXLIBS))
 LDLIBS = $(patsubst %.a,%,$(patsubst lib%,-l%,$(LINKLIBS)))
 
 $(BIN): depend sdklibs
