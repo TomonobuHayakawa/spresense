@@ -35,9 +35,6 @@
 #ifndef __ARCH_ARM_SRC_CXD56XX_POWERMGR_H
 #define __ARCH_ARM_SRC_CXD56XX_POWERMGR_H
 
-#include <queue.h>
-#include <semaphore.h>
-
 /********************************************************************************************
  * Pre-processor Definitions
  ********************************************************************************************/
@@ -268,22 +265,10 @@
 #define PM_CLOCK_CPUID(id)	((0 == (id)) ? PM_CLOCK_SYS_CPU : \
                              (1 == (id)) ? PM_CLOCK_GPS_CPU : \
                                            PM_CLOCK_APP_CPU)
-/* cpu status change callback */
+
+/* CPU status change callback */
+
 #define PM_CPU_STATUS_CHANGE (PM_DOMAIN_SELF_CPU | 0x10000000ul)
-
-/* debug out*/
-
-#ifdef CONFIG_DEBUG_PM
-# define pmdbg(format, ...)    dbg(format, ##__VA_ARGS__)
-# define pmlldbg(format, ...)  lldbg(format, ##__VA_ARGS__)
-# define pmvdbg(format, ...)   vdbg(format, ##__VA_ARGS__)
-# define pmllvdbg(format, ...) llvdbg(format, ##__VA_ARGS__)
-#else
-# define pmdbg(x...)
-# define pmlldbg(x...)
-# define pmvdbg(x...)
-# define pmllvdbg(x...)
-#endif
 
 #ifndef __ASSEMBLY__
 #ifdef __cplusplus
@@ -302,7 +287,7 @@ typedef int (*cxd56_pm_callback)(uint8_t id);
 /********************************************************************************************
  * Public Functions
  ********************************************************************************************/
-void* cxd56_pm_register_callback(uint32_t target, cxd56_pm_callback callback);
+void *cxd56_pm_register_callback(uint32_t target, cxd56_pm_callback callback);
 void cxd56_pm_unregister_callback(void *handle);
 int cxd56_pm_fifo_handlear(int cpuid, uint32_t data[2]);
 int cxd56_pm_main_task(int argc, FAR char *argv[]);

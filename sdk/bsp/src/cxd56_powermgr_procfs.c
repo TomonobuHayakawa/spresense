@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_powermgr_procfs.c
+ * bsp/src/cxd56xx/cxd56_powermgr_procfs.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *
@@ -53,6 +53,16 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+
+#ifdef CONFIG_CXD56_PM_DEBUG
+#  define pmerr(format, ...)  _err(format, ##__VA_ARGS__)
+#  define pmwarn(format, ...) _warn(format, ##__VA_ARGS__)
+#  define pminfo(format, ...) _info(format, ##__VA_ARGS__)
+#else
+#  define pmerr(x...)
+#  define pmwarn(x...)
+#  define pminfo(x...)
+#endif
 
 #define PWD_STAT(val, shift) ((val >> shift) & 0x1)
 #define DSP_NUM (6)
@@ -140,7 +150,7 @@ static const char* g_powermg_procfs_dir[]
  *
  ****************************************************************************/
 
-void cxd56_powermgr_procfs_step_buffer(size_t len)
+static void cxd56_powermgr_procfs_step_buffer(size_t len)
 {
   DEBUGASSERT(g_powermg_procfs_size > (g_powermg_procfs_len + len));
   g_powermg_procfs_len = g_powermg_procfs_len + len;
@@ -158,13 +168,15 @@ static void cxd56_powermgr_procfs_clock_base(void)
 {
   uint32_t sys_clk_sel;
   uint32_t app_clk_sel;
-  size_t    len;
+  size_t   len;
 
-  /* collect clock base value */
+  /* Collect clock base value */
+
   sys_clk_sel = getreg32(CXD56_TOPREG_CKSEL_ROOT) >> 20 & 0x3;
   app_clk_sel = getreg32(CXD56_TOPREG_APP_CKSEL) & 0x3;
 
-  /* store data in buffer */
+  /* Store data in buffer */
+
   len = snprintf(g_powermg_procfs_buffer + g_powermg_procfs_len,
                  g_powermg_procfs_size - g_powermg_procfs_len,
                   "Clock Source\n"
@@ -173,7 +185,8 @@ static void cxd56_powermgr_procfs_clock_base(void)
                  g_powermg_procfs_clock_source_name[sys_clk_sel],
                  g_powermg_procfs_clock_source_name[app_clk_sel]);
 
-  /* step buffer position */
+  /* Step buffer position */
+
   cxd56_powermgr_procfs_step_buffer(len);
 }
 
@@ -196,7 +209,7 @@ static void cxd56_powermgr_procfs_clock(void)
    * and store data in buffer
    */
 
-  /* check scu clock status */
+  /* Check SCU clock status */
 
   scu   = cxd56_get_scu_baseclock();
   hpadc = cxd56_get_hpadc_baseclock();
@@ -209,7 +222,7 @@ static void cxd56_powermgr_procfs_clock(void)
       lpadc = 0;
     }
 
-  /* check gps clock status */
+  /* Check GPS clock status */
 
   gps    = cxd56_get_gps_cpu_baseclock();
   gpsahb = cxd56_get_gps_ahb_baseclock();
@@ -221,7 +234,7 @@ static void cxd56_powermgr_procfs_clock(void)
           gpsahb = 0;
     }
 
-  /* check dsp clock status */
+  /* Check DSP clock status */
 
   val = getreg32(CXD56_CRG_CK_GATE_AHB);
   val = (val >> 16) & 0x3f;
@@ -282,7 +295,8 @@ static void cxd56_powermgr_procfs_clock(void)
                  gps, cxd56_get_img_vsync_baseclock(),
                  gpsahb);
 
-  /* step buffer position */
+  /* Step buffer position */
+
   cxd56_powermgr_procfs_step_buffer(len);
 }
 
@@ -299,12 +313,12 @@ static void cxd56_powermgr_procfs_power_state(void)
   uint32_t reg_pwd_stat, reg_ana_pw_stat, rf;
   size_t len;
 
-  /* collect power status */
+  /* Collect power status */
 
   reg_pwd_stat    = getreg32(CXD56_TOPREG_PWD_STAT);
   reg_ana_pw_stat = getreg32(CXD56_TOPREG_ANA_PW_STAT);
 
-  /* check RF_xxx power status */
+  /* Check RF_xxx power status */
 
   rf = reg_ana_pw_stat & 0x3F0;
   if (rf != 0)
@@ -312,7 +326,7 @@ static void cxd56_powermgr_procfs_power_state(void)
       rf = 1;
     }
 
-  /* store data in buffer */
+  /* Store data in buffer */
 
   len = snprintf(g_powermg_procfs_buffer + g_powermg_procfs_len,
                  g_powermg_procfs_size - g_powermg_procfs_len,
@@ -430,7 +444,7 @@ static int cxd56_powermgr_procfs_open(FAR struct file *filep,
   int fileno;
   char temp[16];
 
-  pmdbg("Open '%s'\n", relpath);
+  pminfo("Open '%s'\n", relpath);
 
   /* PROCFS is read-only.  Any attempt to open with any kind of write
    * access is not permitted.
@@ -440,7 +454,7 @@ static int cxd56_powermgr_procfs_open(FAR struct file *filep,
 
   if (((oflags & O_WRONLY) != 0 || (oflags & O_RDONLY) == 0))
     {
-      dbg("ERROR: Only O_RDONLY supported\n");
+      pmerr("ERROR: Only O_RDONLY supported\n");
       return -EACCES;
     }
 
@@ -459,7 +473,7 @@ static int cxd56_powermgr_procfs_open(FAR struct file *filep,
             kmm_zalloc(sizeof(struct cxd56_powermgr_procfs_file_s));
   if (!priv)
     {
-      dbg("ERROR: Failed to allocate file attributes\n");
+      pmerr("ERROR: Failed to allocate file attributes\n");
       return -ENOMEM;
     }
 
@@ -480,7 +494,7 @@ static int cxd56_powermgr_procfs_open(FAR struct file *filep,
 
 static int cxd56_powermgr_procfs_close(FAR struct file *filep)
 {
-  pmdbg("Close\n");
+  pminfo("Close\n");
 
   DEBUGASSERT(filep->f_priv);
   kmm_free(filep->f_priv);
@@ -498,13 +512,13 @@ static int cxd56_powermgr_procfs_close(FAR struct file *filep)
  ****************************************************************************/
 
 static ssize_t cxd56_powermgr_procfs_read(FAR struct file *filep,
-                                              FAR char *buffer, size_t buflen)
+                                          FAR char *buffer, size_t buflen)
 {
   size_t    len;
   FAR struct cxd56_powermgr_procfs_file_s *priv;
 
-  pmdbg("READ buffer=%p buflen=%lu len=%lu\n"
-       , buffer, (unsigned long)buflen, g_powermg_procfs_len);
+  pminfo("READ buffer=%p buflen=%lu len=%lu\n", buffer,
+         (unsigned long)buflen, g_powermg_procfs_len);
 
   DEBUGASSERT(filep && filep->f_priv);
 
@@ -563,7 +577,7 @@ static int cxd56_powermgr_procfs_dup(FAR const struct file *oldp,
   void *oldpriv;
   void *newpriv;
 
-  pmdbg("Dup %p->%p\n", oldp, newp);
+  pminfo("Dup %p->%p\n", oldp, newp);
 
   /* Recover our private data from the old struct file instance */
 
@@ -575,7 +589,7 @@ static int cxd56_powermgr_procfs_dup(FAR const struct file *oldp,
   newpriv = kmm_malloc(sizeof(struct cxd56_powermgr_procfs_file_s));
   if (!newpriv)
     {
-      dbg("ERROR: Failed to allocate file attributes\n");
+      pmerr("ERROR: Failed to allocate file attributes\n");
       return -ENOMEM;
     }
 
@@ -611,7 +625,7 @@ static int cxd56_powermgr_procfs_stat(FAR const char *relpath,
   snprintf(temp, sizeof(temp)-1, "%s", relpath);
   ret = cxd56_powermgr_procfs_check_dir(temp, &mode, &level, &fileno);
 
-  pmdbg("Stat %s %d %d %d\n", relpath, mode, level, ret);
+  pminfo("Stat %s %d %d %d\n", relpath, mode, level, ret);
 
   buf->st_mode    = mode | S_IROTH | S_IRGRP | S_IRUSR;
   buf->st_size    = 0;
@@ -643,7 +657,7 @@ static int cxd56_powermgr_procfs_opendir(FAR const char *relpath,
   snprintf(temp, sizeof(temp)-1, "%s", relpath);
   ret = cxd56_powermgr_procfs_check_dir(temp, &mode, &level, &fileno);
 
-  pmdbg("Opendir '%s' %d %d\n", relpath, ret, level);
+  pminfo("Opendir '%s' %d %d\n", relpath, ret, level);
 
   if (ret != OK)
     {
@@ -658,7 +672,7 @@ static int cxd56_powermgr_procfs_opendir(FAR const char *relpath,
      kmm_malloc(sizeof(struct cxd56_powermgr_procfs_dir_s));
   if (!procfs)
     {
-      dbg("ERROR: Failed to allocate dir attributes\n");
+      pmerr("ERROR: Failed to allocate dir attributes\n");
       return -ENOMEM;
     }
 
@@ -680,7 +694,7 @@ static int cxd56_powermgr_procfs_closedir(FAR struct fs_dirent_s *dir)
 {
   FAR struct smartfs_level1_s *priv;
 
-  pmdbg("Closedir\n");
+  pminfo("Closedir\n");
 
   DEBUGASSERT(dir && dir->u.procfs);
   priv = dir->u.procfs;
@@ -710,7 +724,7 @@ static int cxd56_powermgr_procfs_readdir(struct fs_dirent_s *dir)
 
   procfs = (FAR struct cxd56_powermgr_procfs_dir_s *)dir->u.procfs;
 
-  pmdbg("Readdir %d\n", procfs->index);
+  pminfo("Readdir %d\n", procfs->index);
 
   if (procfs->index > ((sizeof(g_powermg_procfs_dir)
                         / sizeof(g_powermg_procfs_dir[0])) - 1))
@@ -741,7 +755,7 @@ static int cxd56_powermgr_procfs_rewinddir(struct fs_dirent_s *dir)
   DEBUGASSERT(dir && dir->u.procfs);
 
   procfs = (FAR struct cxd56_powermgr_procfs_dir_s *)dir->u.procfs;
-  pmdbg("Rewind %d\n", procfs->index);
+  pminfo("Rewind %d\n", procfs->index);
   procfs->index = 0;
 
   return OK;
