@@ -31,42 +31,131 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_CONTEXT_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_CONTEXT_H
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_CPUCONTEXT_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_CPUCONTEXT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
 
 /*------------------------------------------------------------------------------
- * include files
+ * Include files
  *----------------------------------------------------------------------------*/
  
 #include <stdint.h>
 
-#include "cpu_context.h"
-
 /*------------------------------------------------------------------------------
- * macro define
+ * Pre-processor Definitions
  *----------------------------------------------------------------------------*/
 
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
+
+struct cpu_state_s {
+
+  /* ARM core register */
+
+  uint32_t r4;
+  uint32_t r5;
+  uint32_t r6;
+  uint32_t r7;
+  uint32_t r8;
+  uint32_t r9;
+  uint32_t r10;
+  uint32_t r11;
+  uint32_t r12;
+  uint32_t r14;
+  uint32_t msp;
+  uint32_t psp;
+  uint32_t xpsr;
+  uint32_t primask;
+  uint32_t control;
+  uint32_t basepri;
+  uint32_t faultmask;
+
+  /* FPU register */
+
+  uint32_t s0;
+  uint32_t s1;
+  uint32_t s2;
+  uint32_t s3;
+  uint32_t s4;
+  uint32_t s5;
+  uint32_t s6;
+  uint32_t s7;
+  uint32_t s8;
+  uint32_t s9;
+  uint32_t s10;
+  uint32_t s11;
+  uint32_t s12;
+  uint32_t s13;
+  uint32_t s14;
+  uint32_t s15;
+  uint32_t s16;
+  uint32_t s17;
+  uint32_t s18;
+  uint32_t s19;
+  uint32_t s20;
+  uint32_t s21;
+  uint32_t s22;
+  uint32_t s23;
+  uint32_t s24;
+  uint32_t s25;
+  uint32_t s26;
+  uint32_t s27;
+  uint32_t s28;
+  uint32_t s29;
+  uint32_t s30;
+  uint32_t s31;
+  uint32_t fpscr;
+
+  /* SCS : System control and ID registers */
+
+  uint32_t vtor;
+  uint32_t aircr;
+  uint32_t scr;
+  uint32_t shpri1;
+  uint32_t shpri2;
+  uint32_t shpri3;
+  uint32_t shcsr;
+  uint32_t cpacr;
+  uint32_t fpccr;
+  uint32_t fpcar;
+  uint32_t fpdscr;
+  uint32_t actlr;
+
+  /* SCS : SysTick */
+
+  uint32_t syst_csr;
+  uint32_t syst_rvr;
+
+  /* SCS : NVIC */
+
+  uint32_t nvic_iser[UP_CPU_CONTEXT_NVIC_ISER_NUM];
+  uint32_t nvic_ipr[UP_CPU_CONTEXT_NVIC_IPR_NUM];
+
+  /* SCS : MPU */
+
+};
 
 /*------------------------------------------------------------------------------
- * structre define
+ * Public Data
  *----------------------------------------------------------------------------*/
-
-extern up_context_ctx_t g_V7mCtx;
 
 /*------------------------------------------------------------------------------
- * function define
+ * Public Functions
  *----------------------------------------------------------------------------*/
 
-extern int cxd56_cpu_context_sleep(void);
+int cxd56_cpu_context_sleep(void);
 
+int up_cpuctxsavewithwfi(struct cpu_state_s *ctx);
+void up_cpuctxload(void);
+int up_fpuctxsave(struct cpu_state_s *ctx);
+int up_fpuctxload(struct cpu_state_s *ctx);
 
-/*----------------------------------------------------------------------------*/
 #ifdef __cplusplus
 }
 #endif  /* __cplusplus */
 
-#endif  /* __ARCH_ARM_SRC_CXD56XX_CXD56_CONTEXT_H */
+#endif  /* __ARCH_ARM_SRC_CXD56XX_CXD56_CPUCONTEXT_H */
