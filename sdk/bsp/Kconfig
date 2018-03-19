@@ -226,7 +226,10 @@ config CXD56_UART2_BASE_CLOCK_DIVIDER
 
 endif # CXD56_UART2
 
-menu "SPI port"
+config CXD56_SPI
+	bool "SPI"
+
+if CXD56_SPI
 
 config CXD56_SPI0
 	bool "SPI0"
@@ -238,8 +241,6 @@ config CXD56_SPI4
 	bool "SPI4"
 
 if CXD56_SPI4
-
-menu "DMAC settings for SPI4"
 
 config CXD56_DMAC_SPI4_TX
 	bool "DMAC support for SPI4 TX"
@@ -288,8 +289,6 @@ config CXD56_DMAC_SPI4_RX_MAXSIZE
 
 endif # CXD56_DMAC_SPI4_RX
 
-endmenu # DMAC settings for SPI4
-
 endif # CXD56_SPI4
 
 config CXD56_SPI5
@@ -310,8 +309,6 @@ config CXD56_SPI5_PINMAP_SDIO
 	depends on !CXD56_SDIO
 	---help---
 		SPI5 assigns to the shared pins with SDIO.
-
-menu "DMAC settings for SPI5"
 
 config CXD56_DMAC_SPI5_TX
 	bool "DMAC support for SPI5 TX"
@@ -360,17 +357,14 @@ config CXD56_DMAC_SPI5_RX_MAXSIZE
 
 endif # CXD56_DMAC_SPI5_RX
 
-endmenu # DMAC settings for SPI5
-
 endif # CXD56_SPI5
 
-config CXD56_SPI
-	bool
-	default y if CXD56_SPI0 || CXD56_SPI3 || CXD56_SPI4 || CXD56_SPI5
+endif
 
-endmenu
+config CXD56_I2C
+	bool "I2C"
 
-menu "I2C Port Selection"
+if CXD56_I2C
 
 config CXD56_I2C0
 	bool "I2C0"
@@ -381,11 +375,7 @@ config CXD56_I2C1
 config CXD56_I2C2
 	bool "I2C2"
 
-config CXD56_I2C
-	bool
-	default y if CXD56_I2C0 || CXD56_I2C1 || CXD56_I2C2
-
-endmenu
+endif
 
 config CXD56_SCU
 	bool "Sensor Control Unit Support"
