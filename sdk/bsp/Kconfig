@@ -1408,9 +1408,14 @@ config CPUFREQ_RELEASE_LOCK
 	---help---
 		Release CPU frequency lock when finish board_app_initialize().
 
+config CXD56_PM_PROCFS
+	bool "Power Management PROCFS support"
+	default n
+
 config CXD56_HOT_SLEEP
 	bool "Enable HOT Sleep"
 	default n
+	depends on SDK_EXPERIMENTAL
 	---help---
 		Enable HOT Sleep
 
@@ -1429,10 +1434,6 @@ config CXD56_GNSS_HOT_SLEEP
 	default n
 
 endif #CXD56_HOT_SLEEP
-
-config CXD56_PM_PROCFS
-	bool "Power Management PROCFS support"
-	default n
 
 config DEBUG_PM
 	bool "Power Manager Debug Output"
