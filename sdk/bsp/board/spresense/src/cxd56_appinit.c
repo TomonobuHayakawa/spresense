@@ -268,9 +268,6 @@ int board_app_initialize(uintptr_t arg)
 #ifdef CONFIG_CXD56_SPI4
   FAR struct spi_dev_s *spi4;
 #endif
-#ifdef CONFIG_CXD56_SPI5
-  FAR struct spi_dev_s *spi5;
-#endif
   int ret;
 
   ret = nsh_cpucom_initialize();
@@ -320,19 +317,6 @@ int board_app_initialize(uintptr_t arg)
   }
 #ifdef HAVE_SPITOOL
   cxd56_spi_register(spi4, 4);
-#endif
-#endif
-
-#ifdef CONFIG_CXD56_SPI5
-  /* globally initialize spi bus for peripherals */
-  spi5 = cxd56_spibus_initialize(5);
-  if (!spi5)
-  {
-    _err("ERROR: Failed to initialize spi bus.\n");
-    return -ENODEV;
-  }
-#ifdef HAVE_SPITOOL
-  cxd56_spi_register(spi5, 5);
 #endif
 #endif
 
