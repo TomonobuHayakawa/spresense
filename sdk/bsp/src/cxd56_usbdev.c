@@ -1463,6 +1463,7 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
                 putreg32(USB_INT_RCS, CXD56_USB_IN_EP_STATUS(n));
 
                 privep->stalled = 0;
+                privep->halted = 0;
               }
 
             if (stat & USB_INT_RSS)
@@ -1470,7 +1471,7 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
                 /* Handle Set_Feature */
 
                 usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_SETFEATURE), n);
-                putreg32(USB_INT_RSS, CXD56_USB_OUT_EP_STATUS(n));
+                putreg32(USB_INT_RSS, CXD56_USB_IN_EP_STATUS(n));
                 privep->halted = 1;
               }
 
@@ -1609,17 +1610,21 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
             if (stat & USB_INT_RCS)
               {
                 usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_CLEARFEATURE), n);
-                ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(n));
-                putreg32(ctrl | USB_CLOSEDESC, CXD56_USB_IN_EP_CONTROL(n));
+#if 0
+                /* This register access causes hardfault. */
+
+                ctrl = getreg32(CXD56_USB_OUT_EP_CONTROL(n));
+                putreg32(ctrl | USB_CLOSEDESC, CXD56_USB_OUT_EP_CONTROL(n));
                 while (
                   !(getreg32(CXD56_USB_OUT_EP_STATUS(n) & USB_INT_CDC_CLEAR)))
                   ;
                 putreg32(USB_INT_CDC_CLEAR, CXD56_USB_OUT_EP_STATUS(n));
-
-                putreg32(ctrl | USB_MRXFLUSH, CXD56_USB_IN_EP_CONTROL(n));
-                putreg32(ctrl | USB_CNAK, CXD56_USB_IN_EP_CONTROL(n));
+                putreg32(ctrl | USB_MRXFLUSH, CXD56_USB_OUT_EP_CONTROL(n));
+                putreg32(ctrl | USB_CNAK, CXD56_USB_OUT_EP_CONTROL(n));
+#endif
                 putreg32(USB_INT_RCS, CXD56_USB_OUT_EP_STATUS(n));
                 privep->stalled = 0;
+                privep->halted = 0;
               }
 
             if (stat & USB_INT_HE)
@@ -1731,6 +1736,7 @@ static int cxd56_usbinterrupt(int irq, FAR void *context, FAR void *arg)
       usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_SI), 0);
       status = getreg32(CXD56_USB_DEV_STATUS);
       memset(&ctrl, 0, USB_SIZEOF_CTRLREQ);
+      ctrl.type     = USB_REQ_RECIPIENT_INTERFACE;
       ctrl.req      = USB_REQ_SETINTERFACE;
       ctrl.value[0] = USB_STATUS_ALT(status);
       ctrl.index[0] = USB_STATUS_INTF(status);
