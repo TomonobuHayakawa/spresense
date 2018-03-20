@@ -379,7 +379,7 @@ endif
 
 config CXD56_SCU
 	bool "Sensor Control Unit Support"
-	default n
+	default y
 
 if CXD56_SCU
 
