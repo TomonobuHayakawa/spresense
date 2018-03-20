@@ -105,6 +105,8 @@ EXTRA_LIBS ?=
 EXTRA_LIBPATHS ?=
 LINKLIBS ?=
 
+BOARDMAKE = $(if $(wildcard ./board/Makefile),y,)
+
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
   BOARDMAKE = $(if $(wildcard .\board\Makefile),y,)
   LIBPATHS += -L"$(SDKDIR)\lib"
@@ -113,7 +115,6 @@ ifeq ($(BOARDMAKE),y)
 endif
 
 else
-  BOARDMAKE = $(if $(wildcard ./board/Makefile),y,)
 
 ifeq ($(WINTOOL),y)
   LIBPATHS += -L"${shell cygpath -w "$(SDKDIR)/lib"}"
