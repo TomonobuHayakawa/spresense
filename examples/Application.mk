@@ -34,6 +34,7 @@
 #
 ############################################################################
 
+-include $(SDKDIR)/.config
 include $(APPDIR)/Make.defs
 
 CXXEXT ?= .cxx
