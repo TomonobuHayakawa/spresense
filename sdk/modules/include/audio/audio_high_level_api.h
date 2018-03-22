@@ -58,6 +58,7 @@
 #include <sdk/config.h>
 
 #include "audio/audio_command_id.h"
+#include "audio/audio_common_defs.h"
 #ifdef CONFIG_AUDIOUTILS_PLAYER
 #  include "audio/audio_player_api.h"
 #  include "audio/audio_outputmix_api.h"
@@ -86,276 +87,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* const for baseband */
-/** @name Constant parameters */
-/** @{ */
-
-#define AS_VOLUME_DAC            -20
-
-/* TODO:Be removed in future */
-
-#define AS_AC_CODEC_VOL_DAC      -20
-
-/** @} */
-
-/* ---------------------------------*/
-
-/** @name Fix values of audio parameter */
-/** @{ */
-
-/**  Mic channel max */
-
-#define AS_MIC_CHANNEL_MAX        8
-
-
-/** Keep setting for #InitMicGainParam.mic_gain */
-
-#define AS_MICGAIN_HOLD           215
-
-/** Keep setting for #SetVolumeParam.input1_db,
- *                   #SetVolumeParam.input2_db,
- *                   #SetVolumeParam.master_db
- */
-
-#define AS_VOLUME_HOLD            255
-
-/** Mute setting for above parameters */
-
-#define AS_VOLUME_MUTE            -1025
-
-/** Keep setting for #SetBeepParam.beep_vol*/
-
-#define AS_BEEP_VOL_HOLD          255
-
-/** Keep setting for #SetBeepParam.beep_freq */
-
-#define AS_BEEP_FREQ_HOLD         0
-
-/** Mute setting for above parameters */
-
-#define AS_MICGAIN_MUTE           -7855
-
-/** @} */
-
-/** @name Codec type */
-/** @{ */
-
-/** MP3 */
-
-#define AS_CODECTYPE_MP3    0
-
-/** WAV */
-
-#define AS_CODECTYPE_WAV    1
-
-/** AAC */
-
-#define AS_CODECTYPE_AAC    2
-
-/** OPUS */
-
-#define AS_CODECTYPE_OPUS   3
-
-/** MEDIA Packet */
-
-#define AS_CODECTYPE_MEDIA  4
-
-/** @} */
-
-/** @name Bit length */
-/** @{ */
-
-/** 16bit */
-
-#define AS_BITLENGTH_16  16
-
-/** 24bit */
-
-#define AS_BITLENGTH_24  24
-
-/** @} */
-
-/** @name Channel number */
-/** @{ */
-
-/** MONO (1ch) */
-
-#define AS_CHANNEL_MONO    1
-
-/** STEREO (2ch) */
-
-#define AS_CHANNEL_STEREO  2
-
-/** 4ch */
-
-#define AS_CHANNEL_4CH     4
-
-/** 6ch */
-
-#define AS_CHANNEL_6CH     6
-
-/** 8ch */
-
-#define AS_CHANNEL_8CH     8
-
-/** @} */
-
-/** @name Sampling rate */
-/** @{ */
-
-/** 8kHz */
-
-#define AS_SAMPLINGRATE_8000    8000
-
-/** 11.025kHz */
-
-#define AS_SAMPLINGRATE_11025   11025
-
-/** 12kHz */
-
-#define AS_SAMPLINGRATE_12000   12000
-
-/** 16kHz */
-
-#define AS_SAMPLINGRATE_16000   16000
-
-/** 22.05kHz */
-
-#define AS_SAMPLINGRATE_22050   22050
-
-/** 24kHz */
-
-#define AS_SAMPLINGRATE_24000   24000
-
-/** 32kHz */
-
-#define AS_SAMPLINGRATE_32000   32000
-
-/** 44.1kHz */
-
-#define AS_SAMPLINGRATE_44100   44100
-
-/** 48kHz */
-
-#define AS_SAMPLINGRATE_48000   48000
-
-/** 64kHz */
-
-#define AS_SAMPLINGRATE_64000   64000
-
-/** 88.2kHz */
-
-#define AS_SAMPLINGRATE_88200   88200
-
-/** 96kHz */
-
-#define AS_SAMPLINGRATE_96000   96000
-
-/** 128kHz */
-
-#define AS_SAMPLINGRATE_128000  128000
-
-/** 176.4kHz */
-
-#define AS_SAMPLINGRATE_176400  176400
-
-/** 192kHz */
-
-#define AS_SAMPLINGRATE_192000  192000
-
-/** @} */
-
-/** @name Bit rate */
-/** @{ */
-
-/** 8kbps */
-
-#define AS_BITRATE_8000    8000
-
-/** 16kbps */
-
-#define AS_BITRATE_16000   16000
-
-/** 24kbps */
-
-#define AS_BITRATE_24000   24000
-
-/** 32kbps */
-
-#define AS_BITRATE_32000   32000
-
-/** 40kbps */
-
-#define AS_BITRATE_40000   40000
-
-/** 48kbps */
-
-#define AS_BITRATE_48000   48000
-
-/** 56kbps */
-
-#define AS_BITRATE_56000   56000
-
-/** 64kbps */
-
-#define AS_BITRATE_64000   64000
-
-/** 80kbps */
-
-#define AS_BITRATE_80000   80000
-
-/** 96kbps */
-
-#define AS_BITRATE_96000   96000
-
-/** 112kbps */
-
-#define AS_BITRATE_112000  112000
-
-/** 128kbps */
-
-#define AS_BITRATE_128000  128000
-
-/** 144kbps */
-
-#define AS_BITRATE_144000  144000
-
-/** 160kbps */
-
-#define AS_BITRATE_160000  160000
-
-/** 192kbps */
-
-#define AS_BITRATE_192000  192000
-
-/** 224kbps */
-
-#define AS_BITRATE_224000  224000
-
-/** 256kbps */
-
-#define AS_BITRATE_256000  256000
-
-/** 320kbps */
-
-#define AS_BITRATE_320000  320000
-
-/** 384kbps */
-
-#define AS_BITRATE_384000  384000
-
-/** 448kbps */
-
-#define AS_BITRATE_448000  448000
-
-/** 510kbps */
-
-#define AS_BITRATE_510000  510000
-
-/** @} */
-
-/* ---------------------------------*/
-
 /** @name Reslt Code Packet length */
 /** @{ */
 
@@ -382,7 +113,7 @@
 
 /*! \brief SetPlayerStaus command (#AUDCMD_SETPLAYERSTATUS) packet length */
 
-#define LENGTH_SET_PLAYER_STATUS    7
+#define LENGTH_SET_PLAYER_STATUS    6 
 
 /*! \brief SetRecorderStatus command (#AUDCMD_SETRECORDERSTATUS) packet length */
 
@@ -1277,86 +1008,6 @@ typedef enum
   AS_STARTSOUNDEFFECT_MODE_NUM
 } AsStartSoundEffectMode;
 
-
-/** (__not supported__) InitSoundEffect Command (#AUDCMD_INITSOUNDEFFECT) parameter */
-
-typedef struct
-{
-  /*! \brief [in] Select InitSoundEffect input channels
-   *
-   * Use #AsInitSoundEffectChannelNumberIndex enum type
-   */
-
-  uint8_t  channel_number;
-
-  /*! \brief [in] Select InitSoundEffect input bit length
-   *
-   * Use #AsInitSoundEffectBitLength enum type
-   */
-
-  uint8_t  bit_length;
-
-  /*! \brief [in] Select InitSoundEffect codec type
-   *
-   * Use #AsInitSoundEffectCodecType enum type
-   */
-
-  uint8_t  codec_type;
-
-  /*! \brief [in] reserved */
-
-  uint8_t  reserved1;
-
-  /*! \brief [in] Select sampling rate of es data
-   *
-   * Use #AsInitSoundEffectSamplingRateIndex enum type
-   */
-
-  uint32_t  sampling_rate;
-} AsInitSoundEffectParam;
-
-/** internal of output_device_handler (used in AsSetRecorderStatusParam) parameter */
-
-typedef struct
-{
-  /*! \brief [in] reserved */
-
-  uint8_t  reserved1;
-
-  /*! \brief [in] reserved */
-
-  uint8_t  reserved2;
-
-  /*! \brief [in] reserved */
-
-  uint8_t  reserved3;
-
-  /*! \brief [in] play mode */
-
-  uint8_t  mode;
-
-  /*! \brief [in] Set SimpleFifo handler
-   *
-   * Use CMN_SimpleFifoHandle (refer to include file)
-   */
-
-  void*  simple_fifo_handler;
-
-  /*! \brief [in] Byte size of effect sound that will be played */
-
-  uint32_t size;
-} AsStartSoundEffectInputDeviceHdlr;
-
-/** (__not supported__) StartSoundEffect Command (#AUDCMD_STARTSOUNDEFFECT) parameter */
-
-typedef struct
-{
-  /*! \brief [in] input handler */
-
-  AsStartSoundEffectInputDeviceHdlr* input_device_handler;
-
-} AsStartSoundEffectParam;
-
 /** Select direct input path */
 
 typedef enum
@@ -1482,29 +1133,17 @@ typedef struct
 
     SetPlayerStsParam set_player_sts_param;
 
-    /*! \brief [in] for InitPlayer
-     * (header.command_code==#AUDCMD_INITPLAYER)
+    /*! \brief [in] player command
      */
 
-    AsInitPlayerParam init_player_param;
-
-    /*! \brief [in] for StopPlayer
-     * (header.command_code==#AUDCMD_STOPPLAYER)
-     */
-
-    AsStopPlayerParam stop_player_param;
+    PlayerCommand player;
 
     /*! \brief [in] for Adjust sound period
      * (header.command_code==#AUDCMD_CLKRECOVERY)
      */
 
-    AsClkRecoveryParam clk_recovery_param;
+    AsPlayerClockRecovery clk_recovery_param;
 
-    /*! \brief [in] for set audio gain level
-     * (header.command_code==#AUDCMD_SETGAIN)
-     */
-
-    AsSetGainParam set_gain_param;
 #endif
 #ifdef AS_FEATURE_RECORDER_ENABLE
 

@@ -58,8 +58,8 @@ __WIEN2_BEGIN_NAMESPACE
 class OutputMixObjectTask
 {
 public:
-  static void create(MsgQueId self_dtq, MsgQueId manager_dtq);
-  OutputMixObjectTask(MsgQueId self_dtq, MsgQueId manager_dtq);
+  static void create(MsgQueId self_dtq);
+  OutputMixObjectTask(MsgQueId self_dtq);
 
 private:
   MsgQueId m_self_dtq;
@@ -67,10 +67,10 @@ private:
 
   OutputMixToHPI2S m_output_mix_to_hpi2s[HPI2SoutChNum];
 
-  OutputMixDevice m_output_device;
+  AsOutputMixDevice m_output_device;
 
   void run();
-  int getHpI2sHandle(MsgPacket* msg);
+  int getHandle(MsgPacket* msg);
   void parse(MsgPacket* msg);
 };
 

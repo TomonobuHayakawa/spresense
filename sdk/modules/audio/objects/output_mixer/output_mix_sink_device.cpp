@@ -69,7 +69,7 @@ static void send_renderer(RenderComponentHandler handle,
                           uint32_t byte_size,
                           int8_t adjust,
                           bool is_valid);
-static bool check_sample(OutputMixObjInputDataCmd* input);
+static bool check_sample(AsPcmDataParam* input);
 
 /****************************************************************************
  * Private Data
@@ -110,7 +110,6 @@ OutputMixToHPI2S::MsgProc OutputMixToHPI2S::MsgProcTbl[AUD_MIX_MSG_NUM][StateNum
 /*            Booted                          Ready                                  Active                                  Stopping */
 /* ACT   */ {&OutputMixToHPI2S::act,         &OutputMixToHPI2S::illegal,            &OutputMixToHPI2S::illegal,             &OutputMixToHPI2S::illegal},
 /* DATA  */ {&OutputMixToHPI2S::illegal,     &OutputMixToHPI2S::input_data_on_ready,&OutputMixToHPI2S::input_data_on_active,&OutputMixToHPI2S::illegal},
-/* STOP */  {&OutputMixToHPI2S::illegal,     &OutputMixToHPI2S::illegal,            &OutputMixToHPI2S::stop_on_active,      &OutputMixToHPI2S::illegal},
 /* DEACT */ {&OutputMixToHPI2S::illegal,     &OutputMixToHPI2S::deact,              &OutputMixToHPI2S::illegal,             &OutputMixToHPI2S::illegal},
 /* DONE */  {&OutputMixToHPI2S::illegal_done,&OutputMixToHPI2S::illegal_done,       &OutputMixToHPI2S::done_on_active,      &OutputMixToHPI2S::done_on_stopping},
 /* ADJ */   {&OutputMixToHPI2S::illegal,     &OutputMixToHPI2S::clock_recovery,     &OutputMixToHPI2S::clock_recovery,      &OutputMixToHPI2S::clock_recovery},
@@ -129,30 +128,56 @@ void OutputMixToHPI2S::parse(MsgPacket* msg)
 void OutputMixToHPI2S::illegal(MsgPacket* msg)
 {
   OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_ILLEGAL_REQUEST);
+
+  uint event = msg->getType();
+
+  /* Extract and abandon message data
+   * ! Each message size is not same !
+   */
+
+  switch (event)
+    {
+      case MSG_AUD_MIX_CMD_ACT:
+      case MSG_AUD_MIX_CMD_DEACT:
+      case MSG_AUD_MIX_CMD_CLKRECOVERY:
+        msg->moveParam<OutputMixerCommand>();
+        break;
+
+      case MSG_AUD_MIX_CMD_RENDER_DONE:
+        msg->moveParam<OutputMixObjParam>();
+        break;
+
+      case MSG_AUD_MIX_CMD_DATA:
+        msg->moveParam<AsPcmDataParam>();
+
+      default:
+        break;
+    }
+
   return;
 }
 
 /*--------------------------------------------------------------------------*/
 void OutputMixToHPI2S::act(MsgPacket* msg)
 {
-  OutputMixDoneParam done_param;
-  err_t er;
-  m_player_dtq = msg->getReply();
-  OutputMixObjActCmd act_output_mix_param =
-    msg->moveParam<OutputMixObjParam>().act_param;
+  AsOutputMixDoneParam done_param;
+
+  m_requester_dtq = msg->getReply();
+  OutputMixerCommand cmd = msg->moveParam<OutputMixerCommand>();
+
 
   OUTPUT_MIX_DBG("ACT: dev %d, type %d\n",
-                 act_output_mix_param.output_device,
-                 act_output_mix_param.mixer_type);
+                 cmd.act_param.output_device,
+                 cmd.act_param.mixer_type);
 
-  switch(act_output_mix_param.mixer_type)
+  switch(cmd.act_param.mixer_type)
     {
       case MainOnly:
         /* Create render component for rendering main sound. */
 
         {
           RenderDevice render_device;
-          if (act_output_mix_param.output_device == HPOutputDevice)
+          if (cmd.act_param.output_device == HPOutputDevice)
             {
               render_device = RenderDeviceHPSP;
             }
@@ -182,24 +207,29 @@ void OutputMixToHPI2S::act(MsgPacket* msg)
         return;
     }
 
-  done_param.handle    = m_self_handle;
+  /* Set handle */
+
+  m_self_handle = cmd.handle;
+
+  /* Set callback function */
+
+  m_callback = cmd.act_param.cb;
+
+  /* Reply */
+
+  done_param.handle    = cmd.handle;
   done_param.done_type = OutputMixActDone;
 
-  er = MsgLib::send<OutputMixDoneParam>(m_player_dtq,
-                                        MsgPriNormal,
-                                        MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE,
-                                        m_self_dtq,
-                                        done_param);
-  F_ASSERT(er == ERR_OK);
+  m_callback(m_requester_dtq, MSG_AUD_MIX_CMD_ACT, &done_param);
+
   m_state = Ready;
 }
 
 /*--------------------------------------------------------------------------*/
 void OutputMixToHPI2S::deact(MsgPacket* msg)
 {
-  err_t er;
-  OutputMixDoneParam done_param;
-  msg->moveParam<OutputMixObjParam>();
+  AsOutputMixDoneParam done_param;
+  uint8_t handle = msg->moveParam<OutputMixerCommand>().handle;
 
   OUTPUT_MIX_DBG("DEACT:\n");
 
@@ -208,15 +238,13 @@ void OutputMixToHPI2S::deact(MsgPacket* msg)
       return;
     }
 
-  done_param.handle    = m_self_handle;
+  /* Replay */
+
+  done_param.handle    = handle;
   done_param.done_type = OutputMixDeactDone;
 
-  er = MsgLib::send<OutputMixDoneParam>(m_player_dtq,
-                                        MsgPriNormal,
-                                        MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE,
-                                        m_self_dtq,
-                                        done_param);
-  F_ASSERT(er == ERR_OK);
+  m_callback(m_requester_dtq, MSG_AUD_MIX_CMD_DEACT, &done_param);
+
   m_self_handle = 0;
   m_state       = Booted;
 }
@@ -224,8 +252,8 @@ void OutputMixToHPI2S::deact(MsgPacket* msg)
 /*--------------------------------------------------------------------------*/
 void OutputMixToHPI2S::input_data_on_ready(MsgPacket* msg)
 {
-  OutputMixObjInputDataCmd input =
-    msg->moveParam<OutputMixObjInputDataCmd>();
+  AsPcmDataParam input =
+    msg->moveParam<AsPcmDataParam>();
 
   /* Keep the resource until render done has been received. */
 
@@ -254,8 +282,8 @@ void OutputMixToHPI2S::input_data_on_ready(MsgPacket* msg)
 /*--------------------------------------------------------------------------*/
 void OutputMixToHPI2S::input_data_on_active(MsgPacket* msg)
 {
-  OutputMixObjInputDataCmd input =
-    msg->moveParam<OutputMixObjInputDataCmd>();
+  AsPcmDataParam input =
+    msg->moveParam<AsPcmDataParam>();
 
   if(check_sample(&input))
     {
@@ -268,26 +296,23 @@ void OutputMixToHPI2S::input_data_on_active(MsgPacket* msg)
         }
 
       send_renderer(m_render_comp_handler,
-                  input.mh.getPa(),
-                  input.size,
-                  get_period_adjustment(),
-                  input.is_valid);
+                    input.mh.getPa(),
+                    input.size,
+                    get_period_adjustment(),
+                    input.is_valid);
     }
-}
 
-/*--------------------------------------------------------------------------*/
-void OutputMixToHPI2S::stop_on_active(MsgPacket* msg)
-{
-  OUTPUT_MIX_DBG("STOP:\n");
+  /* If end-data, publish render stop */
 
-  msg->moveParam<OutputMixObjParam>();
-
-  if (!AS_stop_renderer(m_render_comp_handler, AS_DMASTOPMODE_NORMAL))
+  if (input.is_end)
     {
-      return;
-    }
+      if (!AS_stop_renderer(m_render_comp_handler, AS_DMASTOPMODE_NORMAL))
+        {
+          return;
+        }
 
-  m_state = Stopping;
+      m_state = Stopping;
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -300,11 +325,9 @@ void OutputMixToHPI2S::illegal_done(MsgPacket* msg)
 /*--------------------------------------------------------------------------*/
 void OutputMixToHPI2S::done_on_active(MsgPacket* msg)
 {
-  err_t er;
-  OutputMixDoneParam done_param;
-  bool end_flag =
-    msg->moveParam<OutputMixObjParam>().renderdone_param.end_flag;
-  if (end_flag)
+  OutputMixObjParam param = msg->moveParam<OutputMixObjParam>();
+
+  if (param.renderdone_param.end_flag)
     {
       OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
       return;
@@ -315,100 +338,82 @@ void OutputMixToHPI2S::done_on_active(MsgPacket* msg)
       OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
       return;
     }
+
+  /* Reply */
+
+  m_render_data_queue.top().callback(m_self_handle,
+                                     param.renderdone_param.end_flag);
+
   if (!m_render_data_queue.pop())
     {
       OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
       return;
     }
-
-  done_param.handle    = m_self_handle;
-  done_param.done_type = OutputMixExecDone;
-
-  er = MsgLib::send<OutputMixDoneParam>(m_player_dtq,
-                                        MsgPriNormal,
-                                        MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE,
-                                        m_self_dtq,
-                                        done_param);
-  F_ASSERT(er == ERR_OK);
 }
 
 /*--------------------------------------------------------------------------*/
 void OutputMixToHPI2S::done_on_stopping(MsgPacket* msg)
 {
-  err_t er = ERR_OK;
-  OutputMixDoneParam done_param;
-  bool end_flag =
-    msg->moveParam<OutputMixObjParam>().renderdone_param.end_flag;
+  OutputMixObjParam param = msg->moveParam<OutputMixObjParam>();
 
   if (m_render_data_queue.empty())
     {
       OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
       return;
     }
+
+  /* Reply */
+
+  m_render_data_queue.top().callback(m_self_handle,
+                                     param.renderdone_param.end_flag);
+
   if (!m_render_data_queue.pop())
     {
       OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
       return;
     }
 
-  done_param.handle    = m_self_handle;
-
   if (m_render_data_queue.empty())
     {
-      if (end_flag == false)
+      if (param.renderdone_param.end_flag)
         {
-          OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-          done_param.done_type = OutputMixExecDone;
-          er = MsgLib::send<OutputMixDoneParam>(m_player_dtq,
-                                                MsgPriNormal,
-                                                MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE,
-                                                m_self_dtq, done_param);
-          F_ASSERT(er == ERR_OK);
+          m_state = Ready;
         }
       else
         {
-          done_param.done_type = OutputMixStopDone;
-          er = MsgLib::send<OutputMixDoneParam>(m_player_dtq,
-                                                MsgPriNormal,
-                                                MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE,
-                                                m_self_dtq,
-                                                done_param);
-          F_ASSERT(er == ERR_OK);
-          m_state = Ready;
+          OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
         }
-    }
-  else
-    {
-      done_param.done_type = OutputMixExecDone;
-      er = MsgLib::send<OutputMixDoneParam>(m_player_dtq,
-                                            MsgPriNormal,
-                                            MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE,
-                                            m_self_dtq,
-                                            done_param);
-      F_ASSERT(er == ERR_OK);
     }
 }
 
 /*--------------------------------------------------------------------------*/
 void OutputMixToHPI2S::clock_recovery(MsgPacket* msg)
 {
-  OutputMixObjSoundPeriodAdjust cmd =
-    msg->moveParam<OutputMixObjParam>().adjust_param;
+  OutputMixerCommand cmd =
+    msg->moveParam<OutputMixerCommand>();
 
   OUTPUT_MIX_DBG("CLOCK RECOVERY: dir %d, times %d\n",
-                 cmd.direction, cmd.adjust_times);
+                 cmd.fterm_param.direction, cmd.fterm_param.times);
 
   /* Check Paramete. */
 
-  if (cmd.direction < OutputMixAdvance || OutputMixDelay < cmd.direction)
+  if (cmd.fterm_param.direction < OutputMixAdvance
+   || OutputMixDelay < cmd.fterm_param.direction)
     {
       return;
     }
 
   /* Set recovery parameters. */
 
-  m_adjust_direction = cmd.direction;
-  m_adjustment_times = cmd.adjust_times;
+  m_adjust_direction = cmd.fterm_param.direction;
+  m_adjustment_times = cmd.fterm_param.times;
+
+  AsOutputMixDoneParam done_param;
+
+  done_param.handle    = cmd.handle;
+  done_param.done_type = OutputMixSetClkRcvDone;
+
+  m_callback(m_requester_dtq, MSG_AUD_MIX_CMD_CLKRECOVERY, &done_param);
 
   return;
 }
@@ -501,7 +506,7 @@ static void send_renderer(RenderComponentHandler handle,
 }
 
 /*--------------------------------------------------------------------------*/
-static bool check_sample(OutputMixObjInputDataCmd *input)
+static bool check_sample(AsPcmDataParam *input)
 {
   bool res = true;
   if (input->size < DMA_MIN_SAMPLE*BYTE_SIZE_PER_SAMPLE)

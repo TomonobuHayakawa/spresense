@@ -67,11 +67,12 @@ class OutputMixToHPI2S
 public:
   OutputMixToHPI2S():
     m_state(AS_MODULE_ID_OUTPUT_MIX_OBJ, "", Booted),
+    m_callback(NULL),
     m_adjust_direction(OutputMixNoAdjust),
     m_adjustment_times(0)
     {}
 
-    MsgQueId m_self_dtq, m_player_dtq;
+    MsgQueId m_self_dtq, m_requester_dtq;
     int m_self_handle;
 
   ~OutputMixToHPI2S() {}
@@ -80,10 +81,6 @@ public:
   bool is_active(void)
     {
       return ((m_state.get() != Booted) ? true : false);
-    }
-  void set_self_handle(int handle)
-    {
-      m_self_handle = handle;
     }
   void set_self_dtq(MsgQueId dtqid)
     {
@@ -105,10 +102,12 @@ private:
   typedef void (OutputMixToHPI2S::*MsgProc)(MsgPacket *);
   static MsgProc MsgProcTbl[AUD_MIX_MSG_NUM][StateNum];
 
-  typedef s_std::Queue<OutputMixObjInputDataCmd, 10> RenderDataQueue;
+  typedef s_std::Queue<AsPcmDataParam, 10> RenderDataQueue;
   RenderDataQueue m_render_data_queue;
 
   RenderComponentHandler m_render_comp_handler;
+
+  OutputMixerCallback m_callback;
 
   int8_t m_adjust_direction;
   int32_t m_adjustment_times;
@@ -119,8 +118,6 @@ private:
 
   void input_data_on_ready(MsgPacket *msg);
   void input_data_on_active(MsgPacket *msg);
-
-  void stop_on_active(MsgPacket *msg);
 
   void illegal_done(MsgPacket *msg);
   void done_on_active(MsgPacket *msg);

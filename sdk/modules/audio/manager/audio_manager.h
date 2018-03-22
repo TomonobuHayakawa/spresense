@@ -73,7 +73,8 @@ class AudioManager
 public:
   static void create(MsgQueId selfDtq,
                      MsgQueId playerDtq,
-                     MsgQueId subplayerDtq);
+                     MsgQueId subplayerDtq,
+                     MsgQueId outMixerDtq);
 
   ~AudioManager()
   {
@@ -83,14 +84,17 @@ public:
 private:
   AudioManager(MsgQueId selfDtq,
                MsgQueId playerDtq,
-               MsgQueId subplayerDtq) :
+               MsgQueId subplayerDtq,
+               MsgQueId outMixerDtq) :
     m_selfDtq(selfDtq),
     m_playerDtq(playerDtq),
     m_subplayerDtq(subplayerDtq),
+    m_outMixerDtq(outMixerDtq),
     m_State(AS_MNG_STATUS_POWEROFF),
     m_SubState(AS_MNG_SUB_STATUS_NONE),
     m_attentionCBFunc(NULL),
-    m_active_player(0)
+    m_active_player(0),
+    m_player_transition_count(0)
   {
     cxd56_audio_bb_register("/dev/audio/baseband");
   };
@@ -98,6 +102,7 @@ private:
   MsgQueId m_selfDtq;
   MsgQueId m_playerDtq;
   MsgQueId m_subplayerDtq;
+  MsgQueId m_outMixerDtq;
 
   AsMngStatus    m_State;
   AsMngSubStatus m_SubState;
@@ -127,8 +132,7 @@ private:
   BasebandConfig bbConfig;
   uint32_t m_active_player;
   uint32_t m_command_code;
-  static const int   ActivePlayerNum = 2;
-  s_std::Queue<uint8_t, ActivePlayerNum> m_player_transition_que;
+  int8_t m_player_transition_count;
 
   typedef void (AudioManager::*MsgProc)(AudioCommand &cmd);
   typedef void (AudioManager::*RstProc)(const AudioMngCmdCmpltResult &result);
@@ -146,6 +150,7 @@ private:
   void mfe(AudioCommand &cmd);
   void mpp(AudioCommand &cmd);
   void player(AudioCommand &cmd);
+  void outputmixer(AudioCommand &cmd);
   void recorder(AudioCommand &cmd);
   void initMicGain(AudioCommand &cmd);
   void setMicGain(AudioCommand &cmd);
@@ -168,7 +173,6 @@ private:
   void setActive(AudioCommand &cmd);
   void setPlayerStatus(AudioCommand &cmd);
   void setRecorder(AudioCommand &cmd);
-  void subPlayer(AudioCommand &cmd);
   void voiceCommand(AudioCommand &cmd);
   void setThroughStatus(AudioCommand &cmd);
   void setThroughPath(AudioCommand &cmd);

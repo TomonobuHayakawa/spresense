@@ -52,12 +52,108 @@ static MsgQueId s_selfMid    = 0xFF;  /* Invalid ID. */
 static MsgQueId s_appMid     = 0xFF;  /* Invalid ID. */
 static MsgQueId s_plyMainMid = 0xFF;  /* Invalid ID. */
 static MsgQueId s_plySubMid  = 0xFF;  /* Invalid ID. */
-static MsgQueId s_mixSubMid  = 0xFF;  /* Invalid ID. */
+static MsgQueId s_mixerMid   = 0xFF;  /* Invalid ID. */
 static MsgQueId s_rcdSubMid  = 0xFF;  /* Invalid ID. */
 static MsgQueId s_effectMid  = 0xFF;  /* Invalid ID. */
 static MsgQueId s_rcgMid     = 0xFF;  /* Invalid ID. */
 
 static AudioManager *s_mng = NULL;
+
+#ifdef AS_FEATURE_PLAYER_ENABLE
+/*
+ * Callback functions from OutputMixer
+ */
+
+/*--------------------------------------------------------------------------*/
+static void proc_outputmixer_reply(AsOutputMixerHandle handle,
+                                   MsgQueId requester_dtq,
+                                   MsgType reply_of,
+                                   AsOutputMixDoneParam *done_param)
+{
+  uint8_t cmd_code[AUD_PLY_MSG_NUM] =
+  {
+    AUDCMD_SETPLAYERSTATUS,
+    AUDCMD_SETREADYSTATUS,
+    AUDCMD_CLKRECOVERY,
+  };
+
+  AudioMngCmdCmpltResult cmplt(0, 0, AS_ECODE_OK, AS_MODULE_ID_OUTPUT_MIX_OBJ, 0);
+
+  cmplt.command_code = cmd_code[done_param->done_type];
+
+  err_t er = MsgLib::send<AudioMngCmdCmpltResult>(s_selfMid,
+                                                  MsgPriNormal,
+                                                  MSG_TYPE_AUD_RES,
+                                                  requester_dtq,
+                                                  cmplt);
+  F_ASSERT(er == ERR_OK);
+
+  return;
+}
+
+/*--------------------------------------------------------------------------*/
+static void outputmixer0_done_callback(MsgQueId requester_dtq,
+                                       MsgType reply_of,
+                                       AsOutputMixDoneParam *done_param)
+{
+  proc_outputmixer_reply(OutputMixer0, requester_dtq, reply_of, done_param);
+}
+
+/*--------------------------------------------------------------------------*/
+static void outputmixer1_done_callback(MsgQueId requester_dtq,
+                                       MsgType reply_of,
+                                       AsOutputMixDoneParam *done_param)
+{
+  proc_outputmixer_reply(OutputMixer1, requester_dtq, reply_of, done_param);
+}
+
+/*
+ * Callback functions from MediaPlayer 
+ */
+
+/*--------------------------------------------------------------------------*/
+static void send_player_reply(AsPlayerEvent event, uint32_t result, uint32_t sub_result)
+{
+  uint8_t cmd_code[] =
+  {
+    AUDCMD_SETPLAYERSTATUS,
+    AUDCMD_INITPLAYER,
+    AUDCMD_PLAYPLAYER,
+    AUDCMD_STOPPLAYER,
+    AUDCMD_SETREADYSTATUS,
+    AUDCMD_SETGAIN,
+  };
+
+  AudioMngCmdCmpltResult cmplt(cmd_code[event],
+                               0,
+                               result,
+                               AS_MODULE_ID_PLAYER_OBJ,
+                               sub_result);
+
+  err_t er = MsgLib::send<AudioMngCmdCmpltResult>(s_selfMid,
+                                                  MsgPriNormal,
+                                                  MSG_TYPE_AUD_RES,
+                                                  s_selfMid,
+                                                  cmplt);
+  F_ASSERT(ERR_OK == er);
+}
+
+/*--------------------------------------------------------------------------*/
+static bool player0_done_callback(AsPlayerEvent event, uint32_t result, uint32_t sub_result)
+{
+  send_player_reply(event, result, sub_result);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+static bool player1_done_callback(AsPlayerEvent event, uint32_t result, uint32_t sub_result)
+{
+  send_player_reply(event, result, sub_result);
+
+  return true;
+}
+#endif /* AS_FEATURE_PLAYER_ENABLE */
 
 /*
  * External Interface.
@@ -128,17 +224,12 @@ int AS_SendAudioCommand(FAR AudioCommand *packet)
       case AUDCMD_INITPLAYER:
       case AUDCMD_PLAYPLAYER:
       case AUDCMD_STOPPLAYER:
-      case AUDCMD_CLKRECOVERY:
       case AUDCMD_SETGAIN:
         msg_type = MSG_AUD_MGR_CMD_PLAYER;
         break;
 
-      case AUDCMD_INITSUBPLAYER:
-      case AUDCMD_PLAYSUBPLAYER:
-      case AUDCMD_STOPSUBPLAYER:
-      case AUDCMD_CLKRECOVERYSUB:
-      case AUDCMD_SETGAINSUB:
-        msg_type = MSG_AUD_MGR_CMD_SUBPLAYER;
+      case AUDCMD_CLKRECOVERY:
+        msg_type = MSG_AUD_MGR_CMD_OUTPUTMIXER;
         break;
 
 #endif  /* AS_FEATURE_PLAYER_ENABLE */
@@ -225,7 +316,7 @@ static pid_t s_amng_pid = -1;
 /*--------------------------------------------------------------------------*/
 int AS_AudioManagerEntry(void)
 {
-  AudioManager::create(s_selfMid, s_plyMainMid, s_plySubMid);
+  AudioManager::create(s_selfMid, s_plyMainMid, s_plySubMid, s_mixerMid);
   return 0;
 }
 
@@ -236,7 +327,7 @@ int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids)
   s_appMid     = (MsgQueId)ids.app;
   s_plyMainMid = (MsgQueId)ids.player_main;
   s_plySubMid  = (MsgQueId)ids.player_sub;
-  s_mixSubMid  = (MsgQueId)ids.mixer;
+  s_mixerMid   = (MsgQueId)ids.mixer;
   s_rcdSubMid  = (MsgQueId)ids.recorder;
   s_effectMid  = (MsgQueId)ids.effector;
   s_rcgMid     = (MsgQueId)ids.recognizer;
@@ -304,14 +395,16 @@ MsgQueId AS_GetSelfDtq(void)
 
 } /* extern "C" */
 
+
 /*--------------------------------------------------------------------------*/
 void AudioManager::create(MsgQueId selfDtq,
                           MsgQueId playerDtq,
-                          MsgQueId subplayerDtq)
+                          MsgQueId subplayerDtq,
+                          MsgQueId outMixerDtq)
 {
   if (s_mng == NULL)
     {
-      s_mng = new AudioManager(selfDtq, playerDtq, subplayerDtq);
+      s_mng = new AudioManager(selfDtq, playerDtq, subplayerDtq, outMixerDtq);
       if (s_mng == NULL)
         {
           MANAGER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
@@ -720,13 +813,13 @@ AudioManager::MsgProc
     &AudioManager::illegal             /*   Through state.         */
   },
 
-  /* SubPlayer command. */
+  /* OutputMixer command. */
 
   {                                    /* AudioManager all status: */
     &AudioManager::illegal,            /*   Ready state.           */
-    &AudioManager::subPlayer,          /*   PlayerReady state.     */
-    &AudioManager::subPlayer,          /*   PlayerActive state.    */
-    &AudioManager::subPlayer,          /*   PlayerPause state.     */
+    &AudioManager::outputmixer,        /*   PlayerReady state.     */
+    &AudioManager::outputmixer,        /*   PlayerActive state.    */
+    &AudioManager::outputmixer,        /*   PlayerPause state.     */
     &AudioManager::illegal,            /*   RecorderReady state.   */
     &AudioManager::illegal,            /*   RecorderActive state.  */
     &AudioManager::illegal,            /*   BasebandReady state.   */
@@ -1152,6 +1245,8 @@ void AudioManager::mpp(AudioCommand &cmd)
 void AudioManager::player(AudioCommand &cmd)
 {
 #ifdef AS_FEATURE_PLAYER_ENABLE
+  MsgQueId msgq_id =
+    (cmd.player.player_id == AS_PLAYER_ID_0) ? m_playerDtq : m_subplayerDtq;
   MSG_TYPE msg_type;
   bool check = false;
 
@@ -1172,6 +1267,13 @@ void AudioManager::player(AudioCommand &cmd)
           {
             return;
           }
+
+        cmd.player.play_param.pcm_path = AsPcmDataTunnel;
+        cmd.player.play_param.pcm_dest.msg.id = m_outMixerDtq;
+        cmd.player.play_param.pcm_dest.msg.identifier =
+          (cmd.player.player_id == AS_PLAYER_ID_0) ?
+            OutputMixer0 : OutputMixer1;
+
         msg_type = MSG_AUD_PLY_CMD_PLAY;
         break;
 
@@ -1182,15 +1284,6 @@ void AudioManager::player(AudioCommand &cmd)
             return;
           }
         msg_type = MSG_AUD_PLY_CMD_STOP;
-        break;
-
-      case AUDCMD_CLKRECOVERY:
-        check = packetCheck(LENGTH_CLK_RECOVERY, AUDCMD_CLKRECOVERY, cmd);
-        if (!check)
-          {
-            return;
-          }
-        msg_type = MSG_AUD_PLY_CMD_CLKRECOVERY;
         break;
 
       case AUDCMD_SETGAIN:
@@ -1209,11 +1302,11 @@ void AudioManager::player(AudioCommand &cmd)
         return;
     }
 
-  err_t er = MsgLib::send<AudioCommand>(m_playerDtq,
-                                        MsgPriNormal,
-                                        msg_type,
-                                        m_selfDtq,
-                                        cmd);
+  err_t er = MsgLib::send<PlayerCommand>(msgq_id,
+                                         MsgPriNormal,
+                                         msg_type,
+                                         m_selfDtq,
+                                         cmd.player);
   F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
@@ -1223,76 +1316,44 @@ void AudioManager::player(AudioCommand &cmd)
 }
 
 /*--------------------------------------------------------------------------*/
-void AudioManager::subPlayer(AudioCommand &cmd)
+void AudioManager::outputmixer(AudioCommand &cmd)
 {
 #ifdef AS_FEATURE_PLAYER_ENABLE
+
   MSG_TYPE msg_type;
   bool check = false;
+  OutputMixerCommand omix_cmd;
 
   switch (cmd.header.command_code)
     {
-      case AUDCMD_INITSUBPLAYER:
-        check = packetCheck(LENGTH_INIT_PLAYER, AUDCMD_INITSUBPLAYER, cmd);
+      case AUDCMD_CLKRECOVERY:
+        check = packetCheck(LENGTH_CLK_RECOVERY, AUDCMD_CLKRECOVERY, cmd);
         if (!check)
           {
             return;
           }
-        msg_type = MSG_AUD_PLY_CMD_INIT;
-        break;
 
-      case AUDCMD_PLAYSUBPLAYER:
-        check = packetCheck(LENGTH_PLAY_PLAYER, AUDCMD_PLAYSUBPLAYER, cmd);
-        if (!check)
-          {
-            return;
-          }
-        msg_type = MSG_AUD_PLY_CMD_PLAY;
-        break;
+        omix_cmd.handle =
+          (cmd.clk_recovery_param.player_id == AS_PLAYER_ID_0) ?
+            OutputMixer0 : OutputMixer1;
 
-      case AUDCMD_STOPSUBPLAYER:
-        check = packetCheck(LENGTH_STOP_PLAYER, AUDCMD_STOPSUBPLAYER, cmd);
-        if (!check)
-          {
-            return;
-          }
-        msg_type = MSG_AUD_PLY_CMD_STOP;
-        break;
+        omix_cmd.fterm_param.direction = cmd.clk_recovery_param.direction;
+        omix_cmd.fterm_param.times     = cmd.clk_recovery_param.times;
 
-      case AUDCMD_CLKRECOVERYSUB:
-        check = packetCheck(LENGTH_CLK_RECOVERY, AUDCMD_CLKRECOVERYSUB, cmd);
-        if (!check)
-          {
-            return;
-          }
-        msg_type = MSG_AUD_PLY_CMD_CLKRECOVERY;
-        break;
-
-      case AUDCMD_SETGAINSUB:
-        check = packetCheck(LENGTH_SET_GAIN, AUDCMD_SETGAINSUB, cmd);
-        if (!check)
-          {
-            return;
-          }
-        msg_type = MSG_AUD_PLY_CMD_SETGAIN;
+        msg_type = MSG_AUD_MIX_CMD_CLKRECOVERY;
         break;
 
       default:
-        sendErrRespResult(cmd.header.sub_code,
-                          AS_MODULE_ID_AUDIO_MANAGER,
-                          AS_ECODE_COMMAND_CODE_ERROR);
-        return;
+        break;
     }
 
-  err_t er = MsgLib::send<AudioCommand>(m_subplayerDtq,
-                                        MsgPriNormal,
-                                        msg_type,
-                                        m_selfDtq,
-                                        cmd);
+  err_t er = MsgLib::send<OutputMixerCommand>(m_outMixerDtq,
+                                              MsgPriNormal,
+                                              msg_type,
+                                              m_selfDtq,
+                                              omix_cmd);
   F_ASSERT(er == ERR_OK);
-#else
-  sendErrRespResult(cmd.header.sub_code,
-                    AS_MODULE_ID_AUDIO_MANAGER,
-                    AS_ECODE_COMMAND_NOT_SUPPOT);
+
 #endif /* AS_FEATURE_PLAYER_ENABLE */
 }
 
@@ -1427,31 +1488,59 @@ void AudioManager::setRdyOnPlay(AudioCommand &cmd)
 
   if (m_active_player & AS_ACTPLAYER_MAIN)
     {
-      er = MsgLib::send<AudioCommand>(m_playerDtq,
-                                      MsgPriNormal,
-                                      MSG_AUD_PLY_CMD_DEACT,
-                                      m_selfDtq,
-                                      cmd);
+      /* Deactivate MediaPlayer */
+
+      er = MsgLib::send<PlayerCommand>(m_playerDtq,
+                                       MsgPriNormal,
+                                       MSG_AUD_PLY_CMD_DEACT,
+                                       m_selfDtq,
+                                       cmd.player);
       F_ASSERT(er == ERR_OK);
-      if (!m_player_transition_que.push(er))
-        {
-          MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-        }
+      m_player_transition_count++;
+
+      /* Deactivate OutputMixer */
+
+      OutputMixerCommand omix_cmd;
+
+      omix_cmd.handle = OutputMixer0;
+
+      er = MsgLib::send<OutputMixerCommand>(m_outMixerDtq,
+                                            MsgPriNormal,
+                                            MSG_AUD_MIX_CMD_DEACT,
+                                            m_selfDtq,
+                                            omix_cmd);
+      F_ASSERT(er == ERR_OK);
+      m_player_transition_count++;
+
       m_active_player &= ~AS_ACTPLAYER_MAIN;
     }
 
   if (m_active_player & AS_ACTPLAYER_SUB)
     {
-      er = MsgLib::send<AudioCommand>(m_subplayerDtq,
-                                      MsgPriNormal,
-                                      MSG_AUD_PLY_CMD_DEACT,
-                                      m_selfDtq,
-                                      cmd);
+      /* Deactivate MediaPlayer */
+
+      er = MsgLib::send<PlayerCommand>(m_subplayerDtq,
+                                       MsgPriNormal,
+                                       MSG_AUD_PLY_CMD_DEACT,
+                                       m_selfDtq,
+                                       cmd.player);
       F_ASSERT(er == ERR_OK);
-      if (!m_player_transition_que.push(er))
-        {
-           MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-        }
+      m_player_transition_count++;
+
+      /* Deactivate OutputMixer */
+
+      OutputMixerCommand omix_cmd;
+
+      omix_cmd.handle = OutputMixer1;
+
+      er = MsgLib::send<OutputMixerCommand>(m_outMixerDtq,
+                                            MsgPriNormal,
+                                            MSG_AUD_MIX_CMD_DEACT,
+                                            m_selfDtq,
+                                            omix_cmd);
+      F_ASSERT(er == ERR_OK);
+      m_player_transition_count++;
+
       m_active_player &= ~AS_ACTPLAYER_SUB;
     }
 #else
@@ -1640,9 +1729,9 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
   if (m_active_player & AS_ACTPLAYER_MAIN)
     {
       check_param =
-        setPlayerStatusParamCheck(cmd.set_player_sts_param.input_device,
-                                  cmd.set_player_sts_param.output_device,
-                                  cmd.set_player_sts_param.ram_handler);
+        setPlayerStatusParamCheck(cmd.set_player_sts_param.player0.input_device,
+                                  cmd.set_player_sts_param.player0.output_device,
+                                  cmd.set_player_sts_param.player0.ram_handler);
       if (check_param != AS_ECODE_OK)
         {
           sendErrRespResult(cmd.header.sub_code,
@@ -1655,9 +1744,9 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
   if (m_active_player & AS_ACTPLAYER_SUB)
     {
       check_param =
-        setPlayerStatusParamCheck(cmd.set_player_sts_param.input_device_sub,
-                                  cmd.set_player_sts_param.output_device_sub,
-                                  cmd.set_player_sts_param.ram_handler_sub);
+        setPlayerStatusParamCheck(cmd.set_player_sts_param.player1.input_device,
+                                  cmd.set_player_sts_param.player1.output_device,
+                                  cmd.set_player_sts_param.player1.ram_handler);
       if (check_param != AS_ECODE_OK)
         {
           sendErrRespResult(cmd.header.sub_code,
@@ -1680,41 +1769,72 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
 
   if (m_active_player & AS_ACTPLAYER_MAIN)
     {
-      err_t er = MsgLib::send<AudioCommand>(m_playerDtq,
-                                            MsgPriNormal,
-                                            MSG_AUD_PLY_CMD_ACT,
-                                            m_selfDtq,
-                                            cmd);
+      /* Activate MediaPlayer */
+
+      PlayerCommand player_command;
+
+      player_command.act_param.param = cmd.set_player_sts_param.player0;
+      player_command.act_param.cb    = player0_done_callback;
+
+      err_t er = MsgLib::send<PlayerCommand>(m_playerDtq,
+                                             MsgPriNormal,
+                                             MSG_AUD_PLY_CMD_ACT,
+                                             m_selfDtq,
+                                             player_command);
       F_ASSERT(er == ERR_OK);
-      if (!m_player_transition_que.push(er))
-        {
-           MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-        }
+      m_player_transition_count++;
+
+      /* Activate OutputMixer */
+
+      OutputMixerCommand omix_cmd;
+
+      omix_cmd.handle                  = OutputMixer0;
+      omix_cmd.act_param.output_device = HPOutputDevice;
+      omix_cmd.act_param.mixer_type    = MainOnly;
+      omix_cmd.act_param.cb            = outputmixer0_done_callback;
+
+      er = MsgLib::send<OutputMixerCommand>(m_outMixerDtq,
+                                            MsgPriNormal,
+                                            MSG_AUD_MIX_CMD_ACT,
+                                            m_selfDtq,
+                                            omix_cmd);
+      F_ASSERT(er == ERR_OK);
+      m_player_transition_count++;
     }
 
   if (m_active_player & AS_ACTPLAYER_SUB)
     {
-      /* Reload parameters for PlayerObjct(sub). */
+      /* Activate MediaPlayer */
 
-      cmd.set_player_sts_param.input_device =
-        cmd.set_player_sts_param.input_device_sub;
-      cmd.set_player_sts_param.ram_handler =
-        cmd.set_player_sts_param.ram_handler_sub;
-      cmd.set_player_sts_param.output_device =
-        cmd.set_player_sts_param.output_device_sub;
-      cmd.set_player_sts_param.output_device_handler =
-        cmd.set_player_sts_param.output_device_handler_sub;
+      PlayerCommand player_command;
 
-      err_t er = MsgLib::send<AudioCommand>(m_subplayerDtq,
-                                            MsgPriNormal,
-                                            MSG_AUD_PLY_CMD_ACT,
-                                            m_selfDtq,
-                                            cmd);
+      player_command.act_param.param = cmd.set_player_sts_param.player1;
+      player_command.act_param.cb    = player1_done_callback;
+
+      err_t er = MsgLib::send<PlayerCommand>(m_subplayerDtq,
+                                             MsgPriNormal,
+                                             MSG_AUD_PLY_CMD_ACT,
+                                             m_selfDtq,
+                                             player_command);
       F_ASSERT(er == ERR_OK);
-      if (!m_player_transition_que.push(er))
-        {
-           MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-        }
+      m_player_transition_count++;
+
+      /* Activate OutputMixer */
+
+      OutputMixerCommand omix_cmd;
+
+      omix_cmd.handle                  = OutputMixer1;
+      omix_cmd.act_param.output_device = HPOutputDevice;
+      omix_cmd.act_param.mixer_type    = MainOnly;
+      omix_cmd.act_param.cb            = outputmixer1_done_callback;
+
+      er = MsgLib::send<OutputMixerCommand>(m_outMixerDtq,
+                                            MsgPriNormal,
+                                            MSG_AUD_MIX_CMD_ACT,
+                                            m_selfDtq,
+                                            omix_cmd);
+      F_ASSERT(er == ERR_OK);
+      m_player_transition_count++;
     }
 #else
   sendErrRespResult(cmd.header.sub_code,
@@ -1919,11 +2039,8 @@ void AudioManager::cmpltOnReady(const AudioMngCmdCmpltResult &cmd)
     {
       case AUDCMD_SETPLAYERSTATUS:
         m_command_code = AUDCMD_SETPLAYERSTATUS;
-        if (!m_player_transition_que.pop())
-          {
-            MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-          }
-        if (m_player_transition_que.empty())
+        m_player_transition_count--;
+        if (m_player_transition_count <= 0)
           {
             result_code = AUDRLT_STATUSCHANGED;
             m_State    = AS_MNG_STATUS_PLAYER;
@@ -2114,41 +2231,18 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
         break;
 
       case AUDCMD_SETREADYSTATUS:
-        if (!m_player_transition_que.pop())
-          {
-            MANAGER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-          }
-        if (m_player_transition_que.empty())
+        m_player_transition_count--;
+        if (m_player_transition_count <= 0)
           {
             if (deactivatePlayer())
               {
-                    result_code = AUDRLT_STATUSCHANGED;
+                result_code = AUDRLT_STATUSCHANGED;
               }
           }
         else
           {
             return;
           }
-        break;
-
-      case AUDCMD_INITSUBPLAYER:
-        result_code = AUDRLT_SUBINITPLAYERCMPLT;
-        break;
-
-      case AUDCMD_PLAYSUBPLAYER:
-        result_code = AUDRLT_SUBPLAYCMPLT;
-        break;
-
-      case AUDCMD_STOPSUBPLAYER:
-        result_code = AUDRLT_SUBSTOPCMPLT;
-        break;
-
-      case AUDCMD_CLKRECOVERYSUB:
-        result_code = AUDRLT_CLKRECOVERYSUB_CMPLT;
-        break;
-
-      case AUDCMD_SETGAINSUB:
-        result_code = AUDRLT_SETGAINSUB_CMPLT;
         break;
 
       case AUDCMD_POWERON:

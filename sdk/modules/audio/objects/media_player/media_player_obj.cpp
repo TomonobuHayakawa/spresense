@@ -76,16 +76,12 @@ using namespace MemMgrLite;
 
 static pid_t    s_ply_pid = -1;
 static MsgQueId s_self_dtq;
-static MsgQueId s_manager_dtq;
-static MsgQueId s_omix_dtq;
 static MsgQueId s_dsp_dtq;
 static PoolId   s_es_pool_id;
 static PoolId   s_pcm_pool_id;
 static PoolId   s_apu_pool_id;
 static pid_t    s_sub_ply_pid;
 static MsgQueId s_sub_self_dtq;
-static MsgQueId s_sub_manager_dtq;
-static MsgQueId s_sub_omix_dtq;
 static MsgQueId s_sub_dsp_dtq;
 static PoolId   s_sub_es_pool_id;
 static PoolId   s_sub_pcm_pool_id;
@@ -192,25 +188,40 @@ static bool decoder_comp_done_callback(void *p_response, FAR void *p_requester)
 }
 
 /*--------------------------------------------------------------------------*/
+static void pcm_send_done_callback(int32_t identifier, bool is_end)
+{
+  MsgQueId msgq_id =
+    (identifier == OutputMixer0) ? s_self_dtq : s_sub_self_dtq;
+
+  PlayerCommand cmd;
+
+  cmd.req_next_param.type =
+    (is_end != true) ? AsNextNormalRequest : AsNextStopResRequest;
+
+  err_t er = MsgLib::send<PlayerCommand>(msgq_id,
+                                         MsgPriNormal,
+                                         MSG_AUD_PLY_CMD_NEXT_REQ,
+                                         msgq_id,
+                                         cmd);
+  F_ASSERT(er == ERR_OK);
+}
+
+/*--------------------------------------------------------------------------*/
 PlayerObj::PlayerObj(MsgQueId self_dtq,
-                     MsgQueId manager_dtq,
-                     MsgQueId output_mix_dtq,
                      MsgQueId apu_dtq,
                      MemMgrLite::PoolId es_pool_id,
                      MemMgrLite::PoolId pcm_pool_id,
                      MemMgrLite::PoolId apu_pool_id):
   m_self_dtq(self_dtq),
-  m_manager_dtq(manager_dtq),
-  m_output_mix_dtq(output_mix_dtq),
   m_apu_dtq(apu_dtq),
   m_es_pool_id(es_pool_id),
   m_pcm_pool_id(pcm_pool_id),
   m_apu_pool_id(apu_pool_id),
-  m_outmix_handle(0),
   m_state(AS_MODULE_ID_PLAYER_OBJ, "main", BootedState),
   m_sub_state(AS_MODULE_ID_PLAYER_OBJ, "sub", InvalidSubState),
   m_input_device_handler(NULL),
-  m_codec_type(InvalidCodecType)
+  m_codec_type(InvalidCodecType),
+  m_pcm_path(AsPcmDataReply)
 {
 }
 
@@ -304,19 +315,6 @@ PlayerObj::MsgProc PlayerObj::MsgProcTbl[AUD_PLY_MSG_NUM][PlayerStateNum] =
     &PlayerObj::illegalEvt           /*   WaitStopState.      */
   },
 
-  /* Message type: MSG_AUD_PLY_CMD_CLKRECOVERY. */
-
-  {                                  /* Player status:        */
-    &PlayerObj::illegalEvt,          /*   BootedState.        */
-    &PlayerObj::setClkRecovery,      /*   ReadyState.         */
-    &PlayerObj::parseSubState,       /*   PrePlayParentState. */
-    &PlayerObj::setClkRecovery,      /*   PlayState.          */
-    &PlayerObj::setClkRecovery,      /*   StoppingState.      */
-    &PlayerObj::setClkRecovery,      /*   WaitEsEndState.     */
-    &PlayerObj::setClkRecovery,      /*   UnderflowState.     */
-    &PlayerObj::setClkRecovery       /*   WaitStopState.      */
-  },
-
   /* Message type: MSG_AUD_PLY_CMD_SETGAIN */
   {                                  /* Player status:        */
     &PlayerObj::illegalEvt,          /*   BootedState.        */
@@ -378,15 +376,6 @@ PlayerObj::MsgProc PlayerObj::PlayerSubStateTbl[AUD_PLY_MSG_NUM][SubStateNum] =
     &PlayerObj::illegalEvt,                /*   SubStatePrePlayUnderflow. */
   },
 
-  /* Message type: MSG_AUD_PLY_CMD_CLKRECOVERY. */
-
-  {                                        /* Player sub status:          */
-    &PlayerObj::setClkRecovery,            /*   SubStatePrePlay.          */
-    &PlayerObj::setClkRecovery,            /*   SubStatePrePlayStopping.  */
-    &PlayerObj::setClkRecovery,            /*   SubStatePrePlayWaitEsEnd. */
-    &PlayerObj::setClkRecovery,            /*   SubStatePrePlayUnderflow. */
-  },
-
   /* Message type: MSG_AUD_PLY_CMD_SETGAIN. */
 
   {                                        /* Player sub status:          */
@@ -400,18 +389,18 @@ PlayerObj::MsgProc PlayerObj::PlayerSubStateTbl[AUD_PLY_MSG_NUM][SubStateNum] =
 /*--------------------------------------------------------------------------*/
 PlayerObj::MsgProc PlayerObj::PlayerResultTbl[AUD_PLY_RST_MSG_NUM][PlayerStateNum] =
 {
-  /* Message type: MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE. */
+  /* Message type: MSG_AUD_PLY_CMD_NEXT_REQ. */
 
   {
-    &PlayerObj::sinkDoneOnBoot,      /*   BootedState.        */
-    &PlayerObj::sinkDoneOnReady,     /*   ReadyState.         */
+    &PlayerObj::illegalSinkDone,     /*   BootedState.        */
+    &PlayerObj::illegalSinkDone,     /*   ReadyState.         */
     &PlayerObj::parseSubState,       /*   PrePlayParentState. */
-    &PlayerObj::sinkDoneOnPlay,      /*   PlayState.          */
-    &PlayerObj::sinkDoneOnStopping,  /*   StoppingState.      */
-    &PlayerObj::sinkDoneOnWaitEsEnd, /*   WaitEsEndState.     */
-    &PlayerObj::sinkDoneOnUnderflow, /*   UnderflowState.     */
+    &PlayerObj::nextReqOnPlay,       /*   PlayState.          */
+    &PlayerObj::nextReqOnStopping,   /*   StoppingState.      */
+    &PlayerObj::nextReqOnWaitEsEnd,  /*   WaitEsEndState.     */
+    &PlayerObj::nextReqOnUnderflow,  /*   UnderflowState.     */
     &PlayerObj::illegalSinkDone      /*   WaitStopState.      */
- 
+
   },
 
   /* Message type: MSG_AUD_PLY_CMD_DEC_DONE. */
@@ -444,7 +433,7 @@ PlayerObj::MsgProc PlayerObj::PlayerResultTbl[AUD_PLY_RST_MSG_NUM][PlayerStateNu
 /*--------------------------------------------------------------------------*/
 PlayerObj::MsgProc PlayerObj::PlayerResultSubTbl[AUD_PLY_RST_MSG_NUM][SubStateNum] =
 {
-  /* Message type: MSG_AUD_PLY_CMD_OUTPUT_MIX_DONE. */
+  /* Message type: MSG_AUD_PLY_CMD_NEXT_REQ. */
 
   {                                        /* Player sub status:          */
     &PlayerObj::illegalSinkDone,           /*   SubStatePrePlay.          */
@@ -492,139 +481,132 @@ void PlayerObj::parse(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void PlayerObj::illegalEvt(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  uint msgtype = msg->getType();
+  msg->moveParam<PlayerCommand>();
 
-  sendAudioCmdCmplt(cmd, AS_ECODE_STATE_VIOLATION);
+  /* Extract and abandon message data */
+
+  uint32_t idx = msgtype - MSG_AUD_PLY_CMD_ACT;
+
+  AsPlayerEvent table[] =
+  {
+    AsPlayerEventAct,
+    AsPlayerEventInit,
+    AsPlayerEventPlay,
+    AsPlayerEventStop,
+    AsPlayerEventDeact,
+    AsPlayerEventSetGain
+  };
+
+  m_callback(table[idx],
+             AS_ECODE_STATE_VIOLATION, 0);
 }
 
 /*--------------------------------------------------------------------------*/
 void PlayerObj::activate(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  AsActivatePlayer act = msg->moveParam<PlayerCommand>().act_param;
   PlayerInputDeviceHandler::PlayerInHandle in_device_handle;
   bool result;
 
-  MEDIA_PLAYER_DBG("ACT: act %d, indev %d, indev sub %d, "
-                   "outdev %d, outdev sub %d\n",
-                   cmd.set_player_sts_param.active_player,
-                   cmd.set_player_sts_param.input_device,
-                   cmd.set_player_sts_param.input_device_sub,
-                   cmd.set_player_sts_param.output_device,
-                   cmd.set_player_sts_param.output_device_sub);
+  MEDIA_PLAYER_DBG("ACT: indev %d, outdev %d\n",
+                   act.param.input_device,
+                   act.param.output_device);
+
+  /* Set event callback */
+
+  m_callback = act.cb;
 
   if (!checkAndSetMemPool())
     {
-      sendAudioCmdCmplt(cmd, AS_ECODE_CHECK_MEMORY_POOL_ERROR);
+      m_callback(AsPlayerEventAct,
+                 AS_ECODE_CHECK_MEMORY_POOL_ERROR, 0);
       return;
     }
 
-  switch (cmd.set_player_sts_param.input_device)
+  switch (act.param.input_device)
     {
       case AS_SETPLAYER_INPUTDEVICE_RAM:
         {
           m_input_device_handler = &m_in_ram_device_handler;
           in_device_handle.p_ram_device_handle =
-            cmd.set_player_sts_param.ram_handler;
+            act.param.ram_handler;
         }
         break;
 
     default:
-      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_INPUT_DEVICE);
+      m_callback(AsPlayerEventAct,
+                 AS_ECODE_COMMAND_PARAM_INPUT_DEVICE, 0);
       return;
   }
 
   result = m_input_device_handler->initialize(&in_device_handle);
   if (result)
     {
-      err_t er = ERR_OK;
-      OutputMixObjActCmd init_output_mix_param;
-      OutputMixObjParam  outmix_param;
-
-      init_output_mix_param.mixer_type = MainOnly;
-      init_output_mix_param.output_device = HPOutputDevice;
-
-      outmix_param.handle    = 0;
-      outmix_param.act_param = init_output_mix_param;
-
-      er = MsgLib::send<OutputMixObjParam>(m_output_mix_dtq,
-                                           MsgPriNormal,
-                                           MSG_AUD_MIX_CMD_ACT,
-                                           m_self_dtq,
-                                           outmix_param);
-      F_ASSERT(er == ERR_OK);
-
-      if (!m_external_cmd_que.push(cmd))
-        {
-          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-          sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
-          return;
-        }
+      m_callback(AsPlayerEventAct, AS_ECODE_OK, 0);
+      m_state = ReadyState;
     }
   else
     {
-      sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_INPUT_HANDLER);
+      m_callback(AsPlayerEventAct,
+                 AS_ECODE_COMMAND_PARAM_INPUT_HANDLER, 0);
     }
 }
 
 /*--------------------------------------------------------------------------*/
 void PlayerObj::deactivate(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
-  OutputMixObjParam outmix_param;
-  err_t er;
+  msg->moveParam<PlayerCommand>();
 
   MEDIA_PLAYER_DBG("DEACT:\n");
 
   if (!unloadCodec())
     {
-      sendAudioCmdCmplt(cmd, AS_ECODE_DSP_UNLOAD_ERROR);
+      m_callback(AsPlayerEventDeact,
+                 AS_ECODE_DSP_UNLOAD_ERROR, 0);
       return;
     }
 
-  if (!m_external_cmd_que.push(cmd))
+  if (!m_external_cmd_que.push(AsPlayerEventDeact))
     {
       MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
+      m_callback(AsPlayerEventDeact,
+                 AS_ECODE_QUEUE_OPERATION_ERROR, 0);
       return;
     }
 
-  outmix_param.handle = m_outmix_handle;
-
-  er = MsgLib::send<OutputMixObjParam>(m_output_mix_dtq,
-                                       MsgPriNormal,
-                                       MSG_AUD_MIX_CMD_DEACT,
-                                       m_self_dtq,
-                                       outmix_param);
-  F_ASSERT(er == ERR_OK);
+  m_callback(AsPlayerEventDeact, AS_ECODE_OK, 0);
+  m_state = BootedState;
 }
 
 /*--------------------------------------------------------------------------*/
 void PlayerObj::init(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  AsInitPlayerParam param = msg->moveParam<PlayerCommand>().init_param;
   uint8_t result;
 
   MEDIA_PLAYER_DBG("INIT: ch num %d, bit len %d, codec %d, fs %d\n",
-           cmd.init_player_param.channel_number,
-           cmd.init_player_param.bit_length,
-           cmd.init_player_param.codec_type,
-           cmd.init_player_param.sampling_rate);
+                   param.channel_number,
+                   param.bit_length,
+                   param.codec_type,
+                   param.sampling_rate);
 
-  result = m_input_device_handler->setParam(cmd.init_player_param);
+  result = m_input_device_handler->setParam(param);
   if (result == AS_ECODE_OK)
     {
-      sendAudioCmdCmplt(cmd, AS_ECODE_OK);
+      m_callback(AsPlayerEventInit, AS_ECODE_OK, 0);
     }
   else
     {
-      sendAudioCmdCmplt(cmd, result);
+      m_callback(AsPlayerEventInit, result, 0);
     }
 }
 
 /*--------------------------------------------------------------------------*/
 void PlayerObj::playOnReady(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  AsPlayPlayerParam param = msg->moveParam<PlayerCommand>().play_param;
+
   uint32_t dsp_inf = 0;
   uint32_t rst     = AS_ECODE_OK;
 
@@ -632,21 +614,39 @@ void PlayerObj::playOnReady(MsgPacket *msg)
 
   if ((rst = startPlay(&dsp_inf)) == AS_ECODE_OK)
     {
+      /* Set PCM data path */
+
+      m_pcm_path = static_cast<AsPcmDataPath>(param.pcm_path);
+
+      if (m_pcm_path == AsPcmDataReply)
+        {
+          /* Set callback for send decoded pcm */
+
+          m_pcm_dest.callback = param.pcm_dest.callback;
+        }
+      else
+        {
+          /* Set message destination and indentifier */
+
+          m_pcm_dest.msg.id         = param.pcm_dest.msg.id;
+          m_pcm_dest.msg.identifier = param.pcm_dest.msg.identifier;
+        }
+
       m_sub_state = SubStatePrePlay;
       m_state = PrePlayParentState;
 
-      sendAudioCmdCmplt(cmd, AS_ECODE_OK);
+      m_callback(AsPlayerEventPlay, AS_ECODE_OK, 0);
     }
   else
     {
-      sendAudioCmdCmplt(cmd, rst, dsp_inf);
+      m_callback(AsPlayerEventPlay, rst, dsp_inf);
     }
 }
 
 /*--------------------------------------------------------------------------*/
 void PlayerObj::stopOnPlay(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  AsStopPlayerParam param = msg->moveParam<PlayerCommand>().stop_param;
 
   MEDIA_PLAYER_DBG("STOP:\n");
 
@@ -654,14 +654,14 @@ void PlayerObj::stopOnPlay(MsgPacket *msg)
    * by other event trigger, queue external command.
    */
 
-  if (!m_external_cmd_que.push(cmd))
+  if (!m_external_cmd_que.push(AsPlayerEventStop))
     {
       MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
+      m_callback(AsPlayerEventStop, AS_ECODE_QUEUE_OPERATION_ERROR, 0);
       return;
     }
 
-  if (cmd.stop_player_param.stop_mode == AS_STOPPLAYER_NORMAL)
+  if (param.stop_mode == AS_STOPPLAYER_NORMAL)
     {
       stopPlay();
       m_state = StoppingState;
@@ -675,11 +675,11 @@ void PlayerObj::stopOnPlay(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void PlayerObj::stopOnWait(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  msg->moveParam<PlayerCommand>();
 
   MEDIA_PLAYER_DBG("STOP:\n");
 
-  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
+  m_callback(AsPlayerEventStop, AS_ECODE_OK, 0);
 
   m_state = ReadyState;
 }
@@ -693,14 +693,14 @@ void PlayerObj::stopOnWaitEsEnd(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void PlayerObj::stopOnUnderflow(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  msg->moveParam<PlayerCommand>();
 
   MEDIA_PLAYER_DBG("STOP:\n");
 
-  if (!m_external_cmd_que.push(cmd))
+  if (!m_external_cmd_que.push(AsPlayerEventStop))
     {
       MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
+      m_callback(AsPlayerEventStop, AS_ECODE_QUEUE_OPERATION_ERROR, 0);
       return;
     }
 
@@ -710,7 +710,7 @@ void PlayerObj::stopOnUnderflow(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void PlayerObj::stopOnPrePlay(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  AsStopPlayerParam param = msg->moveParam<PlayerCommand>().stop_param;
 
   MEDIA_PLAYER_DBG("STOP:\n");
 
@@ -718,14 +718,14 @@ void PlayerObj::stopOnPrePlay(MsgPacket *msg)
    * by other event trigger, queue external command.
    */
 
-  if (!m_external_cmd_que.push(cmd))
+  if (!m_external_cmd_que.push(AsPlayerEventStop))
     {
       MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
+      m_callback(AsPlayerEventStop, AS_ECODE_QUEUE_OPERATION_ERROR, 0);
       return;
     }
 
-  if (cmd.stop_player_param.stop_mode == AS_STOPPLAYER_NORMAL)
+  if (param.stop_mode == AS_STOPPLAYER_NORMAL)
     {
       stopPlay();
       m_sub_state = SubStatePrePlayStopping;
@@ -745,7 +745,7 @@ void PlayerObj::stopOnPrePlayWaitEsEnd(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void PlayerObj::stopOnPrePlayUnderflow(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  msg->moveParam<PlayerCommand>();
 
   MEDIA_PLAYER_DBG("STOP:\n");
 
@@ -753,10 +753,10 @@ void PlayerObj::stopOnPrePlayUnderflow(MsgPacket *msg)
    * by other event trigger, queue external command.
    */
 
-  if (!m_external_cmd_que.push(cmd))
+  if (!m_external_cmd_que.push(AsPlayerEventStop))
     {
       MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
+      m_callback(AsPlayerEventStop, AS_ECODE_QUEUE_OPERATION_ERROR, 0);
       return;
     }
 
@@ -766,86 +766,18 @@ void PlayerObj::stopOnPrePlayUnderflow(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void PlayerObj::illegalSinkDone(MsgPacket *msg)
 {
-  msg->moveParam<OutputMixDoneParam>();
+  msg->moveParam<PlayerCommand>();
   MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_ILLEGAL_REQUEST);
 }
 
 /*--------------------------------------------------------------------------*/
-void PlayerObj::sinkDoneOnBoot(MsgPacket *msg)
+void PlayerObj::nextReqOnPlay(MsgPacket *msg)
 {
-  if (m_external_cmd_que.empty())
-    {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
-      return;
-    }
-
-  AudioCommand ext_cmd = m_external_cmd_que.top();
-  if (!m_external_cmd_que.pop())
-    {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-    }
-
-  OutputMixDoneParam done_param = msg->moveParam<OutputMixDoneParam>();
-  if (OutputMixActDone != done_param.done_type)
-    {
-      sendAudioCmdCmplt(ext_cmd,
-                        AS_ECODE_INTERNAL_COMMAND_CODE_ERROR);
-      return;
-    }
-  else
-    {
-      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
-      m_outmix_handle = done_param.handle;
-      m_state = ReadyState;
-    }
-}
-
-/*--------------------------------------------------------------------------*/
-void PlayerObj::sinkDoneOnReady(MsgPacket *msg)
-{
-  if (m_external_cmd_que.empty())
-    {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
-      return;
-    }
-
-  AudioCommand ext_cmd = m_external_cmd_que.top();
-  if (!m_external_cmd_que.pop())
-    {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-    }
-
-  OutputMixDoneParam done_param = msg->moveParam<OutputMixDoneParam>();
-  if (OutputMixDeactDone != done_param.done_type)
-    {
-      sendAudioCmdCmplt(ext_cmd,
-                        AS_ECODE_INTERNAL_COMMAND_CODE_ERROR);
-      return;
-    }
-  else
-    {
-      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
-      m_state = BootedState;
-    }
-}
-
-/*--------------------------------------------------------------------------*/
-void PlayerObj::sinkDoneOnPlay(MsgPacket *msg)
-{
-  OutputMixDoneParam done_param = msg->moveParam<OutputMixDoneParam>();
-  if (OutputMixExecDone != done_param.done_type)
+  AsRequestNextParam param = msg->moveParam<PlayerCommand>().req_next_param;
+  if (AsNextNormalRequest != param.type)
     {
       MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
       return;
-    }
-
-  if (!m_decoded_pcm_mh_que.empty())
-    {
-      sendPcmToOutputMix(m_decoded_pcm_mh_que.top());
-      if (!m_decoded_pcm_mh_que.pop())
-        {
-          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-        }
     }
 
   if ((MemMgrLite::Manager::getPoolNumAvailSegs(m_es_pool_id) > 0) &&
@@ -877,11 +809,11 @@ void PlayerObj::sinkDoneOnPlay(MsgPacket *msg)
 }
 
 /*--------------------------------------------------------------------------*/
-void PlayerObj::sinkDoneOnStopping(MsgPacket *msg)
+void PlayerObj::nextReqOnStopping(MsgPacket *msg)
 {
-  OutputMixDoneParam done_param = msg->moveParam<OutputMixDoneParam>();
+  AsRequestNextParam param = msg->moveParam<PlayerCommand>().req_next_param;
 
-  if (OutputMixStopDone == done_param.done_type)
+  if (AsNextStopResRequest == param.type)
     {
       finalize();
 
@@ -891,18 +823,18 @@ void PlayerObj::sinkDoneOnStopping(MsgPacket *msg)
           return;
         }
 
-      AudioCommand ext_cmd = m_external_cmd_que.top();
+      AsPlayerEvent ext_cmd_code = m_external_cmd_que.top();
       if (!m_external_cmd_que.pop())
         {
           MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
         }
-      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
+      m_callback(ext_cmd_code, AS_ECODE_OK, 0);
 
       m_state = ReadyState;
     }
-  else if (OutputMixExecDone == done_param.done_type)
+  else if (AsNextNormalRequest == param.type)
     {
-      sendPcmToOutputMixOnDecStopping();
+      /* Nothing to do */
     }
   else
     {
@@ -911,25 +843,25 @@ void PlayerObj::sinkDoneOnStopping(MsgPacket *msg)
 }
 
 /*--------------------------------------------------------------------------*/
-void PlayerObj::sinkDoneOnWaitEsEnd(MsgPacket *msg)
+void PlayerObj::nextReqOnWaitEsEnd(MsgPacket *msg)
 {
-  sinkDoneOnPlay(msg);
+  nextReqOnPlay(msg);
 }
 
 /*--------------------------------------------------------------------------*/
-void PlayerObj::sinkDoneOnUnderflow(MsgPacket *msg)
+void PlayerObj::nextReqOnUnderflow(MsgPacket *msg)
 {
-  OutputMixDoneParam done_param = msg->moveParam<OutputMixDoneParam>();
+  AsRequestNextParam param = msg->moveParam<PlayerCommand>().req_next_param;
 
-  if (OutputMixStopDone == done_param.done_type)
+  if (AsNextStopResRequest == param.type)
     {
       finalize();
 
       m_state = WaitStopState;
     }
-  else if (OutputMixExecDone == done_param.done_type)
+  else if (AsNextNormalRequest == param.type)
     {
-      sendPcmToOutputMixOnDecStopping();
+      /* Nothing to do */
     }
   else
     {
@@ -949,22 +881,19 @@ void PlayerObj::illegalDecDone(MsgPacket *msg)
 void PlayerObj::decDoneOnPlay(MsgPacket *msg)
 {
   DecCmpltParam cmplt = msg->moveParam<DecCmpltParam>();
-  OutputMixObjInputDataCmd data;
 
   AS_decode_recv_done(m_p_dec_instance);
   freeEsBuf();
 
-  data.handle   = m_outmix_handle;
-  data.mh       = m_pcm_buf_mh_que.top();
-  data.size     = cmplt.exec_dec_cmplt.output_buffer.size;
-  data.is_valid = ((data.size == 0) ?
+  AsPcmDataParam data;
+
+  data.mh        = m_pcm_buf_mh_que.top();
+  data.size      = cmplt.exec_dec_cmplt.output_buffer.size;
+  data.is_end    = false;
+  data.is_valid  = ((data.size == 0) ?
                     false : cmplt.exec_dec_cmplt.is_valid_frame);
 
-  if (!m_decoded_pcm_mh_que.push(data))
-    {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return;
-    }
+  sendPcmToOwner(data);
 
   freePcmBuf();
 
@@ -1008,50 +937,48 @@ void PlayerObj::decDoneOnWaitEsEnd(MsgPacket *msg)
 void PlayerObj::decDoneOnWaitStop(MsgPacket *msg)
 {
   DecCmpltParam cmplt = msg->moveParam<DecCmpltParam>();
-  OutputMixObjInputDataCmd data;
 
   AS_decode_recv_done(m_p_dec_instance);
 
-  data.handle = m_outmix_handle;
+  AsPcmDataParam data;
+
   data.mh     = m_pcm_buf_mh_que.top();
 
   if (Apu::ExecEvent == cmplt.event_type)
     {
       freeEsBuf();
 
-      data.size     = cmplt.exec_dec_cmplt.output_buffer.size;
-      data.is_valid = ((data.size == 0) ?
+      data.size      = cmplt.exec_dec_cmplt.output_buffer.size;
+      data.is_valid  = ((data.size == 0) ?
                        false : cmplt.exec_dec_cmplt.is_valid_frame);
+      data.is_end = false;
     }
   else if (Apu::FlushEvent == cmplt.event_type)
     {
-      data.size = cmplt.stop_dec_cmplt.output_buffer.size;
-      data.is_valid = cmplt.stop_dec_cmplt.is_valid_frame;
-      data.is_es_end = true;
+      data.size      = cmplt.stop_dec_cmplt.output_buffer.size;
+      data.is_valid  = cmplt.stop_dec_cmplt.is_valid_frame;
+      data.is_end = true;
     }
 
-  if (!m_decoded_pcm_mh_que.push(data))
-    {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return;
-    }
+  sendPcmToOwner(data);
 
-    freePcmBuf();
+  freePcmBuf();
 }
 
 /*--------------------------------------------------------------------------*/
 void PlayerObj::decDoneOnPrePlay(MsgPacket *msg)
 {
   DecCmpltParam cmplt = msg->moveParam<DecCmpltParam>();
-  OutputMixObjInputDataCmd data;
 
   AS_decode_recv_done(m_p_dec_instance);
   freeEsBuf();
 
-  data.handle   = m_outmix_handle;
-  data.mh       = m_pcm_buf_mh_que.top();
-  data.size     = cmplt.exec_dec_cmplt.output_buffer.size;
-  data.is_valid = ((data.size == 0) ?
+  AsPcmDataParam data;
+
+  data.mh        = m_pcm_buf_mh_que.top();
+  data.size      = cmplt.exec_dec_cmplt.output_buffer.size;
+  data.is_end = false;
+  data.is_valid  = ((data.size == 0) ?
                    false : cmplt.exec_dec_cmplt.is_valid_frame);
 
   if (!m_decoded_pcm_mh_que.push(data))
@@ -1089,7 +1016,7 @@ void PlayerObj::decDoneOnPrePlay(MsgPacket *msg)
     {
       while(!m_decoded_pcm_mh_que.empty())
         {
-          sendPcmToOutputMix(m_decoded_pcm_mh_que.top());
+          sendPcmToOwner(const_cast<AsPcmDataParam&>(m_decoded_pcm_mh_que.top()));
           if (!m_decoded_pcm_mh_que.pop())
             {
               MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
@@ -1165,12 +1092,12 @@ void PlayerObj::decDoneOnPrePlayStopping(MsgPacket *msg)
           return;
         }
 
-      AudioCommand ext_cmd = m_external_cmd_que.top();
+      AsPlayerEvent ext_cmd_code = m_external_cmd_que.top();
       if (!m_external_cmd_que.pop())
         {
           MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
         }
-      sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
+      m_callback(ext_cmd_code, AS_ECODE_OK, 0);
 
       m_sub_state = InvalidSubState;
       m_state = ReadyState;
@@ -1233,7 +1160,7 @@ void PlayerObj::decSetDone(MsgPacket *msg)
       return;
     }
 
-  AudioCommand ext_cmd = m_external_cmd_que.top();
+  AsPlayerEvent ext_cmd_code = m_external_cmd_que.top();
   if (!m_external_cmd_que.pop())
     {
       MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
@@ -1241,57 +1168,29 @@ void PlayerObj::decSetDone(MsgPacket *msg)
 
   /* Send result. */
 
-  sendAudioCmdCmplt(ext_cmd, AS_ECODE_OK);
-}
-
-/*--------------------------------------------------------------------------*/
-void PlayerObj::setClkRecovery(MsgPacket *msg)
-{
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
-  OutputMixObjParam outmix_param;
-  err_t er;
-
-  MEDIA_PLAYER_DBG("SET CLOCK RECOVERY: dir %d, times %d\n",
-                   cmd.clk_recovery_param.direction,
-                   cmd.clk_recovery_param.times);
-
-  /* Set paramete to OutputMixer. */
-
-  outmix_param.handle                    = m_outmix_handle;
-  outmix_param.adjust_param.direction    = cmd.clk_recovery_param.direction;
-  outmix_param.adjust_param.adjust_times = cmd.clk_recovery_param.times;
-
-  er = MsgLib::send<OutputMixObjParam>(m_output_mix_dtq,
-                                       MsgPriNormal,
-                                       MSG_AUD_MIX_CMD_CLKRECOVERY,
-                                       m_self_dtq,
-                                       outmix_param);
-  F_ASSERT(er == ERR_OK);
-
-  /* Send result. */
-
-  sendAudioCmdCmplt(cmd, AS_ECODE_OK);
+  m_callback(ext_cmd_code, AS_ECODE_OK, 0);
 }
 
 /*--------------------------------------------------------------------------*/
 void PlayerObj::setGain(MsgPacket *msg)
 {
-  AudioCommand cmd = msg->moveParam<AudioCommand>();
+  AsSetGainParam param = msg->moveParam<PlayerCommand>().set_gain_param;
 
-  if (!m_external_cmd_que.push(cmd))
+  if (!m_external_cmd_que.push(AsPlayerEventSetGain))
     {
-      sendAudioCmdCmplt(cmd, AS_ECODE_QUEUE_OPERATION_ERROR);
+      m_callback(AsPlayerEventSetGain,
+                 AS_ECODE_QUEUE_OPERATION_ERROR, 0);
       return;
     }
 
   /* Set paramter to Decoder */
 
-  SetDecCompParam param;
+  SetDecCompParam setparam;
 
-  param.l_gain = cmd.set_gain_param.l_gain;
-  param.r_gain = cmd.set_gain_param.r_gain;
+  setparam.l_gain = param.l_gain;
+  setparam.r_gain = param.r_gain;
 
-  if (AS_decode_setparam(param, m_p_dec_instance) == false)
+  if (AS_decode_setparam(setparam, m_p_dec_instance) == false)
     {
       /* Do nothing. */
     }
@@ -1475,32 +1374,28 @@ void PlayerObj::stopPlay(void)
 }
 
 /*--------------------------------------------------------------------------*/
-void PlayerObj::sendPcmToOutputMix(const OutputMixObjInputDataCmd& data)
+void PlayerObj::sendPcmToOwner(AsPcmDataParam& data)
 {
-  err_t er;
+  if (m_pcm_path == AsPcmDataReply)
+    {
+      /* Call callback function for PCM data notify */
 
-  er = MsgLib::send<OutputMixObjInputDataCmd>(m_output_mix_dtq,
+      m_pcm_dest.callback(data);
+    }
+  else
+    {
+      /* Send message for PCM data notify */
+
+      data.identifier = m_pcm_dest.msg.identifier;
+      data.callback   = pcm_send_done_callback;
+
+      err_t er = MsgLib::send<AsPcmDataParam>(m_pcm_dest.msg.id,
                                               MsgPriNormal,
                                               MSG_AUD_MIX_CMD_DATA,
-                                              m_self_dtq,
+                                              s_self_dtq,
                                               data);
-  F_ASSERT(er == ERR_OK);
-}
-
-/*--------------------------------------------------------------------------*/
-void PlayerObj::stopOutputMix(void)
-{
-  OutputMixObjParam outmix_param;
-  err_t er;
-
-  outmix_param.handle = m_outmix_handle;
-
-  er = MsgLib::send<OutputMixObjParam>(m_output_mix_dtq,
-                                       MsgPriNormal,
-                                       MSG_AUD_MIX_CMD_STOP,
-                                       m_self_dtq,
-                                       outmix_param);
-  F_ASSERT(er == ERR_OK);
+      F_ASSERT(er == ERR_OK);
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1566,23 +1461,6 @@ void* PlayerObj::getEs(uint32_t* size)
   }
 
   return NULL;
-}
-
-/*--------------------------------------------------------------------------*/
-void PlayerObj::sendPcmToOutputMixOnDecStopping()
-{
-  if (!m_decoded_pcm_mh_que.empty())
-    {
-      sendPcmToOutputMix(m_decoded_pcm_mh_que.top());
-      if (m_decoded_pcm_mh_que.top().is_es_end)
-        {
-          stopOutputMix();
-        }
-    if (!m_decoded_pcm_mh_que.pop())
-        {
-          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-        }
-    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1670,8 +1548,6 @@ int AS_PlayerObjEntry(int argc, char *argv[])
 {
   PlayerObj::create(&s_play_obj,
                     s_self_dtq,
-                    s_manager_dtq,
-                    s_omix_dtq,
                     s_dsp_dtq,
                     s_es_pool_id,
                     s_pcm_pool_id,
@@ -1684,8 +1560,6 @@ int AS_SubPlayerObjEntry(int argc, char *argv[])
 {
   PlayerObj::create(&s_sub_play_obj,
                     s_sub_self_dtq,
-                    s_sub_manager_dtq,
-                    s_sub_omix_dtq,
                     s_sub_dsp_dtq,
                     s_sub_es_pool_id,
                     s_sub_pcm_pool_id,
@@ -1694,101 +1568,236 @@ int AS_SubPlayerObjEntry(int argc, char *argv[])
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_ActivatePlayer(FAR AsActPlayerParam_t *param)
+bool AS_CreatePlayer(AsPlayerId id, FAR AsCreatePlayerParam_t *param)
 {
-  s_self_dtq    = param->msgq_id.player;
-  s_manager_dtq = param->msgq_id.mng;
-  s_omix_dtq    = param->msgq_id.mixer;
-  s_dsp_dtq     = param->msgq_id.dsp;
-  s_es_pool_id  = param->pool_id.es;
-  s_pcm_pool_id = param->pool_id.pcm;
-  s_apu_pool_id = param->pool_id.dsp;
-
-  s_ply_pid = task_create("PLY_OBJ",
-                          150, 1024 * 3,
-                          AS_PlayerObjEntry,
-                          NULL);
-  if (s_ply_pid < 0)
+  if (id == AS_PLAYER_ID_0)
     {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_TASK_CREATE_ERROR);
-      return false;
-    }
+      s_self_dtq    = param->msgq_id.player;
+      s_dsp_dtq     = param->msgq_id.dsp;
+      s_es_pool_id  = param->pool_id.es;
+      s_pcm_pool_id = param->pool_id.pcm;
+      s_apu_pool_id = param->pool_id.dsp;
 
-  return true;
-}
-
-/*--------------------------------------------------------------------------*/
-bool AS_ActivateSubPlayer(FAR AsActPlayerParam_t *param)
-{
-  s_sub_self_dtq    = param->msgq_id.player;
-  s_sub_manager_dtq = param->msgq_id.mng;
-  s_sub_omix_dtq    = param->msgq_id.mixer;
-  s_sub_dsp_dtq     = param->msgq_id.dsp;
-  s_sub_es_pool_id  = param->pool_id.es;
-  s_sub_pcm_pool_id = param->pool_id.pcm;
-  s_sub_apu_pool_id = param->pool_id.dsp;
-
-  s_sub_ply_pid = task_create("SUB_PLY_OBJ",
+      s_ply_pid = task_create("PLY_OBJ",
                               150, 1024 * 3,
-                              AS_SubPlayerObjEntry,
+                              AS_PlayerObjEntry,
                               NULL);
-  if (s_sub_ply_pid < 0)
+      if (s_ply_pid < 0)
+        {
+          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_TASK_CREATE_ERROR);
+          return false;
+        }
+    }
+  else
     {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_TASK_CREATE_ERROR);
-      return false;
+      s_sub_self_dtq    = param->msgq_id.player;
+      s_sub_dsp_dtq     = param->msgq_id.dsp;
+      s_sub_es_pool_id  = param->pool_id.es;
+      s_sub_pcm_pool_id = param->pool_id.pcm;
+      s_sub_apu_pool_id = param->pool_id.dsp;
+    
+      s_sub_ply_pid = task_create("SUB_PLY_OBJ",
+                                  150, 1024 * 3,
+                                  AS_SubPlayerObjEntry,
+                                  NULL);
+      if (s_sub_ply_pid < 0)
+        {
+          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_TASK_CREATE_ERROR);
+          return false;
+        }
     }
 
   return true;
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_DeactivatePlayer(void)
+bool AS_ActivatePlayer(AsPlayerId id, FAR AsActivatePlayer &actparam)
 {
-  if (s_ply_pid < 0)
-    {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-      return false;
-    }
+  MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
 
-  task_delete(s_ply_pid);
+  PlayerCommand cmd;
 
-  if (s_play_obj != NULL)
-    {
-      delete ((PlayerObj *)s_play_obj);
-      s_play_obj = NULL;
-    }
+  cmd.player_id = id;
+  cmd.act_param = actparam;
+
+  err_t er = MsgLib::send<PlayerCommand>(msgq_id,
+                                         MsgPriNormal,
+                                         MSG_AUD_PLY_CMD_ACT,
+                                         s_self_dtq,
+                                         cmd);
+  F_ASSERT(er == ERR_OK);
 
   return true;
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_DeactivateSubPlayer(void)
+bool AS_InitPlayer(AsPlayerId id, FAR AsInitPlayerParam &initparam)
 {
-  if (s_sub_play_obj == NULL)
+  MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
+
+  PlayerCommand cmd;
+
+  cmd.player_id  = id;
+  cmd.init_param = initparam;
+
+  err_t er = MsgLib::send<PlayerCommand>(msgq_id,
+                                         MsgPriNormal,
+                                         MSG_AUD_PLY_CMD_INIT,
+                                         s_self_dtq,
+                                         cmd);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_PlayPlayer(AsPlayerId id, FAR AsPlayPlayerParam &playparam)
+{
+  MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
+
+  PlayerCommand cmd;
+
+  cmd.player_id  = id;
+  cmd.play_param = playparam;
+
+  err_t er = MsgLib::send<PlayerCommand>(msgq_id,
+                                         MsgPriNormal,
+                                         MSG_AUD_PLY_CMD_PLAY,
+                                         s_self_dtq,
+                                         cmd);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_StopPlayer(AsPlayerId id, FAR AsStopPlayerParam &stopparam)
+{
+  MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
+
+  PlayerCommand cmd;
+
+  cmd.player_id  = id;
+  cmd.stop_param = stopparam;
+
+  err_t er = MsgLib::send<PlayerCommand>(msgq_id,
+                                         MsgPriNormal,
+                                         MSG_AUD_PLY_CMD_STOP,
+                                         s_self_dtq,
+                                         cmd);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_SetPlayerGain(AsPlayerId id, FAR AsSetGainParam &gainparam)
+{
+  MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
+
+  PlayerCommand cmd;
+
+  cmd.player_id      = id;
+  cmd.set_gain_param = gainparam;
+
+  err_t er = MsgLib::send<PlayerCommand>(msgq_id,
+                                         MsgPriNormal,
+                                         MSG_AUD_PLY_CMD_SETGAIN,
+                                         s_self_dtq,
+                                         cmd);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_RequestNextPlayerProcess(AsPlayerId id, FAR AsRequestNextParam &nextparam)
+{
+  MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
+
+  PlayerCommand cmd;
+
+  cmd.player_id      = id;
+  cmd.req_next_param = nextparam;
+
+  err_t er = MsgLib::send<PlayerCommand>(msgq_id,
+                                         MsgPriNormal,
+                                         MSG_AUD_PLY_CMD_NEXT_REQ,
+                                         s_self_dtq,
+                                         cmd);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_DeactivatePlayer(AsPlayerId id, FAR AsDeactivatePlayer &deactparam)
+{
+  MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
+
+  PlayerCommand cmd;
+
+  cmd.player_id   = id;
+  cmd.deact_param = deactparam;
+
+  err_t er = MsgLib::send<PlayerCommand>(msgq_id,
+                                         MsgPriNormal,
+                                         MSG_AUD_PLY_CMD_DEACT,
+                                         s_self_dtq,
+                                         cmd);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_DeletePlayer(AsPlayerId id)
+{
+  if (id == AS_PLAYER_ID_0)
     {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-      return false;
+      if (s_ply_pid < 0)
+        {
+          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
+          return false;
+        }
+
+      task_delete(s_ply_pid);
+
+      if (s_play_obj != NULL)
+        {
+          delete ((PlayerObj *)s_play_obj);
+          s_play_obj = NULL;
+        }
+    }
+  else
+    {
+      if (s_sub_ply_pid < 0)
+        {
+          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
+          return false;
+        }
+    
+      task_delete(s_sub_ply_pid);
+
+      if (s_sub_play_obj != NULL)
+        {
+          delete ((PlayerObj *)s_sub_play_obj);
+          s_sub_play_obj = NULL;
+        }
     }
 
-  task_delete(s_sub_ply_pid);
-  delete ((PlayerObj *)s_sub_play_obj);
-  s_sub_play_obj = NULL;
   return true;
 }
 } /* extern "C" */
 
 void PlayerObj::create(FAR void **obj,
                        MsgQueId self_dtq,
-                       MsgQueId manager_dtq,
-                       MsgQueId output_mix_dtq,
                        MsgQueId apu_dtq,
                        MemMgrLite::PoolId es_pool_id,
                        MemMgrLite::PoolId pcm_pool_id,
                        MemMgrLite::PoolId apu_pool_id)
 {
   FAR PlayerObj *player_obj = new PlayerObj(self_dtq,
-                                            manager_dtq,
-                                            output_mix_dtq,
                                             apu_dtq,
                                             es_pool_id,
                                             pcm_pool_id,

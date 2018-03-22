@@ -89,80 +89,11 @@ struct AudioMngCmdCmpltResult
 /*--------------------------------------------------------------------*/
 /* Internal parameters between output-mix object and its user.        */
 /*--------------------------------------------------------------------*/
-/**< Output device type of output-mix object. */
-enum OutputMixDevice
-{
-  HPOutputDevice = 0,
-  I2SOutputDevice,
-  A2dpSrcOutputDevice,
-  OutputMixDeviceNum
-};
-
-/**< Mixer type of output-mix object. */
-enum OutputMixerType
-{
-  MainOnly = 0,
-  SoundEffectOnly,
-  MainSoundEffectMix,
-  OutputMixerTypeNum
-};
-
-/**< Parameters for initializing output-mix object. */
-struct OutputMixObjActCmd
-{
-  OutputMixDevice output_device;
-  OutputMixerType mixer_type;
-
-  union
-  {
-    InitI2SParam as_init_i2s_param; /* Only when output_device equals
-                                     * HPOutputDevice or I2SOutputDevice
-                                     * need to set this field.
-                                     */
-  };
-};
-
-/**< Parameters for deactivation output-mix object. */
-struct OutputMixObjDeactCmd
-{
-};
-
-/**< Input data for output-mix object task. */
-struct OutputMixObjInputDataCmd
-{
-  int handle;
-
-  MemMgrLite::MemHandle mh; /**< MHandle for saving input data. */
-  uint32_t sample;          /**< Sample of input data. */
-  uint32_t size;            /**< Byte size of input data. */
-  bool is_es_end;           /**< True: is last data of current session. */
-                            /**< Otherwise, is not last data of current session. */
-  bool is_valid;            /**< True: Valid PCM frame. */
-
-  OutputMixObjInputDataCmd():
-    sample(0),
-    size(0),
-    is_es_end(false),
-    is_valid(true)
-  {}
-};
-
-/**< Parameters for stop output-mix object. */
-struct OutputMixObjStopCmd
-{
-};
 
 /**< Parameters for render done notify to output-mix object. */
 struct OutputMixObjRenderDoneCmd
 {
   bool end_flag;
-};
-
-/**< Setting of sounding period adjustment. */
-struct OutputMixObjSoundPeriodAdjust
-{
-  int8_t   direction;
-  uint32_t adjust_times;
 };
 
 struct OutputMixObjParam
@@ -171,29 +102,8 @@ struct OutputMixObjParam
 
   union
   {
-    OutputMixObjActCmd            act_param;
-    OutputMixObjDeactCmd          deact_param;
-    OutputMixObjStopCmd           stop_param;
     OutputMixObjRenderDoneCmd     renderdone_param;
-    OutputMixObjSoundPeriodAdjust adjust_param;
   };
-};
-
-/**< Completion of output-mix object task. */
-enum OutputMixDoneCmdType
-{
-  OutputMixActDone = 0,
-  OutputMixDeactDone,
-  OutputMixExecDone,
-  OutputMixStopDone,
-  OutputMixDoneCmdTypeNum
-};
-
-/**< Completion data from output-mix object task. */
-struct OutputMixDoneParam
-{
-  int handle;
-  OutputMixDoneCmdType done_type;
 };
 
 struct DspResult

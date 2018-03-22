@@ -63,7 +63,6 @@ using namespace MemMgrLite;
 
 static pid_t    s_omix_pid = -1;
 static MsgQueId s_self_dtq;
-static MsgQueId s_manager_dtq;
 static OutputMixObjectTask *s_omix_ojb = NULL;
 
 /****************************************************************************
@@ -74,8 +73,7 @@ static OutputMixObjectTask *s_omix_ojb = NULL;
  * Private Functions
  ****************************************************************************/
 
-OutputMixObjectTask::OutputMixObjectTask(MsgQueId self_dtq,
-                                         MsgQueId manager_dtq):
+OutputMixObjectTask::OutputMixObjectTask(MsgQueId self_dtq) :
   m_self_dtq(self_dtq),
   m_output_device(HPOutputDevice)
   {
@@ -86,37 +84,29 @@ OutputMixObjectTask::OutputMixObjectTask(MsgQueId self_dtq,
   }
 
 /*--------------------------------------------------------------------------*/
-int OutputMixObjectTask::getHpI2sHandle(MsgPacket* msg)
+int OutputMixObjectTask::getHandle(MsgPacket* msg)
 {
-  int idx;
+  int handle = 0;
   MsgType msgtype = msg->getType();
 
-  if (msgtype == MSG_AUD_MIX_CMD_ACT)
+  switch (msgtype)
     {
-      for (idx = 0; idx < HPI2SoutChNum; idx++)
-        {
-          if (false == m_output_mix_to_hpi2s[idx].is_active())
-            {
-              m_output_mix_to_hpi2s[idx].set_self_handle(idx);
-              break;
-            }
-        }
+      case MSG_AUD_MIX_CMD_ACT:
+      case MSG_AUD_MIX_CMD_DEACT:
+      case MSG_AUD_MIX_CMD_CLKRECOVERY:
+        handle = msg->peekParam<OutputMixerCommand>().handle;
+        break;
 
-      if (idx >= HPI2SoutChNum)
-        {
-          OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
-        }
-    }
-  else if (msgtype == MSG_AUD_MIX_CMD_DATA)
-    {
-      idx = msg->peekParam<OutputMixObjInputDataCmd>().handle;
-    }
-  else
-    {
-      idx = msg->peekParam<OutputMixObjParam>().handle;
+      case MSG_AUD_MIX_CMD_DATA:
+        handle = msg->peekParam<AsPcmDataParam>().identifier;
+        break;
+
+      default:
+        handle = msg->peekParam<OutputMixObjParam>().handle;
+        break;
     }
 
-  return idx;
+  return handle;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -149,19 +139,15 @@ void OutputMixObjectTask::parse(MsgPacket* msg)
       if (msg->getType() == MSG_AUD_MIX_CMD_ACT)
         {
           m_output_device =
-            msg->peekParam<OutputMixObjParam>().act_param.output_device;
+            static_cast<AsOutputMixDevice>
+              (msg->peekParam<OutputMixerCommand>().act_param.output_device);
         }
+
       switch(m_output_device)
         {
           case HPOutputDevice:
           case I2SOutputDevice:
-            {
-              int idx = getHpI2sHandle(msg);
-              if (idx < HPI2SoutChNum)
-                {
-                  m_output_mix_to_hpi2s[idx].parse(msg);
-                }
-            }
+            m_output_mix_to_hpi2s[getHandle(msg)].parse(msg);
             break;
 
           case A2dpSrcOutputDevice:
@@ -187,15 +173,14 @@ extern "C"
 /*--------------------------------------------------------------------------*/
 int AS_OutputMixObjEntry(int argc, char *argv[])
 {
-  OutputMixObjectTask::create(s_self_dtq, s_manager_dtq);
+  OutputMixObjectTask::create(s_self_dtq);
   return 0;
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_ActivateOutputMix(FAR AsActOutputMixParam_t *param)
+bool AS_CreateOutputMixer(FAR AsCreateOutputMixParam_t *param)
 {
   s_self_dtq    = param->msgq_id.mixer;
-  s_manager_dtq = param->msgq_id.mng;
 
   s_omix_pid = task_create("OMIX_OBJ",
                            150, 1024 * 3,
@@ -211,7 +196,79 @@ bool AS_ActivateOutputMix(FAR AsActOutputMixParam_t *param)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_DeactivateOutputMix(void)
+bool AS_ActivateOutputMixer(uint8_t handle, FAR AsActivateOutputMixer &actparam)
+{
+  OutputMixerCommand cmd;
+
+  cmd.handle    = handle;
+  cmd.act_param = actparam;
+
+  err_t er = MsgLib::send<OutputMixerCommand>(s_self_dtq,
+                                              MsgPriNormal,
+                                              MSG_AUD_MIX_CMD_ACT,
+                                              s_self_dtq,
+                                              cmd);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_SendDataOutputMixer(FAR AsSendDataOutputMixer &sendparam)
+{
+  /* Reload parameters */
+
+  sendparam.pcm.identifier = sendparam.handle;
+  sendparam.pcm.callback   = sendparam.callback;
+
+  err_t er = MsgLib::send<AsPcmDataParam>(s_self_dtq,
+                                          MsgPriNormal,
+                                          MSG_AUD_MIX_CMD_DATA,
+                                          s_self_dtq,
+                                          sendparam.pcm);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_FrameTermFineControlOutputMixer(uint8_t handle, FAR AsFrameTermFineControl &ftermparam)
+{
+  OutputMixerCommand cmd;
+
+  cmd.handle      = handle;
+  cmd.fterm_param = ftermparam;
+
+  err_t er = MsgLib::send<OutputMixerCommand>(s_self_dtq,
+                                              MsgPriNormal,
+                                              MSG_AUD_MIX_CMD_CLKRECOVERY,
+                                              s_self_dtq,
+                                              cmd);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_DeactivateOutputMixer(uint8_t handle, FAR AsDeactivateOutputMixer &deactparam)
+{
+  OutputMixerCommand cmd;
+
+  cmd.handle      = handle;
+  cmd.deact_param = deactparam;
+
+  err_t er = MsgLib::send<OutputMixerCommand>(s_self_dtq,
+                                              MsgPriNormal,
+                                              MSG_AUD_MIX_CMD_DEACT,
+                                              s_self_dtq,
+                                              cmd);
+  F_ASSERT(er == ERR_OK);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_DeleteOutputMix(void)
 {
   if (s_omix_pid < 0)
     {
@@ -231,11 +288,11 @@ bool AS_DeactivateOutputMix(void)
 } /* extern "C" */
 
 /*--------------------------------------------------------------------------*/
-void OutputMixObjectTask::create(MsgQueId self_dtq, MsgQueId manager_dtq)
+void OutputMixObjectTask::create(MsgQueId self_dtq)
 {
   if (s_omix_ojb == NULL)
     {
-      s_omix_ojb = new OutputMixObjectTask(self_dtq, manager_dtq);
+      s_omix_ojb = new OutputMixObjectTask(self_dtq);
       if (s_omix_ojb == NULL)
         {
           OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);

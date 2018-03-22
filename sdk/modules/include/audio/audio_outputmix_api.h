@@ -53,6 +53,11 @@
  * Included Files
  ****************************************************************************/
 
+#include "audio/audio_common_defs.h"
+
+#include "memutils/memory_manager/MemHandle.h"
+#include "memutils/message/MsgPacket.h"
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -60,6 +65,69 @@
 /****************************************************************************
  * Public Types
  ****************************************************************************/
+enum AsOutputMixerHandle
+{
+  /*! \brief OutputMixer No.0 */
+
+  OutputMixer0 = 0,
+
+  /*! \brief OutputMixer No.1 */
+
+  OutputMixer1,
+};
+
+enum AsOutputMixDevice
+{
+  /*! \brief Speaker out */
+
+  HPOutputDevice = 0,
+
+  /*! \brief I2S out */
+
+  I2SOutputDevice,
+
+  /*! \brief A2DP out */
+
+  A2dpSrcOutputDevice,
+
+  OutputMixDeviceNum
+};
+
+/**< Mixer type of output-mix object. */
+enum AsOutputMixerType
+{
+  /*! \brief Main */
+
+  MainOnly = 0,
+
+  /*! \brief SoundEffet */
+
+  SoundEffectOnly,
+
+  /*! \brief Main & SoundEffet */
+
+  MainSoundEffectMix,
+
+  OutputMixerTypeNum
+};
+
+/**< Completion of output-mix object task. */
+enum AsOutputMixDoneCmdType
+{
+  /*! \brief Activation done */
+
+  OutputMixActDone = 0,
+
+  /*! \brief Deactivation done */
+
+  OutputMixDeactDone,
+
+  /*! \brief Set Clock recovery done */
+
+  OutputMixSetClkRcvDone,
+
+  OutputMixDoneCmdTypeNum
+};
 
 /** Message queue ID parameter of activate function */
 
@@ -69,9 +137,6 @@ typedef struct
 
   uint8_t mixer;
 
-  /*! \brief [in] Message queue id of audio_manager */
-
-  uint8_t mng;
 } AsOutputMixMsgQueId_t;
 
 /** Activate function parameter */
@@ -81,7 +146,97 @@ typedef struct
   /*! \brief [in] ID for sending messages to each function */
 
   AsOutputMixMsgQueId_t msgq_id;
-} AsActOutputMixParam_t;
+
+} AsCreateOutputMixParam_t;
+
+/** Activate function parameter */
+
+struct AsOutputMixDoneParam
+{
+  int handle;
+
+  AsOutputMixDoneCmdType done_type;
+
+};
+
+typedef void (*OutputMixerCallback)(MsgQueId requester_dtq, MsgType msgtype, AsOutputMixDoneParam *param);
+
+typedef struct
+{
+  /*! \brief [in] Output device type
+   *
+   * Use #AsOutputMixDevice enum type
+   */
+
+  uint8_t output_device;
+
+  /*! \brief [in] Mixer typ
+   *
+   * Use #AsOutputMixerType enum type
+   */
+
+  uint8_t mixer_type;
+
+  /*! \brief [in] Done callback */
+
+  OutputMixerCallback cb;
+
+} AsActivateOutputMixer;
+
+/** Deactivate function parameter */
+
+typedef struct
+{
+  uint8_t reserve;
+
+} AsDeactivateOutputMixer;
+
+/** Data send function parameter */
+
+typedef struct
+{
+  /*! \brief [in] Handle of OutputMixer */
+
+  uint8_t handle;
+
+  /*! \brief [in] Send done callback */
+
+  PcmProcDoneCallback callback;
+
+  /*! \brief [in] PCM data parameter */
+
+  AsPcmDataParam pcm;
+
+} AsSendDataOutputMixer;
+
+/** Clock recovery function parameter */
+
+typedef struct
+{
+  /*! \brief [in] Recovery direction (advance or delay) */
+
+  int8_t   direction;
+
+  /*! \brief [in] Recovery term */
+
+  uint32_t times;
+
+} AsFrameTermFineControl;
+
+/** Clock recovery function parameter */
+
+typedef struct 
+{
+  uint8_t handle;
+
+  union
+  {
+    AsActivateOutputMixer   act_param;
+    AsDeactivateOutputMixer deact_param;
+    AsFrameTermFineControl  fterm_param;
+  };
+
+} OutputMixerCommand;
 
 /****************************************************************************
  * Public Data
@@ -100,7 +255,7 @@ extern "C"
 {
 #endif
 /**
- * @brief Activate audio output mixer
+ * @brief Create audio output mixer
  *
  * @param[in] param: Parameters of resources used by output mixer
  *
@@ -108,16 +263,60 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_ActivateOutputMix(FAR AsActOutputMixParam_t *param);
+bool AS_CreateOutputMixer(FAR AsCreateOutputMixParam_t *param);
 
 /**
- * @brief Deactivate output mixer
+ * @brief Activate audio output mixer
+ *
+ * @param[in] param: Activation parameters
  *
  * @retval     true  : success
  * @retval     false : failure
  */
 
-bool AS_DeactivateOutputMix(void);
+bool AS_ActivateOutputMixer(uint8_t handle, FAR AsActivateOutputMixer &actparam);
+
+/**
+ * @brief Send audio data via outputmixer
+ *
+ * @param[in] param: Send data parameters
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_SendDataOutputMixer(FAR AsSendDataOutputMixer &sendparam);
+
+/**
+ * @brief Set clock recovery parameters
+ *
+ * @param[in] param: clock recovery parameters
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_FrameTermFineControlOutputMixer(uint8_t handle, FAR AsFrameTermFineControl &ftermparam);
+
+/**
+ * @brief Deactivate audio output mixer
+ *
+ * @param[in] param: Deactivation parameters
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_DeactivateOutputMixer(uint8_t handle, FAR AsDeactivateOutputMixer &deactparam);
+
+/**
+ * @brief Delete output mixer
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_DeleteOutputMix(void);
 
 #ifdef __cplusplus
 }

@@ -56,6 +56,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "audio/audio_common_defs.h"
+
+#include "memutils/memory_manager/MemHandle.h"
+#include "memutils/message/MsgPacket.h"
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -102,6 +107,46 @@
 /****************************************************************************
  * Public Types
  ****************************************************************************/
+
+/** Event type of player */
+
+typedef enum
+{
+  /*! \brief Activate */
+
+  AsPlayerEventAct = 0,
+
+  /*! \brief Init */
+
+  AsPlayerEventInit,
+
+  /*! \brief Play */
+
+  AsPlayerEventPlay,
+
+  /*! \brief Stop */
+
+  AsPlayerEventStop,
+
+  /*! \brief Deactivate */
+
+  AsPlayerEventDeact,
+
+  /*! \brief Set gain */
+
+  AsPlayerEventSetGain,
+
+} AsPlayerEvent;
+
+/** player id */
+
+typedef enum
+{
+  AS_PLAYER_ID_0 = 0,
+
+  AS_PLAYER_ID_1,
+
+} AsPlayerId;
 
 /** Select activate player */
 
@@ -192,6 +237,29 @@ typedef enum
   OutputMixDelay = 1,
 } AsClkRecoveryDirection;
 
+/**< Decodec PCM data send path  */
+
+typedef enum
+{
+  /*! \brief Decodec PCM data will be replied by callback */
+
+  AsPcmDataReply = 0,
+
+  /*! \brief Decodec PCM data will be sent automatically */
+
+  AsPcmDataTunnel,
+
+} AsPcmDataPath;
+
+/**< Request next decoding type  */
+
+typedef enum
+{
+  AsNextNormalRequest = 0,
+  AsNextStopResRequest,
+
+} AsRequestNextType;
+
 /* for AsPlayerInputDeviceHdlrForRAM */
 
 /** SimpliFifo Callback function
@@ -230,35 +298,12 @@ typedef struct
 
 typedef struct
 {
-  /*! \brief [in] Select activate player
-   *
-   * Use #AsSetActivatePlayer enum type
-   */
-
-  uint8_t  active_player;
-
   /*! \brief [in] Select Player Input device
    *
    *  Use #AsSetPlayerInputDevice enum type
    */
 
   uint8_t  input_device;
-
-  /*! \brief [in] Select SubPlayer Input device, same as above. */
-
-  uint8_t  input_device_sub;
-
-  /*! \brief [in] reserved */
-
-  uint8_t  reserved3;
-
-  /*! \brief [in] Set Player Input device handler, refer following. */
-
-  AsPlayerInputDeviceHdlrForRAM* ram_handler;
-
-  /*! \brief [in] Set SubPlayer Input device handler, refer following. */
-
-  AsPlayerInputDeviceHdlrForRAM* ram_handler_sub;
 
   /*! \brief [in] Select Player Output device
    *
@@ -267,25 +312,62 @@ typedef struct
 
   uint8_t  output_device;
 
-  /*! \brief [in] Select SubPlayer Output device, same as above.  */
+  /*! \brief [in] reserved */
 
-  uint8_t  output_device_sub;
+  uint8_t  reserved0;
 
   /*! \brief [in] reserved */
 
-  uint8_t  reserved5;
+  uint8_t  reserved1;
+
+  /*! \brief [in] Set Player Input device handler, refer following. */
+
+  AsPlayerInputDeviceHdlrForRAM* ram_handler;
+
+} AsActivatePlayerParam;
+
+typedef bool (*MediaPlayerCallback)(AsPlayerEvent evtype, uint32_t result, uint32_t sub_result);
+
+typedef struct
+{
+  /*! \brief [in] MediaPlayer activation parameters */
+
+  AsActivatePlayerParam param;
+
+  /*! \brief [in] MediaPlayer done callback */
+
+  MediaPlayerCallback cb;
+
+} AsActivatePlayer;
+
+typedef struct
+{
+  /*! \brief [in] Select activate player
+   *
+   * Use #AsSetActivatePlayer enum type
+   */
+
+  uint8_t  active_player;
 
   /*! \brief [in] reserved */
 
-  uint8_t  reserved6;
+  uint8_t  reserve0;
 
-  /*! \brief [in] Set Player Output device handler, T.B.D. */
+  /*! \brief [in] reserved */
 
-  uint32_t output_device_handler;
+  uint8_t  reserve1;
 
-  /*! \brief [in] Set Player Output device sub_handler, T.B.D. */
+  /*! \brief [in] reserved */
 
-  uint32_t output_device_handler_sub;
+  uint8_t  reserve2;
+
+  /*! \brief [in] Activation parameters for player0 */
+
+  AsActivatePlayerParam player0;
+
+  /*! \brief [in] Activation parameters for player1 */
+
+  AsActivatePlayerParam player1;
 
 #if !defined(__CC_ARM)
 } SetPlayerStsParam ;
@@ -293,7 +375,15 @@ typedef struct
 } SetPlayerStsParam __attribute__((transparent_union));
 #endif
 
+/** DeactivatePlayer Command (#) parameter */
+typedef struct
+{
+  uint32_t reserve0;
+} AsDeactivatePlayer;
+
 /** InitPlayer Command (#AUDCMD_INITPLAYER, AUDCMD_INITSUBPLAYER) parameter */
+
+typedef void (*DecodeDoneCallback)(AsPcmDataParam param);
 
 typedef struct
 {
@@ -328,7 +418,50 @@ typedef struct
    */
 
   uint32_t sampling_rate;
+
 } AsInitPlayerParam;
+
+/** PlayPlayer Command (#AUDCMD_PLAYPLAYER, #AUDCMD_PLAYSUBPLAYER) parameter */
+
+typedef union
+{
+  /*! \brief [in] Decoded PCM notify callback
+   *
+   */
+
+  DecodeDoneCallback callback;
+
+  /*! \brief [in] Decoded PCM notify message 
+   *
+   */
+
+  struct __st_pcm_msg 
+  {
+    MsgQueId id;
+    uint32_t identifier;
+  } msg;
+
+} AsPcmDataDest;
+
+typedef struct
+{
+  /*! \brief [in] Decoded PCM data path 
+   *
+   * Let PCM data callback to owner or send to indicated MsgQue
+   * Use #AsPcmDataPath enum type
+   */
+
+  uint8_t pcm_path;
+
+  /*! \brief [in] Decode done callback
+   *
+   * Set docode done callback function from MediaPlayer
+   * When HighLevelAPI, this parameters is not need to set.
+   */
+
+  AsPcmDataDest pcm_dest;
+
+} AsPlayPlayerParam;
 
 /** StopPlayer Command (#AUDCMD_STOPPLAYER, #AUDCMD_STOPSUBPLAYER) parameter */
 
@@ -341,25 +474,6 @@ typedef struct
 
   uint8_t stop_mode;
 } AsStopPlayerParam;
-
-/** Adjust Sound Period Command (#AUDCMD_ADJUST_SOUNDPERIOD) parameter */
-
-typedef struct
-{
-  /*! \brief [in] Set adjust directoin
-   *
-   * Use #AsClkRecoveryDirection enum type
-   */
-
-  int8_t  direction;
-
-  /*! \brief [in] Set how many times do adjust
-   *
-   * Use #AsInitPlayerBitLength enum type
-   */
-
-  uint32_t times;
-} AsClkRecoveryParam;
 
 /** Set Audio gain level Command (#AUDCMD_SETGAIN) parameter */
 
@@ -377,6 +491,82 @@ typedef struct
 
   uint8_t r_gain;
 } AsSetGainParam;
+
+/** Request next decode Command (#AUDCMD_REQNEXT) parameter */
+
+typedef struct
+{
+  /*! \brief [in] Request type
+   *
+   * Use #AsRequestNextType enum type
+   */
+
+  uint8_t type;
+
+} AsRequestNextParam;
+
+/** PlayerCommand definition */
+
+typedef struct
+{
+  /*! \brief [in] target player id 
+   * Use #AsPlayerId enum type
+   */
+
+  uint8_t player_id;
+
+  union
+  {
+    AsActivatePlayer act_param;
+
+    /*! \brief [in] for InitPlayer
+     * (header.command_code==#AUDCMD_INITPLAYER)
+     * (Object Interface==AS_InitPlayer)
+     */
+  
+    AsInitPlayerParam init_param;
+  
+    /*! \brief [in] for PlayPlayer
+     * (header.command_code==#AUDCMD_PLAYPLAYER)
+     */
+  
+    AsPlayPlayerParam play_param;
+  
+    /*! \brief [in] for StopPlayer
+     * (header.command_code==#AUDCMD_STOPPLAYER)
+     */
+  
+    AsStopPlayerParam stop_param;
+  
+    AsRequestNextParam req_next_param;
+
+    /*! \brief [in] for Adjust sound period
+     * (header.command_code==#AUDCMD_CLKRECOVERY)
+     */
+  
+    AsSetGainParam set_gain_param;
+  
+    /*! \brief [in] for deactivate player
+     * (header.command_code==#AUDCMD_SETREADYSTATUS)
+     */
+  
+    AsDeactivatePlayer deact_param;
+  };
+} PlayerCommand;
+
+/** Request Clock Recovery Command (#AUDCMD_CLKRECOVERY) parameter */
+
+typedef struct
+{
+  /*! \brief [in] Handle of OutputMixer */
+
+  uint8_t  player_id;
+
+  int8_t   direction;
+
+  uint32_t times;
+
+} AsPlayerClockRecovery;
 
 /** Message queue ID parameter of activate function */
 
@@ -427,7 +617,7 @@ typedef struct
   /*! \brief [in] ID of memory pool for processing data */
 
   AsPlayerPoolId_t   pool_id;
-} AsActPlayerParam_t;
+} AsCreatePlayerParam_t;
 
 /****************************************************************************
  * Public Data
@@ -446,7 +636,7 @@ extern "C"
 {
 #endif
 /**
- * @brief Activate audio main player
+ * @brief Create audio main player
  *
  * @param[in] param: Parameters of resources used by audio main player
  *
@@ -454,18 +644,84 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_ActivatePlayer(FAR AsActPlayerParam_t *param);
+bool AS_CreatePlayer(AsPlayerId id, FAR AsCreatePlayerParam_t *param);
 
 /**
- * @brief Activate audio sub player
+ * @brief Activate audio (sub)player
  *
- * @param[in] param: Parameters of resources used by audio sub player
+ * @param[in] actparam: Parameters for activation
  *
  * @retval     true  : success
  * @retval     false : failure
  */
 
-bool AS_ActivateSubPlayer(FAR AsActPlayerParam_t *param);
+bool AS_ActivatePlayer(AsPlayerId id, FAR AsActivatePlayer &actparam);
+
+/**
+ * @brief Initialize audio (sub)player
+ *
+ * @param[in] initparam: Parameters for init player setting
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_InitPlayer(AsPlayerId id, FAR AsInitPlayerParam &initparam);
+
+/**
+ * @brief Play audio (sub)player
+ *
+ * @param[in] playparam: Parameters for play player
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_PlayPlayer(AsPlayerId id, FAR AsPlayPlayerParam &playparam);
+
+/**
+ * @brief Stop audio (sub)player
+ *
+ * @param[in] stopparam: Parameters for stop player
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_StopPlayer(AsPlayerId id, FAR AsStopPlayerParam &stopparam);
+
+/**
+ * @brief Set audio gain level of (sub)player
+ *
+ * @param[in] gainparam: Gain setting parameters
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_SetPlayerGain(AsPlayerId id, FAR AsSetGainParam &gainparam);
+
+/**
+ * @brief Request next process(decode) to (sub)player
+ *
+ * @param[in] nextparam: parameters for next processing
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_RequestNextPlayerProcess(AsPlayerId id, FAR AsRequestNextParam &nextparam);
+
+/**
+ * @brief Deactivate (sub)player
+ *
+ * @param[in] deactparam: Deactivation parameters
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_DeactivatePlayer(AsPlayerId id, FAR AsDeactivatePlayer &deactparam);
 
 /**
  * @brief Deactivate audio main player
@@ -474,16 +730,8 @@ bool AS_ActivateSubPlayer(FAR AsActPlayerParam_t *param);
  * @retval     false : failure
  */
 
-bool AS_DeactivatePlayer(void);
+bool AS_DeletePlayer(AsPlayerId id);
 
-/**
- * @brief Deactivate audio sub player
- *
- * @retval     true  : success
- * @retval     false : failure
- */
-
-bool AS_DeactivateSubPlayer(void);
 
 #ifdef __cplusplus
 }

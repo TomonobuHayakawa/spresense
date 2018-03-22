@@ -39,7 +39,7 @@
  * Included Files
  ****************************************************************************/
 
-#include "audio/audio_high_level_api.h"
+#include "audio/audio_player_api.h"
 #include "memutils/os_utils/chateau_osal.h"
 #include "memutils/message/Message.h"
 #include "memutils/s_stl/queue.h"
@@ -65,8 +65,6 @@ class PlayerObj
 public:
   static void create(void **obj,
                      MsgQueId self_dtq,
-                     MsgQueId manager_dtq,
-                     MsgQueId output_mix_dtq,
                      MsgQueId apu_dtq,
                      MemMgrLite::PoolId es_pool_id,
                      MemMgrLite::PoolId pcm_pool_id,
@@ -83,23 +81,18 @@ public:
 
 private:
   PlayerObj(MsgQueId self_dtq,
-            MsgQueId manager_dtq,
-            MsgQueId output_mix_dtq,
             MsgQueId apu_dtq,
             MemMgrLite::PoolId es_pool_id,
             MemMgrLite::PoolId pcm_pool_id,
             MemMgrLite::PoolId apu_pool_id);
 
   MsgQueId m_self_dtq;
-  MsgQueId m_manager_dtq;
-  MsgQueId m_output_mix_dtq;
   MsgQueId m_apu_dtq;
 
   MemMgrLite::PoolId m_es_pool_id;
   MemMgrLite::PoolId m_pcm_pool_id;
   MemMgrLite::PoolId m_apu_pool_id; /* そもそも、Apuのコマンドは、Componentsで取得じゃないの？:TODO */
 
-  int m_outmix_handle;
 
   enum PlayerState
   {
@@ -144,10 +137,15 @@ private:
   typedef s_std::Queue<MemMgrLite::MemHandle, MAX_OUT_BUFF_NUM> PcmMhQueue;
   PcmMhQueue m_pcm_buf_mh_que;
 
-  typedef s_std::Queue<OutputMixObjInputDataCmd, MAX_OUT_BUFF_NUM + 1> DecodecPcmMhQueue;
+  typedef s_std::Queue<AsPcmDataParam, MAX_OUT_BUFF_NUM + 1> DecodecPcmMhQueue;
   DecodecPcmMhQueue m_decoded_pcm_mh_que;
 
-  s_std::Queue<AudioCommand, 1> m_external_cmd_que;
+  s_std::Queue<AsPlayerEvent, 1> m_external_cmd_que;
+
+  MediaPlayerCallback m_callback;
+
+  AsPcmDataDest m_pcm_dest;
+  AsPcmDataPath m_pcm_path;
 
   void run(void);
   void parse(MsgPacket *);
@@ -177,12 +175,10 @@ private:
   void stopOnPrePlayWaitEsEnd(MsgPacket *);
 
   void illegalSinkDone(MsgPacket *);
-  void sinkDoneOnBoot(MsgPacket *);
-  void sinkDoneOnReady(MsgPacket *);
-  void sinkDoneOnPlay(MsgPacket *);
-  void sinkDoneOnStopping(MsgPacket *);
-  void sinkDoneOnUnderflow(MsgPacket *);
-  void sinkDoneOnWaitEsEnd(MsgPacket *);
+  void nextReqOnPlay(MsgPacket *);
+  void nextReqOnStopping(MsgPacket *);
+  void nextReqOnUnderflow(MsgPacket *);
+  void nextReqOnWaitEsEnd(MsgPacket *);
 
   void illegalDecDone(MsgPacket *);
   void decDoneOnPlay(MsgPacket *);
@@ -195,7 +191,6 @@ private:
 
   void decSetDone(MsgPacket *);
 
-  void setClkRecovery(MsgPacket *);
   void setGain(MsgPacket *);
 
   uint32_t loadCodec(AudioCodec codec, uint32_t* dsp_inf);
@@ -204,9 +199,7 @@ private:
   uint32_t startPlay(uint32_t* dsp_inf);
   void stopPlay(void);
 
-  void sendPcmToOutputMix(const OutputMixObjInputDataCmd& data);
-  void stopOutputMix(void);
-  void sendPcmToOutputMixOnDecStopping();
+  void sendPcmToOwner(AsPcmDataParam& data);
 
   void decode(void* p_es, uint32_t es_size);
 
@@ -229,18 +222,6 @@ private:
         return false;
       }
       return true;
-    }
-
-  void sendAudioCmdCmplt(const AudioCommand& cmd,
-                         uint32_t result,
-                         uint32_t sub_result = 0)
-    {
-      AudioMngCmdCmpltResult cmplt(cmd.header.command_code, cmd.header.sub_code, result, AS_MODULE_ID_PLAYER_OBJ, sub_result);
-      err_t er = MsgLib::send<AudioMngCmdCmpltResult>(m_manager_dtq, MsgPriNormal, MSG_TYPE_AUD_RES, m_self_dtq, cmplt);
-      if (ERR_OK != er)
-        {
-          F_ASSERT(0);
-        }
     }
 
   void finalize();
