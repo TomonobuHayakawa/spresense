@@ -1119,21 +1119,21 @@ int isx012_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
 
   /* YUV */
 
-  priv->image.moni_param.format     = FORMAT_ISX012_YUV;
-  priv->image.moni_param.rate       = RATE_ISX012_120FPS;
-  priv->image.cap_param.format      = FORMAT_ISX012_YUV;
-  priv->image.cap_param.rate        = RATE_ISX012_120FPS;
+  priv->image.moni_param.format     = FORMAT_ISX012_JPEG_MODE1;
+  priv->image.moni_param.rate       = RATE_ISX012_15FPS;
+  priv->image.cap_param.format      = FORMAT_ISX012_JPEG_MODE1;
+  priv->image.cap_param.rate        = RATE_ISX012_15FPS;
 
   /* QVGA */
 
   priv->image.moni_param.yuv_hsize  = 320;
   priv->image.moni_param.yuv_vsize  = 240;
-  priv->image.moni_param.jpeg_hsize = 320;
-  priv->image.moni_param.jpeg_vsize = 240;
+  priv->image.moni_param.jpeg_hsize = 1920;
+  priv->image.moni_param.jpeg_vsize = 1200;
   priv->image.cap_param.yuv_hsize   = 320;
   priv->image.cap_param.yuv_vsize   = 240;
-  priv->image.cap_param.jpeg_hsize  = 320;
-  priv->image.cap_param.jpeg_vsize  = 240;
+  priv->image.cap_param.jpeg_hsize  = 1920;
+  priv->image.cap_param.jpeg_vsize  = 1200;
 
   sem_init(&priv->wait, 0, 0);
 
