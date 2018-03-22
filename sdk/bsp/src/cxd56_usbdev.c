@@ -814,7 +814,7 @@ static void cxd56_reqcomplete(struct cxd56_ep_s *privep, int16_t result)
 }
 
 /****************************************************************************
- * Name: cxd56_rxdmacomplete
+ * Name: cxd56_txdmacomplete
  *
  * Description:
  *   DMA transfer to TxFIFO is completed.
@@ -1149,6 +1149,7 @@ static inline void cxd56_ep0setup(struct cxd56_usbdev_s *priv)
   uint16_t index;
   uint16_t value;
   uint16_t len;
+  uint32_t reg;
 
   /* Starting a control request? */
 
@@ -1214,211 +1215,222 @@ static inline void cxd56_ep0setup(struct cxd56_usbdev_s *priv)
   if ((priv->ctrl.type & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD)
     {
       cxd56_dispatchrequest(priv);
-      return;
     }
-
-  /* Handle standard request.  Pick off the things of interest to the
-   * USB device controller driver; pass what is left to the class driver
-   */
-
-  switch (priv->ctrl.req)
+  else
     {
-      case USB_REQ_GETSTATUS:
+      /* Handle standard request.  Pick off the things of interest to the
+       * USB device controller driver; pass what is left to the class driver
+       */
+
+      switch (priv->ctrl.req)
         {
-          /* type:  device-to-host; recipient = device, interface, endpoint
-           * value: 0
-           * index: zero interface endpoint
-           * len:   2; data = status
-           */
-
-          usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETSTATUS), 0);
-
-          if (len != 2 || (priv->ctrl.type & USB_REQ_DIR_IN) == 0 || value != 0)
+          case USB_REQ_GETSTATUS:
             {
-              usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDGETST),
+              /* type:  device-to-host; recipient = device, interface, endpoint
+               * value: 0
+               * index: zero interface endpoint
+               * len:   2; data = status
+               */
+
+              usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETSTATUS), 0);
+
+              if (len != 2 || (priv->ctrl.type & USB_REQ_DIR_IN) == 0 || value != 0)
+                {
+                  usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDGETST),
+                           priv->ctrl.req);
+                  priv->stalled = 1;
+                }
+              else
+                {
+                  switch (priv->ctrl.type & USB_REQ_RECIPIENT_MASK)
+                    {
+                      case USB_REQ_RECIPIENT_ENDPOINT:
+                        {
+                          usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETENDPOINT),
+                                   0);
+                          privep = cxd56_epfindbyaddr(priv, index);
+                          if (!privep)
+                            {
+                              usbtrace(
+                                TRACE_DEVERROR(CXD56_TRACEERR_STALLEDGETSTEP),
+                                priv->ctrl.type);
+                              priv->stalled = 1;
+                            }
+                        }
+                        break;
+
+                      case USB_REQ_RECIPIENT_DEVICE:
+                      case USB_REQ_RECIPIENT_INTERFACE:
+                        usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETIFDEV), 0);
+                        break;
+
+                      default:
+                        {
+                          usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDGETSTRECIP),
+                                   priv->ctrl.type);
+                          priv->stalled = 1;
+                        }
+                        break;
+                    }
+                }
+            }
+            break;
+
+          case USB_REQ_CLEARFEATURE:
+            {
+              /* type:  host-to device; recipient = device, interface or endpoint
+               * value: feature selector
+               * index: zero interface endpoint;
+               * len:   zero, data = none
+               */
+
+              usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_CLEARFEATURE),
+                       (uint16_t)priv->ctrl.req);
+              if ((priv->ctrl.type & USB_REQ_RECIPIENT_MASK) !=
+                  USB_REQ_RECIPIENT_ENDPOINT)
+                {
+                  cxd56_dispatchrequest(priv);
+                }
+              else if (priv->paddrset != 0 && value == USB_FEATURE_ENDPOINTHALT &&
+                       len == 0 &&
+                       (privep = cxd56_epfindbyaddr(priv, index)) != NULL)
+                {
+                  privep->halted = 0;
+                  cxd56_epstall(&privep->ep, true);
+                  cxd56_epwrite(ep0, NULL, 0);
+                }
+              else
+                {
+                  usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDCLRFEATURE),
+                           priv->ctrl.type);
+                  priv->stalled = 1;
+                }
+            }
+            break;
+
+          case USB_REQ_SETFEATURE:
+            {
+              /* type:  host-to-device; recipient = device, interface, endpoint
+               * value: feature selector
+               * index: zero interface endpoint;
+               * len:   0; data = none
+               */
+
+              usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_SETFEATURE), 0);
+              if (priv->ctrl.type == USB_REQ_RECIPIENT_DEVICE &&
+                  value == USB_FEATURE_TESTMODE)
+                {
+                  usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_TESTMODE), index);
+                }
+              else if (priv->ctrl.type != USB_REQ_RECIPIENT_ENDPOINT)
+                {
+                  cxd56_dispatchrequest(priv);
+                }
+              else if (value == USB_FEATURE_ENDPOINTHALT && len == 0 &&
+                       (privep = cxd56_epfindbyaddr(priv, index)) != NULL)
+                {
+                  privep->halted = 1;
+                }
+              else
+                {
+                  usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDSETFEATURE),
+                           priv->ctrl.type);
+                  priv->stalled = 1;
+                }
+            }
+            break;
+
+          case USB_REQ_SETADDRESS:
+            {
+              /* type:  host-to-device; recipient = device
+               * value: device address
+               * index: 0
+               * len:   0; data = none
+               */
+
+              usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_SETADDRESS), 0);
+              priv->paddr = value & 0xff;
+            }
+            break;
+
+          case USB_REQ_GETDESCRIPTOR:
+            /* type:  device-to-host; recipient = device
+             * value: descriptor type and index
+             * index: 0 or language ID;
+             * len:   descriptor len; data = descriptor
+             */
+          case USB_REQ_SETDESCRIPTOR:
+            /* type:  host-to-device; recipient = device
+             * value: descriptor type and index
+             * index: 0 or language ID;
+             * len:   descriptor len; data = descriptor
+             */
+            {
+              usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETSETDESC), 0);
+              cxd56_dispatchrequest(priv);
+            }
+            break;
+
+          case USB_REQ_GETCONFIGURATION:
+            /* type:  device-to-host; recipient = device
+             * value: 0;
+             * index: 0;
+             * len:   1; data = configuration value
+             */
+          case USB_REQ_SETCONFIGURATION:
+            /* type:  host-to-device; recipient = device
+             * value: configuration value
+             * index: 0;
+             * len:   0; data = none
+             */
+          case USB_REQ_GETINTERFACE:
+            /* type:  device-to-host; recipient = interface
+             * value: 0
+             * index: interface;
+             * len:   1; data = alt interface
+             */
+          case USB_REQ_SETINTERFACE:
+            /* type:  host-to-device; recipient = interface
+             * value: alternate setting
+             * index: interface;
+             * len:   0; data = none
+             */
+            {
+              usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETSETIFCONFIG), 0);
+              cxd56_dispatchrequest(priv);
+            }
+            break;
+
+          case USB_REQ_SYNCHFRAME:
+            {
+              /* type:  device-to-host; recipient = endpoint
+               * value: 0
+               * index: endpoint;
+               * len:   2; data = frame number
+               */
+
+              usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_SYNCHFRAME), 0);
+            }
+            break;
+
+          default:
+            {
+              usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDREQUEST),
                        priv->ctrl.req);
               priv->stalled = 1;
             }
-          else
-            {
-              switch (priv->ctrl.type & USB_REQ_RECIPIENT_MASK)
-                {
-                  case USB_REQ_RECIPIENT_ENDPOINT:
-                    {
-                      usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETENDPOINT),
-                               0);
-                      privep = cxd56_epfindbyaddr(priv, index);
-                      if (!privep)
-                        {
-                          usbtrace(
-                            TRACE_DEVERROR(CXD56_TRACEERR_STALLEDGETSTEP),
-                            priv->ctrl.type);
-                          priv->stalled = 1;
-                        }
-                    }
-                    break;
-
-                  case USB_REQ_RECIPIENT_DEVICE:
-                  case USB_REQ_RECIPIENT_INTERFACE:
-                    usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETIFDEV), 0);
-                    break;
-
-                  default:
-                    {
-                      usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDGETSTRECIP),
-                               priv->ctrl.type);
-                      priv->stalled = 1;
-                    }
-                    break;
-                }
-            }
+            break;
         }
-        break;
+    }
 
-      case USB_REQ_CLEARFEATURE:
-        {
-          /* type:  host-to device; recipient = device, interface or endpoint
-           * value: feature selector
-           * index: zero interface endpoint;
-           * len:   zero, data = none
-           */
+  /* Check if the setup processing resulted in a STALL */
 
-          usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_CLEARFEATURE),
-                   (uint16_t)priv->ctrl.req);
-          if ((priv->ctrl.type & USB_REQ_RECIPIENT_MASK) !=
-              USB_REQ_RECIPIENT_ENDPOINT)
-            {
-              cxd56_dispatchrequest(priv);
-            }
-          else if (priv->paddrset != 0 && value == USB_FEATURE_ENDPOINTHALT &&
-                   len == 0 &&
-                   (privep = cxd56_epfindbyaddr(priv, index)) != NULL)
-            {
-              privep->halted = 0;
-              cxd56_epstall(&privep->ep, true);
-              cxd56_epwrite(ep0, NULL, 0);
-            }
-          else
-            {
-              usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDCLRFEATURE),
-                       priv->ctrl.type);
-              priv->stalled = 1;
-            }
-        }
-        break;
-
-      case USB_REQ_SETFEATURE:
-        {
-          /* type:  host-to-device; recipient = device, interface, endpoint
-           * value: feature selector
-           * index: zero interface endpoint;
-           * len:   0; data = none
-           */
-
-          usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_SETFEATURE), 0);
-          if (priv->ctrl.type == USB_REQ_RECIPIENT_DEVICE &&
-              value == USB_FEATURE_TESTMODE)
-            {
-              usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_TESTMODE), index);
-            }
-          else if (priv->ctrl.type != USB_REQ_RECIPIENT_ENDPOINT)
-            {
-              cxd56_dispatchrequest(priv);
-            }
-          else if (value == USB_FEATURE_ENDPOINTHALT && len == 0 &&
-                   (privep = cxd56_epfindbyaddr(priv, index)) != NULL)
-            {
-              privep->halted = 1;
-            }
-          else
-            {
-              usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDSETFEATURE),
-                       priv->ctrl.type);
-              priv->stalled = 1;
-            }
-        }
-        break;
-
-      case USB_REQ_SETADDRESS:
-        {
-          /* type:  host-to-device; recipient = device
-           * value: device address
-           * index: 0
-           * len:   0; data = none
-           */
-
-          usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_SETADDRESS), 0);
-          priv->paddr = value & 0xff;
-        }
-        break;
-
-      case USB_REQ_GETDESCRIPTOR:
-        /* type:  device-to-host; recipient = device
-         * value: descriptor type and index
-         * index: 0 or language ID;
-         * len:   descriptor len; data = descriptor
-         */
-      case USB_REQ_SETDESCRIPTOR:
-        /* type:  host-to-device; recipient = device
-         * value: descriptor type and index
-         * index: 0 or language ID;
-         * len:   descriptor len; data = descriptor
-         */
-        {
-          usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETSETDESC), 0);
-          cxd56_dispatchrequest(priv);
-        }
-        break;
-
-      case USB_REQ_GETCONFIGURATION:
-        /* type:  device-to-host; recipient = device
-         * value: 0;
-         * index: 0;
-         * len:   1; data = configuration value
-         */
-      case USB_REQ_SETCONFIGURATION:
-        /* type:  host-to-device; recipient = device
-         * value: configuration value
-         * index: 0;
-         * len:   0; data = none
-         */
-      case USB_REQ_GETINTERFACE:
-        /* type:  device-to-host; recipient = interface
-         * value: 0
-         * index: interface;
-         * len:   1; data = alt interface
-         */
-      case USB_REQ_SETINTERFACE:
-        /* type:  host-to-device; recipient = interface
-         * value: alternate setting
-         * index: interface;
-         * len:   0; data = none
-         */
-        {
-          usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_GETSETIFCONFIG), 0);
-          cxd56_dispatchrequest(priv);
-        }
-        break;
-
-      case USB_REQ_SYNCHFRAME:
-        {
-          /* type:  device-to-host; recipient = endpoint
-           * value: 0
-           * index: endpoint;
-           * len:   2; data = frame number
-           */
-
-          usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_SYNCHFRAME), 0);
-        }
-        break;
-
-      default:
-        {
-          usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_STALLEDREQUEST),
-                   priv->ctrl.req);
-          priv->stalled = 1;
-        }
-        break;
+  if (priv->stalled)
+    {
+      reg = getreg32(CXD56_USB_IN_EP_CONTROL(0));
+      putreg32(reg | USB_STALL, CXD56_USB_IN_EP_CONTROL(0));
+      reg = getreg32(CXD56_USB_OUT_EP_CONTROL(0));
+      putreg32(reg | USB_STALL, CXD56_USB_OUT_EP_CONTROL(0));
     }
 }
 
