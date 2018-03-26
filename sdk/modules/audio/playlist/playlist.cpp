@@ -279,7 +279,7 @@ bool Playlist::restart(void)
 {
   _info("Restart playlist\n");
 
-  this->m_play_idx = 0;
+  this->m_play_idx = -1;
 
   if (this->m_play_mode == PlayModeShuffle)
     {
@@ -720,9 +720,9 @@ bool Playlist::loadAliasList(void)
 
   /* Correct index. */
 
-  if (this->m_play_idx >= this->m_alias_list.size())
+  if (this->m_play_idx >= (this->m_alias_list.size() - 1))
     {
-      this->m_play_idx = 0;
+      this->m_play_idx = -1;
     }
 
   /* Close list. */
