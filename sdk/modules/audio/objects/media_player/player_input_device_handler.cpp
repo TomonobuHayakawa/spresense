@@ -89,7 +89,7 @@ bool InputHandlerOfRAM::initialize(PlayerInHandle* p_handle)
   m_in_device_handler.notification_threshold_size =
     p_handle->p_ram_device_handle->notification_threshold_size;
 
-  if (m_codec_type == AudCodecXAVCLPCM)
+  if (m_codec_type == AudCodecLPCM)
     {
       if (m_clock_mode == AS_CLK_MODE_HIRES)
         {
@@ -248,7 +248,7 @@ bool InputHandlerOfRAM::stop()
 /*--------------------------------------------------------------------*/
 bool InputHandlerOfRAM::getEs(void* p_es, uint32_t* es_byte_size)
 {
-  if (m_codec_type == AudCodecXAVCLPCM)
+  if (m_codec_type == AudCodecLPCM)
     {
       *es_byte_size = m_wav_au_size;
     }

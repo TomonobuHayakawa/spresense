@@ -226,7 +226,7 @@ uint32_t DecoderComponent::init_apu(const InitDecCompParam& param,
   p_apu_cmd->init_dec_cmd.out_pcm_param.channel_format = Aud2ChannelFormat;
   p_apu_cmd->init_dec_cmd.out_pcm_param.channel_select = AudChSelThrough;
 
-  if ((p_apu_cmd->init_dec_cmd.codec_type == AudCodecXAVCLPCM
+  if ((p_apu_cmd->init_dec_cmd.codec_type == AudCodecLPCM
     || p_apu_cmd->init_dec_cmd.codec_type == AudCodecFLAC)
    && ((p_apu_cmd->init_dec_cmd.sampling_rate == 64000)
     || (p_apu_cmd->init_dec_cmd.sampling_rate == 88200)
@@ -438,7 +438,7 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
         decoder_dsp_version = DSP_MP3DEC_VERSION;
         break;
 
-      case AudCodecXAVCLPCM:
+      case AudCodecLPCM:
         strncpy(filename, "WAVDEC", 10);
         decoder_dsp_version = DSP_WAVDEC_VERSION;
         break;

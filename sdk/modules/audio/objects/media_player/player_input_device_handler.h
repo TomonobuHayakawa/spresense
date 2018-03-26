@@ -122,7 +122,7 @@ public:
                 return SampleNumPerFrame[m_codec_type];
               }
             return Mp3SampleNumPerFrameWith16kHz;
-          case AudCodecXAVCLPCM:
+          case AudCodecLPCM:
             return m_cur_wav_au_sample_num;
           case AudCodecSBC:
           case AudCodecAAC:
@@ -167,7 +167,7 @@ public:
     m_p_es_source_hdl(NULL),
     m_notification_read_es_size(0)
     {
-      m_codec_type = AudCodecXAVCLPCM;
+      m_codec_type = AudCodecLPCM;
     }
 
   ~InputHandlerOfRAM() {}

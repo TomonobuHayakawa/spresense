@@ -1227,7 +1227,7 @@ uint32_t PlayerObj::loadCodec(AudioCodec codec, uint32_t* dsp_inf)
   switch  (codec)
     {
       case AudCodecMP3:
-      case AudCodecXAVCLPCM:
+      case AudCodecLPCM:
       case AudCodecAAC:
       case AudCodecOPUS:
         break;

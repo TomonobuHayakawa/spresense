@@ -239,7 +239,7 @@ private:
   uint32_t isValidActivateParam(const AudioCommand& cmd);
   uint32_t isValidInitParam(const AudioCommand& cmd);
   uint32_t isValidInitParamMP3(const AudioCommand& cmd);
-  uint32_t isValidInitParamWAV(const AudioCommand& cmd);
+  uint32_t isValidInitParamLPCM(const AudioCommand& cmd);
   uint32_t isValidInitParamOPUS(const AudioCommand& cmd);
   void writeToDataSinker(const MemMgrLite::MemHandle& mh, uint32_t byte_size);
 

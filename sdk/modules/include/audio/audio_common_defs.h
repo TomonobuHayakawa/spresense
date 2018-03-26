@@ -135,6 +135,10 @@
 
 #define AS_CODECTYPE_MEDIA  4
 
+/** Linear PCM */
+
+#define AS_CODECTYPE_LPCM  5
+
 /** @} */
 
 /** @name Bit length */

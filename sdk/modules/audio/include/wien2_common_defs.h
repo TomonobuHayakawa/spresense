@@ -141,7 +141,7 @@ enum AudioCodec
 {
   InvalidCodecType = 0xffffffff,
   AudCodecMP3 = 0,
-  AudCodecXAVCLPCM,
+  AudCodecLPCM,
   AudCodecAAC,
   AudCodecOPUS,
   AudCodecHEAAC,
@@ -241,7 +241,7 @@ const uint32_t AudioFs2ApuValue[] =
 static const uint32_t SampleNumPerFrame[AudCodecNum] =
 {
   1152,  /* AudCodecMP3 */
-  768,   /* AudCodecXAVCLPCM */ /* 任意正整数でよい */
+  768,   /* AudCodecLPCM */ /* 任意正整数でよい */
   1024,  /* AudCodecAAC */
   160,   /* AudCodecOPUS */
   2048,  /* AudCodecHEAAC (未対応) */

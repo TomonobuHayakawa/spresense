@@ -231,7 +231,7 @@ uint32_t VoiceRecorderObjectTask::loadCodec(AudioCodec codec,
           return rst;
         }
     }
-  else if (codec == AudCodecXAVCLPCM)
+  else if (codec == AudCodecLPCM)
     {
       if (sampling_rate != AS_SAMPLINGRATE_48000)
         {
@@ -263,7 +263,7 @@ bool VoiceRecorderObjectTask::unloadCodec(void)
           return false;
         }
     }
-  else if ((m_codec_type == AudCodecXAVCLPCM) &&
+  else if ((m_codec_type == AudCodecLPCM) &&
     (m_sampling_rate != AS_SAMPLINGRATE_48000))
     {
       if(!AS_filter_deactivate(SRCOnly))
@@ -544,7 +544,24 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
   m_pcm_byte_len  = ((m_pcm_bit_width == AudPcm16Bit) ? 2 : 4);
   m_bit_rate      = cmd.init_recorder_param.bitrate;
   m_complexity    = cmd.init_recorder_param.computational_complexity;
-  if (m_codec_type != cmd.init_recorder_param.codec_type)
+  AudioCodec cmd_codec_type = InvalidCodecType;
+  switch (cmd.init_recorder_param.codec_type)
+    {
+      case AS_CODECTYPE_MP3:
+        cmd_codec_type = AudCodecMP3;
+        break;
+      case AS_CODECTYPE_LPCM:
+        cmd_codec_type = AudCodecLPCM;
+        break;
+      case AudCodecOPUS:
+        cmd_codec_type = AudCodecOPUS;
+        break;
+      default:
+        MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+        sendAudioCmdCmplt(cmd, AS_ECODE_COMMAND_PARAM_CODEC_TYPE);
+        return;
+    }
+  if (m_codec_type != cmd_codec_type)
     {
       if (!unloadCodec())
         {
@@ -560,8 +577,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
         }
 
       uint32_t dsp_inf = 0;
-      rst = loadCodec(static_cast<AudioCodec>
-                      (cmd.init_recorder_param.codec_type),
+      rst = loadCodec(cmd_codec_type,
                       cmd.init_recorder_param.sampling_rate,
                       &dsp_inf);
       if (rst != AS_ECODE_OK)
@@ -578,7 +594,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
     }
   else
     {
-      if (m_codec_type == AudCodecXAVCLPCM &&
+      if (m_codec_type == AudCodecLPCM &&
           (m_sampling_rate == AS_SAMPLINGRATE_16000 &&
            cmd.init_recorder_param.sampling_rate == AS_SAMPLINGRATE_48000))
         {
@@ -587,8 +603,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
               sendAudioCmdCmplt(cmd, AS_ECODE_DSP_UNLOAD_ERROR);
               return;
             }
-          m_codec_type =
-            static_cast<AudioCodec>(cmd.init_recorder_param.codec_type);
+          m_codec_type = cmd_codec_type;
         }
       if (!delInputDeviceHdlr())
         {
@@ -597,14 +612,13 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
           return;
         }
 
-      if (m_codec_type == AudCodecXAVCLPCM &&
+      if (m_codec_type == AudCodecLPCM &&
           (m_sampling_rate == AS_SAMPLINGRATE_48000 &&
             cmd.init_recorder_param.sampling_rate ==
               AS_SAMPLINGRATE_16000))
         {
           uint32_t dsp_inf = 0;
-          rst = loadCodec(static_cast<AudioCodec>
-                          (cmd.init_recorder_param.codec_type),
+          rst = loadCodec(cmd_codec_type,
                           cmd.init_recorder_param.sampling_rate,
                           &dsp_inf);
           if (rst != AS_ECODE_OK)
@@ -659,7 +673,7 @@ void VoiceRecorderObjectTask::startOnReady(MsgPacket *msg)
       return;
     }
 
-  if (m_codec_type == AudCodecXAVCLPCM)
+  if (m_codec_type == AudCodecLPCM)
     {
       FilterComponentParam filter_param;
       filter_param.filter_type = Apu::SRC;
@@ -831,7 +845,7 @@ void VoiceRecorderObjectTask::filterDoneOnStop(MsgPacket *msg)
 
   if (filter_result.event_type == Apu::ExecEvent)
     {
-      if (m_codec_type == AudCodecXAVCLPCM)
+      if (m_codec_type == AudCodecLPCM)
         {
           freeCnvInBuf();
 
@@ -884,7 +898,7 @@ void VoiceRecorderObjectTask::filterDoneOnOverflow(MsgPacket *msg)
 
   if (filter_result.event_type == Apu::ExecEvent)
     {
-      if (m_codec_type == AudCodecXAVCLPCM)
+      if (m_codec_type == AudCodecLPCM)
         {
           freeCnvInBuf();
 
@@ -1091,7 +1105,7 @@ bool VoiceRecorderObjectTask::startCapture()
 /*--------------------------------------------------------------------------*/
 void VoiceRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_size)
 {
-  if (m_codec_type == AudCodecXAVCLPCM)
+  if (m_codec_type == AudCodecLPCM)
     {
       if (m_sampling_rate != AS_SAMPLINGRATE_48000)
         {
@@ -1153,7 +1167,7 @@ void VoiceRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_siz
 /*--------------------------------------------------------------------------*/
 void VoiceRecorderObjectTask::stopEnc(void)
 {
-  if (m_codec_type == AudCodecXAVCLPCM)
+  if (m_codec_type == AudCodecLPCM)
     {
       if (m_sampling_rate != AS_SAMPLINGRATE_48000)
         {
@@ -1255,8 +1269,8 @@ uint32_t VoiceRecorderObjectTask::isValidInitParam(
         rst = isValidInitParamMP3(cmd);
         break;
 
-      case AS_CODECTYPE_WAV:
-        rst = isValidInitParamWAV(cmd);
+      case AS_CODECTYPE_LPCM:
+        rst = isValidInitParamLPCM(cmd);
         break;
 
       case AS_CODECTYPE_OPUS:
@@ -1372,7 +1386,7 @@ uint32_t VoiceRecorderObjectTask::isValidInitParamMP3(
 }
 
 /*--------------------------------------------------------------------------*/
-uint32_t VoiceRecorderObjectTask::isValidInitParamWAV(
+uint32_t VoiceRecorderObjectTask::isValidInitParamLPCM(
   const AudioCommand& cmd)
 {
   switch(cmd.init_recorder_param.channel_number)
