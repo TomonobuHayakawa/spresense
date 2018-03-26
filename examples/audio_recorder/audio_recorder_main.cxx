@@ -169,7 +169,7 @@ struct recorder_info_s
 enum codec_type_e
 {
   CODEC_TYPE_MP3 = 0,
-  CODEC_TYPE_WAV,
+  CODEC_TYPE_LPCM,
   CODEC_TYPE_OPUS,
   CODEC_TYPE_NUM
 };
@@ -262,7 +262,7 @@ static bool app_open_output_file(void)
         cur_time->tm_min,
         cur_time->tm_sec);
     }
-  else if (s_recorder_info.file.codec_type == AS_CODECTYPE_WAV)
+  else if (s_recorder_info.file.codec_type == AS_CODECTYPE_LPCM)
     {
       snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.wav",
         CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
@@ -293,7 +293,7 @@ static bool app_open_output_file(void)
     }
   printf("Record data to %s.\n", &fname[0]);
 
-  if (s_recorder_info.file.codec_type == AS_CODECTYPE_WAV)
+  if (s_recorder_info.file.codec_type == AS_CODECTYPE_LPCM)
     {
       if (!app_write_wav_header())
       {
@@ -576,8 +576,8 @@ static bool app_set_recording_param(codec_type_e codec_type,
       case CODEC_TYPE_MP3:
         s_recorder_info.file.codec_type = AS_CODECTYPE_MP3;
         break;
-      case CODEC_TYPE_WAV:
-        s_recorder_info.file.codec_type = AS_CODECTYPE_WAV;
+      case CODEC_TYPE_LPCM:
+        s_recorder_info.file.codec_type = AS_CODECTYPE_LPCM;
         break;
       case CODEC_TYPE_OPUS:
         s_recorder_info.file.codec_type = AS_CODECTYPE_OPUS;
@@ -664,7 +664,7 @@ static void app_init_recorder_wav(AudioCommand* command)
   s_recorder_info.wav_header.bit        = 2 * 8;
   s_recorder_info.wav_header.data_size  = 0;
 
-  command->init_recorder_param.codec_type = AS_CODECTYPE_WAV;
+  command->init_recorder_param.codec_type = AS_CODECTYPE_LPCM;
 }
 
 static void app_init_recorder_mp3(AudioCommand* command)
@@ -684,9 +684,9 @@ static bool app_init_recorder(codec_type_e codec_type,
                               sampling_rate_e sampling_rate,
                               channel_type_e ch_type)
 {
-  if (!app_set_recording_param(CODEC_TYPE_WAV,
-                               SAMPLING_RATE_16K,
-                               CHAN_TYPE_MONO))
+  if (!app_set_recording_param(codec_type,
+                               sampling_rate,
+                               ch_type))
     {
       printf("Error: app_set_recording_param() failure.\n");
       return false;
@@ -702,7 +702,7 @@ static bool app_init_recorder(codec_type_e codec_type,
 
   switch (s_recorder_info.file.codec_type)
     {
-      case AS_CODECTYPE_WAV:
+      case AS_CODECTYPE_LPCM:
         app_init_recorder_wav(&command);
         break;
       case AS_CODECTYPE_MP3:
@@ -769,7 +769,7 @@ static bool app_stop_recorder(void)
       occupied_simple_fifo_size = CMN_SimpleFifoGetOccupiedSize(&s_recorder_info.fifo.handle);
     }
 
-  if (s_recorder_info.file.codec_type == AS_CODECTYPE_WAV)
+  if (s_recorder_info.file.codec_type == AS_CODECTYPE_LPCM)
     {
       app_update_wav_file_size();
       if (!app_write_wav_header())
@@ -1011,7 +1011,7 @@ extern "C" int recorder_main(int argc, char *argv[])
 
   /* Initialize recorder. */
 
-  if (!app_init_recorder(CODEC_TYPE_WAV,
+  if (!app_init_recorder(CODEC_TYPE_LPCM,
                          SAMPLING_RATE_16K,
                          CHAN_TYPE_MONO))
     {
