@@ -1,7 +1,7 @@
 /****************************************************************************
  * examples/gnss_atcmd/gnss_atcmd_usbserial.c
  *
- *   Copyright (C) 2017 Sony. All rights reserved.
+ *   Copyright (C) 2017,2018 Sony. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,6 +37,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -49,6 +50,8 @@
 #include <errno.h>
 #include <debug.h>
 
+#ifdef CONFIG_EXAMPLES_GNSS_ATCMD_USB
+
 #include <nuttx/usb/usbdev.h>
 #include <nuttx/usb/usbdev_trace.h>
 
@@ -57,6 +60,7 @@
 #endif
 
 #include "gnss_usbserial.h"
+
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -211,3 +215,5 @@ int gnss_usbserial_close(FAR int *fds)
 
   return 0;
 }
+
+#endif /* ifdef CONFIG_EXAMPLES_GNSS_ATCMD_USB */

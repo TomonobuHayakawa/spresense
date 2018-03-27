@@ -22,6 +22,27 @@ config EXAMPLES_GNSS_ATCMD_PROGNAME
 		This is the name of the program that will be use when the NSH ELF
 		program is installed.
 
+choice
+	prompt "GNSS Command IO"
+	default EXAMPLES_GNSS_ATCMD_USB
+
+config EXAMPLES_GNSS_ATCMD_USB
+	bool "Example uses USB CDC tty"
+
+config EXAMPLES_GNSS_ATCMD_STDINOUT
+	bool "Example uses STDINOUT for nsh debug UART"
+
+config EXAMPLES_GNSS_ATCMD_TTYS0
+	bool "Example uses UART ttyS0"
+
+config EXAMPLES_GNSS_ATCMD_TTYS1
+	bool "Example uses UART ttyS1"
+
+config EXAMPLES_GNSS_ATCMD_TTYS2
+	bool "Example uses UART ttyS2"
+
+endchoice
+
 config EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM
   bool "Example supports spectrum output"
   default y

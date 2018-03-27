@@ -19,7 +19,16 @@ examplex/gnss_atcmd
 	  Default: 100
   CONFIG_EXAMPLES_GNSS_ATCMD_STACKSIZE -- Specified this example's stack size.
 	  Default: 2048
+
+  Select command input TTY from the following:
+    Default: CONFIG_EXAMPLES_GNSS_ATCMD_USB
   
+  CONFIG_EXAMPLES_GNSS_ATCMD_USB -- USB CDC
+  CONFIG_EXAMPLES_GNSS_ATCMD_STDINOUT -- stdin / stdout when nsh is enabled
+  CONFIG_EXAMPLES_GNSS_ATCMD_TTYS0 -- ttyS0
+  CONFIG_EXAMPLES_GNSS_ATCMD_TTYS1 -- ttyS1
+  CONFIG_EXAMPLES_GNSS_ATCMD_TTYS2 -- ttyS2
+
   In addition to the above, the following definitions are required:
     CONFIG_CXD56_GNSS
     CONFIG_LIBM

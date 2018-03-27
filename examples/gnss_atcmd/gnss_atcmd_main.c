@@ -1,7 +1,7 @@
 /****************************************************************************
  * examples/gnss_atcmd/gnss_atcmd_main.c
  *
- *   Copyright (C) 2017 Sony. All rights reserved.
+ *   Copyright (C) 2017,2018 Sony. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -47,9 +47,13 @@
 #include <sched.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
+#include <termios.h>
 #include <arch/chip/gnss.h>
 #include "gpsutils/cxd56_gnss_nmea.h"
+#if defined(CONFIG_EXAMPLES_GNSS_ATCMD_USB)
 #include "gnss_usbserial.h"
+#endif /* if defined(CONFIG_EXAMPLES_GNSS_ATCMD_USB) */
 #include "gnss_atcmd.h"
 
 /****************************************************************************
@@ -60,9 +64,9 @@
 #define GNSS_POLL_TIMEOUT_FOREVER -1
 #define MY_GNSS_SIG0              18
 #define MY_GNSS_SIG1              19
-#define USB_RBUF_SIZE             128
-#define READ_FD                   usbfds[GNSS_ATCMD_READ_FD]
-#define WRITE_FD                  usbfds[GNSS_ATCMD_WRITE_FD]
+#define CMD_RBUF_SIZE             128
+#define READ_FD                   cmdfds[GNSS_ATCMD_READ_FD]
+#define WRITE_FD                  cmdfds[GNSS_ATCMD_WRITE_FD]
 
 #define _USE_STATIC_NMEA_BUF
 
@@ -74,12 +78,29 @@
 
 #ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM
 #ifndef CONFIG_EXAMPLES_GNSS_ATCMD_SUB_STACKSIZE
-#define CONFIG_EXAMPLES_GNSS_ATCMD_SUB_STACKSIZE  512
+#define CONFIG_EXAMPLES_GNSS_ATCMD_SUB_STACKSIZE  1024
 #endif
 #ifndef CONFIG_EXAMPLES_GNSS_ATCMD_SUB_PRIORITY
 #define CONFIG_EXAMPLES_GNSS_ATCMD_SUB_PRIORITY   CONFIG_EXAMPLES_GNSS_ATCMD_PRIORITY
 #endif
 #endif /* ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM */
+
+#ifdef CONFIG_EXAMPLES_GNSS_ATCMD_STDINOUT
+#define TTYS_NAME "stdin/stdout"
+#endif
+#ifdef CONFIG_EXAMPLES_GNSS_ATCMD_TTYS0
+#define TTYS_NAME "/dev/ttyS0"
+#endif
+#ifdef CONFIG_EXAMPLES_GNSS_ATCMD_TTYS1
+#define TTYS_NAME "/dev/ttyS1"
+#endif
+#ifdef CONFIG_EXAMPLES_GNSS_ATCMD_TTYS2
+#define TTYS_NAME "/dev/ttyS2"
+#endif
+
+#ifndef CONFIG_EXAMPLES_GNSS_ATCMD_STDINOUT
+#define CONFIG_EXAMPLES_GNSS_ATCMD_CREATE_EMULATOR_PTHREAD
+#endif /* ifndef CONFIG_EXAMPLES_GNSS_ATCMD_TTYS */
 
 /****************************************************************************
  * Private Types
@@ -97,10 +118,12 @@ typedef struct
  * Private Data
  ****************************************************************************/
 static struct gnss_atcmd_info atcmd_info;
+#ifdef CONFIG_EXAMPLES_GNSS_ATCMD_CREATE_EMULATOR_PTHREAD
 static pthread_t              atcmd_tid;
+#endif /* ifndef CONFIG_EXAMPLES_GNSS_ATCMD_CREATE_EMULATOR_PTHREAD */
 static struct cxd56_gnss_positiondata_s  posdat;
-static int                    usbfds[2];
-static char                   usb_rbuf[USB_RBUF_SIZE];
+static int                    cmdfds[2];
+static char                   cmd_rbuf[CMD_RBUF_SIZE];
 #ifdef _USE_STATIC_NMEA_BUF
 static char                   nmea_buf[NMEA_SENTENCE_MAX_LEN];
 #endif
@@ -245,13 +268,17 @@ static int signal2own(int signo, void *data)
 
 static FAR void atcmd_emulator(FAR void *arg)
 {
-  int                    fd;
-  int                    ret;
-  int                    remain;
-  struct pollfd          fds[GNSS_POLL_FD_NUM];
-  char *                 bufhead;
-  NMEA_OUTPUT_CB         funcs;
-
+  int            fd;
+  int            ret;
+  int            remain;
+  struct pollfd  fds[GNSS_POLL_FD_NUM];
+  char *         bufhead;
+  NMEA_OUTPUT_CB funcs;
+#if !defined(CONFIG_EXAMPLES_GNSS_ATCMD_USB)
+  struct termios tio;
+  const speed_t  baudRate = B115200;
+#endif /* if !defined(CONFIG_EXAMPLES_GNSS_ATCMD_USB) */
+ 
   /* program start */
 
   printf("Start GNSS_ATCMD!!\n");
@@ -273,19 +300,60 @@ static FAR void atcmd_emulator(FAR void *arg)
   funcs.bufFree = freebuf;
   NMEA_RegistOutputFunc(&funcs);
 
-  ret = gnss_usbserial_open(usbfds);
+#if defined(CONFIG_EXAMPLES_GNSS_ATCMD_USB)
+  /* Open ttyUSB-CDC */
+
+  ret = gnss_usbserial_open(cmdfds);
   if (ret < 0)
     {
       printf("usb open error. %d\n", ret);
       goto _err1;
     }
+#else
+# if defined(CONFIG_EXAMPLES_GNSS_ATCMD_STDINOUT)
+  /* Open tty0 using nash */
+
+  cmdfds[GNSS_ATCMD_WRITE_FD] = fileno(stdout);
+  cmdfds[GNSS_ATCMD_READ_FD] = fileno(stdin);
+# else
+  /* Open tty1/tty2 */
+
+  cmdfds[GNSS_ATCMD_WRITE_FD] = cmdfds[GNSS_ATCMD_READ_FD] =
+    open(TTYS_NAME, O_RDWR);
+#endif
+  ret = errno;
+  if (cmdfds[GNSS_ATCMD_WRITE_FD] < 0 || cmdfds[GNSS_ATCMD_READ_FD] < 0)
+    {
+      printf("%s open error. %d\n", TTYS_NAME, ret);
+      goto _err1;
+    }
+
+  /* tty: setup parameters */
+
+  tio.c_cflag += CREAD;  /* Enable receive */
+  tio.c_cflag += CLOCAL; /* Local line, no modem control */
+  tio.c_cflag += CS8;    /* Data bit 8bit */
+  tio.c_cflag += 0;      /* Stop bit 1bit */
+  tio.c_cflag += 0;      /* Paritiy none */
+  cfsetispeed(&tio, baudRate);
+  cfsetospeed(&tio, baudRate);
+
+  /* tty: set to tty device */
+
+  tcsetattr(cmdfds[GNSS_ATCMD_WRITE_FD], TCSANOW, &tio);
+  tcsetattr(cmdfds[GNSS_ATCMD_READ_FD], TCSANOW, &tio);
+
+  /* tty: Enable settings */
+
+  ioctl(fd, TCSETS, (unsigned long)&tio);
+#endif
 
   atcmd_info.gnssfd = fd;
   atcmd_info.wfd    = WRITE_FD;
   atcmd_info.rfd    = READ_FD;
 
-  bufhead       = usb_rbuf;
-  remain        = sizeof(usb_rbuf);
+  bufhead       = cmd_rbuf;
+  remain        = sizeof(cmd_rbuf);
 
 #ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM
   sem_post(&syncsem);
@@ -331,30 +399,30 @@ static FAR void atcmd_emulator(FAR void *arg)
           if (remain > 0)
             {
               *bufhead = '\0';
-              p = strchr(usb_rbuf, '\r');
+              p = strchr(cmd_rbuf, '\r');
               if (p == NULL)
                 {
-                  p = strchr(usb_rbuf, '\n');
+                  p = strchr(cmd_rbuf, '\n');
                   if (p == NULL)
                     {
                       goto _continue;
                     }
                 }
-              sz = p - usb_rbuf + 1;
+              sz = p - cmd_rbuf + 1;
             }
           else
             {
-              sz = sizeof(usb_rbuf);
-              p  = &usb_rbuf[sz - 1];
+              sz = sizeof(cmd_rbuf);
+              p  = &cmd_rbuf[sz - 1];
             }
           *p = '\0';
-          remain  = sizeof(usb_rbuf);
-          bufhead = usb_rbuf;
-          dbg_printf("# %*s\n", sz, usb_rbuf);
+          remain  = sizeof(cmd_rbuf);
+          bufhead = cmd_rbuf;
+          dbg_printf("# %*s\n", sz, cmd_rbuf);
 #ifdef _DEBUG
-          write(WRITE_FD, usb_rbuf, sz);
+          write(WRITE_FD, cmd_rbuf, sz);
 #endif
-          ret = gnss_atcmd_exec(&atcmd_info, usb_rbuf, sz);
+          ret = gnss_atcmd_exec(&atcmd_info, cmd_rbuf, sz);
         }
 
 _continue:
@@ -369,26 +437,44 @@ _continue:
     }
   while (ret != -ESHUTDOWN);
 
-  gnss_usbserial_close(usbfds);
+  /* close tty */
+
+#if defined(CONFIG_EXAMPLES_GNSS_ATCMD_USB)
+  gnss_usbserial_close(cmdfds);
+#elif defined(CONFIG_EXAMPLES_GNSS_ATCMD_TTY1) || \
+  defined(CONFIG_EXAMPLES_GNSS_ATCMD_TTY2)
+  close(cmdfds[GNSS_ATCMD_READ_FD]);
+  close(cmdfds[GNSS_ATCMD_WRITE_FD]);
+#endif
 
 _err1:
+
+  /* close GPS device */
+
   ret = close(fd);
   if (ret < 0)
     {
       printf("device close error\n");
     }
 
-  /* The pthread has returned */
-
 _err0:
 #ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM
+
+  /* Send signal to spectrum pthread and force exit it */
+
   signal2own(MY_GNSS_SIG1, NULL);
+  pthread_join(atcmd_sub_tid, NULL);
   sem_destroy(&syncsem);
 #endif /* ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM */
 
   printf("Stop GNSS_ATCMD!!\n");
 
-  pthread_exit(0);
+#ifdef CONFIG_EXAMPLES_GNSS_ATCMD_CREATE_EMULATOR_PTHREAD
+  pthread_detach(pthread_self());
+
+  /* This pthread has returned, and exit */
+
+#endif /* ifdef CONFIG_EXAMPLES_GNSS_ATCMD_CREATE_EMULATOR_PTHREAD */
 }
 
 #ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM
@@ -454,7 +540,6 @@ _exit:
   set_signal(atcmd_info.gnssfd, MY_GNSS_SIG0, CXD56_GNSS_SIG_SPECTRUM, 0);
 _err:
   printf("GNSS exit spectrum handler\n");
-  pthread_exit(0);
 }
 
 #endif /* ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM */
@@ -471,7 +556,7 @@ int gnss_atcmd_main(int argc, char *argv[])
 {
   pthread_attr_t           tattr;
   struct sched_param       param;
-  int                      ret;
+  int                      ret = 0;
 
 #ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM
 
@@ -483,6 +568,8 @@ int gnss_atcmd_main(int argc, char *argv[])
     }
 
 #endif /* ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM */
+
+#ifdef CONFIG_EXAMPLES_GNSS_ATCMD_CREATE_EMULATOR_PTHREAD
 
   pthread_attr_init(&tattr);
   tattr.stacksize      = CONFIG_EXAMPLES_GNSS_ATCMD_STACKSIZE;
@@ -496,6 +583,8 @@ int gnss_atcmd_main(int argc, char *argv[])
       ret = -ret; /* pthread_create does not modify errno. */
       goto _err;
     }
+
+#endif /* ifdef CONFIG_EXAMPLES_GNSS_ATCMD_CREATE_EMULATOR_PTHREAD */
 
 #ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM
 
@@ -512,6 +601,12 @@ int gnss_atcmd_main(int argc, char *argv[])
     }
 
 #endif /* ifdef CONFIG_EXAMPLES_GNSS_ATCMD_SUPPORT_SPECRUM */
+
+#ifndef CONFIG_EXAMPLES_GNSS_ATCMD_CREATE_EMULATOR_PTHREAD
+
+  atcmd_emulator(NULL);
+
+#endif /* ifndef CONFIG_EXAMPLES_GNSS_ATCMD_CREATE_EMULATOR_PTHREAD */
 
 _err:
   return ret;
