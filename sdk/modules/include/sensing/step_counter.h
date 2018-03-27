@@ -48,6 +48,52 @@
 #include "sensing/sensor_ecode.h"
 #include "memutils/s_stl/queue.h"
 
+/**
+ * @def
+ * initial step length of each move type
+ */
+
+#define STEP_COUNTER_INITIAL_WALK_STEP_LENGTH 60   /* [cm] */
+#define STEP_COUNTER_INITIAL_RUN_STEP_LENGTH  80   /* [cm] */
+
+/* -------------------------------------------------------------------------- */
+/**
+ * @enum StepCounterStepMode
+ * @brief Step modes
+ */
+typedef enum
+{
+  STEP_COUNTER_MODE_FIXED_LENGTH = 0,    /**< Using fixed length (not using existing stride table).         */
+  STEP_COUNTER_MODE_NEW_TABLE,           /**< Create a new stride table with stepLength, and use the table. */
+  STEP_COUNTER_MODE_STEP_TABLE           /**< Using existing stride table (not using fixed length).         */
+
+} StepCounterStepMode;
+/* -------------------------------------------------------------------------- */
+/**
+ * @struct StepCounterSetParam
+ * @brief the structure of step setting for initialize.
+ */
+struct step_counter_param_s
+{
+  int32_t              step_length;      /**< Step stride setting value. Min 1[cm], Max 249[cm]. */
+  StepCounterStepMode  step_mode;        /**< Setting of using the stride table. */
+};
+
+typedef struct step_counter_param_s StepCounterSetParam;
+
+/* -------------------------------------------------------------------------- */
+/**
+ * @struct StepCounterSetting
+ * @brief the structure of Accelstep user setting.
+ */
+struct step_counter_setting_s
+{
+  StepCounterSetParam      walking;      /**< User Setting for walking. */
+  StepCounterSetParam      running;      /**< User Setting for running. */
+};
+
+typedef struct step_counter_setting_s StepCounterSetting;
+
 /*--------------------------------------------------------------------
     StepCounter Class
   --------------------------------------------------------------------*/
@@ -62,6 +108,7 @@ public:
   int write(sensor_command_data_mh_t*);
   void set_callback(void);
   int receive(void);
+  int set(StepCounterSetting *);
 
   StepCounterClass(MemMgrLite::PoolId cmd_pool_id)
       : m_cmd_pool_id(cmd_pool_id)
@@ -125,6 +172,14 @@ int StepCounterClose(StepCounterClass* ins);
  * @return    result of process
  */
 int StepCounterWrite(StepCounterClass* ins, sensor_command_data_mh_t* command);
+
+/**
+ * @brief     User step set function.
+ * @param[in] ins : instance address of StepCounterClass
+ * @param[in] set : user step set pointer
+ * @return    result of process
+ */
+int StepCounterSet(StepCounterClass *ins, StepCounterSetting *set);
 
 /**
  * @}

@@ -37,6 +37,7 @@
 #include "sensing/step_counter.h"
 #include "sensing/sensor_dsp_command.h"
 #include <debug.h>
+#include "sensing/aesm_dsp_command.h"
 #include "dsp_sensor_version.h"
 
 #define err printf
@@ -104,6 +105,14 @@ int StepCounterWrite(StepCounterClass* ins, sensor_command_data_mh_t* command)
   return ret;
 }
 
+int StepCounterSet(StepCounterClass *ins, StepCounterSetting *set)
+{
+  int ret;
+
+  ret = ins->set(set);
+
+  return ret;
+}
 /*--------------------------------------------------------------------
     Internal Functions
   --------------------------------------------------------------------*/
@@ -254,6 +263,22 @@ int StepCounterClass::sendInit(void)
 
   SensorDspCmd* dsp_cmd = (SensorDspCmd*)mh.getPa();
 
+  /* Apply default step setting to command. */
+
+  AesmStepSetting *w_step;
+
+  w_step = &dsp_cmd->init_aesm_cmd.setting.user_set_walking;
+  w_step->step_length = STEP_COUNTER_INITIAL_WALK_STEP_LENGTH;
+  w_step->step_mode = AESM_STEPMODE_USE_STEP_TABLE;
+
+  AesmStepSetting *r_step;
+
+  r_step = &dsp_cmd->init_aesm_cmd.setting.user_set_running;
+  r_step->step_length = STEP_COUNTER_INITIAL_RUN_STEP_LENGTH;
+  r_step->step_mode = AESM_STEPMODE_USE_STEP_TABLE;
+
+  /* Send command. */
+
   dsp_cmd->header.sensor_type = StepCounter;
   dsp_cmd->header.event_type  = InitEvent;
 
@@ -339,6 +364,7 @@ int StepCounterClass::write(sensor_command_data_mh_t* command)
   int ret = mpmq_send(&m_mq, (AesmMode << 4) + (ExecEvent << 1), reinterpret_cast<int32_t>(exe_mh.cmd.getPa()));
   if (ret < 0)
     {
+      m_exe_que.pop();
       _err("mpmq_send() failure. %d\n", ret);
       return SS_ECODE_DSP_EXEC_ERROR;
     }
@@ -391,9 +417,94 @@ int StepCounterClass::receive(void)
 
       this->set_callback();
     }
-  
+
   return 0;
 }
 
+/*----------------------------------------------------------------------*/
+inline int setparam(AesmStepSetting *step, StepCounterSetParam *param)
+  {
+    step->step_length = param->step_length;
+    switch (param->step_mode)
+      {
+        case STEP_COUNTER_MODE_FIXED_LENGTH :
+          step->step_mode = AESM_STEPMODE_USE_FIXED_LENGTH;
+          break;
+        case STEP_COUNTER_MODE_NEW_TABLE :
+          step->step_mode = AESM_STEPMODE_USE_NEW_TABLE;
+          break;
+        case STEP_COUNTER_MODE_STEP_TABLE :
+          step->step_mode = AESM_STEPMODE_USE_STEP_TABLE;
+          break;
+        default :
+          return -1;
+      }
+
+    return 0;
+  }
+
+/*----------------------------------------------------------------------*/
+int StepCounterClass::set(StepCounterSetting *set)
+{
+  struct exe_mh_s exe_mh;
+
+  /* allocate segment of command */
+
+  int result = exe_mh.cmd.allocSeg(m_cmd_pool_id, sizeof(SensorDspCmd));
+
+  if (result != ERR_OK)
+    {
+      dbg("allocSeg() failure.¥n");
+      return SS_ECODE_MEMHANDLE_ALLOC_ERROR;
+    }
+
+  SensorDspCmd *dsp_cmd = (SensorDspCmd *)exe_mh.cmd.getPa();
+
+  /* Apply user step setting to command. */
+
+  /* walk setting */
+
+  if (0 != setparam(&dsp_cmd->exec_aesm_cmd.setting.user_set_walking,
+                                                       &set->walking))
+  {
+    return SS_ECODE_PARAM_ERROR;
+  }
+
+  /* run  setting */
+
+  if (0 != setparam(&dsp_cmd->exec_aesm_cmd.setting.user_set_running,
+                                                       &set->running))
+  {
+    return SS_ECODE_PARAM_ERROR;
+  }
+
+  /* Send command. */
+
+  dsp_cmd->header.sensor_type = StepCounter;
+  dsp_cmd->header.event_type  = ExecEvent;
+  dsp_cmd->exec_aesm_cmd.cmd_type = AESM_CMD_STEP_SET;
 
 
+  if (!m_exe_que.push(exe_mh))
+    {
+      dbg("m_exe_que.push() failure.¥n");
+      return SS_ECODE_QUEUE_PUSH_ERROR;
+    }
+
+  /* Send sensored data.
+   * Data sent to DSP is physical address of command msg.
+   */
+
+  int ret = mpmq_send(&m_mq,
+                      (AesmMode << 4) + (ExecEvent << 1),
+                      reinterpret_cast<int32_t>(exe_mh.cmd.getPa()));
+
+  if (ret < 0)
+    {
+      m_exe_que.pop();
+      dbg("mpmq_send() failure. %d\n", ret);
+      return SS_ECODE_DSP_EXEC_ERROR;
+    }
+
+  return SS_ECODE_OK;
+}

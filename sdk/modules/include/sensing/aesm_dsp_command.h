@@ -92,6 +92,7 @@ typedef enum {
 typedef enum {
   AESM_CMD_UPDATE_ACCELERATION = 0 ,     /**< Acceleration sensor data is used to update acceleration. */
   AESM_CMD_UPDATE_GPS ,                  /**< Update GPS information using GPS sensor data.            */
+  AESM_CMD_STEP_SET                      /**< Set user step setting.                                   */
 } AesmCmdType;
 
 /* --------------------------------------------------------------------------
@@ -103,10 +104,23 @@ typedef enum {
  */
 typedef struct {
 
-  int32_t              step_length;      /**< Step stride setting value.         */
+  int32_t              step_length;      /**< Step stride setting value. Min 1[cm]:Use default value, Max 249[cm]. */
   AesmStepMode         step_mode;        /**< Setting of using the stride table. */
 
 } AesmStepSetting;
+
+/* -------------------------------------------------------------------------- */
+/**
+ * @struct AesmSetting
+ * @brief the structure of Accelstep user setting.
+ */
+struct aesm_setting_s
+{
+  AesmStepSetting      user_set_walking;  /**< User Setting for walking. */
+  AesmStepSetting      user_set_running;  /**< User Setting for running. */
+};
+
+typedef struct aesm_setting_s AesmSetting;
 
 /* -------------------------------------------------------------------------- */
 /**
@@ -115,11 +129,9 @@ typedef struct {
  */
 typedef struct {
 
-  AesmStepSetting      step_for_walking; /**< Stride setting structure for walking. Unusable in SDK 2.0. */
-  AesmStepSetting      step_for_runnig;  /**< Stride setting structure for running. Unusable in SDK 2.0. */
+  AesmStepSetting      setting;           /**< Step user setting structure. */
 
 } SensorInitAesm;
-
 
 /* -------------------------------------------------------------------------- */
 /**
@@ -133,6 +145,7 @@ typedef struct {
   union {
     ThreeAxisSampleData update_acc;       /**< Acceleration update command setting structure.    */
     GnssSampleData      update_gps;       /**< GPS information update command setting structure. */
+    AesmSetting         setting;          /**< Step user setting structure.                      */
   };
 
 } SensorExecAesm;
