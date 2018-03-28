@@ -1624,6 +1624,8 @@ uint32_t read_bca_reg(BCA_REG_ID regId);
 uint32_t write32_bca_reg(uint32_t offset, uint32_t data);
 uint32_t read32_bca_reg(uint32_t offset);
 
+E_AS AS_SetRenderingClk(uint8_t clk_mode);
+
 /* Debug function */
 
 void init_bca_reg(void);

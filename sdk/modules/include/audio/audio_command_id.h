@@ -359,6 +359,10 @@
 
 #define AUDCMD_SETBEEPPARAM     (AUDCMD_CATEGORY_BASEBAND | 0x0b)
 
+/*! \brief Command Code: SetRenderingClk */
+
+#define AUDCMD_SETRENDERINGCLK  (AUDCMD_CATEGORY_BASEBAND | 0x0c)
+
 /** @} */
 
 /** @name Baseband Result code */
@@ -407,6 +411,10 @@
 /*! \brief Result Code: SetBeepCmplt */
 
 #define AUDRLT_SETBEEPCMPLT             AUDCMD_SETBEEPPARAM
+
+/*! \brief Result Code: SetRenderingClkCmplt */
+
+#define AUDRLT_SETRENDERINGCLKCMPLT     AUDCMD_SETRENDERINGCLK
 
 /** @} */
 

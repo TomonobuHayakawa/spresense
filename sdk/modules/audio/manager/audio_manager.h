@@ -160,6 +160,7 @@ private:
   void setVolume(AudioCommand &cmd);
   void setVolumeMute(AudioCommand &cmd);
   void setBeep(AudioCommand &cmd);
+  void setRenderingClk(AudioCommand &cmd);
   void setRdyOnAct(AudioCommand &cmd);
   void setRdyOnPlay(AudioCommand &cmd);
   void setRdyOnRecorder(AudioCommand &cmd);

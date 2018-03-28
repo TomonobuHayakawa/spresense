@@ -83,6 +83,7 @@ public:
   uint32_t setVolume(AudioCommand &cmd);
   uint32_t setVolumeMute(AudioCommand &cmd);
   uint32_t setBeep(AudioCommand &cmd);
+  uint32_t setRenderingClk(AudioCommand &cmd);
   uint32_t setThroughPath(AudioCommand &cmd);
 
   uint32_t deactivate(bbPowerId power_id);

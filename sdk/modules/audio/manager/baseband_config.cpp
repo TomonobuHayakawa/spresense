@@ -494,6 +494,26 @@ uint32_t BasebandConfig::setBeep(AudioCommand &cmd)
 }
 
 /*--------------------------------------------------------------------------*/
+uint32_t BasebandConfig::setRenderingClk(AudioCommand &cmd)
+{
+  if (cmd.set_renderingclk_param.clk_mode != AS_CLKMODE_NORMAL &&
+      cmd.set_renderingclk_param.clk_mode != AS_CLKMODE_HIRES)
+    {
+      return AS_ECODE_COMMAND_PARAM_RENDERINGCLK;
+    }
+
+  E_AS rtCode = E_AS_OK;
+  _info("AS_SetRenderingClk()\t");
+  rtCode = AS_SetRenderingClk(cmd.set_renderingclk_param.clk_mode);
+  checkErrCode(rtCode, E_AS_OK);
+  if (E_AS_OK != rtCode)
+    {
+      return AS_ECODE_SET_RENDERINGCLK_ERROR;
+    }
+  return AS_ECODE_OK;
+}
+
+/*--------------------------------------------------------------------------*/
 inline asPathFromId conv_path_in(uint8_t path)
 {
   switch(path)

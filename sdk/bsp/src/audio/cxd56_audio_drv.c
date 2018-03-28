@@ -1617,6 +1617,43 @@ AsClkModeId GetClkMode(void)
   return bb_config_tblp->clk_mode;
 }
 
+E_AS AS_SetRenderingClk(uint8_t clk_mode)
+{
+  switch (bb_config_tblp->xtal_sel)
+    {
+      case AS_XTAL_24_576MHZ:
+        switch(clk_mode)
+          {
+            case AS_CLK_MODE_NORMAL:
+              bb_config_tblp->clk_mode = clk_mode;
+              break;
+
+            case AS_CLK_MODE_HIRES:
+              return E_AS_XTAL_CLKMODE_PARAM;
+
+            default:
+              return E_AS_CLK_MODE_PARAM;
+          }
+        break;
+
+      case AS_XTAL_49_152MHZ:
+        switch(clk_mode)
+          {
+            case AS_CLK_MODE_NORMAL:
+            case AS_CLK_MODE_HIRES:
+              bb_config_tblp->clk_mode = clk_mode;
+              break;
+
+            default:
+              return E_AS_CLK_MODE_PARAM;
+          }
+        break;
+      default:
+        return E_AS_XTAL_SEL_PARAM;
+    }
+  return E_AS_OK;
+}
+
 AsDmaDataFormat GetDmaDataFormat(void)
 {
   return bb_config_tblp->dma_data_format;

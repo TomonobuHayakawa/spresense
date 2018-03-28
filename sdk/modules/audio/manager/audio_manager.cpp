@@ -120,6 +120,10 @@ int AS_SendAudioCommand(FAR AudioCommand *packet)
         msg_type = MSG_AUD_MGR_CMD_GETSTATUS;
         break;
 
+      case AUDCMD_SETRENDERINGCLK:
+        msg_type = MSG_AUD_MGR_CMD_SETRENDERINGCLK;
+        break;
+
 #ifdef AS_FEATURE_PLAYER_ENABLE
       case AUDCMD_INITPLAYER:
       case AUDCMD_PLAYPLAYER:
@@ -762,6 +766,22 @@ AudioManager::MsgProc
     &AudioManager::illegal,            /*   WaitCommandWord state. */
     &AudioManager::illegal,            /*   PowerOff state.        */
     &AudioManager::setThroughPath      /*   Through state.         */
+  },
+
+  /* SetRenderingClk command. */
+
+  {                                    /* AudioManager all status: */
+    &AudioManager::setRenderingClk,    /*   Ready state.           */
+    &AudioManager::illegal,            /*   PlayerReady state.     */
+    &AudioManager::illegal,            /*   PlayerActive state.    */
+    &AudioManager::illegal,            /*   PlayerPause state.     */
+    &AudioManager::illegal,            /*   RecorderReady state.   */
+    &AudioManager::illegal,            /*   RecorderActive state.  */
+    &AudioManager::illegal,            /*   BasebandReady state.   */
+    &AudioManager::illegal,            /*   BasebandActive state.  */
+    &AudioManager::illegal,            /*   WaitCommandWord state. */
+    &AudioManager::setRenderingClk,    /*   PowerOff state.        */
+    &AudioManager::illegal             /*   Through state.         */
   },
 
   /* Invalid command. */
@@ -2706,6 +2726,26 @@ void AudioManager::setBeep(AudioCommand &cmd)
     }
 }
 
+/*--------------------------------------------------------------------------*/
+void AudioManager::setRenderingClk(AudioCommand &cmd)
+{
+  bool check =
+    packetCheck(LENGTH_SETRENDERINGCLK, AUDCMD_SETRENDERINGCLK, cmd);
+  if (!check)
+    {
+      return;
+    }
+
+  uint32_t rst = bbConfig.setRenderingClk(cmd);
+  if (rst == AS_ECODE_OK)
+    {
+      sendResult(AUDRLT_SETRENDERINGCLKCMPLT, cmd.header.sub_code);
+    }
+  else
+    {
+      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
+    }
+}
 
 /*--------------------------------------------------------------------------*/
 void AudioManager::setThroughPath(AudioCommand &cmd)

@@ -454,6 +454,10 @@
 
 #define LENGTH_SETBEEPPARAM         3
 
+/*! \brief SetRenderingClk command ("AUDCMD_SETRENDERINGCLK)packet length */
+
+#define LENGTH_SETRENDERINGCLK      2
+
 /*! \brief InitSoundEffect command ("AUDCMD_INITSOUNDEFFECT)packet length */
 
 #define LENGTH_INIT_SOUNDEFFECT     3
@@ -838,6 +842,14 @@
 
 #define AS_ECODE_INTERNAL_COMMAND_CODE_ERROR     0x38
 
+/*! \brief Parameter RenderingClk Error */
+
+#define AS_ECODE_COMMAND_PARAM_RENDERINGCLK      0x39
+
+/*! \brief Set Rendering Clock Error */
+
+#define AS_ECODE_SET_RENDERINGCLK_ERROR          0x3A
+
 /** @} */
 
 #define AS_ERROR_CODE_INFORMATION INFORMATION_ATTENTION_CODE
@@ -1132,6 +1144,29 @@ typedef struct
   uint8_t  reserved2;
   uint8_t  reserved3;
 } PowerOnParam;
+
+/** SetRenderingClk Command (#AUDCMD_SETRENDERINGCLK) parameter */
+
+typedef struct
+{
+  /*! \brief [in] set rendering clock
+   *
+   * Use #AsClkMode enum type.
+   */
+
+  uint8_t  clk_mode;
+  uint8_t  reserved1;
+  uint8_t  reserved2;
+  uint8_t  reserved3;
+} SetRenderingClkParam;
+
+/** SetRenderingClk Command (#AUDCMD_SETRENDERINGCLK) parameter */
+
+typedef enum
+{
+  AS_CLKMODE_NORMAL,
+  AS_CLKMODE_HIRES
+} AsClkMode;
 
 /** Enable or disable effect sound playback function. */
 
@@ -1471,6 +1506,12 @@ typedef struct
      */
 
     AsSetThroughPathParam set_through_path;
+
+    /*! \brief [in] for SetRenderingClk
+     * (header.command_code==#AUDCMD_SETRENDERINGCLK)
+     */
+
+    SetRenderingClkParam set_renderingclk_param;
   };
 
 #ifdef __cplusplus
