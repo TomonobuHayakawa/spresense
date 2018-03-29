@@ -677,7 +677,7 @@ config NSH_MMCSDMINOR
 config NSH_ROMFSETC
 	bool "Support ROMFS start-up script"
 	default n
-	depends on FS_ROMFS
+#	depends on FS_ROMFS
 	---help---
 		Mount a ROMFS filesystem at /etc and provide a startup script
 		at /etc/init.d/rcS.  The default startup script will mount
