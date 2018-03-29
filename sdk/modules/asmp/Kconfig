@@ -15,4 +15,18 @@ if ASMP
 	help
 		Memory size for shared memory area in ASMP Framework.
 
+	config ASMP_DEBUG_FEATURE
+	bool "ASMP Framework debug feature"
+
+if ASMP_DEBUG_FEATURE
+	config ASMP_DEBUG_ERROR
+	bool "ASMP Framework debug error"
+
+	config ASMP_DEBUG_WARN
+	bool "ASMP Framework debug warn"
+
+	config ASMP_DEBUG_INFO
+	bool "ASMP Framework debug error"
+endif
+
 endif

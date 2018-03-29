@@ -65,17 +65,17 @@
 
 #define mptask_semgive(id) sem_post(id)
 
-#ifdef CONFIG_DEBUG_LIB_ASMP_ERROR
+#ifdef CONFIG_ASMP_DEBUG_ERROR
 #  define mperr(fmt, ...)  _err(fmt, ## __VA_ARGS__)
 #else
 #  define mperr(fmt, ...)
 #endif
-#ifdef CONFIG_DEBUG_LIB_ASMP_WARN
+#ifdef CONFIG_ASMP_DEBUG_WARN
 #  define mpwarn(fmt, ...)  _warn(fmt, ## __VA_ARGS__)
 #else
 #  define mpwarn(fmt, ...)
 #endif
-#ifdef CONFIG_DEBUG_LIB_ASMP_INFO
+#ifdef CONFIG_ASMP_DEBUG_INFO
 #  define mpinfo(fmt, ...)  _info(fmt, ## __VA_ARGS__)
 #else
 #  define mpinfo(fmt, ...)
