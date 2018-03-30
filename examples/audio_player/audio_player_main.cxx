@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <time.h>
 #include <errno.h>
 #include <asmp/mpshm.h>
 #include <arch/chip/pm.h>
@@ -836,6 +837,26 @@ static bool app_stop(void)
   return result;
 }
 
+void app_play_process(uint32_t play_time)
+{
+  /* Timer Start */
+  time_t start_time;
+  time_t cur_time;
+
+  time(&start_time);
+
+  do
+    {
+      /* Check the FIFO every 5 ms and fill if there is space. */
+
+      usleep(5 * 1000);
+      if (!app_refill_simple_fifo(s_player_info.file.fd))
+        {
+          break;
+        }
+    } while((time(&cur_time) - start_time) < play_time);
+}
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -945,15 +966,8 @@ extern "C" int player_main(int argc, char *argv[])
   /* Running... */
 
   printf("Running time is %d sec\n", PLAYER_PLAY_TIME);
-  for(int i = 0; i < PLAYER_PLAY_TIME * 100; i++)
-    {
-      /* Check the FIFO every 10 ms and fill if there is space. */
-      usleep(10 * 1000);
-      if (!app_refill_simple_fifo(s_player_info.file.fd))
-        {
-          break;
-        }
-    }
+
+  app_play_process(PLAYER_PLAY_TIME);
 
   /* Stop player operation. */
 
