@@ -1,14 +1,76 @@
-##############################################################################
+############################################################################
+# modules/memutils/memory_manager/tool/mem_layout.rb
 #
-#      File Name: mem_layout.rb
+#   Copyright (C) 2014, 2018 Sony Corporation
 #
-#      Description: Memory layout generate script for Memory Manager Lite.
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
 #
-#      Notes: (C) Copyright 2014 Sony Corporation
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name NuttX nor Sony nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
 #
-#      Author: Satoru AIZAWA
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 #
-##############################################################################
+###########################################################################
+
+###########################################################################
+###########################################################################
+# Editable parameters
+
+#####################################################################
+# Fixed parameters of feature
+#
+# To use the function, delete it from below and write it
+# in the config file with ture.
+#
+
+UseDynamicPool      = false
+UseOver255Segments  = false
+UseCopiedPoolAttr   = false
+UseMultiCore        = false
+UseSegDeleter       = false
+UseSegThreshold     = false
+UseRingBufPool      = false
+UseRingBufThreshold = false
+
+#####################################################################
+# Fixed parameters of pool layout
+#
+# If mem_manager do not use fixed parameters for pool layout,
+# set it to false.
+#
+
+UseFixedPoolLayout = true
+
+#####################################################################
+# Output setting of the configuration definition of selected feature
+#
+# If you define the header file, set it to true.
+#
+
+EnableOutputMacro = false
+
+###########################################################################
+###########################################################################
 
 ##############################################################################
 # Constants
@@ -20,7 +82,7 @@ RingBuf = "RingBufType"
 MinNameSize   = 3
 FenceSize     = 4
 MinAlign      = 4
-MaxPoolId     = 255  # 動的生成プールを含む最大プールID
+MaxPoolId     = 255  # Max pool ID including dynamically generated pool
 MaxSegs       = UseOver255Segments ? 65535 : 255
 RemainderSize = -1
 
@@ -174,8 +236,8 @@ class MemoryDevices
     @@devs.each do |dev|
       io.printf("/* %s: type=%s, use=0x%08x, remainder=0x%08x */\n",
         dev.name, (dev.ram) ? "RAM" : "ROM", dev.size - dev.remainder, dev.remainder)
-      io.printf("#define %s_ADDR	0x%08x\n", dev.name, dev.begin_addr)
-      io.printf("#define %s_SIZE	0x%08x\n", dev.name, dev.size)
+      io.printf("#define %s_ADDR  0x%08x\n", dev.name, dev.begin_addr)
+      io.printf("#define %s_SIZE  0x%08x\n", dev.name, dev.size)
       io.print("\n")
     end
   end
@@ -270,12 +332,12 @@ class FixedAreas
 
   def self.output_table(io)
     return if !UseFence
-    # FixedAreaFences[0]の時に、gcc3.3.6のコンパイラ内部エラーが発生する
+    # Compiler internal error of gcc 3.3.6 occurs when FixedAreaFences[0]
     io.printf("extern PoolAddr const FixedAreaFences[] = {\n")
     @@areas.each do |area|
       if area.fence_flag
-        io.printf("\t/* lower */ 0x%08x, /* upper */ 0x%08x,\n",
-		area.begin_addr - FenceSize, area.begin_addr + area.size)
+        io.printf("  /* lower */ 0x%08x, /* upper */ 0x%08x,\n",
+                  area.begin_addr - FenceSize, area.begin_addr + area.size)
       end
     end
     io.print("}; /* end of FixedAreaFences */\n\n")
@@ -318,20 +380,53 @@ class PoolEntry < BaseEntry
   attr_reader :area_entry, :type, :align, :num_seg, :skip_size, :fence_flag, :spinlock
 end
 
-# メモリプール生成時に、プール毎に必要な作業領域サイズ
-# ・MemPool領域のアライメント調整	: 0～3
-# ・プール属性領域(静的プールでは通常0)	: 0, 12 or 16
-# ・BasicPool(=MemPool)領域		: 12 + 4 * sizeof(NumSeg)
-# ・RingBufPool領域			: 未定(MemPool領域+α)
-# ・セグメント番号キューのデータ領域	: セグメント数 * sizeof(NumSeg)
-# ・参照カウンタ領域			: セグメント数 * sizeof(SegRefCnt)
-NumSegSize		= UseOver255Segments ? 2 : 1
-SegRefCntSize		= 1
-PoolAttrSize		= round_up(10 + NumSegSize + (UseFence ? 1 : 0) + (UseMultiCore ? 1 : 0), 4)
-MemPoolDataSize		= 12 + 4 * NumSegSize	# 16 or 20
-BasicPoolDataSize	= MemPoolDataSize
-RingBufPoolDataSize	= MemPoolDataSize + 32	# 詳細未検討のため暫定値
-RingBufPoolSegDataSize	= 8			# 詳細未検討のため暫定値
+#######################################################################
+class PoolEntryFixParam < BaseEntry
+  def initialize(name, area, align, size, seg, fence)
+    @area_entry = FixedAreas[area]
+    @type = Basic
+    @align = align
+    @num_seg = seg
+    @skip_size = 0
+    @fence_flag = fence
+    @spinlock = "SPL_NULL"
+
+    abort("Bad pool name found. name=#{name}") if !verify_name(name, "_POOL")
+    abort("Area not found at #{name}")         if !area_entry
+    abort("Not RAM area found at #{name}")     if !area_entry.dev_entry.ram
+    abort("Redefine name found at #{name}")    if MemoryDevices[name]
+    abort("Bad pool align found at #{name}")   if align % MinAlign != 0 or align == 0
+    abort("Too big pool align at #{name}")     if align >= area_entry.last_addr
+    if size != RemainderSize
+      abort("Bad pool size found at #{name}")  if size % MinAlign != 0 or size == 0
+      abort("Too big pool size at #{name}. remainder=#{area_entry.remainder}") if size > area_entry.remainder
+    end
+    abort("Bad pool seg found at #{name}")     if seg <= 0 or seg > MaxSegs or (size != RemainderSize and size < seg)
+    @fence_flag = false if !UseFence
+
+    addr, @skip_size, size = area_entry.alloc(fence_flag, align, size)
+    abort("Can't allocate pool at #{name}")    if addr == nil
+
+    # set base class
+    super(name, addr, size)
+  end
+  attr_reader :area_entry, :type, :align, :num_seg, :skip_size, :fence_flag, :spinlock
+end
+
+# When creating a memory pool, the necessary work area size for each pool
+#  - Alignment adjustment of MemPool area         : 0-3
+#  - Pool attribute area(Usually in static pool 0): 0, 12 or 16
+#  - BasicPool(=MemPool) area                      : 12 + 4 * sizeof(NumSeg)
+#  - RingBufPool area                              : To be determined(MemPool Area+alpha)
+#  - Data area of the segment number queue         : Number of segments * sizeof(NumSeg)
+#  - Reference counter area                        : Number of segments * sizeof(SegRefCnt)
+NumSegSize              = UseOver255Segments ? 2 : 1
+SegRefCntSize           = 1
+PoolAttrSize            = round_up(10 + NumSegSize + (UseFence ? 1 : 0) + (UseMultiCore ? 1 : 0), 4)
+MemPoolDataSize         = 12 + 4 * NumSegSize   # 16 or 20
+BasicPoolDataSize       = MemPoolDataSize
+RingBufPoolDataSize     = MemPoolDataSize + 32  # Tentative value for details unexamined
+RingBufPoolSegDataSize  = 8                     # Tentative value for details unexamined
 
 #######################################################################
 class PoolLayout
@@ -341,29 +436,33 @@ class PoolLayout
       check_and_set_arg(arg) if arg
     end
 
-    # レイアウト毎に固定領域の残りサイズを保存して、リセットする
+    # Save the remaining size of the fixed area for each layout and reset
     @used_area_info = FixedAreas.used_info
     FixedAreas.reset_areas
   end
   attr_reader :pools, :used_area_info
 
   def check_and_set_arg(arg)
-    new_pool = PoolEntry.new(*arg)
+    if UseFixedPoolLayout
+      new_pool = PoolEntryFixParam.new(*arg)
+    else
+      new_pool = PoolEntry.new(*arg)
+    end
     @pools.each do |pool|
       abort("Duplication name found. name=#{pool.name}") if pool.name == new_pool.name
     end
     @pools.push(new_pool)
   end
 
-  # レイアウト毎に必要な作業領域を算出する
+  # Calculate necessary work area for each layout
   def work_size
     layout_work_size = 0
     @pools.each do |pool|
       pool_work_size = (UseCopiedPoolAttr) ? PoolAttrSize : 0
       pool_work_size += (pool.type == Basic) ? BasicPoolDataSize : RingBufPoolDataSize
-      pool_work_size += pool.num_seg * NumSegSize    # セグメント番号キューのデータ領域
-      pool_work_size += pool.num_seg * SegRefCntSize # 参照カウンタ領域
-      # MinAlign単位に切り上げて、積算する
+      pool_work_size += pool.num_seg * NumSegSize    # Data area of the segment number queue
+      pool_work_size += pool.num_seg * SegRefCntSize # Reference counter area
+      # Round up to the MinAlign unit and integrate
       layout_work_size += round_up(pool_work_size, MinAlign)
     end
     return layout_work_size
@@ -389,7 +488,7 @@ class PoolAreas
       max_pool_id -= NumDynamicPools
     end
 
-    # Pool IDsを生成
+    # Create Pool IDs
     @@pool_ids = ["NULL_POOL"] + @@layouts.collect{|layout| layout.names}.flatten.uniq
     abort("Too many pool IDs.") if @@pool_ids.size - 1 > max_pool_id
   end
@@ -404,13 +503,13 @@ class PoolAreas
 
     io.print("/*\n * Pool IDs\n */\n")
     @@pool_ids.each_with_index do |name, index|
-      io.print("#define #{name}\t#{index}\n")
+      io.print("#define #{name}  #{index}\n")
     end
     io.print("\n")
-    io.print("#define NUM_MEM_LAYOUTS\t#{@@layouts.size}\n")
-    io.print("#define NUM_MEM_POOLS\t#{@@pool_ids.size}\n\n")
+    io.print("#define NUM_MEM_LAYOUTS  #{@@layouts.size}\n")
+    io.print("#define NUM_MEM_POOLS  #{@@pool_ids.size}\n\n")
     if UseDynamicPool
-      io.print("#define NUM_DYN_POOLS\t#{NumDynamicPools}\n")
+      io.print("#define NUM_DYN_POOLS  #{NumDynamicPools}\n")
       io.print("#define DYN_POOL_WORK_SIZE(attr) \\\n")
       io.print(" ROUND_UP(sizeof(MemMgrLite::PoolAttr) + #{BasicPoolDataSize} +")
       io.print(" #{NumSegSize} * (attr).num_segs + #{SegRefCntSize} * (attr).num_segs, 4)\n")
@@ -473,14 +572,40 @@ class BaseFile
 
   def header_comment(description)
     @fh.print <<-"EOB"
-/*
- * #{basename} #{description}
+/****************************************************************************
+ * #{basename}
  *
- * This file was created by #{File.basename($0)}
- * !!! CAUTION! don't edit this file manually !!!
+ *   Copyright (C) 2018 Sony Corporation
  *
- *   Notes: (C) Copyright 2014 Sony Corporation
- */
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name NuttX nor Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ ****************************************************************************/
+
     EOB
   end
 
@@ -492,24 +617,26 @@ end
 
 #######################################################################
 def output_macros(io)
-  io.print("/*\n * Memory Manager Configurations\n */\n")
-  io.print("#define USE_MEMMGR_FENCE\n")             if UseFence
-  io.print("#define USE_MEMMGR_DYNAMIC_POOL\n")      if UseDynamicPool
-  io.print("#define USE_MEMMGR_OVER255_SEGMENTS\n")  if UseOver255Segments
-  io.print("#define USE_MEMMGR_COPIED_POOL_ATTR\n")  if UseCopiedPoolAttr
-  io.print("#define USE_MEMMGR_SEG_DELETER\n")       if UseSegDeleter
-  io.print("#define USE_MEMMGR_SEG_THRESHOLD\n")     if UseSegThreshold
-  io.print("#define USE_MEMMGR_MULTI_CORE\n")        if UseMultiCore
-  io.print("#define USE_MEMMGR_RINGBUF_POOL\n")      if UseRingBufPool
-  io.print("#define USE_MEMMGR_RINGBUF_THRESHOLD\n") if UseRingBufThreshold
-  io.print("\n")
+  if EnableOutputMacro
+    io.print("/*\n * Memory Manager Configurations\n */\n")
+    io.print("#define USE_MEMMGR_FENCE\n")             if UseFence
+    io.print("#define USE_MEMMGR_DYNAMIC_POOL\n")      if UseDynamicPool
+    io.print("#define USE_MEMMGR_OVER255_SEGMENTS\n")  if UseOver255Segments
+    io.print("#define USE_MEMMGR_COPIED_POOL_ATTR\n")  if UseCopiedPoolAttr
+    io.print("#define USE_MEMMGR_SEG_DELETER\n")       if UseSegDeleter
+    io.print("#define USE_MEMMGR_SEG_THRESHOLD\n")     if UseSegThreshold
+    io.print("#define USE_MEMMGR_MULTI_CORE\n")        if UseMultiCore
+    io.print("#define USE_MEMMGR_RINGBUF_POOL\n")      if UseRingBufPool
+    io.print("#define USE_MEMMGR_RINGBUF_THRESHOLD\n") if UseRingBufThreshold
+    io.print("\n")
 
-  io.print("/*\n * User defined constants\n */\n")
-  Object.constants.sort.each do |cnst|
-    str = cnst.to_s  # 格納される定数は、v1.8までは文字列で、v1.9以降はシンボル
-    io.print("#define #{str}\t#{eval(str)}\t/* 0x#{eval(str).to_s(16)} */\n") if str =~ /^U_MEM_/
+    io.print("/*\n * User defined constants\n */\n")
+    Object.constants.sort.each do |cnst|
+      str = cnst.to_s  # Stored constants are strings up to v1.8, symbols after v1.9 are symbols
+      io.print("#define #{str}  #{eval(str)}  /* 0x#{eval(str).to_s(16)} */\n") if str =~ /^U_MEM_/
+    end
+    io.print("\n")
   end
-  io.print("\n")
 end
 
 #######################################################################
