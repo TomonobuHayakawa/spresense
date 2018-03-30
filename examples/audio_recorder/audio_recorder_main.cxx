@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <time.h>
 #include <errno.h>
 #include <asmp/mpshm.h>
 #include <sys/stat.h>
@@ -850,6 +851,24 @@ static bool app_finalize_libraries(void)
   return true;
 }
 
+void app_recorde_process(uint32_t rec_time)
+{
+  /* Timer Start */
+  time_t start_time;
+  time_t cur_time;
+
+  time(&start_time);
+
+  do
+    {
+      /* Check the FIFO every 5 ms and fill if there is space. */
+
+      usleep(5 * 1000);
+      app_pop_simple_fifo();
+
+    } while((time(&cur_time) - start_time) < rec_time);
+}
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -944,13 +963,8 @@ extern "C" int recorder_main(int argc, char *argv[])
   /* Running... */
 
   printf("Running time is %d sec\n", RECORDER_REC_TIME);
-  for(int i = 0; i < RECORDER_REC_TIME * 100; i++)
-    {
-      /* Check the FIFO every 10 ms and pop if there is data. */
 
-      usleep(10 * 1000);
-      app_pop_simple_fifo();
-    }
+  app_recorde_process(RECORDER_REC_TIME);
 
   /* Stop recorder operation. */
 
