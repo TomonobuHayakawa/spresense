@@ -1,12 +1,7 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/createDynamicPool.cpp
+ * modules/memutils/memory_manager/src/createDynamicPool.cpp
  *
- * Description: Memory Manager Lite's Manager::createDynamicPool implement.
- *
- *   Copyright (C) 2014-16 Sony Corporation. All rights reserved.
- *   Author: Satoru AIZAWA
- *           Tomonobu Hayakawa
- *           Masahiro Takeyama
+ *   Copyright (C) 2014, 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -51,48 +46,48 @@ namespace MemMgrLite {
 PoolId Manager::createDynamicPool(const PoolAttr& attr, void* work_area, uint32_t area_size)
 {
 #ifdef USE_MEMMGR_DEBUG_OUTPUT
-	printf("Manager::createDynamicPool(");
-	attr.printInfo(false);
-	printf(", work_area=%08x, area_size=%08x)\n", work_area, area_size);
+  printf("Manager::createDynamicPool(");
+  attr.printInfo(false);
+  printf(", work_area=%08x, area_size=%08x)\n", work_area, area_size);
 #endif
-	D_ASSERT(attr.num_segs && attr.addr % sizeof(uint32_t) == 0 && attr.size >= attr.num_segs);
-	D_ASSERT(reinterpret_cast<uint32_t>(work_area) % sizeof(uint32_t) == 0);
-	D_ASSERT(area_size >= getDynamicPoolWorkSize(attr));
-	D_ASSERT(theManager);
+  D_ASSERT(attr.num_segs && attr.addr % sizeof(uint32_t) == 0 && attr.size >= attr.num_segs);
+  D_ASSERT(reinterpret_cast<uint32_t>(work_area) % sizeof(uint32_t) == 0);
+  D_ASSERT(area_size >= getDynamicPoolWorkSize(attr));
+  D_ASSERT(theManager);
 
-	/* 動的プールの空き番号を取得 */
-	uint32_t no;
-	{
-		ScopedLock lock;
-		if (theManager->m_pool_no_que.size()) {
-			no = theManager->m_pool_no_que.top();
-			theManager->m_pool_no_que.pop();
-		} else {
-			return NullPoolId;
-		}
-	}
+  /* 動的プールの空き番号を取得 */
+  uint32_t no;
+  {
+    ScopedLock lock;
+    if (theManager->m_pool_no_que.size()) {
+      no = theManager->m_pool_no_que.top();
+      theManager->m_pool_no_que.pop();
+    } else {
+      return NullPoolId;
+    }
+  }
 
-	/* 作業領域用のアロケータを初期化 */
-	FastMemAlloc	fma(work_area, area_size);
+  /* 作業領域用のアロケータを初期化 */
+  FastMemAlloc  fma(work_area, area_size);
 
-	/* 引数attrの内容を作業領域にコピーして、プールIDを設定する */
-	PoolAttr* pool_attr = new(fma, sizeof(uint32_t)) PoolAttr(attr);
-	D_ASSERT(pool_attr);	/* 下のF_ASSERTだけでも問題ないが念のため */
-	pool_attr->id = no + theManager->m_pool_num;	/* 番号に下駄を履かせて、IDに変換する */
-#ifdef USE_MEMMGR_FENCE
-	/* フェンス有効時は、フェンスを除いたプール領域定義値に変更する */
-	if (attr.fence) {
-		pool_attr->addr += sizeof(uint32_t);
-		pool_attr->size -= sizeof(uint32_t) * 2;
-	}
+  /* 引数attrの内容を作業領域にコピーして、プールIDを設定する */
+  PoolAttr* pool_attr = new(fma, sizeof(uint32_t)) PoolAttr(attr);
+  D_ASSERT(pool_attr);  /* 下のF_ASSERTだけでも問題ないが念のため */
+  pool_attr->id = no + theManager->m_pool_num;  /* 番号に下駄を履かせて、IDに変換する */
+#ifdef CONFIG_MEMUTILS_MEMORY_MANAGER_USE_FENCE
+  /* フェンス有効時は、フェンスを除いたプール領域定義値に変更する */
+  if (attr.fence) {
+    pool_attr->addr += sizeof(uint32_t);
+    pool_attr->size -= sizeof(uint32_t) * 2;
+  }
 #endif
-	/* メモリプールを生成する */
-	D_ASSERT(theManager->m_dynamic_pools[no] == NULL);	/* 空きのはず */
-	theManager->m_dynamic_pools[no] = createPool(*pool_attr, fma);
-	if (theManager->m_dynamic_pools[no] == NULL) {
-		F_ASSERT(0); /* このアサートに引っかかるのは、通常work_areaのサイズ不足 */
-	}
-	return pool_attr->id;
+  /* メモリプールを生成する */
+  D_ASSERT(theManager->m_dynamic_pools[no] == NULL);  /* 空きのはず */
+  theManager->m_dynamic_pools[no] = createPool(*pool_attr, fma);
+  if (theManager->m_dynamic_pools[no] == NULL) {
+    F_ASSERT(0); /* このアサートに引っかかるのは、通常work_areaのサイズ不足 */
+  }
+  return pool_attr->id;
 }
 
 } /* end of namespace MemMgrLite */

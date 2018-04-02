@@ -3,9 +3,7 @@
  *
  * Description: Memory Manager Lite Manager class
  *
- *   Copyright (C) 2011-17 Sony Corporation. All rights reserved.
- *   Author: Tomonobu Hayakawa
- *           Suzunosuke Hida
+ *   Copyright (C) 2011, 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -43,6 +41,8 @@
 
 #ifndef MANAGER_H_INCLUDED
 #define MANAGER_H_INCLUDED
+
+#include <nuttx/config.h>
 
 /**
  * @defgroup memutils_memory_manager Memory Manager Lite
@@ -147,7 +147,7 @@ public:
   static PoolSize  getPoolSize(PoolId id) { return findPool(id)->getPoolSize(); }
   static NumSeg  getPoolNumSegs(PoolId id) { return findPool(id)->getPoolNumSegs(); }
   static NumSeg  getPoolNumAvailSegs(PoolId id) { return findPool(id)->getPoolNumAvailSegs(); }
-#ifdef USE_MEMMGR_FENCE
+#ifdef CONFIG_MEMUTILS_MEMORY_MANAGER_USE_FENCE
   static bool  isPoolFenceEnable(PoolId id) { return findPool(id)->isPoolFenceEnable(); }
 #endif
 #ifdef USE_MEMMGR_MULTI_CORE
@@ -158,7 +158,7 @@ public:
 //  void    printInfo(PoolId id);
 #endif
 
-#ifdef USE_MEMMGR_FENCE
+#ifdef CONFIG_MEMUTILS_MEMORY_MANAGER_USE_FENCE
   /* フェンスを検証して、エラー検出回数を返す */
   static uint32_t  verifyFixedAreaFences();
   static uint32_t  verifyStaticPoolsFence();

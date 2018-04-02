@@ -1,12 +1,7 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/fence.cpp
+ * modules/memutils/memory_manager/src/fence.cpp
  *
- * Description: Memory Manager Lite's fence functions implement.
- *
- *   Copyright (C) 2014-16 Sony Corporation. All rights reserved.
- *   Author: Satoru AIZAWA
- *           Tomonobu Hayakawa
- *           Masahiro Takeyama
+ *   Copyright (C) 2014, 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,11 +32,13 @@
  *
  ********************************************************************************/
 
-#ifdef USE_MEMMGR_FENCE
+
 
 #include <string.h>
 #include "ScopedLock.h"
 #include "memutils/memory_manager/MemManager.h"
+
+#ifdef CONFIG_MEMUTILS_MEMORY_MANAGER_USE_FENCE
 
 namespace MemMgrLite {
 
@@ -49,7 +46,7 @@ namespace MemMgrLite {
  * ポインタとして参照された時に例外が発生するよう
  * RAM/ROM範囲外で、LSBが立っている値が望ましい
  */
-const uint32_t FenceValue = 0xfece2bad;		/* fe(n)ce to bad */
+const uint32_t FenceValue = 0xfece2bad;    /* fe(n)ce to bad */
 extern PoolAddr const FixedAreaFences[];
 
 /*****************************************************************
@@ -57,12 +54,12 @@ extern PoolAddr const FixedAreaFences[];
  *****************************************************************/
 void Manager::initFixedAreaFences()
 {
-	if(theManager->m_fix_fene_num != 0){
-		const PoolAddr* fexed_fences = FixedAreaFences;
-		for (uint32_t i = 0; i < theManager->m_fix_fene_num; ++i) {
-			*static_cast<uint32_t*>(translatePoolAddrToVa(fexed_fences[i])) = FenceValue;
-		}
-	}
+  if(theManager->m_fix_fene_num != 0){
+    const PoolAddr* fexed_fences = FixedAreaFences;
+    for (uint32_t i = 0; i < theManager->m_fix_fene_num; ++i) {
+      *static_cast<uint32_t*>(translatePoolAddrToVa(fexed_fences[i])) = FenceValue;
+    }
+  }
 }
 
 /*****************************************************************
@@ -70,22 +67,22 @@ void Manager::initFixedAreaFences()
  *****************************************************************/
 uint32_t Manager::verifyFixedAreaFences()
 {
-	uint32_t ng_cnt = 0;
+  uint32_t ng_cnt = 0;
 
-	if(theManager->m_fix_fene_num != 0){
-		const PoolAddr* fexed_fences = FixedAreaFences;
-		for (uint32_t i = 0; i < theManager->m_fix_fene_num; ++i) {
-			uint32_t* va = static_cast<uint32_t*>(translatePoolAddrToVa(fexed_fences[i]));
-			if (*va != FenceValue) {
+  if(theManager->m_fix_fene_num != 0){
+    const PoolAddr* fexed_fences = FixedAreaFences;
+    for (uint32_t i = 0; i < theManager->m_fix_fene_num; ++i) {
+      uint32_t* va = static_cast<uint32_t*>(translatePoolAddrToVa(fexed_fences[i]));
+      if (*va != FenceValue) {
 #ifdef USE_MEMMGR_DEBUG_OUTPUT
-				printf("FixedArea fence verification error: addr=%08x(%08x), value=%08x\n",
-					va, FixedAreaFences[i], *va);
+        printf("FixedArea fence verification error: addr=%08x(%08x), value=%08x\n",
+          va, FixedAreaFences[i], *va);
 #endif
-				++ng_cnt;
-			}
-		}
-	}
-	return ng_cnt;
+        ++ng_cnt;
+      }
+    }
+  }
+  return ng_cnt;
 }
 
 /*****************************************************************
@@ -93,8 +90,8 @@ uint32_t Manager::verifyFixedAreaFences()
  *****************************************************************/
 void MemPool::initPoolFence()
 {
-	*static_cast<uint32_t*>(translatePoolAddrToVa(m_attr.addr - sizeof(uint32_t))) = FenceValue;
-	*static_cast<uint32_t*>(translatePoolAddrToVa(m_attr.addr + m_attr.size))      = FenceValue;
+  *static_cast<uint32_t*>(translatePoolAddrToVa(m_attr.addr - sizeof(uint32_t))) = FenceValue;
+  *static_cast<uint32_t*>(translatePoolAddrToVa(m_attr.addr + m_attr.size))      = FenceValue;
 }
 
 /*****************************************************************
@@ -102,27 +99,27 @@ void MemPool::initPoolFence()
  *****************************************************************/
 uint32_t MemPool::verifyPoolFence()
 {
-	uint32_t ng_cnt = 0;
-	if (isPoolFenceEnable()) {
-		uint32_t* lower = static_cast<uint32_t*>(translatePoolAddrToVa(m_attr.addr - sizeof(uint32_t)));
-		if (*lower != FenceValue) {
+  uint32_t ng_cnt = 0;
+  if (isPoolFenceEnable()) {
+    uint32_t* lower = static_cast<uint32_t*>(translatePoolAddrToVa(m_attr.addr - sizeof(uint32_t)));
+    if (*lower != 0) {
 #ifdef USE_MEMMGR_DEBUG_OUTPUT
-			printf("Pool#%d lower fence verification error: addr=%08x(%08x), value=%08x\n",
-				m_attr.id, lower, m_attr.addr - sizeof(uint32_t), *lower);
+      printf("Pool#%d lower fence verification error: addr=%08x(%08x), value=%08x\n",
+        m_attr.id, lower, m_attr.addr - sizeof(uint32_t), *lower);
 #endif
-			++ng_cnt;
-		}
+      ++ng_cnt;
+    }
 
-		uint32_t* upper = static_cast<uint32_t*>(translatePoolAddrToVa(m_attr.addr + m_attr.size));
-		if (*upper != FenceValue) {
+    uint32_t* upper = static_cast<uint32_t*>(translatePoolAddrToVa(m_attr.addr + m_attr.size));
+    if (*upper != FenceValue) {
 #ifdef USE_MEMMGR_DEBUG_OUTPUT
-			printf("Pool#%d upper fence verification error: addr=%08x(%08x), value=%08x\n",
-				m_attr.id, upper, m_attr.addr + m_attr.size, *upper);
+      printf("Pool#%d upper fence verification error: addr=%08x(%08x), value=%08x\n",
+        m_attr.id, upper, m_attr.addr + m_attr.size, *upper);
 #endif
-			++ng_cnt;
-		}
-	}
-	return ng_cnt;
+      ++ng_cnt;
+    }
+  }
+  return ng_cnt;
 }
 
 /*****************************************************************
@@ -130,21 +127,21 @@ uint32_t MemPool::verifyPoolFence()
  *****************************************************************/
 uint32_t Manager::verifyStaticPoolsFence()
 {
-	uint32_t ng_cnt = 0;
+  uint32_t ng_cnt = 0;
 
-	ScopedLock lock;
+  ScopedLock lock;
 
-	/* プールID=0は予約 */
-	for (uint32_t i = 1; i < theManager->m_pool_num; ++i) {
-		if (theManager->m_static_pools[i] != NULL) {
-			ng_cnt += theManager->m_static_pools[i]->verifyPoolFence();
-		}
-	}
-	return ng_cnt;
+  /* プールID=0は予約 */
+  for (uint32_t i = 1; i < theManager->m_pool_num; ++i) {
+    if (theManager->m_static_pools[i] != NULL) {
+      ng_cnt += theManager->m_static_pools[i]->verifyPoolFence();
+    }
+  }
+  return ng_cnt;
 }
 
 } /* end of namespace MemMgrLite */
 
-#endif /* USE_MEMMGR_FENCE */
+#endif /* CONFIG_MEMUTILS_MEMORY_MANAGER_USE_FENCE */
 
 /* fence.cxx */

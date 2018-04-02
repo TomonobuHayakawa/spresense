@@ -1,12 +1,7 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/destroyPool.cpp
+ * modules/memutils/memory_manager/src/destroyPool.cpp
  *
- * Description: Memory Manager Lite's Manager::destroyPool implement.
- *
- *   Copyright (C) 2014-16 Sony Corporation. All rights reserved.
- *   Author: Satoru AIZAWA
- *           Tomonobu Hayakawa
- *           Masahiro Takeyama
+ *   Copyright (C) 2014, 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -82,7 +77,7 @@ BasicPool::~BasicPool()
  *****************************************************************/
 MemPool::~MemPool()
 {
-#ifdef USE_MEMMGR_FENCE
+#ifdef CONFIG_MEMUTILS_MEMORY_MANAGER_USE_FENCE
 	if (verifyPoolFence() != 0) {
 		F_ASSERT(0);	/* pool fence verification error */
 	}

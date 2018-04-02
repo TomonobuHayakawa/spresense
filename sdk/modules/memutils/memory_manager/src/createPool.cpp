@@ -1,12 +1,7 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/createPool.cpp
+ * modules/memutils/memory_manager/src/createPool.cpp
  *
- * Description: Memory Manager Lite's Manager::createPool implement.
- *
- *   Copyright (C) 2014-16 Sony Corporation. All rights reserved.
- *   Author: Satoru AIZAWA
- *           Tomonobu Hayakawa
- *           Masahiro Takeyama
+ *   Copyright (C) 2014, 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,8 +32,8 @@
  *
  ********************************************************************************/
 
-#include <string.h>		/* memset */
-#include "FastMemAlloc.h"	/* FastMemAlloc class */
+#include <string.h>    /* memset */
+#include "FastMemAlloc.h"  /* FastMemAlloc class */
 #include "memutils/memory_manager/Manager.h"
 #include "BasicPool.h"
 
@@ -49,43 +44,43 @@ namespace MemMgrLite {
  *****************************************************************/
 MemPool* Manager::createPool(const PoolAttr& attr, FastMemAlloc& fma)
 {
-	MemPool* pool = NULL;
+  MemPool* pool = NULL;
 #ifdef USE_MEMMGR_RINGBUF_POOL
-	switch (attr.type) {
-	case BasicType:
-		pool = new(fma, sizeof(uint32_t)) BasicPool(attr, fma);
-		break;
-	case RingBufType:
-		pool = new(fma, sizeof(uint32_t)) RingBufPool(attr, fma);
-		break;
-	default:
-		D_ASSERT(false);	/* Unsupport pool type */
-		break;
-	}
+  switch (attr.type) {
+  case BasicType:
+    pool = new(fma, sizeof(uint32_t)) BasicPool(attr, fma);
+    break;
+  case RingBufType:
+    pool = new(fma, sizeof(uint32_t)) RingBufPool(attr, fma);
+    break;
+  default:
+    D_ASSERT(false);  /* Unsupport pool type */
+    break;
+  }
 #else
-	/* BasicPoolのみ使用時は、各種チェックを省略する */
-	pool = new(fma, sizeof(uint32_t)) BasicPool(attr, fma);
+  /* BasicPoolのみ使用時は、各種チェックを省略する */
+  pool = new(fma, sizeof(uint32_t)) BasicPool(attr, fma);
 #endif
-	/* コンストラクタ内でエラー? */
-	if (pool && pool->isFailed()) {
-		pool = NULL;
-	}
+  /* コンストラクタ内でエラー? */
+  if (pool && pool->isFailed()) {
+    pool = NULL;
+  }
 
-	if (pool) {
-		/* 成功時の処理 */
-	}
-	return pool;
+  if (pool) {
+    /* 成功時の処理 */
+  }
+  return pool;
 }
 
 /*****************************************************************
  * Basicプールのコンストラクタ
  *****************************************************************/
 BasicPool::BasicPool(const PoolAttr& attr, FastMemAlloc& fma) :
-	MemPool(attr, fma)
+  MemPool(attr, fma)
 {
 #ifdef USE_MEMMGR_DEBUG_OUTPUT
-	printf("BasicPool: created. [fma.rest=%08x] ", fma.rest());
-	attr.printInfo();
+  printf("BasicPool: created. [fma.rest=%08x] ", fma.rest());
+  attr.printInfo();
 #endif
 }
 
@@ -93,25 +88,25 @@ BasicPool::BasicPool(const PoolAttr& attr, FastMemAlloc& fma) :
  * メモリプールのコンストラクタ
  *****************************************************************/
 MemPool::MemPool(const PoolAttr& attr, FastMemAlloc& fma) :
-	m_attr(attr),
-	m_seg_no_que(fma.alloc(sizeof(NumSeg) * attr.num_segs, sizeof(NumSeg)), attr.num_segs),
-	m_ref_cnt_array(static_cast<SegRefCnt*>(fma.alloc(sizeof(SegRefCnt) * attr.num_segs, sizeof(SegRefCnt))))
+  m_attr(attr),
+  m_seg_no_que(fma.alloc(sizeof(NumSeg) * attr.num_segs, sizeof(NumSeg)), attr.num_segs),
+  m_ref_cnt_array(static_cast<SegRefCnt*>(fma.alloc(sizeof(SegRefCnt) * attr.num_segs, sizeof(SegRefCnt))))
 {
-	if (m_seg_no_que.que_area() && m_ref_cnt_array) { /* alloc成功 ? */
-		/* 使用可能なセグメント番号(1 origin)を設定 */
-		for (uint32_t i = 1; i <= static_cast<uint32_t>(attr.num_segs); ++i) {
-			(void)m_seg_no_que.push(static_cast<NumSeg>(i));
-		}
+  if (m_seg_no_que.que_area() && m_ref_cnt_array) { /* alloc成功 ? */
+    /* 使用可能なセグメント番号(1 origin)を設定 */
+    for (uint32_t i = 1; i <= static_cast<uint32_t>(attr.num_segs); ++i) {
+      (void)m_seg_no_que.push(static_cast<NumSeg>(i));
+    }
 
-		/* 参照カウンタ配列を初期化 */
-		memset(m_ref_cnt_array, 0x00, sizeof(SegRefCnt) * attr.num_segs);
+    /* 参照カウンタ配列を初期化 */
+    memset(m_ref_cnt_array, 0x00, sizeof(SegRefCnt) * attr.num_segs);
 
-#ifdef USE_MEMMGR_FENCE
-		if (isPoolFenceEnable()) {
-			initPoolFence();	/* プールフェンスを初期化 */
-		}
+#ifdef CONFIG_MEMUTILS_MEMORY_MANAGER_USE_FENCE
+    if (isPoolFenceEnable()) {
+      initPoolFence();  /* プールフェンスを初期化 */
+    }
 #endif
-	}
+  }
 }
 
 } /* end of namespace MemMgrLite */

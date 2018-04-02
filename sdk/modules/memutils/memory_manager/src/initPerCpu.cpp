@@ -1,12 +1,7 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/initPreCpu.cpp
+ * modules/memutils/memory_manager/src/initPreCpu.cpp
  *
- * Description: MemoryManagerLite's Manager::initPerCpu API implement.
- *
- *   Copyright (C) 2014-16 Sony Corporation. All rights reserved.
- *   Author: Satoru AIZAWA
- *           Tomonobu Hayakawa
- *           Masahiro Takeyama
+ *   Copyright (C) 2014, 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -64,7 +59,7 @@ err_t Manager::initPerCpu(void* manager_area, uint32_t pool_num)
   /* 領域の初期化は、initFirstで実行済みなので、代入のみ */
   theManager = static_cast<Manager*>(manager_area);
 
-  theManager->m_fix_fene_num = CONFIG_NUM_FIXED_AREA_FENCES;
+  theManager->m_fix_fene_num = CONFIG_MEMUTILS_MEMORY_MANAGER_NUM_FIXED_AREA_FENCES;
   theManager->m_pool_num     = pool_num;
   theManager->m_static_pools = static_pools;
 
@@ -75,7 +70,7 @@ err_t Manager::initPerCpu(void* manager_area, uint32_t pool_num)
       return ERR_STS;
     }
 
-#ifdef USE_MEMMGR_FENCE
+#ifdef CONFIG_MEMUTILS_MEMORY_MANAGER_USE_FENCE
   initFixedAreaFences();  /* FixedAreaフェンスを初期化 */
 #endif
 

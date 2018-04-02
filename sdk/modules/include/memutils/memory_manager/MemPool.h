@@ -1,12 +1,7 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/MemPool.h
+ * modules/include/memutils/memory_manager/MemPool.h
  *
- * Description: Memory Manager Lite Memory Pool class
- *
- *   Copyright (C) 2011-16 Sony Corporation. All rights reserved.
- *   Author: Satoru AIZAWA
- *           Tomonobu Hayakawa
- *           Masahiro Takeyama
+ *   Copyright (C) 2011, 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -73,7 +68,7 @@ protected:
 	PoolSize	getPoolSize() const { return m_attr.size; }
 	NumSeg		getPoolNumSegs() const { return m_attr.num_segs; }
 	NumSeg		getPoolNumAvailSegs() const { return m_seg_no_que.size(); }
-#ifdef USE_MEMMGR_FENCE
+#ifdef CONFIG_MEMUTILS_MEMORY_MANAGER_USE_FENCE
 	bool		isPoolFenceEnable() const { return m_attr.fence; }
 	void		initPoolFence();
 	uint32_t	verifyPoolFence();
