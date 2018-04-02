@@ -435,30 +435,29 @@ static bool app_act_audio_sub_system(void)
     }
 
 
-  AsActPlayerParam_t player_act_param;
-  player_act_param.msgq_id.player = MSGQ_AUD_PLY;
-  player_act_param.msgq_id.mng    = MSGQ_AUD_MGR;
-  player_act_param.msgq_id.mixer  = MSGQ_AUD_OUTPUT_MIX;
-  player_act_param.msgq_id.dsp    = MSGQ_AUD_DSP;
-  player_act_param.pool_id.es     = DEC_ES_MAIN_BUF_POOL;
-  player_act_param.pool_id.pcm    = REND_PCM_BUF_POOL;
-  player_act_param.pool_id.dsp    = DEC_APU_CMD_POOL;
+  AsCreatePlayerParam_t player_create_param;
+  player_create_param.msgq_id.player = MSGQ_AUD_PLY;
+  player_create_param.msgq_id.mng    = MSGQ_AUD_MGR;
+  player_create_param.msgq_id.mixer  = MSGQ_AUD_OUTPUT_MIX;
+  player_create_param.msgq_id.dsp    = MSGQ_AUD_DSP;
+  player_create_param.pool_id.es     = DEC_ES_MAIN_BUF_POOL;
+  player_create_param.pool_id.pcm    = REND_PCM_BUF_POOL;
+  player_create_param.pool_id.dsp    = DEC_APU_CMD_POOL;
 
-  result = AS_ActivatePlayer(&player_act_param);
+  result = AS_CreatePlayer(AS_PLAYER_ID_0, &player_create_param);
 
   if (!result)
     {
-      printf("Error: AS_ActivatePlayer() failure. system memory insufficient!\n");
+      printf("Error: AS_CratePlayer() failure. system memory insufficient!\n");
       return false;
     }
 
   /* Activate mixer feature. */
 
-  AsActOutputMixParam_t output_mix_act_param;
+  AsCreateOutputMixParam_t output_mix_act_param;
   output_mix_act_param.msgq_id.mixer = MSGQ_AUD_OUTPUT_MIX;
-  output_mix_act_param.msgq_id.mng   = MSGQ_AUD_MGR;
 
-  result = AS_ActivateOutputMix(&output_mix_act_param);
+  result = AS_CreateOutputMixer(&output_mix_act_param);
   if (!result)
     {
       printf("Error: AS_ActivateOutputMix() failed. system memory insufficient!\n");
@@ -486,8 +485,8 @@ static bool app_act_audio_sub_system(void)
 static void app_deact_audio_sub_system(void)
 {
   AS_DeactivateAudioSubSystem();
-  AS_DeactivatePlayer();
-  AS_DeactivateOutputMix();
+  AS_DeletePlayer(AS_PLAYER_ID_0);
+  AS_DeleteOutputMix();
   AS_DeactivateRenderer();
 }
 
@@ -567,15 +566,13 @@ static bool app_set_player_status(void)
     command.header.packet_length = LENGTH_SET_PLAYER_STATUS;
     command.header.command_code = AUDCMD_SETPLAYERSTATUS;
     command.header.sub_code = 0x00;
-    command.set_player_sts_param.active_player  = AS_ACTPLAYER_MAIN;
-    command.set_player_sts_param.input_device   = AS_SETPLAYER_INPUTDEVICE_RAM;
-    command.set_player_sts_param.ram_handler    = &s_player_info.fifo.input_device;
-    command.set_player_sts_param.output_device  = AS_SETPLAYER_OUTPUTDEVICE_SPHP;
-    command.set_player_sts_param.output_device_handler     = 0x00;
-    command.set_player_sts_param.input_device_sub          = 0x00;
-    command.set_player_sts_param.ram_handler_sub           = NULL;
-    command.set_player_sts_param.output_device_sub         = 0x00;
-    command.set_player_sts_param.output_device_handler_sub = 0x00;
+    command.set_player_sts_param.active_player         = AS_ACTPLAYER_MAIN;
+    command.set_player_sts_param.player0.input_device  = AS_SETPLAYER_INPUTDEVICE_RAM;
+    command.set_player_sts_param.player0.ram_handler   = &s_player_info.fifo.input_device;
+    command.set_player_sts_param.player0.output_device = AS_SETPLAYER_OUTPUTDEVICE_SPHP;
+    command.set_player_sts_param.player1.input_device  = 0x00;
+    command.set_player_sts_param.player1.ram_handler   = NULL;
+    command.set_player_sts_param.player1.output_device = 0x00;
     AS_SendAudioCommand(&command);
 
     AudioResult result;
@@ -591,10 +588,12 @@ static int app_init_player(uint8_t codec_type,
     command.header.packet_length = LENGTH_INIT_PLAYER;
     command.header.command_code  = AUDCMD_INITPLAYER;
     command.header.sub_code      = 0x00;
-    command.init_player_param.codec_type     = codec_type;
-    command.init_player_param.bit_length     = AS_BITLENGTH_16;
-    command.init_player_param.channel_number = channel_number;
-    command.init_player_param.sampling_rate  = sampling_rate;
+    command.player.player_id                 = AS_PLAYER_ID_0;
+    command.player.init_param.codec_type     = codec_type;
+    command.player.init_param.codec_type     = codec_type;
+    command.player.init_param.bit_length     = AS_BITLENGTH_16;
+    command.player.init_param.channel_number = channel_number;
+    command.player.init_param.sampling_rate  = sampling_rate;
     AS_SendAudioCommand(&command);
 
     AudioResult result;
@@ -608,6 +607,7 @@ static int app_play_player(void)
     command.header.packet_length = LENGTH_PLAY_PLAYER;
     command.header.command_code  = AUDCMD_PLAYPLAYER;
     command.header.sub_code      = 0x00;
+    command.player.player_id     = AS_PLAYER_ID_0;
     AS_SendAudioCommand(&command);
 
     AudioResult result;
@@ -621,7 +621,8 @@ static bool app_stop_player(void)
     command.header.packet_length = LENGTH_STOP_PLAYER;
     command.header.command_code  = AUDCMD_STOPPLAYER;
     command.header.sub_code      = 0x00;
-    command.stop_player_param.stop_mode = AS_STOPPLAYER_NORMAL; // todo: comment
+    command.player.player_id            = AS_PLAYER_ID_0;
+    command.player.stop_param.stop_mode = AS_STOPPLAYER_NORMAL; // todo: comment
     AS_SendAudioCommand(&command);
 
     AudioResult result;
