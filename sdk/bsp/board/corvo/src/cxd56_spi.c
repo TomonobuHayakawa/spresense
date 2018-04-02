@@ -1,6 +1,7 @@
 /************************************************************************************
- * configs/cxd56xx/src/cxd56_spi.c
+ * bsp/board/corvo/src/cxd56_spi.c
  *
+ *   Copyright (C) 2018 Sony Semiconductor Solutions Corp.
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,15 +90,7 @@ void cxd56_spi4select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 
 uint8_t cxd56_spi4status(FAR struct spi_dev_s *dev, uint32_t devid)
 {
-#  ifdef CONFIG_CXD56_SPISD
-  /* PIN_AP_CLK is mapping to SD Card detect pin
-   * PIN_AP_CLK = 0: Inserted
-   * PIN_AP_CLK = 1: Removed
-   */
-  return cxd56_gpio_read(PIN_AP_CLK) ? 0 : SPI_STATUS_PRESENT;
-#  else
   return 0;
-#  endif
 }
 #endif
 
