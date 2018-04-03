@@ -45,7 +45,9 @@ endif
 ifeq ($(CONFIG_ARCH_LEDS),y)
 CSRCS += cxd56_autoleds.c
 else
+ifeq ($(CONFIG_USERLED),y)
 CSRCS += cxd56_userleds.c
+endif
 endif
 
 ifeq ($(CONFIG_ARCH_BUTTONS),y)
