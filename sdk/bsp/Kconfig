@@ -1444,4 +1444,10 @@ config DEBUG_PM
 	---help---
 		Enable Power Manager debug SYSLOG output (disabled by default)
 
+comment "Debug Features"
+
+config CXD56_BACKUPLOG
+	bool "Backup Log driver"
+	default y
+
 endmenu
