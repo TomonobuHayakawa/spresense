@@ -2250,9 +2250,9 @@ static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
   req->xfrd   = 0;
   flags       = enter_critical_section();
 
-  /* If we are stalled, then drop all requests on the floor */
+  /* If we are stalled, then drop all requests on the floor, except OUT */
 
-  if (privep->stalled)
+  if (privep->stalled && privep->in)
     {
       cxd56_abortrequest(privep, privreq, -EBUSY);
       ret = -EBUSY;
