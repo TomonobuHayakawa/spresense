@@ -1,4 +1,5 @@
 # CONFIG_ARCH_LEDS is not set
+# CONFIG_MTD_SMART_WEAR_LEVEL is not set
 # CONFIG_NX_DISABLE_16BPP is not set
 # CONFIG_NX_DISABLE_8BPP is not set
 # CONFIG_NX_WRITEONLY is not set
