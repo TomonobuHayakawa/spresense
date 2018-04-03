@@ -89,20 +89,12 @@
 
 /* FrequencyLock initializer macro function */
 
-#ifndef CONFIG_PM_DISABLE_FREQLOCK_COUNT
 #  define PM_CPUFREQLOCK_INIT(_tag, _flag) \
 { \
   .count = 0, \
   .info = _tag, \
   .flag = _flag, \
 }
-#else
-#  define PM_CPUFREQLOCK_INIT(_tag, _flag) \
-{ \
-  .info = _tag, \
-  .flag = _flag, \
-}
-#endif
 
 /* WakeLock identifier tag helper macro function */
 
@@ -134,9 +126,7 @@ enum pm_sleepmode_e
 struct pm_cpu_freqlock_s
 {
   struct sq_entry_s sq_entry;
-#ifndef CONFIG_PM_DISABLE_FREQLOCK_COUNT
   int      count;
-#endif
   uint32_t info;
   int      flag;
 };

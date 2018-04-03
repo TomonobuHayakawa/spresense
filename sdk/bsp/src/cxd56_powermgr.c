@@ -568,9 +568,8 @@ void up_pm_acquire_freqlock(struct pm_cpu_freqlock_s *lock)
       sq_addlast((FAR sq_entry_t *)lock, &g_freqlockqueue);
       cxd56_pm_checkfreqlock();
     }
-#ifndef CONFIG_PM_DISABLE_FREQLOCK_COUNT
+
   lock->count++;
-#endif
 
   sem_post(&g_freqlock);
 
@@ -603,10 +602,8 @@ void up_pm_release_freqlock(struct pm_cpu_freqlock_s *lock)
     {
       if (entry == (struct sq_entry_s *)lock)
         {
-#ifndef CONFIG_PM_DISABLE_FREQLOCK_COUNT
           lock->count--;
           if (lock->count <= 0)
-#endif
             {
               sq_rem(entry, &g_freqlockqueue);
               cxd56_pm_checkfreqlock();
@@ -647,11 +644,7 @@ int up_pm_get_freqlock_count(struct pm_cpu_freqlock_s *lock)
     {
       if (entry == (struct sq_entry_s *)lock)
         {
-#ifndef CONFIG_PM_DISABLE_FREQLOCK_COUNT
           count = lock->count;
-#else
-          count = 1;
-#endif
           break;
         }
     }

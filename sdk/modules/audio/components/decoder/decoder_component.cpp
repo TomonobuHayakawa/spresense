@@ -463,9 +463,7 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
 #ifdef CONFIG_CPUFREQ_RELEASE_LOCK
   /* Lock HV performance to avoid loading time becomes too long */
 
-#  ifndef CONFIG_PM_DISABLE_FREQLOCK_COUNT
   g_decode_hvlock.count = 0;
-#  endif
   g_decode_hvlock.info = PM_CPUFREQLOCK_TAG('D', 'C', 0x1199);
   g_decode_hvlock.flag = PM_CPUFREQLOCK_FLAG_HV;
 
