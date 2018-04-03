@@ -163,9 +163,7 @@ static struct pm_cpu_freqlock_s s_player_lock;
 
 static void app_init_freq_lock(void)
 {
-#ifndef CONFIG_PM_DISABLE_FREQLOCK_COUNT
   s_player_lock.count = 0;
-#endif
   s_player_lock.info = PM_CPUFREQLOCK_TAG('A', 'P', 0);
   s_player_lock.flag = PM_CPUFREQLOCK_FLAG_HV;
 }
