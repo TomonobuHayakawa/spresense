@@ -102,7 +102,7 @@ uint32_t MemPool::verifyPoolFence()
   uint32_t ng_cnt = 0;
   if (isPoolFenceEnable()) {
     uint32_t* lower = static_cast<uint32_t*>(translatePoolAddrToVa(m_attr.addr - sizeof(uint32_t)));
-    if (*lower != 0) {
+    if (*lower != FenceValue) {
 #ifdef USE_MEMMGR_DEBUG_OUTPUT
       printf("Pool#%d lower fence verification error: addr=%08x(%08x), value=%08x\n",
         m_attr.id, lower, m_attr.addr - sizeof(uint32_t), *lower);
