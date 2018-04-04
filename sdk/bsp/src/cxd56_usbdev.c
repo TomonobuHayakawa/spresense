@@ -1623,19 +1623,24 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
 
             if (stat & USB_INT_RCS)
               {
+                uint32_t status;
+
                 usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_CLEARFEATURE), n);
-#if 0
-                /* This register access causes hardfault. */
 
                 ctrl = getreg32(CXD56_USB_OUT_EP_CONTROL(n));
+
+                /* Make sure want to be DMA transfer stopped. */
+
                 putreg32(ctrl | USB_CLOSEDESC, CXD56_USB_OUT_EP_CONTROL(n));
-                while (
-                  !(getreg32(CXD56_USB_OUT_EP_STATUS(n) & USB_INT_CDC_CLEAR)))
-                  ;
+                do
+                  {
+                    status = getreg32(CXD56_USB_OUT_EP_STATUS(n));
+                  }
+                while (!(status & USB_INT_CDC_CLEAR));
                 putreg32(USB_INT_CDC_CLEAR, CXD56_USB_OUT_EP_STATUS(n));
+
                 putreg32(ctrl | USB_MRXFLUSH, CXD56_USB_OUT_EP_CONTROL(n));
                 putreg32(ctrl | USB_CNAK, CXD56_USB_OUT_EP_CONTROL(n));
-#endif
                 putreg32(USB_INT_RCS, CXD56_USB_OUT_EP_STATUS(n));
                 privep->stalled = 0;
                 privep->halted = 0;
