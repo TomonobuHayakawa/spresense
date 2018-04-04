@@ -332,4 +332,28 @@ ifneq ($(EXTSUBDIRS),)
 endif
 PHONY += ext_preconfig ext_clean ext_distclean
 
+help:
+	@echo  ''
+	@echo  'SDK targets:'
+	@echo  '  (all)           - Build sdk (if buildkernel is done in advance)'
+	@echo  '  clean           - Remove most generated sdk files but keep the sdk config'
+	@echo  '  distclean       - Remove all generated sdk files + sdk config'
+	@echo  ''
+	@echo  'Kernel targets:'
+	@echo  '  buildkernel     - Build kernel'
+	@echo  '  cleankernel     - Remove most generated kernel files but keep the kernel config'
+	@echo  '  distcleankernel - Remove all generated kernel files + kernel config'
+	@echo  ''
+	@echo  'Configuration targets:'
+	@echo  '  xxxconfig       - Update the sdk config'
+	@echo  '  xxxconfigkernel - Update the kernel config'
+	@echo  ''
+	@echo  '    There are various configuration targets, but instead of these targets,'
+	@echo  '    Execute configuration by using "./tools/config.py" tool.'
+	@echo  '    For more details refer to help of "./tools/config.py -h".'
+	@echo  ''
+	@echo  'Make options:'
+	@echo  '  make V=0|1 [targets] 0 => quiet build (default), 1 => verbose build'
+	@echo  ''
+
 .PHONY: $(PHONY)
