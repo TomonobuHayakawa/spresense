@@ -133,6 +133,10 @@ ifeq ($(CONFIG_BOARDCTL_UNIQUEID),y)
 CSRCS += cxd56_uid.c
 endif
 
+ifeq ($(CONFIG_BOARD_CRASHDUMP),y)
+CSRCS += cxd56_crashdump.c
+endif
+
 ifeq ($(CONFIG_LCD_ILI9340),y)
 CSRCS += cxd56_ili9340.c
 endif

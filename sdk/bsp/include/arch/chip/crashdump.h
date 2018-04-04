@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/corvo/include/crashdump.h
+ * arch/arm/include/cxd56xx/crashdump.h
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef _CONFIGS_CORVO_INCLUDE_CRASHDUMP_H
-#define _CONFIGS_CORVO_INCLUDE_CRASHDUMP_H
+#ifndef __ARCH_ARM_INCLUDE_CXD56XX_CRASHDUMP_H
+#define __ARCH_ARM_INCLUDE_CXD56XX_CRASHDUMP_H
 
 /****************************************************************************
  * Included Files
@@ -161,4 +161,4 @@ extern "C"
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif  /* _CONFIGS_CORVO_INCLUDE_CRASHDUMP_H */
+#endif  /* __ARCH_ARM_INCLUDE_CXD56XX_CRASHDUMP_H */
