@@ -19,10 +19,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
 #include <arch/chip/backuplog.h>
-#endif
-
 #include "apus/apu_cmd.h"
 #include "objects/sound_recognizer/voice_recognition_command_object.h"
 #include "voice_recognition_command_component.h"

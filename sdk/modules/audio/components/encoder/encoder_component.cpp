@@ -11,9 +11,7 @@
  ***********************************************************************
  */
 
-#ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
 #include <arch/chip/backuplog.h>
-#endif
 
 #include "encoder_component.h"
 #include "apus/cpuif_cmd.h"
