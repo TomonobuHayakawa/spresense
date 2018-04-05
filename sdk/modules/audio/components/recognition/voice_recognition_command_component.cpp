@@ -20,7 +20,7 @@
 #include <stdint.h>
 
 #ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#include <arch/chip/log.h>
+#include <arch/chip/backuplog.h>
 #endif
 
 #include "apus/apu_cmd.h"
@@ -216,7 +216,7 @@ bool VoiceCmdComponent::deact()
 #ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
   if (m_debug_log_info.addr)
     {
-      up_log_free(m_debug_log_info.name);
+      up_backuplog_free(m_debug_log_info.name);
     }
 #endif
 
@@ -265,8 +265,8 @@ int VoiceCmdComponent::init(InitReqParam_t *p_param)
       {
         strncpy(m_debug_log_info.name, "VADWUW", sizeof(m_debug_log_info.name));
 
-        m_debug_log_info.addr = up_log_alloc(m_debug_log_info.name,
-                                             AUDIOUTILS_DSP_DEBUG_DUMP_SIZE);
+        m_debug_log_info.addr = up_backuplog_alloc(m_debug_log_info.name,
+                                                   AUDIOUTILS_DSP_DEBUG_DUMP_SIZE);
 
         if (m_debug_log_info.addr == NULL)
           {

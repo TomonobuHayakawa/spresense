@@ -12,7 +12,7 @@
  */
 
 #ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#include <arch/chip/log.h>
+#include <arch/chip/backuplog.h>
 #endif
 
 #include "decoder_component.h"
@@ -277,7 +277,7 @@ uint32_t DecoderComponent::init_apu(const InitDecCompParam& param,
 
       g_namemap |= m_debug_log_info.namemap_ps;
 
-      m_debug_log_info.info.addr = up_log_alloc
+      m_debug_log_info.info.addr = up_backuplog_alloc
                                             (m_debug_log_info.info.name,
                                              AUDIOUTILS_DSP_DEBUG_DUMP_SIZE);
 
@@ -519,7 +519,7 @@ bool DecoderComponent::deactivate(void)
 #ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
   if (m_debug_log_info.info.addr)
     {
-      up_log_free(m_debug_log_info.info.name);
+      up_backuplog_free(m_debug_log_info.info.name);
       g_namemap &= ~m_debug_log_info.namemap_ps;
     }
 #endif

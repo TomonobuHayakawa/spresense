@@ -46,7 +46,7 @@ config AUDIOUTILS_COMPONENT_COMMON
 config AUDIOUTILS_DSP_DEBUG_DUMP
 	bool "dsp debug dump"
 	default n
-	depends on CXD56_LOG
+	depends on CXD56_BACKUPLOG
 	---help---
 		Enable Dsp Debug Dump
 

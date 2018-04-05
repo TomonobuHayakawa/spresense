@@ -12,7 +12,7 @@
  */
 
 #ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#include <arch/chip/log.h>
+#include <arch/chip/backuplog.h>
 #endif
 
 #include "encoder_component.h"
@@ -213,7 +213,7 @@ bool EncoderComponent::deactivate_apu(void)
 #ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
   if (m_debug_log_info.addr)
     {
-      up_log_free(m_debug_log_info.name);
+      up_backuplog_free(m_debug_log_info.name);
     }
 #endif
 
@@ -309,8 +309,8 @@ uint32_t EncoderComponent::init_apu(const InitEncParam& param, uint32_t *dsp_inf
           strncpy(m_debug_log_info.name, "OPUSENC", sizeof(m_debug_log_info.name));
         }
 
-      m_debug_log_info.addr = up_log_alloc(m_debug_log_info.name,
-                                           AUDIOUTILS_DSP_DEBUG_DUMP_SIZE);
+      m_debug_log_info.addr = up_backuplog_alloc(m_debug_log_info.name,
+                                                 AUDIOUTILS_DSP_DEBUG_DUMP_SIZE);
 
       if (m_debug_log_info.addr == NULL)
         {
