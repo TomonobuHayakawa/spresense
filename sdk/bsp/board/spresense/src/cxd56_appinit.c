@@ -126,6 +126,19 @@
 #  define CONFIG_SFC_DEVNO 0
 #endif
 
+/* TBD:
+ * If the following sensor devices are already mounted on the board, their
+ * devices are initialized here. Originally, the sensor device dependent code
+ * should be removed from cxd56_appinit.c of SPRESENSE board.
+ */
+
+#if defined(CONFIG_BMP280) || defined(CONFIG_AK09912) || \
+    defined(CONFIG_KX022) || defined(CONFIG_APDS9930) || \
+    defined(CONFIG_LT1PA01) || defined(CONFIG_RPR0521RS) || \
+    defined(CONFIG_BH1721FVC) || defined(CONFIG_BH1745NUC)
+#  define USE_KNOWN_I2C0_DEVICE
+#endif
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -259,13 +272,13 @@ int board_app_initialize(uintptr_t arg)
 {
   struct pm_cpu_wakelock_s wlock;
 
-#ifdef CONFIG_CXD56_I2C0
+#if defined(CONFIG_CXD56_I2C0) && defined(USE_KNOWN_I2C0_DEVICE)
   FAR struct i2c_master_s *i2c0;
 #endif
 #ifdef CONFIG_CXD56_I2C2
   FAR struct i2c_master_s *i2c2;
 #endif
-#ifdef CONFIG_CXD56_SPI4
+#if defined(CONFIG_CXD56_SPI4) && defined(CONFIG_CXD56_SPISD)
   FAR struct spi_dev_s *spi4;
 #endif
   int ret;
@@ -307,7 +320,7 @@ int board_app_initialize(uintptr_t arg)
   scu_initialize();
 #endif
 
-#ifdef CONFIG_CXD56_SPI4
+#if defined(CONFIG_CXD56_SPI4) && defined(CONFIG_CXD56_SPISD)
   /* globally initialize spi bus for peripherals */
   spi4 = cxd56_spibus_initialize(4);
   if (!spi4)
@@ -383,7 +396,7 @@ int board_app_initialize(uintptr_t arg)
   asmp_initialize();
 #endif
 
-#ifdef CONFIG_CXD56_I2C0
+#if defined(CONFIG_CXD56_I2C0) && defined(USE_KNOWN_I2C0_DEVICE)
   /* globally intialize i2c bus for peripherals */
 
   i2c0 = cxd56_i2cbus_initialize(0);
