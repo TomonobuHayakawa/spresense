@@ -83,11 +83,7 @@ BaseBandConfigTbl  bb_config_tbl =
 
   0,                                   /* reserved */
 
-#if defined(CONFIG_CXD56_AUDIO_CLK_MODE_HIRES)
-  AS_CLK_MODE_HIRES,                   /* clk_mode */
-#else
   AS_CLK_MODE_NORMAL,                  /* clk_mode */
-#endif
 
 #if defined(CONFIG_CXD56_AUDIO_XTAL_SEL_49_152MHZ)
   AS_XTAL_49_152MHZ,                   /* xtal_sel */

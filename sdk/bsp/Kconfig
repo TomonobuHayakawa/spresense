@@ -1183,22 +1183,6 @@ endif # CXD56_CXD5247_VER_ES4
 endmenu
 endif # CXD56_AUDIO_ANALOG_CXD5247
 
-choice
-	prompt "Audio clk_mode selection"
-	default CXD56_AUDIO_CLK_MODE_NORMAL
-	---help---
-		This designates the mode of the operation clock frequency.
-		When designating High Resolution mode (Hi-Res mode), designate
-		49.152MHz to xtal_sel.
-
-
-config CXD56_AUDIO_CLK_MODE_NORMAL
-	bool "Normal mode"
-
-config CXD56_AUDIO_CLK_MODE_HIRES
-	bool "Hires mode"
-endchoice
-
 menu "I2S settings"
 choice
 	prompt "Number of data paths used by I2S"
