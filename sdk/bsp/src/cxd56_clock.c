@@ -49,6 +49,7 @@
 #include "chip.h"
 #include "chip/cxd56_crg.h"
 #include "chip/cxd5602_backupmem.h"
+#include "chip/cxd5602_topreg.h"
 
 #include "cxd56_clock.h"
 

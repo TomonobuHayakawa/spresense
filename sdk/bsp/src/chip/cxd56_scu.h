@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/arm/src/cxd56xx/chip/cxd56_scu.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

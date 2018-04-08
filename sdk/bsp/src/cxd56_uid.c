@@ -41,6 +41,7 @@
 #include "chip.h"
 #include "up_arch.h"
 #include "cxd56_uid.h"
+#include "chip/cxd5602_topreg.h"
 
 /****************************************************************************
  * Public Functions

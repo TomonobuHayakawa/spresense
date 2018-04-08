@@ -49,6 +49,7 @@
 #include "cxd56_powermgr.h"
 #include "up_arch.h"
 #include "chip/cxd56_crg.h"
+#include "chip/cxd5602_topreg.h"
 
 /****************************************************************************
  * Pre-processor Definitions

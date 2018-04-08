@@ -1,7 +1,7 @@
-/****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_adc.h
+/************************************************************************************
+ * arch/arm/src/cxd56xx/chip/cxd56_cpufifo.h
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,33 +30,28 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ****************************************************************************/
-/**
- * @file       cxd56_adc.h
- */
+ ************************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_ADC_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_ADC_H
+#ifndef __ARCH_ARM_SRC_CXD56XX_CHIP_CXD56_CPUFIFO_H
+#define __ARCH_ARM_SRC_CXD56XX_CHIP_CXD56_CPUFIFO_H
 
-/****************************************************************************
+/************************************************************************************
  * Included Files
- ****************************************************************************/
+ ************************************************************************************/
 
 #include <nuttx/config.h>
 
-#include <stdint.h>
+/************************************************************************************
+ * Pre-processor Definitions
+ ************************************************************************************/
 
-/****************************************************************************
- * Name: cxd56_adc_getinterval
- *
- * Description:
- *
- ****************************************************************************/
+#define CXD56_FIF_PUSH_FULL    (CXD56_CPUFIFO_BASE + 0x00)
+#define CXD56_FIF_PUSH_WRD0    (CXD56_CPUFIFO_BASE + 0x04)
+#define CXD56_FIF_PUSH_WRD1    (CXD56_CPUFIFO_BASE + 0x08)
+#define CXD56_FIF_PUSH_CMP     (CXD56_CPUFIFO_BASE + 0x0c)
+#define CXD56_FIF_PULL_EMP     (CXD56_CPUFIFO_BASE + 0x10)
+#define CXD56_FIF_PULL_WRD0    (CXD56_CPUFIFO_BASE + 0x14)
+#define CXD56_FIF_PULL_WRD1    (CXD56_CPUFIFO_BASE + 0x18)
+#define CXD56_FIF_PULL_CMP     (CXD56_CPUFIFO_BASE + 0x1c)
 
-#ifdef CONFIG_CXD56_ADC
-void cxd56_adc_getinterval(int adctype, uint32_t *interval, uint16_t *adjust);
-#else
-#  define cxd56_adc_getinterval(adctype, interval, adjust)
-#endif
-
-#endif
+#endif /* __ARCH_ARM_SRC_CXD56XX_CHIP_CXD56_CPUFIFO_H */

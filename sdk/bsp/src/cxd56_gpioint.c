@@ -50,6 +50,7 @@
 #include "cxd56_pinconfig.h"
 #include "cxd56_gpio.h"
 #include "cxd56_gpioint.h"
+#include "chip/cxd5602_topreg.h"
 
 #ifdef CONFIG_CXD56_GPIO_IRQ
 

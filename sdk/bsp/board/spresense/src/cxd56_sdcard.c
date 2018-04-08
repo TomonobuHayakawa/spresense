@@ -60,6 +60,7 @@
 #include "cxd56_gpio.h"
 #include "cxd56_pinconfig.h"
 #include "cxd56_sdhci.h"
+#include "chip/cxd5602_topreg.h"
 
 #ifdef CONFIG_MMCSD_HAVECARDDETECT
 #  include "cxd56_gpioint.h"

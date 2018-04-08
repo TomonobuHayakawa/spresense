@@ -70,6 +70,7 @@
 #include "up_internal.h"
 #include "cxd56_clock.h"
 #include "cxd56_usbdev.h"
+#include "chip/cxd5602_topreg.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -639,12 +640,13 @@ const struct procfs_operations cxd56_usbdev_operations =
   cxd56_usbdev_stat   /* stat */
 };
 
+#  ifdef CONFIG_FS_PROCFS_REGISTER
 static const struct procfs_entry_s g_procfs_usbdev =
 {
   "usbdev",
   &cxd56_usbdev_operations
 };
-
+#  endif
 #endif
 
 /****************************************************************************

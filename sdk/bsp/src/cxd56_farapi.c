@@ -52,6 +52,7 @@
 #include "cxd56_icc.h"
 #include "cxd56_config.h"
 #include "cxd56_farapistub.h"
+#include "chip/cxd5602_backupmem.h"
 
 int PM_WakeUpCpu(int cpuid);
 

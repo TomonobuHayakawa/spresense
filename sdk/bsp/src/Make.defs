@@ -87,10 +87,6 @@ ifeq ($(CONFIG_DEBUG),y)
 CHIP_CSRCS += cxd56_debug.c
 endif
 
-ifeq ($(CONFIG_CXD56_RIT),y)
-CHIP_CSRCS += cxd56_rit.c
-endif
-
 ifeq ($(CONFIG_CXD56_SFC),y)
 CHIP_CSRCS += cxd56_sfc.c
 endif

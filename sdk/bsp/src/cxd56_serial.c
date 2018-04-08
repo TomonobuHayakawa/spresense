@@ -144,6 +144,7 @@ static const struct uart_ops_s g_uart_ops =
   .txempty       = up_txempty,
 };
 
+#ifdef CONFIG_CXD56_UART2
 static const struct uart_ops_s g_uart2_ops =
 {
   .setup         = up_setup,
@@ -162,6 +163,7 @@ static const struct uart_ops_s g_uart2_ops =
   .txready       = up_txready,
   .txempty       = up_txempty,
 };
+#endif
 
 /* I/O buffers */
 

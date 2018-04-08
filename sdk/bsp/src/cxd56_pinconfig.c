@@ -48,6 +48,7 @@
 #include "up_arch.h"
 
 #include "cxd56_pinconfig.h"
+#include "chip/cxd5602_topreg.h"
 
 /****************************************************************************
  * Pre-processor Definitions
