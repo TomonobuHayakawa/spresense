@@ -969,27 +969,16 @@ static void cxd56_rxdmacomplete(FAR struct cxd56_ep_s *privep)
 
   nrxbytes = status & DESC_SIZE_MASK;
 
-  if ((status & DESC_STS_MASK) >> DESC_STS_SHIFT)
-    {
-      uinfo("ctrl=%08x status=%08x desc=%08x\n",
-            getreg32(CXD56_USB_OUT_EP_CONTROL(privep->epphy)),
-            getreg32(CXD56_USB_OUT_EP_STATUS(privep->epphy)),
-            getreg32(CXD56_USB_OUT_EP_DATADESC(privep->epphy)));
-      desc = (FAR struct cxd56_data_desc_s *)
-        getreg32(CXD56_USB_OUT_EP_DATADESC(privep->epphy));
-      uinfo("status=%08x buffer=%08x\n", desc->status, desc->buf);
-      return;
-    }
-
-  desc->status = DESC_BS_HOST_BUSY;
-
   privreq = cxd56_rqpeek(privep);
   if (!privreq)
     {
       usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_RXREQLOST), privep->epphy);
       return;
     }
-  else
+
+  desc->status = DESC_BS_HOST_BUSY;
+
+  if ((status & DESC_BS_MASK) == DESC_BS_DMA_DONE)
     {
       privreq->req.xfrd += nrxbytes;
 
@@ -999,6 +988,10 @@ static void cxd56_rxdmacomplete(FAR struct cxd56_ep_s *privep)
           usbtrace(TRACE_COMPLETE(privep->epphy), privreq->req.xfrd);
           cxd56_reqcomplete(privep, OK);
         }
+    }
+  else
+    {
+      uerr("Descriptor status error %08x\n", status);
     }
 
   cxd56_rdrequest(privep);
@@ -1629,7 +1622,13 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
 
                 ctrl = getreg32(CXD56_USB_OUT_EP_CONTROL(n));
 
-                /* Make sure want to be DMA transfer stopped. */
+                /* Make sure want to be DMA transfer stopped.
+                 *
+                 * XXX: S bit needs to be clear by hand, it is not found in
+                 * the specification documents.
+                 */
+
+                ctrl &= ~USB_STALL;
 
                 putreg32(ctrl | USB_CLOSEDESC, CXD56_USB_OUT_EP_CONTROL(n));
                 do
@@ -1639,7 +1638,12 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
                 while (!(status & USB_INT_CDC_CLEAR));
                 putreg32(USB_INT_CDC_CLEAR, CXD56_USB_OUT_EP_STATUS(n));
 
-                putreg32(ctrl | USB_MRXFLUSH, CXD56_USB_OUT_EP_CONTROL(n));
+                if (!(stat & USB_INT_MRXFIFOEMPTY))
+                  {
+                    /* Flush Recieve FIFO and clear NAK to finish status stage */
+
+                    putreg32(ctrl | USB_MRXFLUSH, CXD56_USB_OUT_EP_CONTROL(n));
+                  }
                 putreg32(ctrl | USB_CNAK, CXD56_USB_OUT_EP_CONTROL(n));
                 putreg32(USB_INT_RCS, CXD56_USB_OUT_EP_STATUS(n));
                 privep->stalled = 0;
