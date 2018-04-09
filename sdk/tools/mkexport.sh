@@ -173,6 +173,7 @@ mkdir "${EXPORTNXDIR}/arch" || { echo "MK: 'mkdir ${EXPORTNXDIR}/arch' failed"; 
 mkdir "${EXPORTNXDIR}/tools" || { echo "MK: 'mkdir ${EXPORTNXDIR}/tools' failed"; exit 1; }
 mkdir "${EXPORTSDKDIR}" || { echo "MK: 'mkdir ${EXPORTSDKDIR}' failed"; exit 1; }
 mkdir -p "${EXPORTSDKDIR}/bsp/include/sdk" || { echo "MK: 'mkdir ${EXPORTSDKDIR}/bsp/include/sdk' failed"; exit 1; }
+mkdir -p "${EXPORTSDKDIR}/bsp/include/sdk/chip" || { echo "MK: 'mkdir ${EXPORTSDKDIR}/bsp/include/sdk/chip' failed"; exit 1; }
 mkdir -p "${EXPORTSDKDIR}/modules/include" || { echo "MK: 'mkdir ${EXPORTSDKDIR}/modules/include' failed"; exit 1; }
 mkdir "${EXPORTSDKDIR}/libs" || { echo "MK: 'mkdir ${EXPORTSDKDIR}/libs' failed"; exit 1; }
 mkdir "${EXPORTSDKDIR}/tools" || { echo "MK: 'mkdir ${EXPORTSDKDIR}/tools' failed"; exit 1; }
@@ -243,6 +244,7 @@ cp -rp "${SDKDIR}"/modules/include/* "${EXPORTSDKDIR}"/modules/include/.
 
 # An unnecessary copy, but copying driver headers so using in Arduino library.
 cp -rp "${SDKDIR}"/bsp/src/*.h "${EXPORTSDKDIR}"/bsp/include/sdk/.
+cp -rp "${SDKDIR}"/bsp/src/chip/*.h "${EXPORTSDKDIR}"/bsp/include/sdk/chip/.
 
 # Import build related tools and files
 
