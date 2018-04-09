@@ -75,6 +75,7 @@ options.
     [-a addr] is the I2C device address (hex).  Default: 03 Current: 03
     [-b bus] is the I2C bus number (decimal).  Default: 1 Current: 1
     [-r regaddr] is the I2C device register address (hex).  Default: 00 Current: 00
+      If the set value is less than 0, don't send register address.
     [-w width] is the data width (8 or 16 decimal).  Default: 8 Current: 8
     [-s|n], send/don't send start between command and data.  Default: -n Current: -n
     [-i|j], Auto increment|don't increment regaddr on repititions.  Default: NO Current: NO
@@ -175,6 +176,7 @@ Common Option Summary
   option selects the device register address (sometimes called the sub-address).
   This is an 8-bit hexadecimal value.  The maximum value is determined by
   the configuration setting CONFIG_I2CTOOL_MAXREGADDR.
+  If the set value is less than 0, don't send register address.
 
 [-w width] is the data width (8 or 16 decimal).  Default: 8 Current: 8
 

@@ -163,8 +163,16 @@ int i2ccmd_set(FAR struct i2ctool_s *i2ctool, int argc, FAR char **argv)
 
       if (ret == OK)
         {
-          i2ctool_printf(i2ctool, "WROTE Bus: %d Addr: %02x Subaddr: %02x Value: ",
-                         i2ctool->bus, i2ctool->addr, i2ctool->regaddr);
+          if (!i2ctool->noregaddr)
+            {
+              i2ctool_printf(i2ctool, "WROTE Bus: %d Addr: %02x Subaddr: %02x Value: ",
+                             i2ctool->bus, i2ctool->addr, i2ctool->regaddr);
+            }
+          else
+            {
+              i2ctool_printf(i2ctool, "WROTE Bus: %d Addr: %02x Subaddr: None Value: ",
+                             i2ctool->bus, i2ctool->addr);
+            }
           if (i2ctool->width == 8)
             {
               i2ctool_printf(i2ctool, "%02x\n", (int)value);
@@ -206,42 +214,47 @@ int i2ctool_set(FAR struct i2ctool_s *i2ctool, int fd, uint8_t regaddr,
     uint8_t  data8;
   } u;
   int ret;
+  int n = 0;
 
   /* Set up data structures */
 
-  msg[0].frequency = i2ctool->freq;
-  msg[0].addr      = i2ctool->addr;
-  msg[0].flags     = 0;
-  msg[0].buffer    = &regaddr;
-  msg[0].length    = 1;
+  msg[n].frequency = i2ctool->freq;
+  msg[n].addr      = i2ctool->addr;
+  msg[n].flags     = 0;
+  if (!i2ctool->noregaddr)
+    {
+      msg[n].buffer    = &regaddr;
+      msg[n++].length    = 1;
 
-  msg[1].frequency = i2ctool->freq;
-  msg[1].addr      = i2ctool->addr;
-  msg[1].flags     = 0;
+      msg[n].frequency = i2ctool->freq;
+      msg[n].addr      = i2ctool->addr;
+      msg[n].flags     = 0;
+    }
+
   if (i2ctool->width == 8)
     {
       u.data8       = (uint8_t)value;
-      msg[1].buffer = &u.data8;
-      msg[1].length = 1;
+      msg[n].buffer = &u.data8;
+      msg[n++].length = 1;
     }
   else
     {
       u.data16      = value;
-      msg[1].buffer = (uint8_t*)&u.data16;
-      msg[1].length = 2;
+      msg[n].buffer = (uint8_t*)&u.data16;
+      msg[n++].length = 2;
     }
 
   if (i2ctool->start)
     {
       ret = i2cdev_transfer(fd, &msg[0], 1);
-      if (ret == OK)
+      if ((ret == OK) && (n > 0))
         {
           ret = i2cdev_transfer(fd, &msg[1], 1);
         }
     }
   else
     {
-      ret = i2cdev_transfer(fd, msg, 2);
+      ret = i2cdev_transfer(fd, msg, n);
     }
 
   return ret;

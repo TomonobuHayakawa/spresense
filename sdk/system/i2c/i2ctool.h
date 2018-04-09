@@ -141,6 +141,9 @@ struct i2ctool_s
   bool     start;      /* [-s|n], send|don't send start between command and data */
   bool     autoincr;   /* [-i|j], Auto increment|don't increment regaddr on repititions */
   uint32_t freq;       /* [-f freq] I2C frequency */
+  bool     noregaddr;  /* Don't send register address.
+                        * If [-r regaddr] is less than 0, this flag is set to true.
+                        */
 
   /* Output streams */
 

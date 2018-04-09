@@ -127,6 +127,7 @@ static int i2ccmd_help(FAR struct i2ctool_s *i2ctool, int argc, char **argv)
   i2ctool_printf(i2ctool, "  [-r regaddr] is the I2C device register address (hex).  "
                           "Default: 00 Current: %02x\n",
                  i2ctool->regaddr);
+  i2ctool_printf(i2ctool, "    If the set value is less than 0, don't send register address.\n");
   i2ctool_printf(i2ctool, "  [-w width] is the data width (8 or 16 decimal).  "
                           "Default: 8 Current: %d\n",
                  i2ctool->width);

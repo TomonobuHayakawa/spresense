@@ -165,12 +165,19 @@ int i2ctool_common_args(FAR struct i2ctool_s *i2ctool, FAR char **arg)
 
       case 'r':
         ret = arg_hex(arg, &value);
-        if (value < 0 || value > CONFIG_I2CTOOL_MAXREGADDR)
+        if (value < 0)
+          {
+            i2ctool->noregaddr = true;
+          }
+        else if (value > CONFIG_I2CTOOL_MAXREGADDR)
           {
             goto out_of_range;
           }
-
-        i2ctool->regaddr = (uint8_t)value;
+        else
+          {
+            i2ctool->regaddr = (uint8_t)value;
+            i2ctool->noregaddr = false;
+          }
         return ret;
 
       case 's':
