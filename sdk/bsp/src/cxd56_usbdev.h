@@ -195,9 +195,9 @@
 #define USB_INT_MRXFIFOEMPTY (1<<8)              /* Receive Address FIFO Empty Status */
 #define USB_INT_BNA         (1<<7)               /* Buffer Not Available */
 #define USB_INT_IN          (1<<6)               /* IN token has been received */
-#define USB_INT_OUT(x)      (((x)>>4)&3)         /* OUT packet has been received. */
-#define   USB_INT_OUT_DATA  1
-#define   USB_INT_OUT_SETUP 2
+#define USB_INT_OUT(x)      ((x) & (3 << 4))     /* OUT packet has been received. */
+#define   USB_INT_OUT_DATA  (1 << 4)
+#define   USB_INT_OUT_SETUP (2 << 4)
 
 /* PHY Configuration 0 bits */
 
