@@ -12,10 +12,6 @@ config EXAMPLES_AUDIO_THROUGH
 
 if EXAMPLES_AUDIO_THROUGH
 
-config EXAMPLES_AUDIO_TRHOUGH_APP_NAME
-	string "Application name"
-	default "audio_through"
-	
 config EXAMPLES_AUDIO_PLAYER_PROGNAME
 	string "Program name"
 	default "audio_through"

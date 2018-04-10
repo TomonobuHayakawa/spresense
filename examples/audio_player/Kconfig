@@ -12,10 +12,6 @@ config EXAMPLES_AUDIO_PLAYER
 
 if EXAMPLES_AUDIO_PLAYER
 
-config EXAMPLES_AUDIO_PLAYER_APP_NAME
-	string "Application name"
-	default "player"
-	
 config EXAMPLES_AUDIO_PLAYER_PROGNAME
 	string "Program name"
 	default "audio_player"

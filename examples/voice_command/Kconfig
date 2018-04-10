@@ -12,14 +12,10 @@ config EXAMPLES_VOICE_COMMAND
 
 if EXAMPLES_VOICE_COMMAND
 
-config EXAMPLES_VOICE_COMMAND_APP_NAME
-	string "Application name"
-	default "voice_command"
-	
 config EXAMPLES_VOICE_COMMAND_PROGNAME
 	string "Program name"
 	default "voice_command"
-	
+
 config EXAMPLES_VOICE_COMMAND_PRIORITY
 	int "voice_command task priority"
 	default 100

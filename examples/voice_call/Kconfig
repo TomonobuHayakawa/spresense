@@ -12,10 +12,6 @@ config EXAMPLES_VOICE_CALL
 
 if EXAMPLES_VOICE_CALL
 
-config EXAMPLES_VOICE_CALL_APP_NAME
-	string "Application name"
-	default "voice_call"
-	
 config EXAMPLES_VOICE_CALL_PROGNAME
 	string "Program name"
 	default "voice_call"

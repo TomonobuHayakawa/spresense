@@ -12,10 +12,6 @@ config EXAMPLES_AUDIO_RECORDER
 
 if EXAMPLES_AUDIO_RECORDER
 
-config EXAMPLES_AUDIO_RECORDER_APP_NAME
-	string "Application name"
-	default "recorder"
-	
 config EXAMPLES_AUDIO_RECORDER_PROGNAME
 	string "Program name"
 	default "audio_recorder"
