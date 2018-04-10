@@ -45,13 +45,13 @@
 #include <nuttx/board.h>
 
 #include <nuttx/sensors/rpr0521rs.h>
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_RPR0521RS_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
 #if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_RPR0521RS)
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_RPR0521RS_SCU
 int cxd56_rpr0521rsinitialize(FAR struct i2c_master_s* i2c)
 {
   int ret;
@@ -85,6 +85,6 @@ int cxd56_rpr0521rsinitialize(FAR struct i2c_master_s* i2c)
 
   return ret;
 }
-#endif /* CONFIG_CXD56_SCU */
+#endif /* CONFIG_RPR0521RS_SCU */
 
 #endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_RPR0521RS */

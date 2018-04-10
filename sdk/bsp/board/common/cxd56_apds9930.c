@@ -46,13 +46,13 @@
 #include <nuttx/board.h>
 
 #include <nuttx/sensors/apds9930.h>
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_APDS9930_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
 #if defined(CONFIG_I2C) && defined(CONFIG_APDS9930)
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_APDS9930_SCU
 int cxd56_apds9930initialize(FAR struct i2c_master_s* i2c)
 {
   int ret;
@@ -86,6 +86,6 @@ int cxd56_apds9930initialize(FAR struct i2c_master_s* i2c)
 
   return ret;
 }
-#endif /* CONFIG_CXD56_SCU */
+#endif /* CONFIG_APDS9930_SCU */
 
 #endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_APDS9930 */

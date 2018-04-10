@@ -45,11 +45,11 @@
 #include <nuttx/board.h>
 
 #include <nuttx/sensors/bmp280.h>
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BMP280_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BMP280_SCU
 #  ifdef CONFIG_CXD56_DECI_PRESS
 #    define PRESS_NR_SEQS 3
 #  else
@@ -64,7 +64,7 @@
 
 #if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_BMP280)
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BMP280_SCU
 int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c)
 {
   int i;

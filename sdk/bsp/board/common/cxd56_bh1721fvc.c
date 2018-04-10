@@ -45,13 +45,13 @@
 #include <nuttx/board.h>
 
 #include <nuttx/sensors/bh1721fvc.h>
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BH1721FVC_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
 #if defined(CONFIG_I2C) && defined(CONFIG_BH1721FVC)
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BH1721FVC_SCU
 int cxd56_bh1721fvcinitialize(FAR struct i2c_master_s* i2c)
 {
   int ret;
@@ -78,6 +78,6 @@ int cxd56_bh1721fvcinitialize(FAR struct i2c_master_s* i2c)
 
   return ret;
 }
-#endif /* CONFIG_CXD56_SCU */
+#endif /* CONFIG_BH1721FVC_SCU */
 
 #endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_BH1721FVC */

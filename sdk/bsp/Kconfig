@@ -253,6 +253,17 @@ config CXD56_SPI0
 config CXD56_SPI3
 	bool "SPI3"
 
+if CXD56_SPI3
+
+config CXD56_SPI3_SCUSEQ
+	bool "SCU Sequencer"
+	default y
+	depends on CXD56_SCU
+	---help---
+		Use the sensor control unit (SCU) sequencer.
+
+endif # CXD56_SPI3
+
 config CXD56_SPI4
 	bool "SPI4"
 
@@ -385,8 +396,30 @@ if CXD56_I2C
 config CXD56_I2C0
 	bool "I2C0"
 
+if CXD56_I2C0
+
+config CXD56_I2C0_SCUSEQ
+	bool "SCU Sequencer"
+	default y
+	depends on CXD56_SCU
+	---help---
+		Use the sensor control unit (SCU) sequencer.
+
+endif # CXD56_I2C0
+
 config CXD56_I2C1
 	bool "I2C1"
+
+if CXD56_I2C1
+
+config CXD56_I2C1_SCUSEQ
+	bool "SCU Sequencer"
+	default y
+	depends on CXD56_SCU
+	---help---
+		Use the sensor control unit (SCU) sequencer.
+
+endif # CXD56_I2C1
 
 config CXD56_I2C2
 	bool "I2C2"

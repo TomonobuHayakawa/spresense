@@ -1286,7 +1286,7 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
 
   sem_init(&priv->exclsem, 0, 1);
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_CXD56_SPI3_SCUSEQ
   /* Enable the SPI, but not enable port 3 when SCU support enabled.
    * Because this enabler will be controlled by SCU.
    */
@@ -1296,7 +1296,7 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
 #endif
       regval = spi_getreg(priv, CXD56_SPI_CR1_OFFSET);
       spi_putreg(priv, CXD56_SPI_CR1_OFFSET, regval | SPI_CR1_SSE);
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_CXD56_SPI3_SCUSEQ
     }
 #endif
 

@@ -45,11 +45,11 @@
 #include <nuttx/board.h>
 
 #include <nuttx/sensors/bm1422gmv.h>
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BM1422GMV_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BM1422GMV_SCU
 #  ifdef CONFIG_CXD56_DECI_BM1422GMV
 #    define BM1422GMV_PATH_CNT 3
 #  else
@@ -59,7 +59,7 @@
 
 #if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_BM1422GMV)
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BM1422GMV_SCU
 int cxd56_bm1422gmvinitialize(FAR const char *devpath,
                               FAR struct i2c_master_s* i2c)
 {
@@ -91,6 +91,6 @@ int cxd56_bm1422gmvinitialize(FAR const char *devpath,
 
   return ret;
 }
-#endif /* CONFIG_CXD56_SCU */
+#endif /* CONFIG_BM1422GMV_SCU */
 
 #endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_BM1422GMV */

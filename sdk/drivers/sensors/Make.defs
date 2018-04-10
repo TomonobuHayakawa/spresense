@@ -39,7 +39,7 @@ ifeq ($(CONFIG_SENSORS),y)
 ifeq ($(CONFIG_I2C),y)
 
 ifeq ($(CONFIG_BMP280),y)
-ifeq ($(CONFIG_CXD56_SCU),y)
+ifeq ($(CONFIG_BMP280_SCU),y)
   CSRCS += bmp280_scu.c
 else
   CSRCS += bmp280.c
@@ -47,7 +47,7 @@ endif
 endif
 
 ifeq ($(CONFIG_AK09912),y)
-ifeq ($(CONFIG_CXD56_SCU),y)
+ifeq ($(CONFIG_AK09912_SCU),y)
   CSRCS += ak09912_scu.c
 else
   CSRCS += ak09912.c
@@ -55,7 +55,9 @@ endif
 endif
 
 ifeq ($(CONFIG_APDS9930),y)
+ifeq ($(CONFIG_APDS9930_SCU),y)
   CSRCS += apds9930_scu.c
+endif
 endif
 
 ifeq ($(CONFIG_APDS9960),y)
@@ -63,31 +65,45 @@ ifeq ($(CONFIG_APDS9960),y)
 endif
 
 ifeq ($(CONFIG_LT1PA01),y)
+ifeq ($(CONFIG_LT1PA01_SCU),y)
   CSRCS += lt1pa01_scu.c
+endif
 endif
 
 ifeq ($(CONFIG_BH1721FVC),y)
+ifeq ($(CONFIG_BH1721FVC_SCU),y)
   CSRCS += bh1721fvc_scu.c
+endif
 endif
 
 ifeq ($(CONFIG_KX022),y)
+ifeq ($(CONFIG_KX022_SCU),y)
   CSRCS += kx022_scu.c
+endif
 endif
 
 ifeq ($(CONFIG_BM1422GMV),y)
+ifeq ($(CONFIG_BM1422GMV_SCU),y)
   CSRCS += bm1422gmv_scu.c
+endif
 endif
 
 ifeq ($(CONFIG_BM1383GLV),y)
+ifeq ($(CONFIG_BM1383GLV_SCU),y)
   CSRCS += bm1383glv_scu.c
+endif
 endif
 
 ifeq ($(CONFIG_BH1745NUC),y)
+ifeq ($(CONFIG_BH1745NUC_SCU),y)
   CSRCS += bh1745nuc_scu.c
+endif
 endif
 
 ifeq ($(CONFIG_RPR0521RS),y)
+ifeq ($(CONFIG_RPR0521RS_SCU),y)
   CSRCS += rpr0521rs_scu.c
+endif
 endif
 
 endif # CONFIG_I2C
@@ -95,7 +111,7 @@ endif # CONFIG_I2C
 ifeq ($(CONFIG_SPI),y)
 
 ifeq ($(CONFIG_BMI160),y)
-ifeq ($(CONFIG_CXD56_SCU),y)
+ifeq ($(CONFIG_BMI160_SCU),y)
   CSRCS += bmi160_scu.c
 else
   CSRCS += bmi160.c

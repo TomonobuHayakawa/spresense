@@ -93,7 +93,7 @@ struct ak09912_sensadj_s
   uint8_t z;
 };
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_AK09912_SCU
 /****************************************************************************
  * Name: ak09912_init
  *
@@ -127,7 +127,7 @@ int ak09912_init(FAR struct i2c_master_s *i2c, int port);
  *   Zero (OK) on success; a negated errno value on failure.
  *
  ****************************************************************************/
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_AK09912_SCU
 int ak09912_register(FAR const char *devpath, int minor,
                      FAR struct i2c_master_s *i2c, int port);
 #else

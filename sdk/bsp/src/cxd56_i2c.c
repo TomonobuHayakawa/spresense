@@ -60,7 +60,7 @@
 #include "chip/cxd56_i2c.h"
 #include "cxd56_pinconfig.h"
 
-#ifdef CONFIG_CXD56_SCU
+#if defined(CONFIG_CXD56_I2C0_SCUSEQ) || defined(CONFIG_CXD56_I2C1_SCUSEQ)
 #include <arch/chip/cxd56_scu.h>
 #endif
 
@@ -159,7 +159,7 @@ static int  cxd56_i2c_transfer(FAR struct i2c_master_s *dev,
 #ifdef CONFIG_I2C_RESET
 static int cxd56_i2c_reset(FAR struct i2c_master_s * dev);
 #endif
-#ifdef CONFIG_CXD56_SCU
+#if defined(CONFIG_CXD56_I2C0_SCUSEQ) || defined(CONFIG_CXD56_I2C1_SCUSEQ)
 static int  cxd56_i2c_transfer_scu(FAR struct i2c_master_s *dev,
                                    FAR struct i2c_msg_s *msgs, int count);
 #endif
@@ -235,7 +235,7 @@ struct i2c_ops_s cxd56_i2c_ops =
 #endif
 };
 
-#ifdef CONFIG_CXD56_SCU
+#if defined(CONFIG_CXD56_I2C0_SCUSEQ) || defined(CONFIG_CXD56_I2C1_SCUSEQ)
 struct i2c_ops_s cxd56_i2c_scu_ops =
 {
   .transfer = cxd56_i2c_transfer_scu,
@@ -680,7 +680,7 @@ static int cxd56_i2c_reset(FAR struct i2c_master_s *dev)
  *
  ****************************************************************************/
 
-#ifdef CONFIG_CXD56_SCU
+#if defined(CONFIG_CXD56_I2C0_SCUSEQ) || defined(CONFIG_CXD56_I2C1_SCUSEQ)
 static int cxd56_i2c_transfer_scu(FAR struct i2c_master_s *dev,
                                   FAR struct i2c_msg_s *msgs, int count)
 {
@@ -864,7 +864,7 @@ struct i2c_master_s *cxd56_i2cbus_initialize(int port)
   if (port == 0)
     {
       priv        = &g_i2c0dev;
-#  ifndef CONFIG_CXD56_SCU
+#  ifndef CONFIG_CXD56_I2C0_SCUSEQ
       priv->dev.ops = &cxd56_i2c_ops;
 #  else
       priv->dev.ops = &cxd56_i2c_scu_ops;
@@ -876,7 +876,7 @@ struct i2c_master_s *cxd56_i2cbus_initialize(int port)
   if (port == 1)
     {
       priv        = &g_i2c1dev;
-#  ifndef CONFIG_CXD56_SCU
+#  ifndef CONFIG_CXD56_I2C1_SCUSEQ
       priv->dev.ops = &cxd56_i2c_ops;
 #  else
       priv->dev.ops = &cxd56_i2c_scu_ops;

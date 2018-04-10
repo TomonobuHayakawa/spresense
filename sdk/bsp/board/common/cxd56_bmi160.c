@@ -45,7 +45,7 @@
 #include <nuttx/board.h>
 #include <nuttx/spi/spi.h>
 #include <nuttx/sensors/bmi160.h>
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BMI160_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
@@ -66,7 +66,7 @@
 int cxd56_bmi160initialize(FAR struct spi_dev_s* spi)
 {
   int ret;
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BMI160_SCU
   int i;
 
   sninfo("Initializing BMI160..\n");

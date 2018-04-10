@@ -138,7 +138,7 @@ struct bmp280_meas_s
   uint8_t   xlsb;   /** meas value XLSB */
 };
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BMP280_SCU
 /****************************************************************************
  * Name: bmp280_init
  *
@@ -171,7 +171,7 @@ int bmp280_init(FAR struct i2c_master_s *i2c, int port);
  *   Zero (OK) on success; a negated errno value on failure.
  *
  ****************************************************************************/
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BMP280_SCU
 int bmp280press_register(FAR const char *devpath, int minor,
                          FAR struct i2c_master_s *i2c, int port);
 int bmp280temp_register(FAR const char *devpath, int minor,

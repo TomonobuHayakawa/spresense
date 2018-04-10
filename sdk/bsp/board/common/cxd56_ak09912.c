@@ -46,11 +46,11 @@
 #include <nuttx/board.h>
 
 #include <nuttx/sensors/ak09912.h>
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_AK09912_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_AK09912_SCU
 #  ifdef CONFIG_CXD56_DECI_AK09912
 #    define MAG_NR_SEQS 3
 #  else
@@ -60,7 +60,7 @@
 
 #if defined(CONFIG_I2C) && defined(CONFIG_AK09912)
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_AK09912_SCU
 int cxd56_ak09912initialize(FAR const char *devpath,  FAR struct i2c_master_s* i2c)
 {
   int i;

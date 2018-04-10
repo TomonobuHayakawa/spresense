@@ -117,7 +117,7 @@ extern "C"
 
 int bmi160_register(FAR const char *devpath, FAR struct spi_dev_s *dev);
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_BMI160_SCU
 int bmi160_init(FAR struct spi_dev_s *dev);
 
 int bmi160gyro_register(FAR const char *devname, int minor,

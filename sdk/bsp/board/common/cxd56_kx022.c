@@ -46,11 +46,11 @@
 #include <nuttx/board.h>
 
 #include <nuttx/sensors/kx022.h>
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_KX022_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_KX022_SCU
 #  ifdef CONFIG_CXD56_DECI_KX022
 #    define KX022_FIFO_CNT 3
 #  else
@@ -60,7 +60,7 @@
 
 #if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_KX022)
 
-#ifdef CONFIG_CXD56_SCU
+#ifdef CONFIG_KX022_SCU
 int cxd56_kx022initialize(FAR const char *devpath,
                           FAR struct i2c_master_s* i2c)
 {
@@ -92,6 +92,6 @@ int cxd56_kx022initialize(FAR const char *devpath,
 
   return ret;
 }
-#endif /* CONFIG_CXD56_SCU */
+#endif /* CONFIG_KX022_SCU */
 
 #endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_KX022 */
