@@ -100,6 +100,7 @@ struct cxd56_i2cdev_s
   struct i2c_msg_s *msgs;
 
   int              error;      /* Error status of each transfers */
+  int              refs;       /* Reference count */
 };
 
 /* Channel 0 as SCU_I2C0
@@ -110,19 +111,28 @@ struct cxd56_i2cdev_s
 #ifdef CONFIG_CXD56_I2C0
 static struct cxd56_i2cdev_s g_i2c0dev =
 {
-  .port = 0
+  .port = 0,
+  .base = CXD56_SCU_I2C0_BASE,
+  .irqid = CXD56_IRQ_SCU_I2C0,
+  .refs = 0,
 };
 #endif
 #ifdef CONFIG_CXD56_I2C1
 static struct cxd56_i2cdev_s g_i2c1dev =
 {
-  .port = 1
+  .port = 1,
+  .base = CXD56_SCU_I2C1_BASE,
+  .irqid = CXD56_IRQ_SCU_I2C1,
+  .refs = 0,
 };
 #endif
 #ifdef CONFIG_CXD56_I2C2
 static struct cxd56_i2cdev_s g_i2c2dev =
 {
-  .port = 2
+  .port = 2,
+  .base = CXD56_I2CM_BASE,
+  .irqid = CXD56_IRQ_I2CM,
+  .refs = 0,
 };
 #endif
 
@@ -847,8 +857,6 @@ struct i2c_master_s *cxd56_i2cbus_initialize(int port)
   if (port == 0)
     {
       priv        = &g_i2c0dev;
-      priv->base  = CXD56_SCU_I2C0_BASE;
-      priv->irqid = CXD56_IRQ_SCU_I2C0;
 #  ifndef CONFIG_CXD56_SCU
       priv->dev.ops = &cxd56_i2c_ops;
 #  else
@@ -861,8 +869,6 @@ struct i2c_master_s *cxd56_i2cbus_initialize(int port)
   if (port == 1)
     {
       priv        = &g_i2c1dev;
-      priv->base  = CXD56_SCU_I2C1_BASE;
-      priv->irqid = CXD56_IRQ_SCU_I2C1;
 #  ifndef CONFIG_CXD56_SCU
       priv->dev.ops = &cxd56_i2c_ops;
 #  else
@@ -875,15 +881,24 @@ struct i2c_master_s *cxd56_i2cbus_initialize(int port)
   if (port == 2)
     {
       priv          = &g_i2c2dev;
-      priv->base    = CXD56_I2CM_BASE;
-      priv->irqid   = CXD56_IRQ_I2CM;
       priv->dev.ops = &cxd56_i2c_ops;
     }
   else
 #endif
     {
+      leave_critical_section(flags);
       i2cerr("I2C Only support 0,1,2\n");
       return NULL;
+    }
+
+  priv->refs++;
+
+  /* Test if already initialized or not */
+
+  if (1 < priv->refs)
+    {
+      leave_critical_section(flags);
+      return &priv->dev;
     }
 
   priv->port      = port;
@@ -956,6 +971,18 @@ int cxd56_i2cbus_uninitialize(FAR struct i2c_master_s *dev)
 {
   struct cxd56_i2cdev_s *priv = (struct cxd56_i2cdev_s *)dev;
 
+  /* Decrement reference count and check for underflow */
+
+  if (priv->refs == 0)
+    {
+      return ERROR;
+    }
+
+  if (--priv->refs)
+    {
+      return OK;
+    }
+
   /* Configure pin */
 
   cxd56_i2c_pincontrol(priv->port, false);
@@ -969,6 +996,12 @@ int cxd56_i2cbus_uninitialize(FAR struct i2c_master_s *dev)
 
   up_disable_irq(priv->irqid);
   irq_detach(priv->irqid);
+
+  wd_delete(priv->timeout);
+  priv->timeout = NULL;
+  sem_destroy(&priv->mutex);
+  sem_destroy(&priv->wait);
+
   return OK;
 }
 
