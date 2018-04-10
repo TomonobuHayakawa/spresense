@@ -84,7 +84,7 @@ clean:
 	$(call DELFILE, $(BIN))
 	$(call CLEAN)
 
-install:
+install: $(BIN)
 	$(Q) mkdir -p $(ROMFS_DIR)
 ifeq ($(WINTOOL),y)
 	$(Q) $(STRIP) -d -o "$(shell cygpath -w $(ROMFS_DIR)/$(BIN))" $(BIN)
