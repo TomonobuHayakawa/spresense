@@ -57,6 +57,7 @@
 #include "up_arch.h"
 
 #include <arch/board/board.h>
+#include <arch/chip/pm.h>
 #include "cxd56_gpio.h"
 #include "cxd56_pinconfig.h"
 #include "cxd56_sdhci.h"
@@ -94,6 +95,9 @@ static struct cxd56_sdhci_state_s g_sdhci;
 static struct work_s g_sdcard_work;
 #endif
 
+static struct pm_cpu_freqlock_s g_hv_lock =
+  PM_CPUFREQLOCK_INIT(PM_CPUFREQLOCK_TAG('S','D',0), PM_CPUFREQLOCK_FLAG_HV);
+
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -111,6 +115,10 @@ static void board_sdcard_enable(FAR void *arg)
   struct stat stat_sdio;
   int ret = OK;
 
+  /* Acquire frequency lock */
+
+  up_pm_acquire_freqlock(&g_hv_lock);
+
   if(!g_sdhci.initialized)
     {
       /* Mount the SDHC-based MMC/SD block driver */
@@ -123,7 +131,7 @@ static void board_sdcard_enable(FAR void *arg)
       if (!g_sdhci.sdhci)
         {
           _err("ERROR: Failed to initialize SDHC slot 0\n");
-          return;
+          goto release_frequency_lock;
         }
 
       /* If not initialize SD slot */
@@ -138,7 +146,7 @@ static void board_sdcard_enable(FAR void *arg)
           if (ret != OK)
             {
               _err("ERROR: Failed to bind SDHC to the MMC/SD driver: %d\n", ret);
-              return;
+              goto release_frequency_lock;
             }
 
           finfo("Successfully bound SDHC to the MMC/SD driver\n");
@@ -166,6 +174,11 @@ static void board_sdcard_enable(FAR void *arg)
 
       g_sdhci.initialized = true;
     }
+
+release_frequency_lock:
+    /* Release frequency lock */
+
+    up_pm_release_freqlock(&g_hv_lock);
 }
 
 /****************************************************************************
