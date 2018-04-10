@@ -741,7 +741,7 @@ static int cxd56_epwrite(FAR struct cxd56_ep_s *privep, uint8_t *buf,
       ctrl |= USB_SENDNULL;
     }
 
-  putreg32(ctrl | USB_P, CXD56_USB_IN_EP_CONTROL(epphy));
+  putreg32(ctrl | USB_P | USB_CNAK, CXD56_USB_IN_EP_CONTROL(epphy));
 
   return nbytes;
 }
@@ -853,15 +853,6 @@ static void cxd56_txdmacomplete(struct cxd56_ep_s *privep)
           cxd56_reqcomplete(privep, OK);
         }
     }
-
-  privep->txbusy = 0;
-
-  /* Send next queued request if exist */
-
-  if (cxd56_rqpeek(privep))
-    {
-      cxd56_wrrequest(privep);
-    }
 }
 
 /****************************************************************************
@@ -917,12 +908,6 @@ static int cxd56_wrrequest(struct cxd56_ep_s *privep)
   usbtrace(TRACE_WRITE(privep->epphy), (uint16_t)bytesleft);
   if (bytesleft > 0 || privep->txnullpkt)
     {
-      /* Indicate that there is data in the TX FIFO.  This will be cleared
-       * when the EPIN interrupt is received
-       */
-
-      privep->txbusy = 1;
-
       /* Try to send maxpacketsize -- unless we don't have that many
        * bytes to send.
        */
@@ -964,8 +949,6 @@ static void cxd56_rxdmacomplete(FAR struct cxd56_ep_s *privep)
   FAR struct cxd56_req_s *privreq;
   uint32_t status = desc->status;
   uint16_t nrxbytes;
-
-  uinfo("EP%d status %08x\n", privep->epphy, desc->status);
 
   nrxbytes = status & DESC_SIZE_MASK;
 
@@ -1248,7 +1231,6 @@ static inline void cxd56_ep0setup(struct cxd56_usbdev_s *priv)
   /* Assume NOT stalled */
 
   ep0->stalled  = 0;
-  ep0->txbusy   = 0;
   priv->stalled = 0;
 
   /* Read EP0 SETUP data */
@@ -1551,16 +1533,6 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
                 privep->halted = 1;
               }
 
-            if (stat & USB_INT_IN)
-              {
-                /* Reply NAK when TxFIFO empty */
-
-                usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_IN), n);
-                ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(n));
-                putreg32(ctrl | USB_SNAK, CXD56_USB_IN_EP_CONTROL(n));
-                putreg32(USB_INT_IN, CXD56_USB_IN_EP_STATUS(n));
-              }
-
             if (stat & USB_INT_TXEMPTY)
               {
                 /* Transmit FIFO Empty detected */
@@ -1586,11 +1558,38 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
                 /* Transfer Done/Transmit FIFO Empty */
 
                 usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_XFERDONE), n);
+
+                /* Set NAK during processing IN request completion */
+
                 ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(n));
                 putreg32(ctrl | USB_SNAK, CXD56_USB_IN_EP_CONTROL(n));
+
                 putreg32(USB_INT_XFERDONE, CXD56_USB_IN_EP_STATUS(n));
 
                 cxd56_txdmacomplete(privep);
+
+                /* Clear NAK to raise IN interrupt for send next IN
+                 * packets.
+                 */
+
+                putreg32(ctrl | USB_CNAK, CXD56_USB_IN_EP_CONTROL(n));
+              }
+
+            if (stat & USB_INT_IN)
+              {
+                /* Reply NAK for IN token when TxFIFO empty */
+
+                usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_IN), n);
+                putreg32(USB_INT_IN, CXD56_USB_IN_EP_STATUS(n));
+                ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(n));
+                putreg32(ctrl | USB_SNAK, CXD56_USB_IN_EP_CONTROL(n));
+
+                /* If another IN request has been queued, then send it. */
+
+                if (n > 0 && !cxd56_rqempty(privep))
+                  {
+                    cxd56_wrrequest(privep);
+                  }
               }
 
             if (stat & USB_INT_HE)
@@ -2330,8 +2329,6 @@ static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
   usbtrace(TRACE_EPSUBMIT, privep->epphy);
   priv = privep->dev;
 
-  uinfo("EP%d\n", privep->epphy);
-
   if (!priv->driver || priv->usbdev.speed == USB_SPEED_UNKNOWN)
     {
       usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_NOTCONFIGURED), 0);
@@ -2380,12 +2377,19 @@ static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
 
   else if (privep->in || privep->epphy == 0)
     {
+      int xmit = 0;
+
+      if (cxd56_rqempty(privep))
+        {
+          xmit = 1;
+        }
+
       /* Add the new request to the request queue for the IN endpoint */
 
       cxd56_rqenqueue(privep, privreq);
       usbtrace(TRACE_INREQQUEUED(privep->epphy), privreq->req.len);
 
-      if (privep->txbusy == 0)
+      if (xmit)
         {
           ret = cxd56_wrrequest(privep);
         }
