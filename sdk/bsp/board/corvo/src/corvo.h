@@ -58,13 +58,6 @@ struct spi_dev_s;
 #define GPIO_BUT1           (PIN_SPI2_MOSI)
 #define GPIO_BUT2           (PIN_SPI2_MISO)
 
-/* Do we need to register I2C drivers on behalf of the I2C tool? */
-
-#define HAVE_I2CTOOL 1
-#if !defined(CONFIG_SYSTEM_I2CTOOL) || !defined(CONFIG_I2C_DRIVER)
-#  undef HAVE_I2CTOOL
-#endif
-
 /* Do we need to register SPI drivers on behalf of the SPI tool? */
 
 #define HAVE_SPITOOL 1

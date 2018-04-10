@@ -246,27 +246,6 @@ static void timer_initialize(void)
 }
 #endif
 
-#ifdef HAVE_I2CTOOL
-/****************************************************************************
- * Name: cxd56_i2c_register
- *
- * Description:
- *   Register one I2C drivers for the I2C tool.
- *
- ****************************************************************************/
-
-static void cxd56_i2c_register(FAR struct i2c_master_s *i2c, int bus)
-{
-  int ret;
-
-  ret = i2c_register(i2c, bus);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to register I2C%d driver: %d\n", bus, ret);
-    }
-}
-#endif
-
 #ifdef HAVE_SPITOOL
 #if defined(CONFIG_CXD56_SPI3) || defined (CONFIG_CXD56_SPI5)
 /****************************************************************************
@@ -411,9 +390,6 @@ int board_app_initialize(uintptr_t arg)
     _err("ERROR: Failed to intialize i2c bus.\n");
     return -ENODEV;
   }
-#ifdef HAVE_I2CTOOL
-  cxd56_i2c_register(i2c, 0);
-#endif
 #endif
 
 #ifdef CONFIG_CXD56_I2C1
@@ -424,9 +400,6 @@ int board_app_initialize(uintptr_t arg)
     _err("ERROR: Failed to intialize i2c bus1.\n");
     return -ENODEV;
   }
-#ifdef HAVE_I2CTOOL
-  cxd56_i2c_register(i2c1, 1);
-#endif
 #endif
 
 #ifdef CONFIG_CXD56_I2C2
@@ -437,9 +410,6 @@ int board_app_initialize(uintptr_t arg)
     _err("ERROR: Failed to intialize i2c bus2.\n");
     return -ENODEV;
   }
-#ifdef HAVE_I2CTOOL
-  cxd56_i2c_register(i2c2, 2);
-#endif
 #endif
 
 #ifdef CONFIG_CXD56_SPI3
@@ -453,6 +423,15 @@ int board_app_initialize(uintptr_t arg)
 #ifdef HAVE_SPITOOL
   cxd56_spi_register(spi3, 3);
 #endif
+#endif
+
+#ifdef CONFIG_SYSTEM_I2CTOOL
+  /* Initialize to use system/i2ctool for all of the i2c port */
+
+  for (int port = 0; port <= 2; port++)
+    {
+      board_i2cdev_initialize(port);
+    }
 #endif
 
 #ifdef CONFIG_SENSORS

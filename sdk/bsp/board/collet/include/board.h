@@ -462,6 +462,16 @@ bool board_aca_power_monitor(int target);
 
 #define board_sdcard_set_low_voltage()
 
+/****************************************************************************
+ * Name: board_i2cdev_initialize
+ *
+ * Description:
+ *   Initialize and register i2c driver for the specified i2c port
+ *
+ ****************************************************************************/
+
+int board_i2cdev_initialize(int port);
+
 #undef EXTERN
 #if defined(__cplusplus)
 }

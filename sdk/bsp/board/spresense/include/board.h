@@ -538,6 +538,16 @@ void board_isx012_release_sleep(void);
 
 int board_pwm_setup(void);
 
+/****************************************************************************
+ * Name: board_i2cdev_initialize
+ *
+ * Description:
+ *   Initialize and register i2c driver for the specified i2c port
+ *
+ ****************************************************************************/
+
+int board_i2cdev_initialize(int port);
+
 #undef EXTERN
 #if defined(__cplusplus)
 }

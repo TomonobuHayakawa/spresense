@@ -405,9 +405,6 @@ int board_app_initialize(uintptr_t arg)
     _err("ERROR: Failed to intialize i2c bus0.\n");
     return -ENODEV;
   }
-#ifdef HAVE_I2CTOOL
-  cxd56_i2c_register(i2c0, 0);
-#endif
 #endif
 #ifdef CONFIG_CXD56_I2C2
   /* globally intialize i2c bus for peripherals */
@@ -418,9 +415,15 @@ int board_app_initialize(uintptr_t arg)
     _err("ERROR: Failed to intialize i2c bus2.\n");
     return -ENODEV;
   }
-#ifdef HAVE_I2CTOOL
-  cxd56_i2c_register(i2c2, 2);
 #endif
+
+#ifdef CONFIG_SYSTEM_I2CTOOL
+  /* Initialize to use system/i2ctool for all of the i2c port */
+
+  for (int port = 0; port <= 2; port++)
+    {
+      board_i2cdev_initialize(port);
+    }
 #endif
 
 #ifdef CONFIG_BMP280
