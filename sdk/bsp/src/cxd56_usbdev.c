@@ -1041,6 +1041,51 @@ static int cxd56_rdrequest(struct cxd56_ep_s *privep)
 }
 
 /****************************************************************************
+ * Name: cxd56_stopinep
+ *
+ * Description:
+ *   Stop IN endpoint forcibly
+ *
+ ****************************************************************************/
+
+static void cxd56_stopinep(FAR struct cxd56_ep_s *privep)
+{
+  uint32_t ctrl;
+
+  /* Stop TX */
+
+  ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(privep->epphy));
+  ctrl |= USB_F;
+  putreg32(ctrl, CXD56_USB_IN_EP_CONTROL(privep->epphy));
+}
+
+/****************************************************************************
+ * Name: cxd56_stopoutep
+ *
+ * Description:
+ *   Stop OUT endpoint forcibly
+ *
+ ****************************************************************************/
+
+static void cxd56_stopoutep(FAR struct cxd56_ep_s *privep)
+{
+  uint32_t ctrl;
+  uint32_t stat;
+
+  /* Stop RX if FIFO not empty */
+
+  stat = getreg32(CXD56_USB_OUT_EP_STATUS(privep->epphy));
+  if (stat & USB_INT_MRXFIFOEMPTY)
+    {
+      return;
+    }
+
+  ctrl = getreg32(CXD56_USB_OUT_EP_CONTROL(privep->epphy));
+  ctrl |= USB_CLOSEDESC | USB_MRXFLUSH;
+  putreg32(ctrl, CXD56_USB_OUT_EP_CONTROL(privep->epphy));
+}
+
+/****************************************************************************
  * Name: cxd56_cancelrequests
  *
  * Description:
@@ -1050,10 +1095,34 @@ static int cxd56_rdrequest(struct cxd56_ep_s *privep)
 
 static void cxd56_cancelrequests(struct cxd56_ep_s *privep)
 {
+  if (privep->epphy > 0)
+    {
+      if (privep->in)
+        {
+          cxd56_stopinep(privep);
+        }
+      else
+        {
+          cxd56_stopoutep(privep);
+        }
+    }
+
   while (!cxd56_rqempty(privep))
     {
       usbtrace(TRACE_COMPLETE(privep->epphy), (cxd56_rqpeek(privep))->req.xfrd);
       cxd56_reqcomplete(privep, -ESHUTDOWN);
+    }
+
+  if (privep->epphy > 0)
+    {
+      if (privep->in)
+        {
+          putreg32(0, CXD56_USB_IN_EP_DATADESC(privep->epphy));
+        }
+      else
+        {
+          putreg32(0, CXD56_USB_OUT_EP_DATADESC(privep->epphy));
+        }
     }
 }
 
@@ -1496,6 +1565,7 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
               {
                 /* Transmit FIFO Empty detected */
 
+                usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_TXEMPTY), n);
                 ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(n));
                 putreg32(ctrl | USB_SNAK, CXD56_USB_IN_EP_CONTROL(n));
                 putreg32(USB_INT_TXEMPTY, CXD56_USB_IN_EP_STATUS(n));
@@ -1731,11 +1801,8 @@ static int cxd56_usbinterrupt(int irq, FAR void *context, FAR void *arg)
         {
           FAR struct cxd56_ep_s *privep =
             (FAR struct cxd56_ep_s *)&g_usbdev.eplist[i];
-          uint32_t v;
 
           cxd56_cancelrequests(privep);
-          v = getreg32(CXD56_USB_IN_EP_CONTROL(i));
-          putreg32(v | USB_F, CXD56_USB_IN_EP_CONTROL(i));
         }
 
       cxd56_pullup(&g_usbdev.usbdev, false);
@@ -2088,6 +2155,22 @@ static int cxd56_epconfigure(FAR struct usbdev_ep_s *ep,
 
   privep->stalled = 0;
 
+  /* Clear and setup DMA descriptor */
+
+  privep->desc->status = DESC_BS_HOST_BUSY;
+  privep->desc->buf    = 0;
+
+  if (privep->in)
+    {
+      putreg32((uint32_t)(uintptr_t)privep->desc,
+               CXD56_USB_IN_EP_DATADESC(privep->epphy));
+    }
+  else
+    {
+      putreg32((uint32_t)(uintptr_t)privep->desc,
+               CXD56_USB_OUT_EP_DATADESC(privep->epphy));
+    }
+
   return OK;
 }
 
@@ -2117,8 +2200,8 @@ static int cxd56_epdisable(FAR struct usbdev_ep_s *ep)
   /* Cancel any ongoing activity and reset the endpoint */
 
   flags = enter_critical_section();
-  cxd56_cancelrequests(privep);
   cxd56_epstall(&privep->ep, false);
+  cxd56_cancelrequests(privep);
   leave_critical_section(flags);
   return OK;
 }
@@ -2442,7 +2525,14 @@ static void cxd56_freeepbuffer(FAR struct cxd56_ep_s *privep)
 {
   DEBUGASSERT(privep->epphy); /* Do not use for EP0 */
 
-  putreg32(0, CXD56_USB_IN_EP_DATADESC(privep->epphy));
+  if (privep->in)
+    {
+      putreg32(0, CXD56_USB_IN_EP_DATADESC(privep->epphy));
+    }
+  else
+    {
+      putreg32(0, CXD56_USB_OUT_EP_DATADESC(privep->epphy));
+    }
 
   if (privep->desc)
     {
@@ -2812,7 +2902,6 @@ static int cxd56_vbusninterrupt(int irq, FAR void *context, FAR void *arg)
 {
   FAR struct cxd56_usbdev_s *priv = (FAR struct cxd56_usbdev_s *)arg;
   FAR struct cxd56_ep_s *privep;
-  uint32_t v;
   int i;
 
   usbtrace(TRACE_INTENTRY(CXD56_TRACEINTID_VBUSN), 0);
@@ -2830,22 +2919,8 @@ static int cxd56_vbusninterrupt(int irq, FAR void *context, FAR void *arg)
     {
       privep = (FAR struct cxd56_ep_s *)&priv->eplist[i];
 
-      cxd56_cancelrequests(privep);
       cxd56_epstall(&privep->ep, false);
-
-      if (privep->in)
-        {
-          v = getreg32(CXD56_USB_IN_EP_CONTROL(i));
-          putreg32(v | USB_F, CXD56_USB_IN_EP_CONTROL(i));
-          putreg32(0, CXD56_USB_IN_EP_DATADESC(privep->epphy));
-        }
-      else
-        {
-          v = getreg32(CXD56_USB_OUT_EP_CONTROL(i));
-          putreg32(v | USB_CLOSEDESC | USB_MRXFLUSH,
-                   CXD56_USB_OUT_EP_CONTROL(i));
-          putreg32(0, CXD56_USB_OUT_EP_DATADESC(privep->epphy));
-        }
+      cxd56_cancelrequests(privep);
     }
 
   if (g_usbdev.driver)
