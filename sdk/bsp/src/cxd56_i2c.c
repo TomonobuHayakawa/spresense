@@ -413,21 +413,25 @@ static int cxd56_i2c_interrupt(int irq, FAR void *context, FAR void *arg)
   if (state & INTR_TX_ABRT)
     {
       i2c_reg_read(priv, CXD56_IC_CLR_TX_ABRT);
+      priv->error = -ENODEV;
     }
 
   if (state & INTR_TX_OVER)
     {
       i2c_reg_read(priv, CXD56_IC_CLR_TX_OVER);
+      priv->error = -EIO;
     }
 
   if (state & INTR_RX_OVER)
     {
       i2c_reg_read(priv, CXD56_IC_CLR_RX_OVER);
+      priv->error = -EIO;
     }
 
   if (state & INTR_RX_UNDER)
     {
       i2c_reg_read(priv, CXD56_IC_CLR_RX_UNDER);
+      priv->error = -EIO;
     }
 
   if (state & INTR_TX_EMPTY)
@@ -437,17 +441,6 @@ static int cxd56_i2c_interrupt(int irq, FAR void *context, FAR void *arg)
        */
 
       i2c_reg_rmw(priv, CXD56_IC_INTR_MASK, 0, INTR_TX_EMPTY);
-
-      /* Failure of wd_cancel() means that the timer expired.
-       * In this case, sem_post() has already been called.
-       * Therefore, call sem_post() only when wd_cancel() succeeds.
-       */
-
-      ret = wd_cancel(priv->timeout);
-      if (ret == OK)
-        {
-          sem_post(&priv->wait);
-        }
     }
 
   if (state & INTR_RX_FULL)
@@ -458,7 +451,15 @@ static int cxd56_i2c_interrupt(int irq, FAR void *context, FAR void *arg)
 
       i2c_reg_rmw(priv, CXD56_IC_INTR_MASK, 0, INTR_RX_FULL);
       cxd56_i2c_drainrxfifo(priv);
+    }
 
+  if (state & INTR_STOP_DET)
+    {
+      i2c_reg_read(priv, CXD56_IC_CLR_STOP_DET);
+    }
+
+  if ((priv->error) || (state & INTR_TX_EMPTY) || (state & INTR_RX_FULL))
+    {
       /* Failure of wd_cancel() means that the timer expired.
        * In this case, sem_post() has already been called.
        * Therefore, call sem_post() only when wd_cancel() succeeds.
@@ -469,11 +470,6 @@ static int cxd56_i2c_interrupt(int irq, FAR void *context, FAR void *arg)
         {
           sem_post(&priv->wait);
         }
-    }
-
-  if (state & INTR_STOP_DET)
-    {
-      i2c_reg_read(priv, CXD56_IC_CLR_STOP_DET);
     }
 
   return OK;
