@@ -292,7 +292,7 @@ int gnss_main(int argc, char *argv[])
 
   sigemptyset(&mask);
   sigaddset(&mask, MY_GNSS_SIG);
-  ret = sigprocmask(SIG_UNBLOCK, &mask, NULL);
+  ret = sigprocmask(SIG_BLOCK, &mask, NULL);
   if (ret != OK)
     {
       printf("sigprocmask failed. %d\n", ret);
@@ -394,12 +394,14 @@ _err:
       printf("signal error\n");
     }
 
+  sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
   /* Release GNSS file descriptor. */
 
   ret = close(fd);
   if (ret < 0)
     {
-      printf("close error\n");
+      printf("close error %d\n", errno);
     }
 
   printf("End of GNSS Sample:%d\n", ret);
