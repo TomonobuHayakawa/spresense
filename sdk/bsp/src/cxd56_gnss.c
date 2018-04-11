@@ -2263,9 +2263,22 @@ static int cxd56_gnss_cpufifo_api(FAR struct file *filep, unsigned int api,
   type = CXD56_GNSS_CPUFIFOAPI_SET_DATA(api, data);
   cxd56_cpu1sigsend(CXD56_CPU1_DATA_TYPE_CPUFIFOAPI, type);
 
-  sem_wait(&priv->apiwait);
+  ret = sem_wait(&priv->apiwait);
+  if (ret < 0)
+    {
+
+      /* If sem_wait returns -EINTR, there is a possibility that the signal
+       * for GNSS set with CXD56_GNSS_IOCTL_SIGNAL_SET is unmasked
+       * by SIG_UNMASK in the signal mask. */
+
+      ret = -errno;
+      _warn("Cannot wait GNSS semaphore %d\n", ret);
+      goto _err;
+    }
+
   ret = priv->apiret;
 
+_err:
   return ret;
 }
 
