@@ -221,6 +221,7 @@ static const uint16_t g_lt1pa01alsinst[] =
   SCU_INST_RECV(LT1PA01_ALS_BYTESPERSAMPLE) | SCU_INST_LAST,
 };
 
+#ifndef CONFIG_LT1PA01_PROXIMITY_INTERRUPT
 /* SCU instructions for pick proximity sensing data. */
 
 static const uint16_t g_lt1pa01proxinst[] =
@@ -228,6 +229,7 @@ static const uint16_t g_lt1pa01proxinst[] =
   SCU_INST_SEND(LT1PA01_PROX_DATA),
   SCU_INST_RECV(LT1PA01_PROX_BYTESPERSAMPLE) | SCU_INST_LAST,
 };
+#endif
 
 /* Reference count */
 

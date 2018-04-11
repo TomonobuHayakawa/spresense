@@ -204,6 +204,7 @@ static const uint16_t g_rpr0521rsalsinst[] =
   SCU_INST_RECV(RPR0521RS_ALS_BYTESPERSAMPLE) | SCU_INST_LAST,
 };
 
+#ifndef CONFIG_RPR0521RS_PROXIMITY_INTERRUPT
 /* SCU instructions for pick proximity sensing data. */
 
 static const uint16_t g_rpr0521rspsinst[] =
@@ -211,6 +212,7 @@ static const uint16_t g_rpr0521rspsinst[] =
   SCU_INST_SEND(RPR0521RS_PS_DATA_LSB),
   SCU_INST_RECV(RPR0521RS_PS_BYTESPERSAMPLE) | SCU_INST_LAST,
 };
+#endif
 
 /* Reference count */
 

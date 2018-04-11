@@ -226,6 +226,7 @@ static const uint16_t g_apds9930alsinst[] =
   SCU_INST_RECV(APDS9930_ALS_BYTESPERSAMPLE) | SCU_INST_LAST,
 };
 
+#ifndef CONFIG_APDS9930_PROXIMITY_INTERRUPT
 /* SCU instructions for pick proximity sensing data. */
 
 static const uint16_t g_apds9930psinst[] =
@@ -233,6 +234,7 @@ static const uint16_t g_apds9930psinst[] =
   SCU_INST_SEND(APDS9930_CMD_TYPE_AUTOINC | APDS9930_PDATAL),
   SCU_INST_RECV(APDS9930_PS_BYTESPERSAMPLE) | SCU_INST_LAST,
 };
+#endif
 
 /* Reference count */
 
