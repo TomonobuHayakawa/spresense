@@ -48,8 +48,8 @@ ifneq ($(BOARDNAME),)
 include $(BOARDNAME)/Make.defs
 endif
 
-VPATH   += common
-DEPPATH += --dep-path common
+VPATH   += common/src
+DEPPATH += --dep-path common/src
 
 CSRCS += cxd56_boot.c
 

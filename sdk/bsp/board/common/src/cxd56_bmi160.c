@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_cxd224x.h
+ * configs/cxd56xx/src/cxd56_bmi160.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,13 +32,87 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_CXD224X_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_CXD224X_H
-
 /****************************************************************************
- * Public Function Prototypes
+ * Included Files
  ****************************************************************************/
 
-extern void cxd224x_initialize(FAR const char *devpath, int bus);
+#include <sdk/config.h>
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_CXD224X_H */
+#include <stdio.h>
+#include <debug.h>
+#include <errno.h>
+
+#include <nuttx/board.h>
+#include <nuttx/spi/spi.h>
+#include <nuttx/sensors/bmi160.h>
+#ifdef CONFIG_BMI160_SCU
+#include <arch/chip/cxd56_scu.h>
+#endif
+
+#ifdef CONFIG_CXD56_DECI_GYRO
+#  define GYRO_NR_SEQS 3
+#else
+#  define GYRO_NR_SEQS 1
+#endif
+
+#ifdef CONFIG_CXD56_DECI_ACCEL
+#  define ACCEL_NR_SEQS 3
+#else
+#  define ACCEL_NR_SEQS 1
+#endif
+
+#if defined(CONFIG_SPI) && defined(CONFIG_BMI160)
+
+int board_bmi160_initialize(FAR struct spi_dev_s* spi)
+{
+  int ret;
+#ifdef CONFIG_BMI160_SCU
+  int i;
+
+  sninfo("Initializing BMI160..\n");
+
+  ret = bmi160_init(spi);
+  if (ret < 0)
+    {
+      snerr("Error initialize BMI160\n");
+      return ret;
+    }
+
+  /* Create char devices for each FIFOs */
+
+  for (i = 0; i < GYRO_NR_SEQS; i++)
+    {
+      ret = bmi160gyro_register("/dev/gyro", i, spi);
+      if (ret < 0)
+        {
+          snerr("Error registering gyroscope. %d\n", ret);
+          return ret;
+        }
+    }
+
+  /* Create char devices for each FIFOs */
+
+  for (i = 0; i < ACCEL_NR_SEQS; i++)
+    {
+      ret = bmi160accel_register("/dev/accel", i, spi);
+      if (ret < 0)
+        {
+          snerr("Error registering accelerometer. %d\n", ret);
+          return ret;
+        }
+    }
+
+#else
+  sninfo("Initializing BMI160..\n");
+
+  ret = bmi160_register("/dev/accel0", spi);
+  if (ret < 0)
+    {
+      snerr("Error registering BMI160\n");
+    }
+#endif
+  return ret;
+}
+
+#endif
+

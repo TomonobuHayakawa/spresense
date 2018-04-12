@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bm1383glv.c
+ * bsp/board/common/include/cxd56_ak09912.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,53 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_AK09912_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_AK09912_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-#include <stdio.h>
-#include <debug.h>
-#include <errno.h>
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-#include <nuttx/board.h>
+#ifndef __ASSEMBLY__
 
-#include <nuttx/sensors/bm1383glv.h>
-#ifdef CONFIG_BM1383GLV_SCU
-#include <arch/chip/cxd56_scu.h>
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_BM1383GLV)
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-#ifdef CONFIG_BM1383GLV_SCU
-int cxd56_bm1383glvinitialize(FAR const char *devpath,
-                              FAR struct i2c_master_s* i2c)
-{
-  int ret;
+/****************************************************************************
+ * Name: board_ak09912_initialize
+ *
+ * Description:
+ *   Initialize AK09912 i2c driver and register the AK09912 device.
+ *
+ ****************************************************************************/
 
-  sninfo("Initializing BM1383GLV...\n");
+#ifdef CONFIG_AK09912
+int board_ak09912_initialize(FAR const char *devpath, int bus);
+#endif
 
-  /* Initialize deivce at I2C port 0 */
-
-  ret = bm1383glv_init(i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error initialize BM1383GLV.\n");
-      return ret;
-    }
-
-  /* Register devices for each FIFOs at I2C port 0 */
-
-  ret = bm1383glv_register(devpath, 0, i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error registering BM1383GLV.\n");
-      return ret;
-    }
-
-  return ret;
+#undef EXTERN
+#if defined(__cplusplus)
 }
-#endif /* CONFIG_BM1383GLV_SCU */
+#endif
 
-#endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_BM1383GLV */
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_AK09912_H */

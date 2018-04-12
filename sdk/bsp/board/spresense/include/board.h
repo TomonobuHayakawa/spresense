@@ -39,7 +39,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <sys/boardctl.h>
 #include <stdbool.h>
 
@@ -50,6 +50,16 @@
 #if defined(CONFIG_BOARDCTL_IOCTL) && defined(CONFIG_USBDEV)
 #  include <arch/chip/usbdev.h>
 #endif
+
+#include <arch/board/common/cxd56_bmp280.h>
+#include <arch/board/common/cxd56_kx022.h>
+#include <arch/board/common/cxd56_ak09912.h>
+#include <arch/board/common/cxd56_bh1745nuc.h>
+#include <arch/board/common/cxd56_apds9930.h>
+#include <arch/board/common/cxd56_lt1pa01.h>
+#include <arch/board/common/cxd56_bh1721fvc.h>
+#include <arch/board/common/cxd56_rpr0521rs.h>
+#include <arch/board/common/cxd56_i2cdev.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -537,16 +547,6 @@ void board_isx012_release_sleep(void);
  ****************************************************************************/
 
 int board_pwm_setup(void);
-
-/****************************************************************************
- * Name: board_i2cdev_initialize
- *
- * Description:
- *   Initialize and register i2c driver for the specified i2c port
- *
- ****************************************************************************/
-
-int board_i2cdev_initialize(int port);
 
 #undef EXTERN
 #if defined(__cplusplus)

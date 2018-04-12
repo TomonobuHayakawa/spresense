@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_lt1pa01.c
+ * bsp/board/common/include/cxd56_apds9930.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,59 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9930_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9930_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-#include <stdio.h>
-#include <debug.h>
-#include <errno.h>
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-#include <nuttx/board.h>
+#ifndef __ASSEMBLY__
 
-#include <nuttx/sensors/lt1pa01.h>
-#ifdef CONFIG_LT1PA01_SCU
-#include <arch/chip/cxd56_scu.h>
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_LT1PA01)
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-#ifdef CONFIG_LT1PA01_SCU
-int cxd56_lt1pa01initialize(FAR struct i2c_master_s* i2c)
-{
-  int ret;
+/****************************************************************************
+ * Name: board_apds9930_initialize
+ *
+ * Description:
+ *   Initialize APDS9930 i2c driver and register the APDS9930 device.
+ *
+ ****************************************************************************/
 
-  sninfo("Initializing LT1PA01...\n");
+#ifdef CONFIG_APDS9930
+int board_apds9930_initialize(int bus);
+#endif
 
-  /* Initialize deivce at I2C port 0 */
-
-  ret = lt1pa01_init(i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error initialize LT1PA01.\n");
-      return ret;
-    }
-
-  /* Register devices for each FIFOs at I2C port 0 */
-
-  ret = lt1pa01als_register("/dev/light", 0, i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error registering LT1PA01[ALS].\n");
-      return ret;
-    }
-
-  ret = lt1pa01prox_register("/dev/proximity", 0, i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error registering LT1PA01[PS].\n");
-      return ret;
-    }
-
-  return ret;
+#undef EXTERN
+#if defined(__cplusplus)
 }
-#endif /* CONFIG_LT1PA01_SCU */
+#endif
 
-#endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_LT1PA01 */
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9930_H */

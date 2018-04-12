@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_cxd224x.h
+ * configs/cxd56xx/src/cxd56_bm1383glv.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,13 +32,62 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_CXD224X_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_CXD224X_H
-
 /****************************************************************************
- * Public Function Prototypes
+ * Included Files
  ****************************************************************************/
 
-extern void cxd224x_initialize(FAR const char *devpath, int bus);
+#include <sdk/config.h>
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_CXD224X_H */
+#include <stdio.h>
+#include <debug.h>
+#include <errno.h>
+
+#include <nuttx/board.h>
+
+#include <nuttx/sensors/bm1383glv.h>
+#ifdef CONFIG_BM1383GLV_SCU
+#include <arch/chip/cxd56_scu.h>
+#endif
+
+#include "cxd56_i2c.h"
+
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BM1383GLV)
+
+#ifdef CONFIG_BM1383GLV_SCU
+int board_bm1383glv_initialize(FAR const char *devpath, int bus)
+{
+  int ret;
+  FAR struct i2c_master_s *i2c;
+
+  sninfo("Initializing BM1383GLV...\n");
+
+  /* Initialize i2c deivce */
+
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = bm1383glv_init(i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error initialize BM1383GLV.\n");
+      return ret;
+    }
+
+  /* Register devices for each FIFOs at I2C bus */
+
+  ret = bm1383glv_register(devpath, 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering BM1383GLV.\n");
+      return ret;
+    }
+
+  return ret;
+}
+#endif /* CONFIG_BM1383GLV_SCU */
+
+#endif /* CONFIG_CXD56_I2C && CONFIG_CXD56_I2C0 && CONFIG_BM1383GLV */

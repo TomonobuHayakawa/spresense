@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bh1745nuc.c
+ * bsp/board/common/include/cxd56_rpr0521rs.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,53 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_RPR0521RS_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_RPR0521RS_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-#include <stdio.h>
-#include <debug.h>
-#include <errno.h>
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-#include <nuttx/board.h>
+#ifndef __ASSEMBLY__
 
-#include <nuttx/sensors/bh1745nuc.h>
-#ifdef CONFIG_BH1745NUC_SCU
-#include <arch/chip/cxd56_scu.h>
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_BH1745NUC)
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-#ifdef CONFIG_BH1745NUC_SCU
-int cxd56_bh1745nucinitialize(FAR const char *devpath,
-                              FAR struct i2c_master_s* i2c)
-{
-  int ret;
+/****************************************************************************
+ * Name: board_rpr0521rs_initialize
+ *
+ * Description:
+ *   Initialize RPR0521RS i2c driver and register the RPR0521RS device.
+ *
+ ****************************************************************************/
 
-  sninfo("Initializing BH1745NUC...\n");
+#ifdef CONFIG_RPR0521RS
+int board_rpr0521rs_initialize(int bus);
+#endif
 
-  /* Initialize deivce at I2C port 0 */
-
-  ret = bh1745nuc_init(i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error initialize BH1745NUC.\n");
-      return ret;
-    }
-
-  /* Register devices for each FIFOs at I2C port 0 */
-
-  ret = bh1745nuc_register(devpath, 0, i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error registering BH1745NUC.\n");
-      return ret;
-    }
-
-  return ret;
+#undef EXTERN
+#if defined(__cplusplus)
 }
-#endif /* CONFIG_BH1745NUC_SCU */
+#endif
 
-#endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_BH1745NUC */
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_RPR0521RS_H */

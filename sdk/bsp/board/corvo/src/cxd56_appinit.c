@@ -140,6 +140,10 @@
 
 /* Sanity check */
 
+#if defined(CONFIG_BMI160) && defined(CONFIG_KX022)
+# error "Duplicate accelerometer sensor device."
+#endif
+
 #if defined(CONFIG_BMP280) && defined(CONFIG_BM1383GLV)
 #  error "Duplicate pressure sensor device."
 #endif
@@ -332,15 +336,6 @@ int board_app_initialize(uintptr_t arg)
 {
   struct pm_cpu_wakelock_s wlock;
 
-#ifdef CONFIG_CXD56_I2C0
-  FAR struct i2c_master_s *i2c;
-#endif
-#ifdef CONFIG_CXD56_I2C1
-  FAR struct i2c_master_s *i2c1;
-#endif
-#ifdef CONFIG_CXD56_I2C2
-  FAR struct i2c_master_s *i2c2;
-#endif
 #ifdef CONFIG_CXD56_SPI3
   FAR struct spi_dev_s *spi3;
 #endif
@@ -429,36 +424,6 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#ifdef CONFIG_CXD56_I2C0
-  /* globally intialize i2c bus for peripherals */
-  i2c = cxd56_i2cbus_initialize(0);
-  if (!i2c)
-  {
-    _err("ERROR: Failed to intialize i2c bus.\n");
-    return -ENODEV;
-  }
-#endif
-
-#ifdef CONFIG_CXD56_I2C1
-  /* globally intialize i2c bus for peripherals */
-  i2c1 = cxd56_i2cbus_initialize(1);
-  if (!i2c1)
-  {
-    _err("ERROR: Failed to intialize i2c bus1.\n");
-    return -ENODEV;
-  }
-#endif
-
-#ifdef CONFIG_CXD56_I2C2
-  /* globally intialize i2c bus for peripherals */
-  i2c2 = cxd56_i2cbus_initialize(2);
-  if (!i2c2)
-  {
-    _err("ERROR: Failed to intialize i2c bus2.\n");
-    return -ENODEV;
-  }
-#endif
-
 #ifdef CONFIG_CXD56_SPI3
   /* globally initialize spi bus for peripherals */
   spi3 = cxd56_spibus_initialize(3);
@@ -473,11 +438,11 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_SYSTEM_I2CTOOL
-  /* Initialize to use system/i2ctool for all of the i2c port */
+  /* Initialize to use system/i2ctool for all of the i2c bus */
 
-  for (int port = 0; port <= 2; port++)
+  for (int bus = 0; bus <= 2; bus++)
     {
-      board_i2cdev_initialize(port);
+      board_i2cdev_initialize(bus);
     }
 #endif
 
@@ -500,7 +465,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_BMP280
-  ret = cxd56_bmp280initialize(i2c);
+  ret = board_bmp280_initialize(0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BMP280.\n");
@@ -508,19 +473,15 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_BM1383GLV
-  ret = cxd56_bm1383glvinitialize("/dev/press", i2c);
+  ret = board_bm1383glv_initialize("/dev/press", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BM1383GLV.\n");
     }
 #endif
 
-#if defined(CONFIG_BMI160) && defined(CONFIG_KX022)
-# error "Duplicate accelerometer sensor device."
-#endif
-
-#ifdef CONFIG_BMI160
-  ret = cxd56_bmi160initialize(spi3);
+#if defined(CONFIG_CXD56_SPI3) && defined(CONFIG_BMI160)
+  ret = board_bmi160_initialize(spi3);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BMI160.\n");
@@ -528,7 +489,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_KX022
-  ret = cxd56_kx022initialize("/dev/accel", i2c);
+  ret = board_kx022_initialize("/dev/accel", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize KX022.\n");
@@ -536,7 +497,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_AK09912
-  ret = cxd56_ak09912initialize("/dev/mag", i2c);
+  ret = board_ak09912_initialize("/dev/mag", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize AKM09912.\n");
@@ -544,7 +505,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_BM1422GMV
-  ret = cxd56_bm1422gmvinitialize("/dev/mag", i2c);
+  ret = board_bm1422gmv_initialize("/dev/mag", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BM1422GMV.\n");
@@ -552,7 +513,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_BH1745NUC
-  ret = cxd56_bh1745nucinitialize("/dev/color", i2c);
+  ret = board_bh1745nuc_initialize("/dev/color", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BH1745NUC.\n");
@@ -560,7 +521,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_APDS9930
-  ret = cxd56_apds9930initialize(i2c);
+  ret = board_apds9930_initialize(0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize APDS9930.\n");
@@ -568,7 +529,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_LT1PA01
-  ret = cxd56_lt1pa01initialize(i2c);
+  ret = board_lt1pa01_initialize(0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize LT1PA01.\n");
@@ -576,7 +537,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_BH1721FVC
-  ret = cxd56_bh1721fvcinitialize(i2c);
+  ret = board_bh1721fvc_initialize("/dev/light", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BH1721FVC.\n");
@@ -584,7 +545,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_RPR0521RS
-  ret = cxd56_rpr0521rsinitialize(i2c);
+  ret = board_rpr0521rs_initialize(0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize RPR0521RS.\n");
@@ -628,11 +589,11 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #if (defined(CONFIG_LIBNFC) || defined(CONFIG_NFC_SEQUENCER)) && defined(CONFIG_CXD56_I2C1)
-  cxd224x_initialize("/dev/cxd224x-i2c", i2c1);
+  cxd224x_initialize("/dev/cxd224x-i2c", 1);
 #endif
 
 #ifdef CONFIG_VIDEO_ISX012
-  cxd56_isx012initialize("/dev/imager", i2c1);
+  cxd56_isx012initialize("/dev/imager", 1);
 #endif
 
   ret = nsh_sfc_initialize();

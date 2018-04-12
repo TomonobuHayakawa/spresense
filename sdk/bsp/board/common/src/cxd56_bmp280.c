@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bm1422gmv.c
+ * configs/cxd56xx/src/cxd56_bmp280.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
@@ -44,53 +44,105 @@
 
 #include <nuttx/board.h>
 
-#include <nuttx/sensors/bm1422gmv.h>
-#ifdef CONFIG_BM1422GMV_SCU
+#include <nuttx/sensors/bmp280.h>
+#ifdef CONFIG_BMP280_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#ifdef CONFIG_BM1422GMV_SCU
-#  ifdef CONFIG_CXD56_DECI_BM1422GMV
-#    define BM1422GMV_PATH_CNT 3
+#ifdef CONFIG_BMP280_SCU
+#  ifdef CONFIG_CXD56_DECI_PRESS
+#    define PRESS_NR_SEQS 3
 #  else
-#    define BM1422GMV_PATH_CNT 1
+#    define PRESS_NR_SEQS 1
+#  endif
+#  ifdef CONFIG_CXD56_DECI_TEMP
+#    define TEMP_NR_SEQS 3
+#  else
+#    define TEMP_NR_SEQS 1
 #  endif
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_BM1422GMV)
+#include "cxd56_i2c.h"
 
-#ifdef CONFIG_BM1422GMV_SCU
-int cxd56_bm1422gmvinitialize(FAR const char *devpath,
-                              FAR struct i2c_master_s* i2c)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BMP280)
+
+#ifdef CONFIG_BMP280_SCU
+int board_bmp280_initialize(int bus)
 {
-  int id = 0;
+  int i;
   int ret;
+  FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing BM1422GMV...\n");
+  sninfo("Initializing BMP280..\n");
 
-  /* Initialize deivce at I2C port 0 */
+  /* Initialize i2c deivce */
 
-  ret = bm1422gmv_init(i2c, 0);
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = bmp280_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize BM1422GMV.\n");
+      snerr("Error initialize BMP280.\n");
       return ret;
     }
 
-  /* Register devices for each FIFOs at I2C port 0 */
+  /* Create char devices for each FIFOs */
 
-  for (id = 0; id < BM1422GMV_PATH_CNT; id++)
+  for (i = 0; i < PRESS_NR_SEQS; i++)
     {
-      ret = bm1422gmv_register(devpath, id, i2c, 0);
+      ret = bmp280press_register("/dev/press", i, i2c, bus);
       if (ret < 0)
         {
-          snerr("Error registering BM1422GMV.\n");
+          snerr("Error registering pressure. %d\n", ret);
+          return ret;
+        }
+    }
+
+  /* Create char devices for each FIFOs */
+
+  for (i = 0; i < TEMP_NR_SEQS; i++)
+    {
+      ret = bmp280temp_register("/dev/temp", i, i2c, bus);
+      if (ret < 0)
+        {
+          snerr("Error registering temperature. %d\n", ret);
           return ret;
         }
     }
 
   return ret;
 }
-#endif /* CONFIG_BM1422GMV_SCU */
+#else
+int board_bmp280_initialize(int bus)
+{
+  int ret;
+  FAR struct i2c_master_s *i2c;
 
-#endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_BM1422GMV */
+  snerr("Initializing BMP280..\n");
+
+  /* Initialize i2c deivce */
+
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = bmp280_register("/dev/press0", i2c);
+  if (ret < 0)
+    {
+      snerr("Error registering BMP280\n");
+    }
+
+  return ret;
+}
+#endif
+
+#endif
+

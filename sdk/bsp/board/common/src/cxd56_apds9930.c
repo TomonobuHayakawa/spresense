@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_cxd224x.h
+ * configs/cxd56xx/src/cxd56_apds9930.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,13 +32,70 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_CXD224X_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_CXD224X_H
-
 /****************************************************************************
- * Public Function Prototypes
+ * Included Files
  ****************************************************************************/
 
-extern void cxd224x_initialize(FAR const char *devpath, int bus);
+#include <nuttx/config.h>
+#include <sdk/config.h>
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_CXD224X_H */
+#include <stdio.h>
+#include <debug.h>
+#include <errno.h>
+
+#include <nuttx/board.h>
+
+#include <nuttx/sensors/apds9930.h>
+#ifdef CONFIG_APDS9930_SCU
+#include <arch/chip/cxd56_scu.h>
+#endif
+
+#include "cxd56_i2c.h"
+
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_APDS9930)
+
+#ifdef CONFIG_APDS9930_SCU
+int board_apds9930_initialize(int bus)
+{
+  int ret;
+  FAR struct i2c_master_s *i2c;
+
+  sninfo("Initializing APDS9930...\n");
+
+  /* Initialize i2c deivce */
+
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = apds9930_init(i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error initialize APDS9930.\n");
+      return ret;
+    }
+
+  /* Register devices for each FIFOs at I2C bus */
+
+  ret = apds9930als_register("/dev/light", 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering APDS9930[ALS].\n");
+      return ret;
+    }
+
+  ret = apds9930ps_register("/dev/proximity", 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering APDS9930[PS].\n");
+      return ret;
+    }
+
+  return ret;
+}
+#endif /* CONFIG_APDS9930_SCU */
+
+#endif /* CONFIG_CXD56_I2C && CONFIG_APDS9930 */

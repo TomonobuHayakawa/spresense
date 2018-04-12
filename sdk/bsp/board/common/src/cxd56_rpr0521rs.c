@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bmp280.c
+ * configs/cxd56xx/src/cxd56_rpr0521rs.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
@@ -44,85 +44,57 @@
 
 #include <nuttx/board.h>
 
-#include <nuttx/sensors/bmp280.h>
-#ifdef CONFIG_BMP280_SCU
+#include <nuttx/sensors/rpr0521rs.h>
+#ifdef CONFIG_RPR0521RS_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#ifdef CONFIG_BMP280_SCU
-#  ifdef CONFIG_CXD56_DECI_PRESS
-#    define PRESS_NR_SEQS 3
-#  else
-#    define PRESS_NR_SEQS 1
-#  endif
-#  ifdef CONFIG_CXD56_DECI_TEMP
-#    define TEMP_NR_SEQS 3
-#  else
-#    define TEMP_NR_SEQS 1
-#  endif
-#endif
+#include "cxd56_i2c.h"
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_BMP280)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_RPR0521RS)
 
-#ifdef CONFIG_BMP280_SCU
-int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c)
+#ifdef CONFIG_RPR0521RS_SCU
+int board_rpr0521rs_initialize(int bus)
 {
-  int i;
   int ret;
+  FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing BMP280..\n");
+  sninfo("Initializing RPR0521RS...\n");
 
-  /* Initialize deivce at I2C port 0 */
+  /* Initialize i2c deivce */
 
-  ret = bmp280_init(i2c, 0);
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = rpr0521rs_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize BMP280.\n");
+      snerr("Error initialize RPR0521RS.\n");
       return ret;
     }
 
-  /* Create char devices for each FIFOs */
+  /* Register devices for each FIFOs at I2C bus */
 
-  for (i = 0; i < PRESS_NR_SEQS; i++)
-    {
-      ret = bmp280press_register("/dev/press", i, i2c, 0);
-      if (ret < 0)
-        {
-          snerr("Error registering pressure. %d\n", ret);
-          return ret;
-        }
-    }
-
-  /* Create char devices for each FIFOs */
-
-  for (i = 0; i < TEMP_NR_SEQS; i++)
-    {
-      ret = bmp280temp_register("/dev/temp", i, i2c, 0);
-      if (ret < 0)
-        {
-          snerr("Error registering temperature. %d\n", ret);
-          return ret;
-        }
-    }
-
-  return ret;
-}
-#else
-int cxd56_bmp280initialize(FAR struct i2c_master_s* i2c)
-{
-  int ret;
-
-  snerr("Initializing BMP280..\n");
-
-  ret = bmp280_register("/dev/press0", i2c);
+  ret = rpr0521rsals_register("/dev/light", 0, i2c, bus);
   if (ret < 0)
     {
-      snerr("Error registering BMP280\n");
+      snerr("Error registering RPR0521RS[ALS].\n");
+      return ret;
+    }
+
+  ret = rpr0521rsps_register("/dev/proximity", 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering RPR0521RS[PS].\n");
+      return ret;
     }
 
   return ret;
 }
-#endif
+#endif /* CONFIG_RPR0521RS_SCU */
 
-#endif
-
+#endif /* CONFIG_CXD56_I2C && CONFIG_RPR0521RS */

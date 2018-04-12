@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bh1721fvc.c
+ * bsp/board/common/include/cxd56_bh1745nuc.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,52 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1745NUC_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1745NUC_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-#include <stdio.h>
-#include <debug.h>
-#include <errno.h>
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-#include <nuttx/board.h>
+#ifndef __ASSEMBLY__
 
-#include <nuttx/sensors/bh1721fvc.h>
-#ifdef CONFIG_BH1721FVC_SCU
-#include <arch/chip/cxd56_scu.h>
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_BH1721FVC)
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-#ifdef CONFIG_BH1721FVC_SCU
-int cxd56_bh1721fvcinitialize(FAR struct i2c_master_s* i2c)
-{
-  int ret;
+/****************************************************************************
+ * Name: board_bh1745nuc_initialize
+ *
+ * Description:
+ *   Initialize BH1745NUC i2c driver and register the BH1745NUC device.
+ *
+ ****************************************************************************/
 
-  sninfo("Initializing BH1721FVC...\n");
+#ifdef CONFIG_BH1745NUC
+int board_bh1745nuc_initialize(FAR const char *devpath, int bus);
+#endif
 
-  /* Initialize deivce at I2C port 0 */
-
-  ret = bh1721fvc_init(i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error initialize BH1721FVC.\n");
-      return ret;
-    }
-
-  /* Register devices for each FIFOs at I2C port 0 */
-
-  ret = bh1721fvc_register("/dev/light", 0, i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error registering BH1721FVC.\n");
-      return ret;
-    }
-
-  return ret;
+#undef EXTERN
+#if defined(__cplusplus)
 }
-#endif /* CONFIG_BH1721FVC_SCU */
+#endif
 
-#endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_BH1721FVC */
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1745NUC_H */

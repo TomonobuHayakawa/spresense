@@ -47,26 +47,36 @@
 
 #include <nuttx/sensors/apds9960.h>
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_APDS9960)
+#include "cxd56_i2c.h"
 
-int cxd56_apds9960initialize(FAR struct i2c_master_s* i2c)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_APDS9960)
+
+int board_apds9960_initialize(FAR const char *devpath, int bus)
 {
   int ret;
+  FAR struct i2c_master_s *i2c;
 
   sninfo("Initializing APDS9960...\n");
 
-  /* Initialize deivce at I2C port 0 */
+  /* Initialize i2c deivce */
 
-  ret = apds9960_init(i2c, 0);
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = apds9960_init(i2c, bus);
   if (ret < 0)
     {
       snerr("Error initialize APDS9960.\n");
       return ret;
     }
 
-  /* Register devices for each FIFOs at I2C port 0 */
+  /* Register devices for each FIFOs at I2C bus */
 
-  ret = apds9960_register("/dev/gesture", i2c, 0);
+  ret = apds9960_register(devpath, i2c, bus);
   if (ret < 0)
     {
       snerr("Error registering APDS9960.\n");
@@ -76,4 +86,4 @@ int cxd56_apds9960initialize(FAR struct i2c_master_s* i2c)
   return ret;
 }
 
-#endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_APDS9960 */
+#endif /* CONFIG_CXD56_I2C && CONFIG_APDS9960 */

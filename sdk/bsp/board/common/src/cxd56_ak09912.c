@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_rpr0521rs.c
+ * configs/cxd56xx/src/cxd56_ak09912.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
@@ -36,6 +36,7 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/config.h>
 #include <sdk/config.h>
 
 #include <stdio.h>
@@ -44,47 +45,88 @@
 
 #include <nuttx/board.h>
 
-#include <nuttx/sensors/rpr0521rs.h>
-#ifdef CONFIG_RPR0521RS_SCU
+#include <nuttx/sensors/ak09912.h>
+#ifdef CONFIG_AK09912_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#if defined(CONFIG_I2C) && defined(CONFIG_CXD56_I2C0) && defined(CONFIG_RPR0521RS)
+#ifdef CONFIG_AK09912_SCU
+#  ifdef CONFIG_CXD56_DECI_AK09912
+#    define MAG_NR_SEQS 3
+#  else
+#    define MAG_NR_SEQS 1
+#  endif
+#endif
 
-#ifdef CONFIG_RPR0521RS_SCU
-int cxd56_rpr0521rsinitialize(FAR struct i2c_master_s* i2c)
+#include "cxd56_i2c.h"
+
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_AK09912)
+
+#ifdef CONFIG_AK09912_SCU
+int board_ak09912_initialize(FAR const char *devpath, int bus)
 {
+  int i;
   int ret;
+  FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing RPR0521RS...\n");
+  sninfo("Initializing AK09912...\n");
 
-  /* Initialize deivce at I2C port 0 */
+  /* Initialize i2c deivce */
 
-  ret = rpr0521rs_init(i2c, 0);
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = ak09912_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize RPR0521RS.\n");
+      snerr("Error initialize AK09912.\n");
       return ret;
     }
 
-  /* Register devices for each FIFOs at I2C port 0 */
-
-  ret = rpr0521rsals_register("/dev/light", 0, i2c, 0);
-  if (ret < 0)
+  for (i = 0; i < MAG_NR_SEQS; i++)
     {
-      snerr("Error registering RPR0521RS[ALS].\n");
-      return ret;
-    }
+      /* register deivce at I2C bus */
 
-  ret = rpr0521rsps_register("/dev/proximity", 0, i2c, 0);
-  if (ret < 0)
-    {
-      snerr("Error registering RPR0521RS[PS].\n");
-      return ret;
+      ret = ak09912_register(devpath, i, i2c, bus);
+      if (ret < 0)
+        {
+          snerr("Error registering AK09912.\n");
+          return ret;
+        }
     }
 
   return ret;
 }
-#endif /* CONFIG_RPR0521RS_SCU */
+#else
+int board_ak09912_initialize(FAR const char *devpath, int bus)
+{
+  int ret;
+  FAR struct i2c_master_s *i2c;
 
-#endif /* CONFIG_I2C && CONFIG_CXD56_I2C0 && CONFIG_RPR0521RS */
+  sninfo("Initializing AK09912...\n");
+
+  /* Initialize i2c deivce */
+
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = ak09912_register(devpath, i2c);
+  if (ret < 0)
+    {
+      snerr("Error registering AK09912.\n");
+    }
+
+  return ret;
+}
+#endif
+
+#endif
+

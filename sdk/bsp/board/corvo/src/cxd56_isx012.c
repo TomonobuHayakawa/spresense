@@ -162,10 +162,11 @@ void board_isx012_release_sleep(void)
 
 int isx012_register(FAR const char *devpath, FAR struct i2c_master_s *i2c);
 
-int cxd56_isx012initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c)
+int cxd56_isx012initialize(FAR const char *devpath, int bus)
 {
   int ret;
   uint32_t pinconf;
+  FAR struct i2c_master_s *i2c;
 
   _info("Initializing ISX012...\n");
 
@@ -208,6 +209,14 @@ int cxd56_isx012initialize(FAR const char *devpath, FAR struct i2c_master_s* i2c
   pinconf = PINCONF_SET(PIN_IS_DATA7, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
                         PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
   cxd56_pin_config(pinconf);
+
+  /* Initialize i2c deivce */
+
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      return -ENODEV;
+    }
 
   ret = isx012_register(devpath, i2c);
   if (ret < 0)

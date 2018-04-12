@@ -502,14 +502,22 @@ static int cxd224x_i2c_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
   return OK;
 }
 
-void cxd224x_initialize( FAR const char *devpath,
-                         FAR struct i2c_master_s *i2c_master )
+void cxd224x_initialize( FAR const char *devpath, int bus)
 {
   int ret;
 
   DBG_I2C_DEBUG_PRINT("%s: Enter cxd224x_initialize()\n", __func__);
 
-  i2c_dev = i2c_master;
+  /* Initialize i2c deivce */
+
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      _err("ERROR: Failed to initialize i2c%d.\n", bus);
+      return;
+    }
+
+  i2c_dev = i2c;
 
   ret = register_driver(devpath, &cxd224x_i2c_fops, 0666, NULL);
   if (ret < 0)

@@ -40,6 +40,7 @@ endif
 endif
 
 BOARD_DIR = $(SDKDIR)$(DELIM)bsp$(DELIM)board$(DELIM)$(CONFIG_BOARD_NAME)
+BOARD_COMMON_DIR = $(SDKDIR)$(DELIM)bsp$(DELIM)board$(DELIM)common
 
 # Dummy. It needs libapps.a to be a member of EXPORTLIBS.
 
@@ -174,7 +175,11 @@ bsp/include/arch/board: .config
 	@echo "LN: bsp/include/arch/board to $(BOARD_DIR)/include"
 	$(Q) $(DIRLINK) $(BOARD_DIR)/include $@
 
-dirlinks: bsp/include/arch/board
+bsp/include/arch/board/common: bsp/include/arch/board .config
+	@echo "LN: bsp/include/arch/board/common to $(BOARD_COMMON_DIR)/include"
+	$(Q) $(DIRLINK) $(BOARD_COMMON_DIR)/include $@
+
+dirlinks: bsp/include/arch/board bsp/include/arch/board/common
 PHONY += dirlinks
 
 context: check_context $(TOPDIR)/include/nuttx/config.h dirlinks
@@ -210,6 +215,7 @@ check_context:
 	fi
 
 clean_context:
+	$(Q) $(DIRUNLINK) bsp/include/arch/board/common
 	$(Q) $(DIRUNLINK) bsp/include/arch/board
 
 PHONY += clean_context

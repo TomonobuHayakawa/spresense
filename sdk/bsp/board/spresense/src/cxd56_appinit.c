@@ -126,19 +126,6 @@
 #  define CONFIG_SFC_DEVNO 0
 #endif
 
-/* TBD:
- * If the following sensor devices are already mounted on the board, their
- * devices are initialized here. Originally, the sensor device dependent code
- * should be removed from cxd56_appinit.c of SPRESENSE board.
- */
-
-#if defined(CONFIG_BMP280) || defined(CONFIG_AK09912) || \
-    defined(CONFIG_KX022) || defined(CONFIG_APDS9930) || \
-    defined(CONFIG_LT1PA01) || defined(CONFIG_RPR0521RS) || \
-    defined(CONFIG_BH1721FVC) || defined(CONFIG_BH1745NUC)
-#  define USE_KNOWN_I2C0_DEVICE
-#endif
-
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -272,12 +259,6 @@ int board_app_initialize(uintptr_t arg)
 {
   struct pm_cpu_wakelock_s wlock;
 
-#if defined(CONFIG_CXD56_I2C0) && defined(USE_KNOWN_I2C0_DEVICE)
-  FAR struct i2c_master_s *i2c0;
-#endif
-#ifdef CONFIG_CXD56_I2C2
-  FAR struct i2c_master_s *i2c2;
-#endif
 #if defined(CONFIG_CXD56_SPI4) && defined(CONFIG_CXD56_SPISD)
   FAR struct spi_dev_s *spi4;
 #endif
@@ -396,38 +377,17 @@ int board_app_initialize(uintptr_t arg)
   asmp_initialize();
 #endif
 
-#if defined(CONFIG_CXD56_I2C0) && defined(USE_KNOWN_I2C0_DEVICE)
-  /* globally intialize i2c bus for peripherals */
-
-  i2c0 = cxd56_i2cbus_initialize(0);
-  if (!i2c0)
-  {
-    _err("ERROR: Failed to intialize i2c bus0.\n");
-    return -ENODEV;
-  }
-#endif
-#ifdef CONFIG_CXD56_I2C2
-  /* globally intialize i2c bus for peripherals */
-
-  i2c2 = cxd56_i2cbus_initialize(2);
-  if (!i2c2)
-  {
-    _err("ERROR: Failed to intialize i2c bus2.\n");
-    return -ENODEV;
-  }
-#endif
-
 #ifdef CONFIG_SYSTEM_I2CTOOL
   /* Initialize to use system/i2ctool for all of the i2c port */
 
-  for (int port = 0; port <= 2; port++)
+  for (int bus = 0; bus <= 2; bus++)
     {
-      board_i2cdev_initialize(port);
+      board_i2cdev_initialize(bus);
     }
 #endif
 
 #ifdef CONFIG_BMP280
-  ret = cxd56_bmp280initialize(i2c0);
+  ret = board_bmp280_initialize(0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BMP280.\n");
@@ -435,7 +395,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_AK09912
-  ret = cxd56_ak09912initialize("/dev/mag", i2c0);
+  ret = board_ak09912_initialize("/dev/mag", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize AK09912.\n");
@@ -443,7 +403,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_KX022
-  ret = cxd56_kx022initialize("/dev/accel", i2c0);
+  ret = board_kx022_initialize("/dev/accel", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize KX022.\n");
@@ -451,7 +411,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_APDS9930
-  ret = cxd56_apds9930initialize(i2c0);
+  ret = board_apds9930_initialize(0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize APDS9930.\n");
@@ -459,7 +419,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_LT1PA01
-  ret = cxd56_lt1pa01initialize(i2c0);
+  ret = board_lt1pa01_initialize(0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize LT1PA01.\n");
@@ -467,7 +427,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_RPR0521RS
-  ret = cxd56_rpr0521rsinitialize(i2c0);
+  ret = board_rpr0521rs_initialize(0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize RPR0521RS.\n");
@@ -475,7 +435,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_BH1721FVC
-  ret = cxd56_bh1721fvcinitialize(i2c0);
+  ret = board_bh1721fvc_initialize("/dev/light", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BH1721FVC.\n");
@@ -483,7 +443,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_BH1745NUC
-  ret = cxd56_bh1745nucinitialize("/dev/color", i2c0);
+  ret = board_bh1745nuc_initialize("/dev/color", 0);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BH1745NUC.\n");
@@ -491,7 +451,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_VIDEO_ISX012
-  cxd56_isx012initialize("/dev/imager", i2c2);
+  cxd56_isx012initialize("/dev/imager", 2);
 #endif
 
   ret = nsh_sfc_initialize();

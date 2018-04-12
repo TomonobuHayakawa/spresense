@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bmi160.c
+ * configs/cxd56xx/src/cxd56_kx022.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
@@ -36,6 +36,7 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/config.h>
 #include <sdk/config.h>
 
 #include <stdio.h>
@@ -43,76 +44,63 @@
 #include <errno.h>
 
 #include <nuttx/board.h>
-#include <nuttx/spi/spi.h>
-#include <nuttx/sensors/bmi160.h>
-#ifdef CONFIG_BMI160_SCU
+
+#include <nuttx/sensors/kx022.h>
+#ifdef CONFIG_KX022_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#ifdef CONFIG_CXD56_DECI_GYRO
-#  define GYRO_NR_SEQS 3
-#else
-#  define GYRO_NR_SEQS 1
+#ifdef CONFIG_KX022_SCU
+#  ifdef CONFIG_CXD56_DECI_KX022
+#    define KX022_FIFO_CNT 3
+#  else
+#    define KX022_FIFO_CNT 1
+#  endif
 #endif
 
-#ifdef CONFIG_CXD56_DECI_ACCEL
-#  define ACCEL_NR_SEQS 3
-#else
-#  define ACCEL_NR_SEQS 1
-#endif
+#include "cxd56_i2c.h"
 
-#if defined(CONFIG_SPI) && defined(CONFIG_BMI160)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_KX022)
 
-int cxd56_bmi160initialize(FAR struct spi_dev_s* spi)
+#ifdef CONFIG_KX022_SCU
+int board_kx022_initialize(FAR const char *devpath, int bus)
 {
+  int fifoid = 0;
   int ret;
-#ifdef CONFIG_BMI160_SCU
-  int i;
+  FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing BMI160..\n");
+  sninfo("Initializing KX022...\n");
 
-  ret = bmi160_init(spi);
+  /* Initialize i2c deivce */
+
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = kx022_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize BMI160\n");
+      snerr("Error initialize KX022.\n");
       return ret;
     }
 
-  /* Create char devices for each FIFOs */
+  /* Register devices for each FIFOs at I2C bus */
 
-  for (i = 0; i < GYRO_NR_SEQS; i++)
+  for (fifoid = 0; fifoid < KX022_FIFO_CNT; fifoid++)
     {
-      ret = bmi160gyro_register("/dev/gyro", i, spi);
+      ret = kx022_register(devpath, fifoid, i2c, bus);
       if (ret < 0)
         {
-          snerr("Error registering gyroscope. %d\n", ret);
+          snerr("Error registering KX022.\n");
           return ret;
         }
     }
 
-  /* Create char devices for each FIFOs */
-
-  for (i = 0; i < ACCEL_NR_SEQS; i++)
-    {
-      ret = bmi160accel_register("/dev/accel", i, spi);
-      if (ret < 0)
-        {
-          snerr("Error registering accelerometer. %d\n", ret);
-          return ret;
-        }
-    }
-
-#else
-  sninfo("Initializing BMI160..\n");
-
-  ret = bmi160_register("/dev/accel0", spi);
-  if (ret < 0)
-    {
-      snerr("Error registering BMI160\n");
-    }
-#endif
   return ret;
 }
+#endif /* CONFIG_KX022_SCU */
 
-#endif
-
+#endif /* CONFIG_CXD56_I2C && CONFIG_KX022 */

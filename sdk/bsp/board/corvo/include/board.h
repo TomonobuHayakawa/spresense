@@ -51,6 +51,18 @@
 #  include <arch/chip/usbdev.h>
 #endif
 
+#include <arch/board/common/cxd56_bmp280.h>
+#include <arch/board/common/cxd56_bm1383glv.h>
+#include <arch/board/common/cxd56_bmi160.h>
+#include <arch/board/common/cxd56_kx022.h>
+#include <arch/board/common/cxd56_ak09912.h>
+#include <arch/board/common/cxd56_bm1422gmv.h>
+#include <arch/board/common/cxd56_bh1745nuc.h>
+#include <arch/board/common/cxd56_apds9930.h>
+#include <arch/board/common/cxd56_lt1pa01.h>
+#include <arch/board/common/cxd56_bh1721fvc.h>
+#include <arch/board/common/cxd56_rpr0521rs.h>
+#include <arch/board/common/cxd56_i2cdev.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -597,16 +609,6 @@ void board_isx012_release_sleep(void);
  ****************************************************************************/
 
 #define board_sdcard_set_low_voltage()
-
-/****************************************************************************
- * Name: board_i2cdev_initialize
- *
- * Description:
- *   Initialize and register i2c driver for the specified i2c port
- *
- ****************************************************************************/
-
-int board_i2cdev_initialize(int port);
 
 #undef EXTERN
 #if defined(__cplusplus)
