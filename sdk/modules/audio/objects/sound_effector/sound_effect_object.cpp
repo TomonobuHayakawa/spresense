@@ -169,6 +169,11 @@ static void render_done_callback(AudioDrvDmaResult *pParam, void *p_requester)
 }
 
 /*--------------------------------------------------------------------*/
+static void render_error_callback(AudioDrvDmaError *pParam, void *p_requester)
+{
+}
+
+/*--------------------------------------------------------------------*/
 static bool handle_mfe_done_notification(Apu::Wien2ApuCmd *packet)
 {
   switch (packet->header.event_type)
@@ -569,10 +574,12 @@ void SoundEffectObject::act(MsgPacket *msg)
 
   if (!AS_init_renderer(m_hp_render_comp_handler,
                         &render_done_callback,
+                        &render_error_callback,
                         static_cast<void*>(this),
                         AS_BITLENGTH_16)
    || !AS_init_renderer(m_i2s_render_comp_handler,
                         &render_done_callback,
+                        &render_error_callback,
                         static_cast<void*>(this),
                         AS_BITLENGTH_16))
     {

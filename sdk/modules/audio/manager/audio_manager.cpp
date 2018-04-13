@@ -107,6 +107,20 @@ static void outputmixer1_done_callback(MsgQueId requester_dtq,
   proc_outputmixer_reply(OutputMixer1, requester_dtq, reply_of, done_param);
 }
 
+/*--------------------------------------------------------------------------*/
+static void outputmixer_error_callback(uint8_t handle)
+{
+  MsgQueId ply_msgid = ((handle == OutputMixer0) ? s_plyMainMid: s_plySubMid);
+  PlayerCommand player;
+  player.stop_param.stop_mode = AS_STOPPLAYER_FORCIBLY;
+  err_t er = MsgLib::send<PlayerCommand>(ply_msgid,
+                                         MsgPriNormal,
+                                         MSG_AUD_PLY_CMD_STOP,
+                                         s_selfMid,
+                                         player);
+  F_ASSERT(er == ERR_OK);
+}
+
 /*
  * Callback functions from MediaPlayer 
  */
@@ -1792,6 +1806,7 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
       omix_cmd.act_param.output_device = HPOutputDevice;
       omix_cmd.act_param.mixer_type    = MainOnly;
       omix_cmd.act_param.cb            = outputmixer0_done_callback;
+      omix_cmd.act_param.error_cb      = outputmixer_error_callback;
 
       er = MsgLib::send<OutputMixerCommand>(m_outMixerDtq,
                                             MsgPriNormal,
@@ -1827,6 +1842,7 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
       omix_cmd.act_param.output_device = HPOutputDevice;
       omix_cmd.act_param.mixer_type    = MainOnly;
       omix_cmd.act_param.cb            = outputmixer1_done_callback;
+      omix_cmd.act_param.error_cb      = outputmixer_error_callback;
 
       er = MsgLib::send<OutputMixerCommand>(m_outMixerDtq,
                                             MsgPriNormal,

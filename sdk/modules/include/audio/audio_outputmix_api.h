@@ -160,6 +160,7 @@ struct AsOutputMixDoneParam
 };
 
 typedef void (*OutputMixerCallback)(MsgQueId requester_dtq, MsgType msgtype, AsOutputMixDoneParam *param);
+typedef void (*OutputMixerErrorCallback)(uint8_t handle);
 
 typedef struct
 {
@@ -180,6 +181,10 @@ typedef struct
   /*! \brief [in] Done callback */
 
   OutputMixerCallback cb;
+
+  /*! \brief [in] error callback */
+
+  OutputMixerErrorCallback error_cb;
 
 } AsActivateOutputMixer;
 

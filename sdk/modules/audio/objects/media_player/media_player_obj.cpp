@@ -672,6 +672,13 @@ void PlayerObj::stopOnPlay(MsgPacket *msg)
    * by other event trigger, queue external command.
    */
 
+  if (param.stop_mode == AS_STOPPLAYER_FORCIBLY)
+    {
+      stopPlay();
+      m_state = UnderflowState;
+      return;
+    }
+
   if (!m_external_cmd_que.push(AsPlayerEventStop))
     {
       MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
@@ -711,9 +718,14 @@ void PlayerObj::stopOnWaitEsEnd(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void PlayerObj::stopOnUnderflow(MsgPacket *msg)
 {
-  msg->moveParam<PlayerCommand>();
+  AsStopPlayerParam param = msg->moveParam<PlayerCommand>().stop_param;;
 
   MEDIA_PLAYER_DBG("STOP:\n");
+
+  if (param.stop_mode == AS_STOPPLAYER_FORCIBLY)
+    {
+      return;
+    }
 
   if (!m_external_cmd_que.push(AsPlayerEventStop))
     {

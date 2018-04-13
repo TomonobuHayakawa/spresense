@@ -52,6 +52,7 @@ __WIEN2_BEGIN_NAMESPACE
 
 typedef uint32_t RenderComponentHandler;
 typedef void (*RenderDoneCB)(AudioDrvDmaResult *p_param, void *p_requester);
+typedef void (*RenderErrorCB)(AudioDrvDmaError *p_param, void *p_requester);
 
 enum RenderDevice
 {
@@ -68,6 +69,7 @@ bool AS_release_render_comp_handler(RenderComponentHandler handle);
 
 bool AS_init_renderer(RenderComponentHandler handle,
                       RenderDoneCB callback,
+                      RenderErrorCB err_callback,
                       void *p_requester,
                       uint8_t bit_length);
 
@@ -107,6 +109,7 @@ public:
   {
     cxd56_audio_samp_fmt_t format;
     RenderDoneCB           callback;
+    RenderErrorCB err_callback;
     void                   *p_requester;
   };
 
@@ -147,6 +150,10 @@ public:
   typedef void (*RendererDoneCb)(AudioDrvDmaResult *pParam,
                                  void *p_requester);
   RendererDoneCb m_callback;
+
+  typedef void (*RendererErrorCb)(AudioDrvDmaError *pParam,
+                                 void *p_requester);
+  RendererErrorCb m_err_callback;
 
   void create(AS_DmaDoneCb, AS_ErrorCb, MsgQueId, MsgQueId);
 

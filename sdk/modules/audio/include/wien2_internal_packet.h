@@ -94,6 +94,7 @@ struct AudioMngCmdCmpltResult
 struct OutputMixObjRenderDoneCmd
 {
   bool end_flag;
+  bool error_flag;
 };
 
 struct OutputMixObjParam

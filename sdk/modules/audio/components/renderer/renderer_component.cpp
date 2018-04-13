@@ -149,26 +149,17 @@ static MsgQueId s_self_sync_dtq[MAX_RENDER_COMP_INSTANCE_NUM];
   --------------------------------------------------------------------*/
 extern "C" {
 
-static void AS_RendererNotifyDmaDoneDev0(AudioDrvDmaResult *param)
+static void AS_RendererNotifyDmaDoneDev(AudioDrvDmaResult *param)
 {
-  RendererComponent *instance = s_pFactory->getRenderCompInstance(0);
+  RenderComponentHandler handle =
+    s_pFactory->getRenderHandleByDmacId(param->dmac_id);
+  RendererComponent *instance = s_pFactory->getRenderCompInstance(handle);
   instance->m_callback(param, static_cast<void*>(instance->m_p_requester));
 }
-
-/*--------------------------------------------------------------------*/
-#if MAX_RENDER_COMP_INSTANCE_NUM > 1
-static void AS_RendererNotifyDmaDoneDev1(AudioDrvDmaResult *param)
-{
-  RendererComponent *instance = s_pFactory->getRenderCompInstance(1);
-  instance->m_callback(param, static_cast<void*>(instance->m_p_requester));
-}
-#endif
 
 /*--------------------------------------------------------------------*/
 static void AS_RendererNotifyDmaError(AudioDrvDmaError *p_param)
 {
-  RENDERER_ERR(AS_ATTENTION_SUB_CODE_DMA_ERROR);
-
   switch (p_param->status)
     {
       case E_AS_BB_DMA_OK:
@@ -181,10 +172,18 @@ static void AS_RendererNotifyDmaError(AudioDrvDmaError *p_param)
       case E_AS_BB_DMA_ERR_INT:
       case E_AS_BB_DMA_ERR_START:
       case E_AS_BB_DMA_ERR_REQUEST:
-        F_ASSERT(0);
         break;
 
       case E_AS_BB_DMA_UNDERFLOW:
+        {
+          RenderComponentHandler handle =
+            s_pFactory->getRenderHandleByDmacId(p_param->dmac_id);
+          RendererComponent *instance =
+            s_pFactory->getRenderCompInstance(handle);
+          instance->m_err_callback(p_param,
+                                   static_cast<void*>(instance->m_p_requester));
+        }
+        break;
       case E_AS_BB_DMA_OVERFLOW:
       case E_AS_BB_DMA_PARAM:
       default:
@@ -192,12 +191,13 @@ static void AS_RendererNotifyDmaError(AudioDrvDmaError *p_param)
     }
 }
 
+
 /*--------------------------------------------------------------------*/
 int AS_RendererCmpEntryDev0(int argc, char *argv[])
 {
   RendererComponent *instance = s_pFactory->getRenderCompInstance(0);
 
-  instance->create(AS_RendererNotifyDmaDoneDev0,
+  instance->create(AS_RendererNotifyDmaDoneDev,
                    AS_RendererNotifyDmaError,
                    s_self_dtq[0],
                    s_self_sync_dtq[0]);
@@ -211,7 +211,7 @@ int AS_RendererCmpEntryDev1(int argc, char *argv[])
 {
   RendererComponent *instance = s_pFactory->getRenderCompInstance(1);
 
-  instance->create(AS_RendererNotifyDmaDoneDev1,
+  instance->create(AS_RendererNotifyDmaDoneDev,
                    AS_RendererNotifyDmaError,
                    s_self_dtq[1],
                    s_self_sync_dtq[1]);
@@ -468,6 +468,7 @@ bool AS_release_render_comp_handler(RenderComponentHandler handle)
 /*--------------------------------------------------------------------*/
 bool AS_init_renderer(RenderComponentHandler handle,
                       RenderDoneCB callback,
+                      RenderErrorCB err_callback,
                       void *p_requester,
                       uint8_t bit_length)
 {
@@ -478,6 +479,7 @@ bool AS_init_renderer(RenderComponentHandler handle,
                                     CXD56_AUDIO_SAMP_FMT_24);
   param.init_render_param.callback    = callback;
   param.init_render_param.p_requester = p_requester;
+  param.init_render_param.err_callback = err_callback;
 
   if (!s_pFactory->parse(handle, MSG_AUD_BB_CMD_INIT, param))
     {
@@ -759,6 +761,7 @@ bool RendererComponent::init(const RendererComponentParam& param)
 
   m_callback    = param.init_render_param.callback;
   m_p_requester = param.init_render_param.p_requester;
+  m_err_callback = param.init_render_param.err_callback;
 
   if (E_AS_OK != AS_InitDmac(&init_param))
     {

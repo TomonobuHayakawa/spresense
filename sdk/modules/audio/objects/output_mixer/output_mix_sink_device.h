@@ -94,6 +94,7 @@ private:
     Ready,
     Active,
     Stopping,
+    Underflow,
     StateNum
   };
 
@@ -108,6 +109,7 @@ private:
   RenderComponentHandler m_render_comp_handler;
 
   OutputMixerCallback m_callback;
+  OutputMixerErrorCallback m_error_callback;
 
   int8_t m_adjust_direction;
   int32_t m_adjustment_times;
@@ -118,6 +120,7 @@ private:
 
   void input_data_on_ready(MsgPacket *msg);
   void input_data_on_active(MsgPacket *msg);
+  void input_data_on_under(MsgPacket *msg);
 
   void illegal_done(MsgPacket *msg);
   void done_on_active(MsgPacket *msg);

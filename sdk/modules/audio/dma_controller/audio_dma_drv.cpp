@@ -65,6 +65,14 @@
 
 extern "C" uint32_t cxd56_get_cpu_baseclk(void);
 
+#ifdef CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW
+/* Underflow insertion data 
+ *  (saize: sample[UNDERFLOW_DATA_SAMPLE] * bitleng[4] * channel[2])
+ */
+
+static char under_data[UNDERFLOW_INSERT_SAMPLE * AS_DMAC_BYTE_WT_24BIT * AS_DMA_I2SO_CH] = {0};
+#endif  /* CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW */
+
 AsDmaDrv::dmaDrvFuncTbl AsDmaDrv::m_func_tbl[] =
 {
   {
@@ -671,8 +679,8 @@ bool AsDmaDrv::dmaCmpltOnRun(void *p_param)
 
 #ifdef CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW
   if ((m_running_que.size() == 1) &&
-      (m_dmac_id == AS_DMAC_SEL_I2S_OUT ||
-       m_dmac_id == AS_DMAC_SEL_I2S2_OUT))
+      (m_dmac_id == CXD56_AUDIO_DMAC_I2S0_DOWN ||
+       m_dmac_id == CXD56_AUDIO_DMAC_I2S1_DOWN))
     {
       asWriteDmacParam dmac_param;
       dmac_param.dmacId = m_dmac_id;
@@ -820,8 +828,19 @@ void AsDmaDrv::dmaErrCb(E_AS_BB err_code)
       errorParam.dmac_id = m_dmac_id;
       errorParam.status  = err_code;
       errorParam.state   = m_state;
-
+#ifdef CONFIG_AUDIOUTILS_RENDERER_UNDERFLOW
+    if (m_dmac_id != CXD56_AUDIO_DMAC_I2S0_DOWN &&
+        m_dmac_id != CXD56_AUDIO_DMAC_I2S1_DOWN)
+      {
+        (*m_error_func)(&errorParam);
+      }
+    else if (err_code != E_AS_BB_DMA_UNDERFLOW)
+      {
+        (*m_error_func)(&errorParam);
+      }
+#else
       (*m_error_func)(&errorParam);
+#endif
     }
 
   switch (err_code)

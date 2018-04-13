@@ -92,6 +92,28 @@ static void render_done_callback(FAR AudioDrvDmaResult *p_param,
   outmix_param.handle =
     (static_cast<OutputMixToHPI2S*>(p_requester))->m_self_handle;
   outmix_param.renderdone_param.end_flag = p_param->endflg;
+  outmix_param.renderdone_param.error_flag = false;
+
+  er = MsgLib::send<OutputMixObjParam>((static_cast<OutputMixToHPI2S*>
+                                        (p_requester))->m_self_dtq,
+                                       MsgPriNormal,
+                                       MSG_AUD_MIX_CMD_RENDER_DONE,
+                                       (static_cast<OutputMixToHPI2S*>
+                                        (p_requester))->m_self_dtq,
+                                       outmix_param);
+  F_ASSERT(er == ERR_OK);
+}
+
+/*--------------------------------------------------------------------------*/
+static void render_err_callback(FAR AudioDrvDmaError *p_param,
+                                void* p_requester)
+{
+  err_t er;
+  OutputMixObjParam outmix_param;
+  outmix_param.handle =
+    (static_cast<OutputMixToHPI2S*>(p_requester))->m_self_handle;
+  outmix_param.renderdone_param.end_flag = false;
+  outmix_param.renderdone_param.error_flag = true;
 
   er = MsgLib::send<OutputMixObjParam>((static_cast<OutputMixToHPI2S*>
                                         (p_requester))->m_self_dtq,
@@ -108,12 +130,54 @@ static void render_done_callback(FAR AudioDrvDmaResult *p_param,
 /*--------------------------------------------------------------------------*/
 OutputMixToHPI2S::MsgProc OutputMixToHPI2S::MsgProcTbl[AUD_MIX_MSG_NUM][StateNum] =
 {
-/*            Booted                          Ready                                  Active                                  Stopping */
-/* ACT   */ {&OutputMixToHPI2S::act,         &OutputMixToHPI2S::illegal,            &OutputMixToHPI2S::illegal,             &OutputMixToHPI2S::illegal},
-/* DATA  */ {&OutputMixToHPI2S::illegal,     &OutputMixToHPI2S::input_data_on_ready,&OutputMixToHPI2S::input_data_on_active,&OutputMixToHPI2S::illegal},
-/* DEACT */ {&OutputMixToHPI2S::illegal,     &OutputMixToHPI2S::deact,              &OutputMixToHPI2S::illegal,             &OutputMixToHPI2S::illegal},
-/* DONE */  {&OutputMixToHPI2S::illegal_done,&OutputMixToHPI2S::illegal_done,       &OutputMixToHPI2S::done_on_active,      &OutputMixToHPI2S::done_on_stopping},
-/* ADJ */   {&OutputMixToHPI2S::illegal,     &OutputMixToHPI2S::clock_recovery,     &OutputMixToHPI2S::clock_recovery,      &OutputMixToHPI2S::clock_recovery},
+  /* Message type: ACT   */
+
+  {                                           /* OutputMixToHPI2S State: */
+    &OutputMixToHPI2S::act,                   /*   Booted                */
+    &OutputMixToHPI2S::illegal,               /*   Ready                 */
+    &OutputMixToHPI2S::illegal,               /*   Active                */
+    &OutputMixToHPI2S::illegal,               /*   Stopping              */
+    &OutputMixToHPI2S::illegal                /*   Underflow             */
+  },
+
+  /* Message type: DATA  */
+
+  {                                           /* OutputMixToHPI2S State: */
+    &OutputMixToHPI2S::illegal,               /*  Booted                 */
+    &OutputMixToHPI2S::input_data_on_ready,   /*  Ready                  */
+    &OutputMixToHPI2S::input_data_on_active,  /*  Active                 */
+    &OutputMixToHPI2S::illegal,               /*  Stopping               */
+    &OutputMixToHPI2S::input_data_on_under    /*  Underflow              */
+  },
+
+  /* Message type: DEACT */
+
+  {                                           /* OutputMixToHPI2S State: */
+    &OutputMixToHPI2S::illegal,               /*  Booted                 */
+    &OutputMixToHPI2S::deact,                 /*  Ready                  */
+    &OutputMixToHPI2S::illegal,               /*  Active                 */
+    &OutputMixToHPI2S::illegal,               /*  Stopping               */
+    &OutputMixToHPI2S::illegal                /*  Underflow              */
+  },
+
+  /* Message type: DONE */
+
+  {                                           /* OutputMixToHPI2S State: */
+    &OutputMixToHPI2S::illegal_done,          /*  Booted                 */
+    &OutputMixToHPI2S::illegal_done,          /*  Ready                  */
+    &OutputMixToHPI2S::done_on_active,        /*  Active                 */
+    &OutputMixToHPI2S::done_on_stopping,      /*  Stopping               */
+    &OutputMixToHPI2S::illegal_done           /*  Underflow              */
+  },
+
+  /* Message type: ADJ */
+  {                                           /* OutputMixToHPI2S State: */
+    &OutputMixToHPI2S::illegal,               /*  Booted                 */
+    &OutputMixToHPI2S::clock_recovery,        /*  Ready                  */
+    &OutputMixToHPI2S::clock_recovery,        /*  Active                 */
+    &OutputMixToHPI2S::clock_recovery,        /*  Stopping               */
+    &OutputMixToHPI2S::clock_recovery         /*  Underflow              */
+  },
 };
 
 /*--------------------------------------------------------------------------*/
@@ -216,6 +280,10 @@ void OutputMixToHPI2S::act(MsgPacket* msg)
 
   m_callback = cmd.act_param.cb;
 
+  /* Set error callback function */
+
+  m_error_callback = cmd.act_param.error_cb;
+
   /* Reply */
 
   done_param.handle    = cmd.handle;
@@ -266,6 +334,7 @@ void OutputMixToHPI2S::input_data_on_ready(MsgPacket* msg)
 
   if (!AS_init_renderer(m_render_comp_handler,
                         &render_done_callback,
+                        &render_err_callback,
                         static_cast<void*>(this),
                         input.bit_length))
     {
@@ -320,6 +389,39 @@ void OutputMixToHPI2S::input_data_on_active(MsgPacket* msg)
 }
 
 /*--------------------------------------------------------------------------*/
+void OutputMixToHPI2S::input_data_on_under(MsgPacket* msg)
+{
+  AsPcmDataParam input =
+    msg->moveParam<AsPcmDataParam>();
+
+  /* If end-data, publish render stop */
+
+  if (input.is_end)
+    {
+      if (!m_render_data_queue.push(input))
+        {
+          OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+          return;
+        }
+
+      AS_stop_renderer(m_render_comp_handler, AS_DMASTOPMODE_NORMAL);
+
+      OutputMixObjParam param;
+      param.renderdone_param.end_flag = true;
+      m_render_data_queue.top().callback(m_self_handle,
+                                         param.renderdone_param.end_flag);
+
+      if (!m_render_data_queue.pop())
+        {
+          OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
+          return;
+        }
+
+      m_state = Ready;
+    }
+}
+
+/*--------------------------------------------------------------------------*/
 void OutputMixToHPI2S::illegal_done(MsgPacket* msg)
 {
   msg->moveParam<OutputMixObjParam>();
@@ -330,6 +432,13 @@ void OutputMixToHPI2S::illegal_done(MsgPacket* msg)
 void OutputMixToHPI2S::done_on_active(MsgPacket* msg)
 {
   OutputMixObjParam param = msg->moveParam<OutputMixObjParam>();
+
+  if (param.renderdone_param.error_flag)
+    {
+      m_error_callback(m_self_handle);
+      m_state = Underflow;
+      return;
+    }
 
   if (param.renderdone_param.end_flag)
     {

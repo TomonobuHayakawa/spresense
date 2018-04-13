@@ -217,7 +217,10 @@ typedef enum
 
   /*! \brief Wait end of es */
 
-  AS_STOPPLAYER_ESEND
+  AS_STOPPLAYER_ESEND,
+
+  /*! \brief Forcibly stop at system failure */
+  AS_STOPPLAYER_FORCIBLY = 0xFF
 } AsStopPlayerStopMode;
 
 /**< Output sound period adjustment direction */
