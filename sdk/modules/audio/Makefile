@@ -66,6 +66,7 @@ else
 endif
 
 CXXFLAGS += -D_POSIX
+CXXFLAGS += -DATTENTION_USE_FILENAME_LINE
 
 all: $(BIN)
 .PHONY: context depend clean distclean

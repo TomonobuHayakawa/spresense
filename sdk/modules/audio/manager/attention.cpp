@@ -91,7 +91,7 @@ void _Attention(uint8_t module_id,
 {
 #  ifndef CONFIG_AUDIOUTILS_ATTENTIONLOG_DISABLE
   syslog(LOG_ERR,
-         "Attention: module[%d] attention id[%d]/code[%d]n",
+         "Attention: module[%d] attention id[%d]/code[%d]\n",
          module_id,
          attention_id,
          sub_code);
