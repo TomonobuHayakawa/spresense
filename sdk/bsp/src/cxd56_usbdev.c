@@ -338,7 +338,7 @@ struct cxd56_ep_s
   uint8_t in : 1;                 /* Endpoint is IN only */
   uint8_t halted : 1;             /* Endpoint feature halted */
   uint8_t txnullpkt : 1;          /* Null packet needed at end of transfer */
-  uint8_t txbusy : 1;             /* Transferring */
+  uint8_t txwait : 1;             /* IN transaction already requested from host */
 };
 
 /* This structure encapsulates the overall driver state */
@@ -611,7 +611,7 @@ static const struct cxd56_epinfo_s g_epinfo[CXD56_NENDPOINTS] =
     CXD56_INTRBUFSIZE,            /* Buffer size */
   }};
 
-static uint8_t g_ep0outbuffer[64];
+static uint8_t g_ep0outbuffer[CXD56_EP0MAXPACKET];
 
 /* USB cable detach/attach status */
 
@@ -1538,8 +1538,6 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
                 /* Transmit FIFO Empty detected */
 
                 usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_TXEMPTY), n);
-                ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(n));
-                putreg32(ctrl | USB_SNAK, CXD56_USB_IN_EP_CONTROL(n));
                 putreg32(USB_INT_TXEMPTY, CXD56_USB_IN_EP_STATUS(n));
               }
 
@@ -1548,8 +1546,6 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
                 /* DMA Transmit complete for TxFIFO */
 
                 usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_TDC), n);
-                ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(n));
-                putreg32(ctrl | USB_CNAK, CXD56_USB_IN_EP_CONTROL(n));
                 putreg32(USB_INT_TDC, CXD56_USB_IN_EP_STATUS(n));
               }
 
@@ -1580,16 +1576,22 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
                 /* Reply NAK for IN token when TxFIFO empty */
 
                 usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_IN), n);
-                putreg32(USB_INT_IN, CXD56_USB_IN_EP_STATUS(n));
+
                 ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(n));
                 putreg32(ctrl | USB_SNAK, CXD56_USB_IN_EP_CONTROL(n));
 
-                /* If another IN request has been queued, then send it. */
+                /* If IN request is ready, then send it. */
 
-                if (n > 0 && !cxd56_rqempty(privep))
+                if (!cxd56_rqempty(privep))
                   {
                     cxd56_wrrequest(privep);
                   }
+                else
+                  {
+                    privep->txwait = 1;
+                  }
+
+                putreg32(USB_INT_IN, CXD56_USB_IN_EP_STATUS(n));
               }
 
             if (stat & USB_INT_HE)
@@ -1622,10 +1624,15 @@ static int cxd56_epinterrupt(int irq, FAR void *context)
                     usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_OUTSETUP), 0);
 
                     ctrl = getreg32(CXD56_USB_OUT_EP_CONTROL(0));
+                    putreg32(ctrl | USB_SNAK, CXD56_USB_OUT_EP_CONTROL(0));
+
+                    cxd56_ep0setup(priv);
+
                     putreg32(ctrl | USB_CNAK | USB_RRDY,
                              CXD56_USB_OUT_EP_CONTROL(0));
 
-                    cxd56_ep0setup(priv);
+                    ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(0));
+                    putreg32(ctrl | USB_CNAK, CXD56_USB_IN_EP_CONTROL(0));
                   }
               }
 
@@ -1921,7 +1928,7 @@ static void cxd56_ep0initialize(struct cxd56_usbdev_s *priv)
   memset(&g_ep0out, 0, sizeof(g_ep0out));
 
   g_ep0out.buf    = (uint32_t)(uintptr_t)g_ep0outbuffer;
-  g_ep0out.status = 64 | DESC_LAST;
+  g_ep0out.status = CXD56_EP0MAXPACKET | DESC_LAST;
 
   putreg32((uint32_t)(uintptr_t)&g_ep0setup, CXD56_USB_OUT_EP_SETUP(0));
   putreg32((uint32_t)(uintptr_t)&g_ep0in, CXD56_USB_IN_EP_DATADESC(0));
@@ -1939,7 +1946,7 @@ static void cxd56_ep0initialize(struct cxd56_usbdev_s *priv)
   putreg32(maxp, CXD56_USB_IN_EP_MAXPKTSIZE(0));
   putreg32(bufsz, CXD56_USB_IN_EP_BUFSIZE(0));
   putreg32(maxp | (bufsz << 16), CXD56_USB_OUT_EP_BUFSIZE(0));
-  putreg32(USB_ET(USB_EP_CONTROL) | USB_SNAK, CXD56_USB_IN_EP_CONTROL(0));
+  putreg32(USB_ET(USB_EP_CONTROL) | USB_F, CXD56_USB_IN_EP_CONTROL(0));
   putreg32(USB_ET(USB_EP_CONTROL) | USB_SNAK, CXD56_USB_OUT_EP_CONTROL(0));
   putreg32(maxp << 19, CXD56_USB_DEV_UDC_EP(0));
 
@@ -2056,7 +2063,7 @@ static void cxd56_usbreset(struct cxd56_usbdev_s *priv)
           putreg32(stat, CXD56_USB_IN_EP_STATUS(i));
           putreg32(info->maxpacket, CXD56_USB_IN_EP_MAXPKTSIZE(i));
           putreg32(info->bufsize / 4, CXD56_USB_IN_EP_BUFSIZE(i));
-          putreg32(USB_ET(info->attr) | USB_STALL, CXD56_USB_IN_EP_CONTROL(i));
+          putreg32(USB_ET(info->attr) | USB_F, CXD56_USB_IN_EP_CONTROL(i));
         }
       else
         {
@@ -2064,7 +2071,7 @@ static void cxd56_usbreset(struct cxd56_usbdev_s *priv)
           putreg32(stat, CXD56_USB_OUT_EP_STATUS(i));
           putreg32(info->maxpacket | ((info->bufsize / 4) << 16),
                    CXD56_USB_OUT_EP_BUFSIZE(i));
-          putreg32(USB_ET(info->attr) | USB_STALL, CXD56_USB_OUT_EP_CONTROL(i));
+          putreg32(USB_ET(info->attr) | USB_SNAK, CXD56_USB_OUT_EP_CONTROL(i));
         }
     }
 
@@ -2150,7 +2157,8 @@ static int cxd56_epconfigure(FAR struct usbdev_ep_s *ep,
   addr = USB_ISEPIN(ep->eplog) ? CXD56_USB_IN_EP_CONTROL(privep->epphy)
                                : CXD56_USB_OUT_EP_CONTROL(privep->epphy);
   ctrl = getreg32(addr);
-  putreg32((ctrl & ~USB_STALL) /*| USB_CNAK | USB_RRDY*/, addr);
+
+  putreg32((ctrl & ~USB_STALL), addr);
 
   privep->stalled = 0;
 
@@ -2315,7 +2323,7 @@ static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
   FAR struct cxd56_req_s *privreq = (FAR struct cxd56_req_s *)req;
   FAR struct cxd56_ep_s *privep   = (FAR struct cxd56_ep_s *)ep;
   FAR struct cxd56_usbdev_s *priv;
-  FAR struct usb_cfgdesc_s *cfgdesc;
+  uint32_t ctrl;
   irqstate_t flags;
   int ret = OK;
 
@@ -2347,19 +2355,27 @@ static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
       ret = -EBUSY;
     }
 
-  /* SetConfiguration and SetInterface are handled by hardware, USB device IP
-   * automatically returns NULL packet to host, so I drop this request and
-   * indicate complete to upper driver.
+  /* Handle control requests.
+   * Submit on endpoint 0 is always IN request
    */
 
-  else if (privep->epphy == 0 && (priv->ctrl.req == USB_REQ_SETCONFIGURATION ||
-                                  priv->ctrl.req == USB_REQ_SETINTERFACE))
+  else if (privep->epphy == 0)
     {
-      /* Nothing to transfer -- exit success, with zero bytes transferred */
-
-      usbtrace(TRACE_COMPLETE(privep->epphy), privreq->req.xfrd);
       cxd56_rqenqueue(privep, privreq);
-      cxd56_reqcomplete(privep, OK);
+
+      /* SetConfiguration and SetInterface are handled by hardware, USB device IP
+       * a  utomatically returns NULL packet to host, so I drop this request and
+       * indicate complete to upper driver.
+       */
+
+      if (priv->ctrl.req == USB_REQ_SETCONFIGURATION ||
+          priv->ctrl.req == USB_REQ_SETINTERFACE)
+        {
+          /* Nothing to transfer -- exit success, with zero bytes transferred */
+
+          usbtrace(TRACE_COMPLETE(privep->epphy), privreq->req.xfrd);
+          cxd56_reqcomplete(privep, OK);
+        }
 
       if (priv->ctrl.req == USB_REQ_SETCONFIGURATION)
         {
@@ -2371,28 +2387,6 @@ static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
 
           cxd56_notify_signal(USBDEV_STATE_ATTACH, priv->power);
         }
-    }
-
-  /* Handle IN (device-to-host) requests */
-
-  else if (privep->in || privep->epphy == 0)
-    {
-      int xmit = 0;
-
-      if (cxd56_rqempty(privep))
-        {
-          xmit = 1;
-        }
-
-      /* Add the new request to the request queue for the IN endpoint */
-
-      cxd56_rqenqueue(privep, privreq);
-      usbtrace(TRACE_INREQQUEUED(privep->epphy), privreq->req.len);
-
-      if (xmit)
-        {
-          ret = cxd56_wrrequest(privep);
-        }
 
       /* Get max supply current value from GET_CONFIGURATION response.
        * max supply current value is stored in units of 2 mA.
@@ -2401,8 +2395,40 @@ static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
       if (priv->ctrl.req == USB_REQ_GETDESCRIPTOR &&
           priv->ctrl.value[1] == USB_DESC_TYPE_CONFIG)
         {
+          FAR struct usb_cfgdesc_s *cfgdesc;
+
           cfgdesc     = (FAR struct usb_cfgdesc_s *)req->buf;
           priv->power = cfgdesc->mxpower * 2;
+        }
+
+      /* If IN transaction has been requested, clear NAK bit to be able
+       * to raise IN interrupt to start IN packets.
+       */
+
+      if (privep->txwait)
+        {
+          ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(privep->epphy));
+          putreg32(ctrl | USB_CNAK, CXD56_USB_IN_EP_CONTROL(privep->epphy));
+        }
+    }
+
+  /* Handle IN (device-to-host) requests */
+
+  else if (privep->in)
+    {
+      /* Add the new request to the request queue for the IN endpoint */
+
+      cxd56_rqenqueue(privep, privreq);
+      usbtrace(TRACE_INREQQUEUED(privep->epphy), privreq->req.len);
+
+      /* If IN transaction has been requested, clear NAK bit to be able
+       * to raise IN interrupt to start IN packets.
+       */
+
+      if (privep->txwait)
+        {
+          ctrl = getreg32(CXD56_USB_IN_EP_CONTROL(privep->epphy));
+          putreg32(ctrl | USB_CNAK, CXD56_USB_IN_EP_CONTROL(privep->epphy));
         }
     }
 
