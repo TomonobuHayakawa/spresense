@@ -11,6 +11,7 @@ if SENSORS
 config BMI160
 	bool "Bosch BMI160 Sensor support"
 	default n
+	select CXD56_SPI
 	---help---
 		Enable driver support for the Bosch BMI160 sensor.
 
@@ -28,7 +29,7 @@ endif # BMI160
 config BMP280
 	bool "Bosch BMP280 Barometic Pressure Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for the Bosch BMP280 barometic pressure sensor.
 
@@ -46,7 +47,7 @@ endif # BMP280
 config AK09912
 	bool "Asahi AK09912 Compass Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for AK09912 Compass sensor.
 
@@ -64,7 +65,7 @@ endif # AK09912
 config APDS9930
 	bool "Avago APDS9930 Proximity and Ambient light Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for APDS9930 proximity and ambient light sensor.
 
@@ -89,14 +90,14 @@ endif
 config APDS9960
 	bool "Avago APDS9960 Proximity, Ambient light, RGB and Gesture Sensor support"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver support for APDS9960 proximity, ambient light, RGB and gesture sensor.
 
 config LT1PA01
 	bool "Murata LT1PA01 Proximity and Ambient light Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for LT1PA01 proximity and ambient light sensor.
 
@@ -121,7 +122,7 @@ endif
 config BH1721FVC
 	bool "Rohm BH1721FVC Ambient Light Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for the Rohm BH1721FVC light sensor.
 
@@ -139,7 +140,7 @@ endif # BH1721FVC
 config KX022
 	bool "Kionix KX022 Acceleration Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for the Kionix KX0222 acceleration sensor.
 
@@ -158,7 +159,7 @@ endif # KX022
 config BM1422GMV
 	bool "Rohm BM1422GMV Magnetic Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for BM1422GMV magnetic sensor.
 
@@ -176,7 +177,7 @@ endif # BM1422GMV
 config BM1383GLV
 	bool "Rohm BM1383GLV Pressure Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for BM1383GLV pressure sensor.
 
@@ -194,7 +195,7 @@ endif # BM1383GLV
 config BH1745NUC
 	bool "Rohm BH1745NUC Color Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for BH1745NUC color sensor.
 
@@ -212,7 +213,7 @@ endif # BH1745NUC
 config RPR0521RS
 	bool "Rohm RPR0521RS Proximity and Ambient light Sensor"
 	default n
-	select I2C
+	select CXD56_I2C
 	---help---
 		Enable driver for RPR0521RS proximity and ambient light sensor.
 
