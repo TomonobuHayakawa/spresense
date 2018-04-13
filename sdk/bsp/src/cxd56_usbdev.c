@@ -1,9 +1,10 @@
 /****************************************************************************
  * arch/arm/src/cxd56xx/cxd56_usbdev.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *   Copyright (C) 2008-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *
+ *   Copyright (C) 2016, 2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -415,8 +416,10 @@ struct cxd56_usbdev_file_s
 {
   struct procfs_file_s base; /* Base open file structure */
   unsigned int linesize;     /* Number of valid characters in line[] */
-  char
-    line[CXD56_USBDEV_LINELEN]; /* Pre-allocated buffer for formatted lines */
+
+  /* Pre-allocated buffer for formatted lines */
+
+  char line[CXD56_USBDEV_LINELEN];
 };
 
 static struct pm_cpu_freqlock_s g_hv_lock =
@@ -431,8 +434,7 @@ static struct pm_cpu_wakelock_s g_wake_lock =
  * Private Function Prototypes
  ****************************************************************************/
 
-/* Request queue operations
- * ****************************************************/
+/* Request queue operations *************************************************/
 
 static FAR struct cxd56_req_s *cxd56_rqdequeue(FAR struct cxd56_ep_s *privep);
 static void cxd56_rqenqueue(FAR struct cxd56_ep_s *privep,
@@ -440,24 +442,24 @@ static void cxd56_rqenqueue(FAR struct cxd56_ep_s *privep,
 
 /* Low level data transfers and request operations */
 
-static int cxd56_epwrite(FAR struct cxd56_ep_s *privep, uint8_t *buf,
+static int cxd56_epwrite(FAR struct cxd56_ep_s *privep, FAR uint8_t *buf,
                          uint16_t nbytes);
-static inline void cxd56_abortrequest(struct cxd56_ep_s *privep,
-                                      struct cxd56_req_s *privreq,
+static inline void cxd56_abortrequest(FAR struct cxd56_ep_s *privep,
+                                      FAR struct cxd56_req_s *privreq,
                                       int16_t result);
-static void cxd56_reqcomplete(struct cxd56_ep_s *privep, int16_t result);
-static int cxd56_wrrequest(struct cxd56_ep_s *privep);
-static int cxd56_rdrequest(struct cxd56_ep_s *privep);
-static void cxd56_cancelrequests(struct cxd56_ep_s *privep);
-static void cxd56_usbreset(struct cxd56_usbdev_s *priv);
-static void cxd56_reconstructep(struct cxd56_usbdev_s *priv);
+static void cxd56_reqcomplete(FAR struct cxd56_ep_s *privep, int16_t result);
+static int cxd56_wrrequest(FAR struct cxd56_ep_s *privep);
+static int cxd56_rdrequest(FAR struct cxd56_ep_s *privep);
+static void cxd56_cancelrequests(FAR struct cxd56_ep_s *privep);
+static void cxd56_usbreset(FAR struct cxd56_usbdev_s *priv);
+static void cxd56_reconstructep(FAR struct cxd56_usbdev_s *priv);
 
 /* Interrupt handling */
 
-static struct cxd56_ep_s *cxd56_epfindbyaddr(struct cxd56_usbdev_s *priv,
-                                             uint16_t eplog);
-static void cxd56_dispatchrequest(struct cxd56_usbdev_s *priv);
-static inline void cxd56_ep0setup(struct cxd56_usbdev_s *priv);
+static FAR struct cxd56_ep_s *
+  cxd56_epfindbyaddr(FAR struct cxd56_usbdev_s *priv, uint16_t eplog);
+static void cxd56_dispatchrequest(FAR struct cxd56_usbdev_s *priv);
+static inline void cxd56_ep0setup(FAR struct cxd56_usbdev_s *priv);
 static int cxd56_usbinterrupt(int irq, FAR void *context, FAR void *arg);
 static int cxd56_sysinterrupt(int irq, FAR void *context, FAR void *arg);
 static int cxd56_vbusinterrupt(int irq, FAR void *context, FAR void *arg);
@@ -465,9 +467,9 @@ static int cxd56_vbusninterrupt(int irq, FAR void *context, FAR void *arg);
 
 /* Initialization operations */
 
-static inline void cxd56_ep0initialize(struct cxd56_usbdev_s *priv);
-static void cxd56_ctrlinitialize(struct cxd56_usbdev_s *priv);
-static void cxd56_usbhwinit(void);
+static inline void cxd56_ep0initialize(FAR struct cxd56_usbdev_s *priv);
+static void cxd56_ctrlinitialize(FAR struct cxd56_usbdev_s *priv);
+static void cxd56_usbhwinit(FAR struct cxd56_usbdev_s *priv);
 
 /* Un-initialization operations */
 
@@ -476,7 +478,7 @@ static void cxd56_usbhwuninit(void);
 /* Endpoint methods */
 
 static int cxd56_epconfigure(FAR struct usbdev_ep_s *ep,
-                             const struct usb_epdesc_s *desc, bool last);
+                             FAR const struct usb_epdesc_s *desc, bool last);
 static int cxd56_epdisable(FAR struct usbdev_ep_s *ep);
 static FAR struct usbdev_req_s *cxd56_epallocreq(FAR struct usbdev_ep_s *ep);
 static void cxd56_epfreereq(FAR struct usbdev_ep_s *ep,
@@ -487,9 +489,9 @@ static FAR void *cxd56_epallocbuffer(FAR struct usbdev_ep_s *ep,
 static void cxd56_epfreebuffer(FAR struct usbdev_ep_s *ep, FAR void *buf);
 #endif
 static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
-                          struct usbdev_req_s *privreq);
+                          FAR struct usbdev_req_s *privreq);
 static int cxd56_epcancel(FAR struct usbdev_ep_s *ep,
-                          struct usbdev_req_s *privreq);
+                          FAR struct usbdev_req_s *privreq);
 static int cxd56_epstall(FAR struct usbdev_ep_s *ep, bool resume);
 
 /* USB device controller methods */
@@ -498,10 +500,10 @@ static FAR struct usbdev_ep_s *cxd56_allocep(FAR struct usbdev_s *dev,
                                              uint8_t epno, bool in,
                                              uint8_t eptype);
 static void cxd56_freeep(FAR struct usbdev_s *dev, FAR struct usbdev_ep_s *ep);
-static int cxd56_getframe(struct usbdev_s *dev);
-static int cxd56_wakeup(struct usbdev_s *dev);
-static int cxd56_selfpowered(struct usbdev_s *dev, bool selfpowered);
-static int cxd56_pullup(struct usbdev_s *dev, bool enable);
+static int cxd56_getframe(FAR struct usbdev_s *dev);
+static int cxd56_wakeup(FAR struct usbdev_s *dev);
+static int cxd56_selfpowered(FAR struct usbdev_s *dev, bool selfpowered);
+static int cxd56_pullup(FAR struct usbdev_s *dev, bool enable);
 
 /* Notify USB device attach/detach signal */
 
@@ -711,10 +713,10 @@ static void cxd56_rqenqueue(FAR struct cxd56_ep_s *privep,
  *
  ****************************************************************************/
 
-static int cxd56_epwrite(FAR struct cxd56_ep_s *privep, uint8_t *buf,
+static int cxd56_epwrite(FAR struct cxd56_ep_s *privep, FAR uint8_t *buf,
                          uint16_t nbytes)
 {
-  struct cxd56_data_desc_s *desc;
+  FAR struct cxd56_data_desc_s *desc;
   uint32_t ctrl;
   uint8_t epphy = privep->epphy;
 
@@ -754,8 +756,8 @@ static int cxd56_epwrite(FAR struct cxd56_ep_s *privep, uint8_t *buf,
  *
  ****************************************************************************/
 
-static inline void cxd56_abortrequest(struct cxd56_ep_s *privep,
-                                      struct cxd56_req_s *privreq,
+static inline void cxd56_abortrequest(FAR struct cxd56_ep_s *privep,
+                                      FAR struct cxd56_req_s *privreq,
                                       int16_t result)
 {
   usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_REQABORTED), (uint16_t)privep->epphy);
@@ -777,9 +779,9 @@ static inline void cxd56_abortrequest(struct cxd56_ep_s *privep,
  *
  ****************************************************************************/
 
-static void cxd56_reqcomplete(struct cxd56_ep_s *privep, int16_t result)
+static void cxd56_reqcomplete(FAR struct cxd56_ep_s *privep, int16_t result)
 {
-  struct cxd56_req_s *privreq;
+  FAR struct cxd56_req_s *privreq;
   int stalled = privep->stalled;
   irqstate_t flags;
 
@@ -824,10 +826,10 @@ static void cxd56_reqcomplete(struct cxd56_ep_s *privep, int16_t result)
  *
  ****************************************************************************/
 
-static void cxd56_txdmacomplete(struct cxd56_ep_s *privep)
+static void cxd56_txdmacomplete(FAR struct cxd56_ep_s *privep)
 {
-  struct cxd56_data_desc_s *desc;
-  struct cxd56_req_s *privreq;
+  FAR struct cxd56_data_desc_s *desc;
+  FAR struct cxd56_req_s *privreq;
 
   desc = privep->epphy == CXD56_EP0 ? &g_ep0in : privep->desc;
 
@@ -866,10 +868,10 @@ static void cxd56_txdmacomplete(struct cxd56_ep_s *privep)
  *
  ****************************************************************************/
 
-static int cxd56_wrrequest(struct cxd56_ep_s *privep)
+static int cxd56_wrrequest(FAR struct cxd56_ep_s *privep)
 {
-  struct cxd56_req_s *privreq;
-  uint8_t *buf;
+  FAR struct cxd56_req_s *privreq;
+  FAR uint8_t *buf;
   int nbytes;
   int bytesleft;
 
@@ -988,10 +990,10 @@ static void cxd56_rxdmacomplete(FAR struct cxd56_ep_s *privep)
  *
  ****************************************************************************/
 
-static int cxd56_rdrequest(struct cxd56_ep_s *privep)
+static int cxd56_rdrequest(FAR struct cxd56_ep_s *privep)
 {
-  struct cxd56_data_desc_s *desc = privep->desc;
-  struct cxd56_req_s *privreq;
+  FAR struct cxd56_data_desc_s *desc = privep->desc;
+  FAR struct cxd56_req_s *privreq;
   uint32_t ctrl;
 
   /* Check the request from the head of the endpoint request queue */
@@ -1076,7 +1078,7 @@ static void cxd56_stopoutep(FAR struct cxd56_ep_s *privep)
  *
  ****************************************************************************/
 
-static void cxd56_cancelrequests(struct cxd56_ep_s *privep)
+static void cxd56_cancelrequests(FAR struct cxd56_ep_s *privep)
 {
   if (privep->epphy > 0)
     {
@@ -1118,10 +1120,10 @@ static void cxd56_cancelrequests(struct cxd56_ep_s *privep)
  *
  ****************************************************************************/
 
-static struct cxd56_ep_s *cxd56_epfindbyaddr(struct cxd56_usbdev_s *priv,
-                                             uint16_t eplog)
+static FAR struct cxd56_ep_s *
+cxd56_epfindbyaddr(FAR struct cxd56_usbdev_s *priv, uint16_t eplog)
 {
-  struct cxd56_ep_s *privep;
+  FAR struct cxd56_ep_s *privep;
   int i;
 
   /* Endpoint zero is a special case */
@@ -1160,7 +1162,7 @@ static struct cxd56_ep_s *cxd56_epfindbyaddr(struct cxd56_usbdev_s *priv,
  *
  ****************************************************************************/
 
-static void cxd56_dispatchrequest(struct cxd56_usbdev_s *priv)
+static void cxd56_dispatchrequest(FAR struct cxd56_usbdev_s *priv)
 {
   int ret;
 
@@ -1188,11 +1190,11 @@ static void cxd56_dispatchrequest(struct cxd56_usbdev_s *priv)
  *
  ****************************************************************************/
 
-static inline void cxd56_ep0setup(struct cxd56_usbdev_s *priv)
+static inline void cxd56_ep0setup(FAR struct cxd56_usbdev_s *priv)
 {
-  struct cxd56_ep_s *ep0      = &priv->eplist[0];
-  struct cxd56_req_s *privreq = cxd56_rqpeek(ep0);
-  struct cxd56_ep_s *privep;
+  FAR struct cxd56_ep_s *ep0      = &priv->eplist[0];
+  FAR struct cxd56_req_s *privreq = cxd56_rqpeek(ep0);
+  FAR struct cxd56_ep_s *privep;
   uint16_t index;
   uint16_t value;
   uint16_t len;
@@ -1490,8 +1492,8 @@ static inline void cxd56_ep0setup(struct cxd56_usbdev_s *priv)
 
 static int cxd56_epinterrupt(int irq, FAR void *context)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
-  struct cxd56_ep_s *privep;
+  FAR struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_ep_s *privep;
   uint32_t eps;
   uint32_t stat;
   uint32_t ctrl;
@@ -1915,7 +1917,7 @@ static int cxd56_sysinterrupt(int irq, FAR void *context, FAR void *arg)
  *
  ****************************************************************************/
 
-static void cxd56_ep0initialize(struct cxd56_usbdev_s *priv)
+static void cxd56_ep0initialize(FAR struct cxd56_usbdev_s *priv)
 {
   uint32_t maxp  = g_epinfo[0].maxpacket;
   uint32_t bufsz = g_epinfo[0].bufsize / 4;
@@ -2001,7 +2003,7 @@ static void cxd56_ctrlinitialize(FAR struct cxd56_usbdev_s *priv)
  *
  ****************************************************************************/
 
-static void cxd56_usbreset(struct cxd56_usbdev_s *priv)
+static void cxd56_usbreset(FAR struct cxd56_usbdev_s *priv)
 {
   uint32_t mask;
   int i;
@@ -2459,7 +2461,8 @@ static int cxd56_epsubmit(FAR struct usbdev_ep_s *ep,
  *
  ****************************************************************************/
 
-static int cxd56_epcancel(struct usbdev_ep_s *ep, FAR struct usbdev_req_s *req)
+static int cxd56_epcancel(FAR struct usbdev_ep_s *ep,
+                          FAR struct usbdev_req_s *req)
 {
   FAR struct cxd56_ep_s *privep = (FAR struct cxd56_ep_s *)ep;
   irqstate_t flags;
@@ -2700,7 +2703,7 @@ static void cxd56_freeep(FAR struct usbdev_s *dev, FAR struct usbdev_ep_s *ep)
  *
  ****************************************************************************/
 
-static int cxd56_getframe(struct usbdev_s *dev)
+static int cxd56_getframe(FAR struct usbdev_s *dev)
 {
   irqstate_t flags;
   int ret = 0;
@@ -2733,7 +2736,7 @@ static int cxd56_getframe(struct usbdev_s *dev)
  *
  ****************************************************************************/
 
-static int cxd56_wakeup(struct usbdev_s *dev)
+static int cxd56_wakeup(FAR struct usbdev_s *dev)
 {
   irqstate_t flags;
 
@@ -2753,9 +2756,9 @@ static int cxd56_wakeup(struct usbdev_s *dev)
  *
  ****************************************************************************/
 
-static int cxd56_selfpowered(struct usbdev_s *dev, bool selfpowered)
+static int cxd56_selfpowered(FAR struct usbdev_s *dev, bool selfpowered)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_usbdev_s *priv = &g_usbdev;
 
   usbtrace(TRACE_DEVSELFPOWERED, (uint16_t)selfpowered);
 
@@ -2779,7 +2782,7 @@ static int cxd56_selfpowered(struct usbdev_s *dev, bool selfpowered)
  *
  ****************************************************************************/
 
-static int cxd56_pullup(struct usbdev_s *dev, bool enable)
+static int cxd56_pullup(FAR struct usbdev_s *dev, bool enable)
 {
   uint32_t ctrl;
   uint32_t ep;
@@ -2814,9 +2817,8 @@ static int cxd56_pullup(struct usbdev_s *dev, bool enable)
  *
  ****************************************************************************/
 
-static void cxd56_usbhwinit(void)
+static void cxd56_usbhwinit(FAR struct cxd56_usbdev_s *priv)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
   int i;
 
   /* Initialize the device state structure */
@@ -2827,8 +2829,8 @@ static void cxd56_usbhwinit(void)
 
   for (i = 1; i < CXD56_NENDPOINTS; i++)
     {
-      const struct cxd56_epinfo_s *info = &g_epinfo[i];
-      struct cxd56_ep_s *privep;
+      FAR const struct cxd56_epinfo_s *info = &g_epinfo[i];
+      FAR struct cxd56_ep_s *privep;
 
       /* Set up the standard stuff */
 
@@ -3030,7 +3032,7 @@ void up_usbinitialize(void)
 
   /* Initialize USB hardware */
 
-  cxd56_usbhwinit();
+  cxd56_usbhwinit(&g_usbdev);
 
   /* Enable interrupts */
 
@@ -3156,7 +3158,7 @@ int usbdev_register(FAR struct usbdevclass_driver_s *driver)
 
 int usbdev_unregister(FAR struct usbdevclass_driver_s *driver)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_usbdev_s *priv = &g_usbdev;
   irqstate_t flags;
 
   usbtrace(TRACE_DEVUNREGISTER, 0);
@@ -3210,7 +3212,7 @@ int usbdev_unregister(FAR struct usbdevclass_driver_s *driver)
  *
  ************************************************************************************/
 
-static void cxd56_reconstructep(struct cxd56_usbdev_s *priv)
+static void cxd56_reconstructep(FAR struct cxd56_usbdev_s *priv)
 {
   uint32_t mask;
   int i;
@@ -3294,7 +3296,7 @@ int cxd56_usbdev_setsigno(int signo)
 
 static void cxd56_notify_signal(uint16_t state, uint16_t power)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_usbdev_s *priv = &g_usbdev;
 
   if (priv->signo > 0)
     {
@@ -3379,7 +3381,7 @@ static ssize_t cxd56_usbdev_read(FAR struct file *filep, FAR char *buffer,
                                  size_t buflen)
 {
   FAR struct cxd56_usbdev_file_s *attr;
-  struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_usbdev_s *priv = &g_usbdev;
   off_t offset;
   int ret;
 
