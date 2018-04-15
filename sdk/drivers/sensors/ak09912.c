@@ -1,11 +1,7 @@
 /****************************************************************************
  * drivers/sensors/ak09912.c
  *
- *   Copyright (C) 2015 Alan Carvalho de Assis
- *   Author: Alan Carvalho de Assis <acassis@gmail.com>
- *
- *   Copyright (C) 2015-2016 Gregory Nutt. All rights reserved.
- *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -63,68 +59,68 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define AK09912_ADDR         0x0C
-#define AK09912_FREQ         400000
-#define AK09912_DEVID        0x04
+#define AK09912_ADDR        0x0C
+#define AK09912_FREQ        400000
+#define AK09912_DEVID       0x04
 
 /**
-  * REGISTER: WIA
-  * Who I am.
-  */
+ * REGISTER: WIA
+ * Who I am.
+ */
   #define AK09912_DEVADD    0x01
 
 /**
-   * REGISTER: CNTL2
-   * Power mode
-   */
-#define POWER_MODE_ADDR      0x31
+ * REGISTER: CNTL2
+ * Power mode
+ */
+#define POWER_MODE_ADDR     0x31
 
 /**
-   * REGISTER: ASAX
-   * Sensitivity values
-   */
-#define AK09912_ASAX       0x60
+ * REGISTER: ASAX
+ * Sensitivity values
+ */
+#define AK09912_ASAX        0x60
 
 /**
-   * REGISTER: CNTL1
-   * Enable or disable temparator measure or enable or disable Noice suppression filter.
-   */
-#define AK09912_CTRL1      0x30
-
-
-/**
-   * REGISTER: HXL
-   * The start address of data registers.
-   */
-#define AK09912_HXL        0x11
-
+ * REGISTER: CNTL1
+ * Enable or disable temparator measure or enable or disable Noice suppression filter.
+ */
+#define AK09912_CTRL1       0x30
 
 
 /**
-   * @brief Polling timeout
-   * The unit is 10 millisecond.
-   */
+ * REGISTER: HXL
+ * The start address of data registers.
+ */
+#define AK09912_HXL         0x11
+
+
+
+/**
+ * @brief Polling timeout
+ * The unit is 10 millisecond.
+ */
 #define AK09912_POLLING_TIMEOUT (1)  // 10 ms
 
 
 /**
-  * The parameter for compensating.
-  */
+ * The parameter for compensating.
+ */
 #define AK09912_SENSITIVITY               (128)
 #define AK09912_SENSITIVITY_DIV           (256)
 
 
 /**
-   *  Noice Suppression Filter
-   */
+ * Noice Suppression Filter
+ */
 #define AK09912_NSF_NONE                  0b00
 #define AK09912_NSF_LOW                   0b01
 #define AK09912_NSF_MIDDLE                0b10
 #define AK09912_NSF_HIGH                  0b11
 
 /**
-  *  Power mode
-  */
+ * Power mode
+ */
 #define AKM_POWER_DOWN_MODE                0b0000
 #define AKM_SINGL_MEAS_MODE                0b00001
 #define AKM_CONT_MEAS_1                    0b00010
@@ -136,10 +132,10 @@
 #define AKM_FUSE_ROM_MODE                  0b11111
 
 /**
-   * REGISTER: ST1
-   * DRDY: Data ready bit. 0: not ready, 1: ready
-   * DOR: Data overrun. 0: Not overrun, 1: overrun
-   */
+ * REGISTER: ST1
+ * DRDY: Data ready bit. 0: not ready, 1: ready
+ * DOR: Data overrun. 0: Not overrun, 1: overrun
+ */
 #define AK09912_ST1 0x10
 
 #define SET_BITSLICE(s, v, offset, mask) \
@@ -171,10 +167,10 @@ struct ak09912_dev_s
   FAR struct i2c_master_s *i2c; /* I2C interface */
   uint8_t addr;                 /*  I2C address */
   int freq;                     /* Frequency <= 3.4MHz */
-  int compensated;                /* 0: uncompensated, 1:compensated */
-  struct sensi_data_s asa_data;  /* sensitivity data */
-  uint8_t mode;  /* power mode */
-  uint8_t nsf;      /* noice suppression filter setting */
+  int compensated;              /* 0: uncompensated, 1:compensated */
+  struct sensi_data_s asa_data; /* sensitivity data */
+  uint8_t mode;                 /* power mode */
+  uint8_t nsf;                  /* noice suppression filter setting */
   WDOG_ID wd;
   sem_t wait;
 };
@@ -202,12 +198,12 @@ static const struct file_operations g_ak09912fops =
   ak09912_close,                 /* close */
   ak09912_read,                  /* read */
   ak09912_write,                 /* write */
-  0,                            /* seek */
-  ak09912_ioctl,                            /* ioctl */
+  0,                             /* seek */
+  ak09912_ioctl,                 /* ioctl */
 #ifndef CONFIG_DISABLE_POLL
-  0,                            /* poll */
+  0,                             /* poll */
 #endif
-  0                             /* unlink */
+  0                              /* unlink */
 };
 
 /****************************************************************************
@@ -258,7 +254,8 @@ static uint8_t ak09912_getreg8(FAR struct ak09912_dev_s *priv, uint8_t regaddr)
  *
  ****************************************************************************/
 
-static int ak09912_putreg8(FAR struct ak09912_dev_s *priv, uint8_t regaddr,   uint8_t regval)
+static int ak09912_putreg8(FAR struct ak09912_dev_s *priv,
+                           uint8_t regaddr, uint8_t regval)
 {
   struct i2c_msg_s msg[2];
   int ret;
@@ -278,7 +275,7 @@ static int ak09912_putreg8(FAR struct ak09912_dev_s *priv, uint8_t regaddr,   ui
     {
       snerr("I2C_TRANSFER failed: %d\n", ret);
     }
-    return ret;
+  return ret;
 }
 
 
@@ -290,7 +287,8 @@ static int ak09912_putreg8(FAR struct ak09912_dev_s *priv, uint8_t regaddr,   ui
  *
  ****************************************************************************/
 
-static int32_t ak09912_getreg(FAR struct ak09912_dev_s *priv, uint8_t regaddr, uint8_t* buffer, uint32_t cnt)
+static int32_t ak09912_getreg(FAR struct ak09912_dev_s *priv,
+                              uint8_t regaddr, uint8_t* buffer, uint32_t cnt)
 {
   struct i2c_msg_s msg[2];
   int ret;
@@ -356,7 +354,8 @@ static int ak09912_set_power_mode(FAR struct ak09912_dev_s* priv, uint32_t mode)
  *
  ****************************************************************************/
 
-static int ak09912_read_sensitivity_data(FAR struct ak09912_dev_s* priv, FAR struct sensi_data_s* asa_data)
+static int ak09912_read_sensitivity_data(FAR struct ak09912_dev_s* priv,
+                                         FAR struct sensi_data_s* asa_data)
 {
   int ret = 0;
   uint8_t buffer[3];
@@ -429,14 +428,14 @@ static int ak09912_read_mag_uncomp_data(FAR struct ak09912_dev_s* priv, FAR stru
     {
       sem_wait(&priv->wait);
     }
-   wd_cancel(priv->wd);
-   ret = ak09912_getreg(priv,  AK09912_HXL,  buffer, sizeof(buffer));
+  wd_cancel(priv->wd);
+  ret = ak09912_getreg(priv,  AK09912_HXL,  buffer, sizeof(buffer));
 
-   mag_data->x = MERGE_BYTE(buffer[0], buffer[1]);
-   mag_data->y = MERGE_BYTE(buffer[2], buffer[3]);
-   mag_data->z = MERGE_BYTE(buffer[4], buffer[5]);
+  mag_data->x = MERGE_BYTE(buffer[0], buffer[1]);
+  mag_data->y = MERGE_BYTE(buffer[2], buffer[3]);
+  mag_data->z = MERGE_BYTE(buffer[4], buffer[5]);
 
-   return ret;
+  return ret;
 }
 
 /****************************************************************************
@@ -456,7 +455,7 @@ static int ak09912_read_mag_data(FAR struct ak09912_dev_s* priv, FAR struct mag_
     {
       snerr("Failed to read mag data from device.\n");
       return ret;
-     }
+    }
 
   mag_data->x = (int16_t)(mag_data->x * ((int32_t)priv->asa_data.x + AK09912_SENSITIVITY) / AK09912_SENSITIVITY_DIV);
   mag_data->y = (int16_t)(mag_data->y * ((int32_t)priv->asa_data.y + AK09912_SENSITIVITY) / AK09912_SENSITIVITY_DIV);
@@ -582,18 +581,18 @@ static ssize_t ak09912_read(FAR struct file *filep, FAR char *buffer,
       return -1;
     }
 
-    if (priv->compensated)
-      {
-        irqstate_t flags = enter_critical_section();
-        ret = ak09912_read_mag_data(priv, mag_data);
-        leave_critical_section(flags);
-     }
-    else
-      {
-        irqstate_t flags = enter_critical_section();
-        ret = ak09912_read_mag_uncomp_data(priv, mag_data);
-        leave_critical_section(flags);
-      }
+  if (priv->compensated)
+    {
+      irqstate_t flags = enter_critical_section();
+      ret = ak09912_read_mag_data(priv, mag_data);
+      leave_critical_section(flags);
+    }
+  else
+    {
+      irqstate_t flags = enter_critical_section();
+      ret = ak09912_read_mag_uncomp_data(priv, mag_data);
+      leave_critical_section(flags);
+    }
 
   if (ret < 0)
     {
