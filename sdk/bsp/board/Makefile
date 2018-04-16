@@ -70,7 +70,11 @@ CSRCS += cxd56_bmp280.c
 endif
 
 ifeq ($(CONFIG_BMI160),y)
-CSRCS += cxd56_bmi160.c
+ifeq ($(CONFIG_BMI160_I2C),y)
+CSRCS += cxd56_bmi160_i2c.c
+else
+CSRCS += cxd56_bmi160_spi.c
+endif
 endif
 
 ifeq ($(CONFIG_AK09912),y)

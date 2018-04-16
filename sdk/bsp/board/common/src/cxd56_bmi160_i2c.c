@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_bmi160.h
+ * bsp/board/common/src/cxd56_bmi160_i2c.c
  *
- *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,54 +32,99 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_BMI160_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_BMI160_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-/****************************************************************************
- * Public Types
- ****************************************************************************/
+#include <stdio.h>
+#include <debug.h>
+#include <errno.h>
 
-#ifndef __ASSEMBLY__
+#include <nuttx/board.h>
+#include <nuttx/sensors/bmi160.h>
+#ifdef CONFIG_BMI160_SCU
+#include <arch/chip/cxd56_scu.h>
+#endif
 
-/****************************************************************************
- * Public Data
- ****************************************************************************/
+#include "cxd56_i2c.h"
 
-#undef EXTERN
-#if defined(__cplusplus)
-#define EXTERN extern "C"
-extern "C"
-{
+#ifdef CONFIG_CXD56_DECI_GYRO
+#  define GYRO_NR_SEQS 3
 #else
-#define EXTERN extern
+#  define GYRO_NR_SEQS 1
 #endif
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-/****************************************************************************
- * Name: board_bmi160_initialize
- *
- * Description:
- *   Initialize BMI160 spi or i2c driver and register the BMI160 device.
- *
- ****************************************************************************/
-
-#ifdef CONFIG_BMI160
-int board_bmi160_initialize(int bus);
+#ifdef CONFIG_CXD56_DECI_ACCEL
+#  define ACCEL_NR_SEQS 3
+#else
+#  define ACCEL_NR_SEQS 1
 #endif
 
-#undef EXTERN
-#if defined(__cplusplus)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BMI160)
+
+int board_bmi160_initialize(int bus)
+{
+  int ret;
+  FAR struct i2c_master_s *i2c;
+
+  sninfo("Initializing BMI160..\n");
+
+  /* Initialize i2c deivce */
+
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+#ifdef CONFIG_BMI160_SCU
+  int i;
+
+  ret = bmi160_init(i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error initialize BMI160\n");
+      return ret;
+    }
+
+  /* Create char devices for each FIFOs */
+
+  for (i = 0; i < GYRO_NR_SEQS; i++)
+    {
+      ret = bmi160gyro_register("/dev/gyro", i, i2c, bus);
+      if (ret < 0)
+        {
+          snerr("Error registering gyroscope. %d\n", ret);
+          return ret;
+        }
+    }
+
+  /* Create char devices for each FIFOs */
+
+  for (i = 0; i < ACCEL_NR_SEQS; i++)
+    {
+      ret = bmi160accel_register("/dev/accel", i, i2c, bus);
+      if (ret < 0)
+        {
+          snerr("Error registering accelerometer. %d\n", ret);
+          return ret;
+        }
+    }
+
+#else /* !CONFIG_BMI160_SCU */
+  ret = bmi160_register("/dev/accel0", i2c);
+  if (ret < 0)
+    {
+      snerr("Error registering BMI160\n");
+    }
+
+#endif
+
+  return ret;
 }
+
 #endif
 
-#endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_BMI160_H */

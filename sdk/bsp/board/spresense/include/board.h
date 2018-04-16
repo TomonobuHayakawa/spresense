@@ -51,6 +51,7 @@
 #  include <arch/chip/usbdev.h>
 #endif
 
+#include <arch/board/common/cxd56_bmi160.h>
 #include <arch/board/common/cxd56_bmp280.h>
 #include <arch/board/common/cxd56_kx022.h>
 #include <arch/board/common/cxd56_ak09912.h>

@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bmi160.c
+ * bsp/board/common/src/cxd56_bmi160_spi.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -49,6 +49,8 @@
 #include <arch/chip/cxd56_scu.h>
 #endif
 
+#include "cxd56_spi.h"
+
 #ifdef CONFIG_CXD56_DECI_GYRO
 #  define GYRO_NR_SEQS 3
 #else
@@ -61,15 +63,26 @@
 #  define ACCEL_NR_SEQS 1
 #endif
 
-#if defined(CONFIG_SPI) && defined(CONFIG_BMI160)
+#if defined(CONFIG_CXD56_SPI) && defined(CONFIG_BMI160)
 
-int board_bmi160_initialize(FAR struct spi_dev_s* spi)
+int board_bmi160_initialize(int bus)
 {
   int ret;
-#ifdef CONFIG_BMI160_SCU
-  int i;
+  FAR struct spi_dev_s *spi;
 
   sninfo("Initializing BMI160..\n");
+
+  /* Initialize spi deivce */
+
+  spi = cxd56_spibus_initialize(bus);
+  if (!spi)
+    {
+      snerr("ERROR: Failed to initialize spi%d.\n", bus);
+      return -ENODEV;
+    }
+
+#ifdef CONFIG_BMI160_SCU
+  int i;
 
   ret = bmi160_init(spi);
   if (ret < 0)
@@ -102,15 +115,15 @@ int board_bmi160_initialize(FAR struct spi_dev_s* spi)
         }
     }
 
-#else
-  sninfo("Initializing BMI160..\n");
-
+#else /* !CONFIG_BMI160_SCU */
   ret = bmi160_register("/dev/accel0", spi);
   if (ret < 0)
     {
       snerr("Error registering BMI160\n");
     }
+
 #endif
+
   return ret;
 }
 
