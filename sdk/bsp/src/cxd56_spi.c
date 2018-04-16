@@ -94,6 +94,7 @@ struct cxd56_spidev_s
   uint8_t          nbits;      /* Width of word in bits (4 to 16) */
   uint8_t          mode;       /* Mode 0,1,2,3 */
   uint8_t          port;       /* Port number */
+  int              initialized; /* Initialized flag */
 #ifdef CONFIG_CXD56_DMAC
   DMA_HANDLE       rxdmach;    /* RX DMA channel handle */
   DMA_HANDLE       txdmach;    /* TX DMA channel handle */
@@ -152,21 +153,6 @@ static void spi_recvblock(FAR struct spi_dev_s *dev, FAR void *buffer,
                           size_t nwords);
 #endif
 
-/* Initialization */
-
-#ifdef CONFIG_CXD56_SPI0
-static inline FAR struct cxd56_spidev_s *cxd56_spi0initialize(void);
-#endif
-#ifdef CONFIG_CXD56_SPI3
-static inline FAR struct cxd56_spidev_s *cxd56_spi3initialize(void);
-#endif
-#ifdef CONFIG_CXD56_SPI4
-static inline FAR struct cxd56_spidev_s *cxd56_spi4initialize(void);
-#endif
-#ifdef CONFIG_CXD56_SPI5
-static inline FAR struct cxd56_spidev_s *cxd56_spi5initialize(void);
-#endif
-
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -222,6 +208,7 @@ static struct cxd56_spidev_s g_spi4dev =
   .spibase           = CXD56_IMG_SPI_BASE,
   .spibasefreq       = 0,
   .port              = 4,
+  .initialized       = 0,
 #ifdef CONFIG_CXD56_SPI_INTERRUPTS
   .spiirq            = CXD56_IRQ_IMG_SPI,
 #endif
@@ -270,6 +257,7 @@ static struct cxd56_spidev_s g_spi5dev =
   .spibase           = CXD56_IMG_WSPI_BASE,
   .spibasefreq       = 0,
   .port              = 5,
+  .initialized       = 0,
 #ifdef CONFIG_CXD56_SPI_INTERRUPTS
   .spiirq            = CXD56_IRQ_IMG_WSPI,
 #endif
@@ -308,6 +296,7 @@ static struct cxd56_spidev_s g_spi0dev =
   .spibase           = CXD56_SPIM_BASE,
   .spibasefreq       = 0,
   .port              = 0,
+  .initialized       = 0,
 #ifdef CONFIG_CXD56_SPI_INTERRUPTS
   .spiirq            = CXD56_IRQ_SPIM,
 #endif
@@ -346,6 +335,7 @@ static struct cxd56_spidev_s g_spi3dev =
   .spibase           = CXD56_SCU_SPI_BASE,
   .spibasefreq       = 0,
   .port              = 3,
+  .initialized       = 0,
 #ifdef CONFIG_CXD56_SPI_INTERRUPTS
   .spiirq            = CXD56_IRQ_SCU_SPI,
 #endif
@@ -1008,158 +998,6 @@ static void cxd56_spi_pincontrol(int ch, bool on)
 }
 
 /****************************************************************************
- * Name: cxd56_spi4initialize
- *
- * Description:
- *   Initialize the SPI4
- *
- * Input Parameter:
- *   None
- *
- * Returned Value:
- *   Valid SPI device structure reference on succcess; a NULL on failure
- *
- ****************************************************************************/
-
-#ifdef CONFIG_CXD56_SPI4
-static inline FAR struct cxd56_spidev_s *cxd56_spi4initialize(void)
-{
-  irqstate_t flags;
-
-  flags = enter_critical_section();
-
-  /* Configure clocking */
-
-  cxd56_spi_clock_enable(4);
-  g_spi4dev.spibasefreq = cxd56_get_spi_baseclock(4);
-
-  leave_critical_section(flags);
-
-  /* Configure pin */
-
-  cxd56_spi_pincontrol(4, true);
-
-  return &g_spi4dev;
-}
-#endif
-
-/****************************************************************************
- * Name: cxd56_spi5initialize
- *
- * Description:
- *   Initialize the SPI5
- *
- * Input Parameter:
- *   None
- *
- * Returned Value:
- *   Valid SPI device structure reference on succcess; a NULL on failure
- *
- ****************************************************************************/
-
-#ifdef CONFIG_CXD56_SPI5
-static inline FAR struct cxd56_spidev_s *cxd56_spi5initialize(void)
-{
-  irqstate_t flags;
-
-  flags = enter_critical_section();
-
-  /* Configure clocking */
-
-  cxd56_spi_clock_enable(5);
-  g_spi5dev.spibasefreq = cxd56_get_spi_baseclock(5);
-
-  leave_critical_section(flags);
-
-  /* Configure pin */
-
-  cxd56_spi_pincontrol(5, true);
-
-  return &g_spi5dev;
-}
-#endif
-
-/****************************************************************************
- * Name: cxd56_spi0initialize
- *
- * Description:
- *   Initialize the SPI0
- *
- * Input Parameter:
- *   None
- *
- * Returned Value:
- *   Valid SPI device structure reference on succcess; a NULL on failure
- *
- ****************************************************************************/
-
-#ifdef CONFIG_CXD56_SPI0
-static inline FAR struct cxd56_spidev_s *cxd56_spi0initialize(void)
-{
-  irqstate_t flags;
-
-  flags = enter_critical_section();
-
-  /* Configure clocking */
-
-  cxd56_spi_clock_enable(0);
-  g_spi0dev.spibasefreq = cxd56_get_spi_baseclock(0);
-
-  spi_putreg(&g_spi0dev, CXD56_SPI_CSMODE_OFFSET, 1);
-  spi_putreg(&g_spi0dev, CXD56_SPI_CS_OFFSET, 1);
-
-  leave_critical_section(flags);
-
-  /* Configure pin */
-
-  cxd56_spi_pincontrol(0, true);
-
-  return &g_spi0dev;
-}
-#endif
-
-/****************************************************************************
- * Name: cxd56_spi3initialize
- *
- * Description:
- *   Initialize the SPI3
- *
- * Input Parameter:
- *   None
- *
- * Returned Value:
- *   Valid SPI device structure reference on succcess; a NULL on failure
- *
- ****************************************************************************/
-
-#ifdef CONFIG_CXD56_SPI3
-static inline FAR struct cxd56_spidev_s *cxd56_spi3initialize(void)
-{
-  irqstate_t flags;
-
-  flags = enter_critical_section();
-
-  /* Configure clocking */
-
-  cxd56_spi_clock_enable(3);
-  g_spi3dev.spibasefreq = cxd56_get_spi_baseclock(3);
-
-  /* CS control */
-
-  spi_putreg(&g_spi3dev, CXD56_SPI_CSMODE_OFFSET, 1);
-  spi_putreg(&g_spi3dev, CXD56_SPI_CS_OFFSET, 1);
-
-  leave_critical_section(flags);
-
-  /* Configure pin */
-
-  cxd56_spi_pincontrol(3, true);
-
-  return &g_spi3dev;
-}
-#endif
-
-/****************************************************************************
  * Public Functions
  ****************************************************************************/
 
@@ -1187,77 +1025,106 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
     {
 #ifdef CONFIG_CXD56_SPI4
       case 4:
-        priv = cxd56_spi4initialize();
-
-#if defined(CONFIG_CXD56_DMAC_SPI4_TX)
-        priv->txconfig = CXD56_DMA_PERIPHERAL_SPI4_TX;
-        priv->txdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI4_TX_CH,
-                                         CONFIG_CXD56_DMAC_SPI4_TX_MAXSIZE);
-        if (priv->txdmach == NULL)
-          {
-            return NULL;
-          }
-#endif
-#if defined(CONFIG_CXD56_DMAC_SPI4_RX)
-        priv->rxconfig = CXD56_DMA_PERIPHERAL_SPI4_RX;
-        priv->rxdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI4_RX_CH,
-                                         CONFIG_CXD56_DMAC_SPI4_RX_MAXSIZE);
-        if (priv->rxdmach == NULL)
-          {
-            return NULL;
-          }
-#endif
-#if defined(CONFIG_CXD56_DMAC_SPI4_TX) || defined(CONFIG_CXD56_DMAC_SPI4_RX)
-        sem_init(&priv->dmasem, 0, 0);
-#endif
-
+        priv = &g_spi4dev;
         break;
 #endif
 
 #ifdef CONFIG_CXD56_SPI5
       case 5:
-        priv = cxd56_spi5initialize();
-
-#if defined(CONFIG_CXD56_DMAC_SPI5_TX)
-        priv->txconfig = CXD56_DMA_PERIPHERAL_SPI5_TX;
-        priv->txdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI5_TX_CH,
-                                         CONFIG_CXD56_DMAC_SPI5_TX_MAXSIZE);
-        if (priv->txdmach == NULL)
-          {
-            return NULL;
-          }
-#endif
-#if defined(CONFIG_CXD56_DMAC_SPI5_RX)
-        priv->rxconfig = CXD56_DMA_PERIPHERAL_SPI5_RX;
-        priv->rxdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI5_RX_CH,
-                                         CONFIG_CXD56_DMAC_SPI5_RX_MAXSIZE);
-        if (priv->rxdmach == NULL)
-          {
-            return NULL;
-          }
-#endif
-#if defined(CONFIG_CXD56_DMAC_SPI5_TX) || defined(CONFIG_CXD56_DMAC_SPI5_RX)
-        sem_init(&priv->dmasem, 0, 0);
-#endif
-
+        priv = &g_spi5dev;
         break;
 #endif
 
 #ifdef CONFIG_CXD56_SPI0
       case 0:
-        priv = cxd56_spi0initialize();
+        priv = &g_spi0dev;
         break;
 #endif
 
 #ifdef CONFIG_CXD56_SPI3
       case 3:
-        priv = cxd56_spi3initialize();
+        priv = &g_spi3dev;
         break;
 #endif
-
       default:
         return NULL;
     }
+
+  /* If already initialized */
+
+  if (priv->initialized)
+    {
+      return &priv->spidev;
+    }
+
+  /* DMA settings */
+
+#if defined(CONFIG_CXD56_DMAC_SPI4_TX) || defined(CONFIG_CXD56_DMAC_SPI4_RX)
+  if (port == 4)
+    {
+#if defined(CONFIG_CXD56_DMAC_SPI4_TX)
+      priv->txconfig = CXD56_DMA_PERIPHERAL_SPI4_TX;
+      priv->txdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI4_TX_CH,
+                                        CONFIG_CXD56_DMAC_SPI4_TX_MAXSIZE);
+      if (priv->txdmach == NULL)
+        {
+          return NULL;
+        }
+#endif
+#if defined(CONFIG_CXD56_DMAC_SPI4_RX)
+      priv->rxconfig = CXD56_DMA_PERIPHERAL_SPI4_RX;
+      priv->rxdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI4_RX_CH,
+                                        CONFIG_CXD56_DMAC_SPI4_RX_MAXSIZE);
+      if (priv->rxdmach == NULL)
+        {
+          return NULL;
+        }
+#endif
+      sem_init(&priv->dmasem, 0, 0);
+    }
+#endif
+
+#if defined(CONFIG_CXD56_DMAC_SPI5_TX) || defined(CONFIG_CXD56_DMAC_SPI5_RX)
+  if (port == 5)
+    {
+#if defined(CONFIG_CXD56_DMAC_SPI5_TX)
+      priv->txconfig = CXD56_DMA_PERIPHERAL_SPI5_TX;
+      priv->txdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI5_TX_CH,
+                                        CONFIG_CXD56_DMAC_SPI5_TX_MAXSIZE);
+      if (priv->txdmach == NULL)
+        {
+          return NULL;
+        }
+#endif
+#if defined(CONFIG_CXD56_DMAC_SPI5_RX)
+      priv->rxconfig = CXD56_DMA_PERIPHERAL_SPI5_RX;
+      priv->rxdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI5_RX_CH,
+                                        CONFIG_CXD56_DMAC_SPI5_RX_MAXSIZE);
+      if (priv->rxdmach == NULL)
+        {
+          return NULL;
+        }
+#endif
+      sem_init(&priv->dmasem, 0, 0);
+    }
+#endif
+
+  /* Configure clocking */
+
+  cxd56_spi_clock_enable(port);
+  priv->spibasefreq = cxd56_get_spi_baseclock(port);
+
+  /* CS control */
+
+  if ((port == 0) || (port == 3))
+    {
+      spi_putreg(priv, CXD56_SPI_CSMODE_OFFSET, 1);
+      spi_putreg(priv, CXD56_SPI_CS_OFFSET, 1);
+    }
+
+  /* Configure pin */
+
+  cxd56_spi_pincontrol(port, true);
 
   /* Configure 8-bit SPI mode */
 
@@ -1308,6 +1175,10 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
   /* Enable clock gating (clock disable) */
 
   cxd56_spi_clock_gate_enable(port);
+
+  /* Set a initialized flag */
+
+  priv->initialized = 1;
 
   return &priv->spidev;
 }
