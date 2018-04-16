@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd56_cisif.h
+ * bsp/src/chip/cxd56_cisif.h
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CHIP_CXD56_CISIF_H
-#define __ARCH_ARM_SRC_CXD56XX_CHIP_CXD56_CISIF_H
+#ifndef __BSP_SRC_CHIP_CXD56_CISIF_H
+#define __BSP_SRC_CHIP_CXD56_CISIF_H
 
 /********************************************************************************************
  * Included Files
@@ -108,4 +108,4 @@
 #define MODE_JPG_TRS_EN      (0x00000109)
 #define MODE_INTLEV_TRS_EN   (0x0000010E)
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CHIP_CXD56_CISIF_H */
+#endif /* __BSP_SRC_CHIP_CXD56_CISIF_H */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/cisif.h
+ * bsp/include/arch/chip/cisif.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_INCLUDE_CXD56XX_CISIF_H
-#define __ARCH_ARM_INCLUDE_CXD56XX_CISIF_H
+#ifndef __BSP_INCLUDE_ARCH_CHIP_CISIF_H
+#define __BSP_INCLUDE_ARCH_CHIP_CISIF_H
 
 /************************************************************************************
  * Public Types
@@ -124,4 +124,4 @@ int cxd56_cisifstopmonitoring(void);
 
 #endif /* __ASSEMBLY__ */
 
-#endif /* __ARCH_ARM_INCLUDE_CXD56XX_CISIF_H */
+#endif /* __BSP_INCLUDE_ARCH_CHIP_CISIF_H */

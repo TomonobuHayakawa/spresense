@@ -1,7 +1,7 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_cisif.h
+ * bsp/src/cxd56_cisif.h
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,68 +32,71 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_CISIF_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_CISIF_H
+#ifndef __BSP_SRC_CXD56_CISIF_H
+#define __BSP_SRC_CXD56_CISIF_H
 
 /************************************************************************************
  * Public Types
  ************************************************************************************/
 
-typedef void (*Notify_callback_t)(uint8_t code, uint32_t size, uint32_t addr);
-typedef void (*Comp_callback_t)(uint8_t code, uint8_t last_frame, uint32_t size, uint32_t addr);
+typedef void (*notify_callback_t)(uint8_t code, uint32_t size, uint32_t addr);
+typedef void (*comp_callback_t)(uint8_t code, uint8_t last_frame, uint32_t size, uint32_t addr);
 
-typedef enum
+enum format_cisif_e
 {
-  E_OK,
-  E_SETTING_FAILED,
-  E_INVALID_STATE,
-  E_INVALID_PARAMETER,
-} ResCode;
+  FORMAT_CISIF_YUV,
+  FORMAT_CISIF_JPEG,
+  FORMAT_CISIF_INTERLEAVE,
+  FORMAT_CISIF_MAX,
+};
 
-typedef enum
+typedef enum format_cisif_e format_cisif_t;
+
+struct cisif_init_yuv_param_s
 {
-  CisifFormatYuv,
-  CisifFormatJpeg,
-  CisifFormatInterleave,
-  CisifFormatMax,
-} CisifFormat;
+  uint16_t          hsize;
+  uint16_t          vsize;
+  uint32_t          notify_size;
+  notify_callback_t notify_func;
+  comp_callback_t   comp_func;
+};
 
-typedef struct
-{
-  uint16_t hsize;
-  uint16_t vsize;
-  uint32_t notify_size;
-  Notify_callback_t notify_func;
-  Comp_callback_t comp_func;
-} CisifInitYuvParam;
+typedef struct cisif_init_yuv_param_s cisif_init_yuv_param_t;
 
-typedef struct
+struct cisif_init_jpeg_param_s
 {
   uint32_t notify_size;
-  Notify_callback_t notify_func;
-  Comp_callback_t comp_func;
-} CisifInitJpgParam;
+  notify_callback_t notify_func;
+  comp_callback_t comp_func;
+};
 
-typedef struct
+typedef struct cisif_init_jpeg_param_s cisif_init_jpeg_param_t;
+
+struct cisif_param_s
 {
-  CisifFormat format;
-  CisifInitYuvParam yuv_param;
-  CisifInitJpgParam jpg_param;
-} CisifParam_t;
+  format_cisif_t          format;
+  cisif_init_yuv_param_t  yuv_param;
+  cisif_init_jpeg_param_t jpg_param;
+};
 
-typedef struct
+typedef struct cisif_param_s cisif_param_t;
+
+struct cisif_sarea_s
 {
   uint8_t *strg_addr;
   uint32_t strg_size;
-} StrageArea;
+};
 
-typedef struct
+typedef struct cisif_sarea_s cisif_sarea_t;
+
+struct cisif_bank_sarea_s
 {
   uint8_t *strg_addr_0;
   uint8_t *strg_addr_1;
   uint32_t strg_size;
-} BankStrageArea;
+};
 
+typedef struct cisif_bank_sarea_s cisif_bank_sarea_t;
 
 #ifndef __ASSEMBLY__
 
@@ -110,10 +113,10 @@ extern "C"
  * Public Function Prototypes
  ************************************************************************************/
 
-ResCode cxd56_cisifinit(CisifParam_t *pCisifPar);
-ResCode cxd56_cisifcaptureframe(StrageArea *yuv_area, StrageArea *jpg_area);
-ResCode cxd56_cisifstartmonitoring(BankStrageArea *yuv_area, BankStrageArea *jpg_area);
-ResCode cxd56_cisifstopmonitoring(void);
+int cxd56_cisifinit(cisif_param_t *pCisifPar);
+int cxd56_cisifcaptureframe(cisif_sarea_t *yuv_area, cisif_sarea_t *jpg_area);
+int cxd56_cisifstartmonitoring(cisif_bank_sarea_t *yuv_area, cisif_bank_sarea_t *jpg_area);
+int cxd56_cisifstopmonitoring(void);
 
 #undef EXTERN
 #if defined(__cplusplus)
@@ -122,4 +125,4 @@ ResCode cxd56_cisifstopmonitoring(void);
 
 #endif /* __ASSEMBLY__ */
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_CISIF_H */
+#endif /* __BSP_SRC_CXD56_CISIF_H */
