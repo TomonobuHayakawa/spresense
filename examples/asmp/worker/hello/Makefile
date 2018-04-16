@@ -53,7 +53,7 @@ CSRCS = $(BIN).c
 CELFFLAGS += -Os
 ifeq ($(WINTOOL),y)
 CELFFLAGS += -I"$(shell cygpath -w $(APPDIR))"
-CELFFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)asmp$(DELIM)worker)"
+CELFFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIM)asmp$(DELIM)worker)"
 else
 CELFFLAGS += -I$(APPDIR)
 CELFFLAGS += -I$(SDKDIR)/modules/asmp/worker
