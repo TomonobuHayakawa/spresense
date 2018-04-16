@@ -120,10 +120,6 @@
 #  include "cxd56_usbdev.h"
 #endif
 
-#ifdef HAVE_SPITOOL
-#  include <nuttx/spi/spi_transfer.h>
-#endif
-
 #ifdef CONFIG_VIDEO_ISX012
 #  include "cxd56_gpio.h"
 #  include <nuttx/video/isx012.h>
@@ -297,29 +293,6 @@ static void timer_initialize(void)
 }
 #endif
 
-#ifdef HAVE_SPITOOL
-#if defined(CONFIG_CXD56_SPI3) || defined (CONFIG_CXD56_SPI5)
-/****************************************************************************
- * Name: cxd56_spi_register
- *
- * Description:
- *   Register one SPI drivers for the SPI tool.
- *
- ****************************************************************************/
-
-static void cxd56_spi_register(FAR struct spi_dev_s *spi, int bus)
-{
-  int ret;
-
-  ret = spi_register(spi, bus);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to register SPI%d driver: %d\n", bus, ret);
-    }
-}
-#endif
-#endif
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -336,9 +309,6 @@ int board_app_initialize(uintptr_t arg)
 {
   struct pm_cpu_wakelock_s wlock;
 
-#ifdef CONFIG_CXD56_SPI3
-  FAR struct spi_dev_s *spi3;
-#endif
 #ifdef CONFIG_CXD5247_CHARGER
   FAR struct battery_charger_dev_s *charger;
 #endif
@@ -424,19 +394,6 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#ifdef CONFIG_CXD56_SPI3
-  /* globally initialize spi bus for peripherals */
-  spi3 = cxd56_spibus_initialize(3);
-  if (!spi3)
-  {
-    _err("ERROR: Failed to initialize spi bus.\n");
-    return -ENODEV;
-  }
-#ifdef HAVE_SPITOOL
-  cxd56_spi_register(spi3, 3);
-#endif
-#endif
-
 #ifdef CONFIG_SYSTEM_I2CTOOL
   /* Initialize to use system/i2ctool for all of the i2c bus */
 
@@ -480,8 +437,15 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#if defined(CONFIG_CXD56_SPI3) && defined(CONFIG_BMI160)
-  ret = board_bmi160_initialize(spi3);
+#ifdef CONFIG_BMI160
+  int bmi160_bus;
+
+#  ifdef CONFIG_BMI160_I2C
+  bmi160_bus = 0; /* I2C0 */
+#  else /*  CONFIG_BMI160_SPI */
+  bmi160_bus = 3; /* SPI3 */
+#  endif
+  ret = board_bmi160_initialize(bmi160_bus);
   if (ret < 0)
     {
       _err("ERROR: Failed to initialize BMI160.\n");

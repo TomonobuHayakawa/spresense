@@ -402,6 +402,21 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
+#ifdef CONFIG_BMI160
+  int bmi160_bus;
+
+#  ifdef CONFIG_BMI160_I2C
+  bmi160_bus = 0; /* I2C0 */
+#  else /*  CONFIG_BMI160_SPI */
+  bmi160_bus = 3; /* SPI3 */
+#  endif
+  ret = board_bmi160_initialize(bmi160_bus);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialize BMI160.\n");
+    }
+#endif
+
 #ifdef CONFIG_KX022
   ret = board_kx022_initialize("/dev/accel", 0);
   if (ret < 0)
