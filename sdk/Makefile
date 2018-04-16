@@ -243,10 +243,17 @@ PHONY += distcleankernel
 subdir_clean:
 	$(Q) for dir in $(SDKCLEANDIRS); do \
 		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" clean; \
+		find $$dir -name "Make.dep" -delete; \
+		find $$dir -name ".depend" -delete; \
 	done
 PHONY += subdir_clean
 
-clean: subdir_clean
+depend_clean:
+	$(Q)find $(SDKDIR) -name "Make.dep" -delete
+	$(Q)find $(SDKDIR) -name ".depend" -delete
+PHONY += depend_clean
+
+clean: subdir_clean depend_clean
 	$(call DELFILE, .kconfig.tmp)
 	$(call DELDIR,  .config.tmp)
 	$(call DELFILE, bsp/include/sdk/version.h)
