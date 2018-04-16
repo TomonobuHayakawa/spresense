@@ -290,7 +290,7 @@ static uint8_t bmi160_getreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
 
   /* Select the BMI160 */
 
-  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER, true);
+  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER(0), true);
 
   /* Send register to read and get the next byte */
 
@@ -299,7 +299,7 @@ static uint8_t bmi160_getreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
 
   /* Deselect the BMI160 */
 
-  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER, false);
+  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER(0), false);
 
   /* Unlock bus */
 
@@ -326,7 +326,7 @@ static void bmi160_putreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr,
 
   /* Select the BMI160 */
 
-  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER, true);
+  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER(0), true);
 
   /* Send register address and set the value */
 
@@ -335,7 +335,7 @@ static void bmi160_putreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr,
 
   /* Deselect the BMI160 */
 
-  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER, false);
+  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER(0), false);
 
   /* Unlock bus */
 
@@ -361,7 +361,7 @@ static uint16_t bmi160_getreg16(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
 
   /* Select the BMI160 */
 
-  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER, true);
+  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER(0), true);
 
   /* Send register to read and get the next 2 bytes */
 
@@ -370,7 +370,7 @@ static uint16_t bmi160_getreg16(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
 
   /* Deselect the BMI160 */
 
-  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER, false);
+  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER(0), false);
 
   /* Unlock bus */
 
@@ -397,7 +397,7 @@ static void bmi160_getregs(FAR struct bmi160_dev_s* priv, uint8_t regaddr,
 
   /* Select the BMI160 */
 
-  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER, true);
+  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER(0), true);
 
   /* Send register to read and get the next 2 bytes */
 
@@ -406,7 +406,7 @@ static void bmi160_getregs(FAR struct bmi160_dev_s* priv, uint8_t regaddr,
 
   /* Deselect the BMI160 */
 
-  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER, false);
+  SPI_SELECT(priv->spi, SPIDEV_ACCELEROMETER(0), false);
 
   /* Unlock bus */
 
@@ -587,7 +587,7 @@ static int bmi160_checkid(FAR struct bmi160_dev_s *priv)
   /* Read device ID  */
 
   devid = bmi160_getreg8(priv, BMI160_CHIP_ID);
-  snvinfo("devid: %04x\n", devid);
+  sninfo("devid: %04x\n", devid);
 
   if (devid != (uint16_t) DEVID)
     {
