@@ -4,10 +4,10 @@
 #
 
 config SDK_AUDIO
-    bool "SDK audio"
-    default n
-    --- help ---
-       Enable support for sdk audio 
+	bool "SDK audio"
+	default n
+	---help---
+		Enable support for sdk audio
 
 if SDK_AUDIO
 
@@ -173,10 +173,10 @@ config AUDIOUTILS_DSP_MOUNTPT
 		The path to the DSP mount point. Default: /mnt/sd0/BIN"
 
 config AUDIOUTILS_EVENTLOG
-    bool "Print event log to console"
-    default n
-    ---help---
-        Print logs of audioutils. Event logs only, periodical log is not.
+	bool "Print event log to console"
+	default n
+	---help---
+		Print logs of audioutils. Event logs only, periodical log is not.
 
 config AUDIOUTILS_STATELOG
 	bool "Print state log to console"
@@ -201,11 +201,11 @@ source "$SDKDIR/modules/audio/components/Kconfig"
 endmenu
 
 config AUDIOUTILS_UNUSE_ORIGINAL_OPUS_FORMAT
-    bool "Unuse original opus format"
-    default n
-    depends on AUDIOUTILS_PLAYER || AUDIOUTILS_RECORDER
-    ---help---
-        Enable Unuse Original Opus Format
+	bool "Unuse original opus format"
+	default n
+	depends on AUDIOUTILS_PLAYER || AUDIOUTILS_RECORDER
+	---help---
+		Enable Unuse Original Opus Format
 
 config AUDIOUTILS_DSP_DRIVER
 	bool
