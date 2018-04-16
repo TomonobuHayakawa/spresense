@@ -17,6 +17,24 @@ config BMI160
 
 if BMI160
 
+choice
+	prompt "BMI160 Interface"
+	default BMI160_SPI
+
+config BMI160_SPI
+	bool "BMI160 SPI Interface"
+	select CXD56_SPI
+	---help---
+		Enables support for the SPI interface.
+
+config BMI160_I2C
+	bool "BMI160 I2C Interface"
+	select CXD56_I2C
+	---help---
+		Enables support for the I2C interface
+
+endchoice
+
 config BMI160_SCU
 	bool "SCU Sequencer"
 	default y

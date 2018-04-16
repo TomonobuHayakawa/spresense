@@ -46,6 +46,7 @@
 #include <nuttx/kmalloc.h>
 #include <nuttx/fs/fs.h>
 #include <nuttx/spi/spi.h>
+#include <nuttx/i2c/i2c_master.h>
 #include <nuttx/sensors/bmi160.h>
 
 #if defined(CONFIG_BMI160)
@@ -55,6 +56,8 @@
  ****************************************************************************/
 
 #define DEVID               0xd1
+#define BMI160_I2C_ADDR     0x68 /* If SDO pin is pulled to VDDIO, use 0x69 */
+#define BMI160_I2C_FREQ     400000
 
 #define BMI160_CHIP_ID          (0x00) /* Chip ID */
 #define BMI160_ERROR            (0x02) /* Error register */
@@ -163,18 +166,18 @@
 #define ACCEL_RES_AVG64   (9 << 4)
 #define ACCEL_RES_AVG128  (10 << 4)
 
-#define ACCEL_ODR_0_78HZ         (0x01)
-#define ACCEL_ODR_1_56HZ         (0x02)
-#define ACCEL_ODR_3_12HZ         (0x03)
-#define ACCEL_ODR_6_25HZ         (0x04)
-#define ACCEL_ODR_12_5HZ         (0x05)
-#define ACCEL_ODR_25HZ           (0x06)
-#define ACCEL_ODR_50HZ           (0x07)
-#define ACCEL_ODR_100HZ          (0x08)
-#define ACCEL_ODR_200HZ          (0x09)
-#define ACCEL_ODR_400HZ          (0x0A)
-#define ACCEL_ODR_800HZ          (0x0B)
-#define ACCEL_ODR_1600HZ         (0x0C)
+#define ACCEL_ODR_0_78HZ      (0x01)
+#define ACCEL_ODR_1_56HZ      (0x02)
+#define ACCEL_ODR_3_12HZ      (0x03)
+#define ACCEL_ODR_6_25HZ      (0x04)
+#define ACCEL_ODR_12_5HZ      (0x05)
+#define ACCEL_ODR_25HZ        (0x06)
+#define ACCEL_ODR_50HZ        (0x07)
+#define ACCEL_ODR_100HZ       (0x08)
+#define ACCEL_ODR_200HZ       (0x09)
+#define ACCEL_ODR_400HZ       (0x0A)
+#define ACCEL_ODR_800HZ       (0x0B)
+#define ACCEL_ODR_1600HZ      (0x0C)
 
 /* Register 0x42 - GYRO_CONFIG accel bandwidth */
 
@@ -183,14 +186,14 @@
 #define GYRO_NORMAL_MODE (0x02 << 4)
 #define GYRO_CIC_MODE    (0x03 << 4)
 
-#define GYRO_ODR_25HZ			(0x06)
-#define GYRO_ODR_50HZ			(0x07)
-#define GYRO_ODR_100HZ			(0x08)
-#define GYRO_ODR_200HZ			(0x09)
-#define GYRO_ODR_400HZ			(0x0A)
-#define GYRO_ODR_800HZ			(0x0B)
-#define GYRO_ODR_1600HZ			(0x0C)
-#define GYRO_ODR_3200HZ			(0x0D)
+#define GYRO_ODR_25HZ         (0x06)
+#define GYRO_ODR_50HZ         (0x07)
+#define GYRO_ODR_100HZ        (0x08)
+#define GYRO_ODR_200HZ        (0x09)
+#define GYRO_ODR_400HZ        (0x0A)
+#define GYRO_ODR_800HZ        (0x0B)
+#define GYRO_ODR_1600HZ       (0x0C)
+#define GYRO_ODR_3200HZ       (0x0D)
 
 /* Register 0x7b STEP_CONFIG_1 */
 
@@ -214,7 +217,15 @@
 
 struct bmi160_dev_s
 {
-  FAR struct spi_dev_s *spi;
+#ifdef CONFIG_BMI160_I2C
+  FAR struct i2c_master_s *i2c; /* I2C interface */
+  uint8_t addr;                 /* I2C address */
+  int freq;                     /* Frequency <= 3.4MHz */
+
+#else /* CONFIG_BMI160_SPI */
+  FAR struct spi_dev_s *spi;    /* SPI interface */
+
+#endif
 };
 
 /****************************************************************************
@@ -260,7 +271,7 @@ static const struct file_operations g_bmi160fops =
  * Description:
  *
  ****************************************************************************/
-
+#ifdef CONFIG_BMI160_SPI
 static inline void bmi160_configspi(FAR struct spi_dev_s *spi)
 {
   /* Configure SPI for the BMI160 */
@@ -270,6 +281,7 @@ static inline void bmi160_configspi(FAR struct spi_dev_s *spi)
   (void)SPI_HWFEATURES(spi, 0);
   (void)SPI_SETFREQUENCY(spi, BMI160_SPI_MAXFREQUENCY);
 }
+#endif
 
 /****************************************************************************
  * Name: bmi160_getreg8
@@ -281,8 +293,31 @@ static inline void bmi160_configspi(FAR struct spi_dev_s *spi)
 
 static uint8_t bmi160_getreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
 {
-  uint8_t regval;
+  uint8_t regval = 0;
 
+#ifdef CONFIG_BMI160_I2C
+  struct i2c_msg_s msg[2];
+  int ret;
+
+  msg[0].frequency = priv->freq;
+  msg[0].addr      = priv->addr;
+  msg[0].flags     = 0;
+  msg[0].buffer    = &regaddr;
+  msg[0].length    = 1;
+
+  msg[1].frequency = priv->freq;
+  msg[1].addr      = priv->addr;
+  msg[1].flags     = I2C_M_READ;
+  msg[1].buffer    = &regval;
+  msg[1].length    = 1;
+
+  ret = I2C_TRANSFER(priv->i2c, msg, 2);
+  if (ret < 0)
+    {
+      snerr("I2C_TRANSFER failed: %d\n", ret);
+    }
+
+#else /* CONFIG_BMI160_SPI */
   /* If SPI bus is shared then lock and configure it */
 
   (void)SPI_LOCK(priv->spi, true);
@@ -304,6 +339,7 @@ static uint8_t bmi160_getreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
   /* Unlock bus */
 
   (void)SPI_LOCK(priv->spi, false);
+#endif
 
   return regval;
 }
@@ -319,6 +355,27 @@ static uint8_t bmi160_getreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
 static void bmi160_putreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr,
                            uint8_t regval)
 {
+#ifdef CONFIG_BMI160_I2C
+  struct i2c_msg_s msg[2];
+  int ret;
+  uint8_t txbuffer[2];
+
+  txbuffer[0] = regaddr;
+  txbuffer[1] = regval;
+
+  msg[0].frequency = priv->freq;
+  msg[0].addr      = priv->addr;
+  msg[0].flags     = 0;
+  msg[0].buffer    = txbuffer;
+  msg[0].length    = 2;
+
+  ret = I2C_TRANSFER(priv->i2c, msg, 1);
+  if (ret < 0)
+    {
+      snerr("I2C_TRANSFER failed: %d\n", ret);
+    }
+
+#else /* CONFIG_BMI160_SPI */
   /* If SPI bus is shared then lock and configure it */
 
   (void)SPI_LOCK(priv->spi, true);
@@ -340,6 +397,8 @@ static void bmi160_putreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr,
   /* Unlock bus */
 
   (void)SPI_LOCK(priv->spi, false);
+
+#endif
 }
 
 /****************************************************************************
@@ -352,8 +411,31 @@ static void bmi160_putreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr,
 
 static uint16_t bmi160_getreg16(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
 {
-  uint16_t regval;
+  uint16_t regval = 0;
 
+#ifdef CONFIG_BMI160_I2C
+  struct i2c_msg_s msg[2];
+  int ret;
+
+  msg[0].frequency = priv->freq;
+  msg[0].addr      = priv->addr;
+  msg[0].flags     = 0;
+  msg[0].buffer    = &regaddr;
+  msg[0].length    = 1;
+
+  msg[1].frequency = priv->freq;
+  msg[1].addr      = priv->addr;
+  msg[1].flags     = I2C_M_READ;
+  msg[1].buffer    = (uint8_t *)&regval;
+  msg[1].length    = 2;
+
+  ret = I2C_TRANSFER(priv->i2c, msg, 2);
+  if (ret < 0)
+    {
+      snerr("I2C_TRANSFER failed: %d\n", ret);
+    }
+
+#else /* CONFIG_BMI160_SPI */
   /* If SPI bus is shared then lock and configure it */
 
   (void)SPI_LOCK(priv->spi, true);
@@ -375,12 +457,13 @@ static uint16_t bmi160_getreg16(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
   /* Unlock bus */
 
   (void)SPI_LOCK(priv->spi, false);
+#endif
 
   return regval;
 }
 
 /****************************************************************************
- * Name: bmi160_spi_bus_burst_read
+ * Name: bmi160_getregs
  *
  * Description:
  *   Read cnt bytes from specified dev_addr and reg_addr
@@ -390,6 +473,29 @@ static uint16_t bmi160_getreg16(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
 static void bmi160_getregs(FAR struct bmi160_dev_s* priv, uint8_t regaddr,
                            uint8_t *regval, int len)
 {
+#ifdef CONFIG_BMI160_I2C
+  struct i2c_msg_s msg[2];
+  int ret;
+
+  msg[0].frequency = priv->freq;
+  msg[0].addr      = priv->addr;
+  msg[0].flags     = 0;
+  msg[0].buffer    = &regaddr;
+  msg[0].length    = 1;
+
+  msg[1].frequency = priv->freq;
+  msg[1].addr      = priv->addr;
+  msg[1].flags     = I2C_M_READ;
+  msg[1].buffer    = regval;
+  msg[1].length    = len;
+
+  ret = I2C_TRANSFER(priv->i2c, msg, 2);
+  if (ret < 0)
+    {
+      snerr("I2C_TRANSFER failed: %d\n", ret);
+    }
+
+#else /* CONFIG_BMI160_SPI */
   /* If SPI bus is shared then lock and configure it */
 
   (void)SPI_LOCK(priv->spi, true);
@@ -411,6 +517,8 @@ static void bmi160_getregs(FAR struct bmi160_dev_s* priv, uint8_t regaddr,
   /* Unlock bus */
 
   (void)SPI_LOCK(priv->spi, false);
+
+#endif
 }
 
 /****************************************************************************
@@ -615,7 +723,11 @@ static int bmi160_checkid(FAR struct bmi160_dev_s *priv)
  *
  ****************************************************************************/
 
+#ifdef CONFIG_BMI160_I2C
+int bmi160_register(FAR const char *devpath, FAR struct i2c_master_s *dev)
+#else /* CONFIG_BMI160_SPI */
 int bmi160_register(FAR const char *devpath, FAR struct spi_dev_s *dev)
+#endif
 {
   FAR struct bmi160_dev_s *priv;
   int ret;
@@ -626,7 +738,12 @@ int bmi160_register(FAR const char *devpath, FAR struct spi_dev_s *dev)
       snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
+#ifdef CONFIG_BMI160_I2C
+  priv->i2c = dev;
+  priv->addr = BMI160_I2C_ADDR;
+  priv->freq = BMI160_I2C_FREQ;
 
+#else /* CONFIG_BMI160_SPI */
   priv->spi = dev;
 
   /* BMI160 detects communication bus is SPI by rising edge of CS. */
@@ -634,6 +751,8 @@ int bmi160_register(FAR const char *devpath, FAR struct spi_dev_s *dev)
   bmi160_getreg8(priv, 0x7f);
   bmi160_getreg8(priv, 0x7f); /* workaround: fail to switch SPI, run twice */
   up_udelay(200);
+
+#endif
 
   ret = bmi160_checkid(priv);
   if (ret < 0)

@@ -35,7 +35,7 @@
 #ifndef __INCLUDE_NUTTX_SENSORS_BMI160_H
 #define __INCLUDE_NUTTX_SENSORS_BMI160_H
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/fs/ioctl.h>
 
 #if defined(CONFIG_BMI160)
@@ -86,6 +86,7 @@ struct accel_gyro_st_s
 };
 
 struct spi_dev_s;
+struct i2c_master_s;
 
 /********************************************************************************************
  * Public Function Prototypes
@@ -106,24 +107,39 @@ extern "C"
  *   Register the BMI160 character device as 'devpath'
  *
  * Input Parameters:
- *   devpath - The full path to the driver to register. E.g., "/dev/press0"
- *   dev     - An instance of the SPI interface to use to communicate with
- *             BMI160
+ *   devpath - The full path to the driver to register. E.g., "/dev/accel0"
+ *   dev     - An instance of the SPI or I2C interface to use to communicate
+ *             with BMI160
  *
  * Returned Value:
  *   Zero (OK) on success; a negated errno value on failure.
  *
  ****************************************************************************/
 
+#ifndef CONFIG_BMI160_SCU
+
+#  ifdef CONFIG_BMI160_I2C
+int bmi160_register(FAR const char *devpath, FAR struct i2c_master_s *dev);
+#  else /* CONFIG_BMI160_SPI */
 int bmi160_register(FAR const char *devpath, FAR struct spi_dev_s *dev);
+#  endif
 
-#ifdef CONFIG_BMI160_SCU
+#else /* CONFIG_BMI160_SCU */
+
+#  ifdef CONFIG_BMI160_I2C
+int bmi160_init(FAR struct i2c_master_s *dev, int port);
+int bmi160gyro_register(FAR const char *devpath, int minor,
+                        FAR struct i2c_master_s *dev, int port);
+int bmi160accel_register(FAR const char *devpath, int minor,
+                         FAR struct i2c_master_s *dev, int port);
+#  else /* CONFIG_BMI160_SPI */
 int bmi160_init(FAR struct spi_dev_s *dev);
-
-int bmi160gyro_register(FAR const char *devname, int minor,
+int bmi160gyro_register(FAR const char *devpath, int minor,
                         FAR struct spi_dev_s *dev);
-int bmi160accel_register(FAR const char *devname, int mirno,
+int bmi160accel_register(FAR const char *devpath, int minor,
                          FAR struct spi_dev_s *dev);
+#  endif
+
 #endif
 
 #undef EXTERN

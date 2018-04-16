@@ -69,6 +69,8 @@
 #endif
 
 #define DEVID               0xd1
+#define BMI160_I2C_ADDR     0x68 /* If SDO pin is pulled to VDDIO, use 0x69 */
+#define BMI160_I2C_FREQ     400000
 
 /* BMI160 have accel and gyro, XYZ axis respectively in 16 bits.
  */
@@ -223,17 +225,29 @@ uint32_t g_pmu_stat;
 
 struct bmi160_dev_s
 {
-  FAR struct spi_dev_s *spi;
-  FAR struct seq_s *seq;
-  int fifoid;
+#ifdef CONFIG_BMI160_I2C
+  FAR struct i2c_master_s *i2c; /* I2C interface */
+  uint8_t addr;                 /* BMP280 I2C address */
+  int freq;                     /* BMP280 Frequency <= 3.4MHz */
+  int port;                     /* I2C port */
+  FAR struct seq_s *seq;        /* Sequencer */
+  int fifoid;                   /* Sequencer id */
+
+#else /* CONFIG_BMI160_SPI */
+  FAR struct spi_dev_s *spi;    /* SPI interface */
+  FAR struct seq_s *seq;        /* Sequencer */
+  int fifoid;                   /* Sequencer id */
+
+#endif
 };
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-static uint8_t bmi160_getreg8(uint8_t regaddr);
-static void bmi160_putreg8(uint8_t regaddr, uint8_t regval);
+static uint8_t bmi160_getreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr);
+static void bmi160_putreg8(FAR struct bmi160_dev_s *priv,
+                           uint8_t regaddr, uint8_t regval);
 
 /* Character driver methods */
 
@@ -245,10 +259,15 @@ static ssize_t bmi160_read(FAR struct file *filep, FAR char *buffer,
                            size_t len);
 static int     bmi160_ioctl(FAR struct file *filep,int cmd,unsigned long arg);
 
-static int     bmi160_checkid(void);
+static int     bmi160_checkid(FAR struct bmi160_dev_s *priv);
 
+#ifdef CONFIG_BMI160_I2C
+static int bmi160_devregister(FAR const char *devpath, FAR struct i2c_master_s *dev,
+                              int minor, const struct file_operations *fops, int port);
+#else /* CONFIG_BMI160_SPI */
 static int bmi160_devregister(FAR const char *devpath, FAR struct spi_dev_s *dev,
                               int minor, const struct file_operations *fops);
+#endif
 
 /****************************************************************************
  * Private Data
@@ -308,7 +327,7 @@ static int g_refcnt_accel = 0;
  *
  ****************************************************************************/
 
-static uint8_t bmi160_getreg8(uint8_t regaddr)
+static uint8_t bmi160_getreg8(FAR struct bmi160_dev_s *priv, uint8_t regaddr)
 {
   uint8_t regval = 0;
   uint16_t inst[2];
@@ -318,7 +337,11 @@ static uint8_t bmi160_getreg8(uint8_t regaddr)
   inst[0] = SCU_INST_SEND(regaddr | 0x80);
   inst[1] = SCU_INST_RECV(1) | SCU_INST_LAST;
 
+#ifdef CONFIG_BMI160_I2C
+  scu_i2ctransfer(priv->port, priv->addr, inst, 2, &regval, 1);
+#else /* CONFIG_BMI160_SPI */
   scu_spitransfer(0, inst, 2, &regval, 1);
+#endif
 
   return regval;
 }
@@ -332,7 +355,8 @@ static uint8_t bmi160_getreg8(uint8_t regaddr)
  *
  ****************************************************************************/
 
-static uint8_t bmi160_getregs(uint8_t regaddr, void *buffer, int len)
+static uint8_t bmi160_getregs(FAR struct bmi160_dev_s *priv,
+                              uint8_t regaddr, void *buffer, int len)
 {
   uint16_t inst[3];
   int ilen;
@@ -352,8 +376,11 @@ static uint8_t bmi160_getregs(uint8_t regaddr, void *buffer, int len)
       ilen = 2;
     }
 
+#ifdef CONFIG_BMI160_I2C
+  scu_i2ctransfer(priv->port, priv->addr, inst, ilen, buffer, len);
+#else /* CONFIG_BMI160_SPI */
   scu_spitransfer(0, inst, ilen, buffer, len);
-
+#endif
   return OK;
 }
 #endif
@@ -366,7 +393,8 @@ static uint8_t bmi160_getregs(uint8_t regaddr, void *buffer, int len)
  *
  ****************************************************************************/
 
-static void bmi160_putreg8(uint8_t regaddr, uint8_t regval)
+static void bmi160_putreg8(FAR struct bmi160_dev_s *priv,
+                           uint8_t regaddr, uint8_t regval)
 {
   uint16_t inst[2];
 
@@ -375,7 +403,11 @@ static void bmi160_putreg8(uint8_t regaddr, uint8_t regval)
   inst[0] = SCU_INST_SEND(regaddr);
   inst[1] = SCU_INST_SEND(regval) | SCU_INST_LAST;
 
+#ifdef CONFIG_BMI160_I2C
+  scu_i2ctransfer(priv->port, priv->addr, inst, 2, NULL, 0);
+#else /* CONFIG_BMI160_SPI */
   scu_spitransfer(0, inst, 2, NULL, 0);
+#endif
 }
 
 /****************************************************************************
@@ -386,11 +418,11 @@ static void bmi160_putreg8(uint8_t regaddr, uint8_t regval)
  *
  ****************************************************************************/
 
-static void bmi160_setcommand(uint8_t command)
+static void bmi160_setcommand(FAR struct bmi160_dev_s *priv, uint8_t command)
 {
   /* Write command register */
 
-  bmi160_putreg8(BMI160_CMD, command);
+  bmi160_putreg8(priv, BMI160_CMD, command);
 
   /* Interface idle time delay */
 
@@ -398,7 +430,7 @@ static void bmi160_setcommand(uint8_t command)
 
   /* Save power mode status of Accel and gyro */
 
-  g_pmu_stat = bmi160_getreg8(BMI160_PMU_STAT) & 0x3c;
+  g_pmu_stat = bmi160_getreg8(priv, BMI160_PMU_STAT) & 0x3c;
 }
 
 static int bmi160_seqinit_gyro(FAR struct bmi160_dev_s *priv)
@@ -407,14 +439,23 @@ static int bmi160_seqinit_gyro(FAR struct bmi160_dev_s *priv)
 
   /* Open sequencer */
 
+#ifdef CONFIG_BMI160_I2C
+  g_seq_gyro = seq_open(GYRO_SEQ_TYPE,
+                        (priv->port == 0) ? SCU_BUS_I2C0 : SCU_BUS_I2C1);
+#else /* CONFIG_BMI160_SPI */
   g_seq_gyro = seq_open(GYRO_SEQ_TYPE, SCU_BUS_SPI);
+#endif
   if (!g_seq_gyro)
     {
       return -ENOENT;
     }
   priv->seq = g_seq_gyro;
 
+#ifdef CONFIG_BMI160_I2C
+  seq_setaddress(priv->seq, priv->addr);
+#else /* CONFIG_BMI160_SPI */
   seq_setaddress(priv->seq, 0);
+#endif
 
   /* Set instruction and sample data information to sequencer */
 
@@ -430,14 +471,23 @@ static int bmi160_seqinit_accel(FAR struct bmi160_dev_s *priv)
 
   /* Open sequencer */
 
+#ifdef CONFIG_BMI160_I2C
+  g_seq_accel = seq_open(ACCEL_SEQ_TYPE,
+                         (priv->port == 0) ? SCU_BUS_I2C0 : SCU_BUS_I2C1);
+#else /* CONFIG_BMI160_SPI */
   g_seq_accel = seq_open(ACCEL_SEQ_TYPE, SCU_BUS_SPI);
+#endif
   if (!g_seq_accel)
     {
       return -ENOENT;
     }
   priv->seq = g_seq_accel;
 
+#ifdef CONFIG_BMI160_I2C
+  seq_setaddress(priv->seq, priv->addr);
+#else /* CONFIG_BMI160_SPI */
   seq_setaddress(priv->seq, 0);
+#endif
 
   /* Set instruction and sample data information to sequencer */
 
@@ -473,14 +523,14 @@ static int bmi160_open_gyro(FAR struct file *filep)
 
       /* Change gyroscope to normal mode */
 
-      bmi160_setcommand(GYRO_PM_NORMAL);
+      bmi160_setcommand(priv, GYRO_PM_NORMAL);
       up_mdelay(30);
 
       /* Set gyro to normal bandwidth and output data rate 100Hz
        * Hz = 100/2^(8-n)
        */
 
-      bmi160_putreg8(BMI160_GYRO_CONFIG, GYRO_NORMAL_MODE | 8);
+      bmi160_putreg8(priv, BMI160_GYRO_CONFIG, GYRO_NORMAL_MODE | 8);
     }
   else
     {
@@ -512,14 +562,14 @@ static int bmi160_open_accel(FAR struct file *filep)
 
       /* Change accelerometer to normal mode */
 
-      bmi160_setcommand(ACCEL_PM_NORMAL);
+      bmi160_setcommand(priv, ACCEL_PM_NORMAL);
       up_mdelay(30);
 
       /* Set accel to normal bandwidth and output data rate 100Hz
        * Hz = 100/2^(8-n)
        */
 
-      bmi160_putreg8(BMI160_ACCEL_CONFIG, ACCEL_OSR4_AVG1 | 8);
+      bmi160_putreg8(priv, BMI160_ACCEL_CONFIG, ACCEL_OSR4_AVG1 | 8);
     }
   else
     {
@@ -553,7 +603,7 @@ static int bmi160_close_gyro(FAR struct file *filep)
 
       /* Change gyroscope to suspend */
 
-      bmi160_setcommand(GYRO_PM_SUSPEND);
+      bmi160_setcommand(priv, GYRO_PM_SUSPEND);
       up_mdelay(30);
 
       seq_close(g_seq_gyro);
@@ -579,7 +629,7 @@ static int bmi160_close_accel(FAR struct file *filep)
 
       /* Change accelerometer to suspend */
 
-      bmi160_setcommand(ACCEL_PM_SUSPEND);
+      bmi160_setcommand(priv, ACCEL_PM_SUSPEND);
       up_mdelay(30);
 
       /* Close sequencer */
@@ -609,7 +659,7 @@ static ssize_t bmi160_read(FAR struct file *filep, FAR char *buffer, size_t len)
   FAR struct bmi160_dev_s *priv  = inode->i_private;
 
 #ifdef USE_ONESHOTREAD
-  bmi160_getregs(BMI160_DATA_14, buffer, 6);
+  bmi160_getregs(priv, BMI160_DATA_14, buffer, 6);
   len = 6;
 #else
   len = seq_read(priv->seq, priv->fifoid, buffer, len);
@@ -662,13 +712,13 @@ static int bmi160_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
  *
  ****************************************************************************/
 
-static int bmi160_checkid(void)
+static int bmi160_checkid(FAR struct bmi160_dev_s *priv)
 {
   uint8_t devid = 0;
 
   /* Read device ID  */
 
-  devid = bmi160_getreg8(BMI160_CHIP_ID);
+  devid = bmi160_getreg8(priv, BMI160_CHIP_ID);
   sninfo("devid: %04x\n", devid);
 
   if (devid != (uint16_t) DEVID)
@@ -699,8 +749,13 @@ static int bmi160_checkid(void)
  *
  ****************************************************************************/
 
+#ifdef CONFIG_BMI160_I2C
+static int bmi160_devregister(FAR const char *devpath, FAR struct i2c_master_s *dev,
+                              int minor, const struct file_operations *fops, int port)
+#else /* CONFIG_BMI160_SPI */
 static int bmi160_devregister(FAR const char *devpath, FAR struct spi_dev_s *dev,
                               int minor, const struct file_operations *fops)
+#endif
 {
   FAR struct bmi160_dev_s *priv;
   char path[12];
@@ -712,11 +767,20 @@ static int bmi160_devregister(FAR const char *devpath, FAR struct spi_dev_s *dev
       snerr("Failed to allocate instance\n");
       return -ENOMEM;
     }
+#ifdef CONFIG_BMI160_I2C
+  priv->i2c = dev;
+  priv->seq = NULL;
+  priv->fifoid = minor;
+  priv->addr = BMI160_I2C_ADDR;
+  priv->freq = BMI160_I2C_FREQ;
+  priv->port = port;
 
+#else /* CONFIG_BMI160_SPI */
   priv->spi = dev;
   priv->seq = NULL;
   priv->fifoid = minor;
 
+#endif
   (void) snprintf(path, sizeof(path), "%s%d", devpath, minor);
   ret = register_driver(path, fops, 0666, priv);
   if (ret < 0)
@@ -743,10 +807,24 @@ static int bmi160_devregister(FAR const char *devpath, FAR struct spi_dev_s *dev
  *
  ****************************************************************************/
 
+#ifdef CONFIG_BMI160_I2C
+int bmi160_init(FAR struct i2c_master_s *dev, int port)
+#else /* CONFIG_BMI160_SPI */
 int bmi160_init(FAR struct spi_dev_s *dev)
+#endif
 {
+  FAR struct bmi160_dev_s tmp, *priv = &tmp;
   int ret;
 
+#ifdef CONFIG_BMI160_I2C
+  /* Setup temporary device structure for initialization */
+
+  priv->i2c = dev;
+  priv->addr = BMI160_I2C_ADDR;
+  priv->freq = BMI160_I2C_FREQ;
+  priv->port = port;
+
+#else /* CONFIG_BMI160_SPI */
   /* Configure SPI for the BMI160 */
 
   SPI_SETMODE(dev, SPIDEV_MODE3);
@@ -756,10 +834,12 @@ int bmi160_init(FAR struct spi_dev_s *dev)
 
   /* BMI160 detects communication bus is SPI by rising edge of CS. */
 
-  bmi160_getreg8(0x7f);
-  bmi160_getreg8(0x7f); /* workaround: fail to switch SPI, run twice */
+  bmi160_getreg8(priv, 0x7f);
+  bmi160_getreg8(priv, 0x7f); /* workaround: fail to switch SPI, run twice */
 
-  ret = bmi160_checkid();
+#endif
+
+  ret = bmi160_checkid(priv);
   if (ret < 0)
     {
       snerr("Wrong Device ID!\n");
@@ -768,7 +848,7 @@ int bmi160_init(FAR struct spi_dev_s *dev)
 
   /* To avoid gyro wakeup it is required to write 0x00 to 0x6C*/
 
-  bmi160_putreg8(BMI160_PMU_TRIGGER, 0);
+  bmi160_putreg8(priv, BMI160_PMU_TRIGGER, 0);
   up_mdelay(1);
 
   return OK;
@@ -790,12 +870,21 @@ int bmi160_init(FAR struct spi_dev_s *dev)
  *
  ****************************************************************************/
 
-int bmi160gyro_register(FAR const char *devname, int minor,
+#ifdef CONFIG_BMI160_I2C
+int bmi160gyro_register(FAR const char *devpath, int minor,
+                        FAR struct i2c_master_s *dev, int port)
+#else /* CONFIG_BMI160_SPI */
+int bmi160gyro_register(FAR const char *devpath, int minor,
                         FAR struct spi_dev_s *dev)
+#endif
 {
   int ret;
 
-  ret = bmi160_devregister(devname, dev, minor, &g_bmi160gyrofops);
+#ifdef CONFIG_BMI160_I2C
+  ret = bmi160_devregister(devpath, dev, minor, &g_bmi160gyrofops, port);
+#else /* CONFIG_BMI160_SPI */
+  ret = bmi160_devregister(devpath, dev, minor, &g_bmi160gyrofops);
+#endif
   if (ret < 0)
     {
       snerr("Gyroscope register failed. %d\n", ret);
@@ -813,20 +902,29 @@ int bmi160gyro_register(FAR const char *devname, int minor,
  *
  * Input Parameters:
  *   devpath - The base path to the driver to register. E.g., "/dev/accel"
- *   dev     - An instance of the SPI interface to use to communicate with
- *             BMI160
+ *   dev     - An instance of the SPI or I2C interface to use to communicate
+ *             with BMI160
  *
  * Returned Value:
  *   Zero (OK) on success; a negated errno value on failure.
  *
  ****************************************************************************/
 
-int bmi160accel_register(FAR const char *devname, int minor,
+#ifdef CONFIG_BMI160_I2C
+int bmi160accel_register(FAR const char *devpath, int minor,
+                         FAR struct i2c_master_s *dev, int port)
+#else /* CONFIG_BMI160_SPI */
+int bmi160accel_register(FAR const char *devpath, int minor,
                          FAR struct spi_dev_s *dev)
+#endif
 {
   int ret;
 
-  ret = bmi160_devregister(devname, dev, minor, &g_bmi160accelfops);
+#ifdef CONFIG_BMI160_I2C
+  ret = bmi160_devregister(devpath, dev, minor, &g_bmi160accelfops, port);
+#else /* CONFIG_BMI160_SPI */
+  ret = bmi160_devregister(devpath, dev, minor, &g_bmi160accelfops);
+#endif
   if (ret < 0)
     {
       snerr("Accelerometer register failed. %d\n", ret);
