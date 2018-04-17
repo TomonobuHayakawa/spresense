@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/spresense/src/cxd56_spisd.h
+ * bsp/board/common/src/cxd56_spisd.c
  *
- *   Copyright (C) 2018 Sony Corporation.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,29 +32,72 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_SPISD_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_SPISD_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
-#include <nuttx/spi/spi.h>
+#include <debug.h>
+#include <sys/mount.h>
+#include <nuttx/mmcsd.h>
+#include <nuttx/board.h>
+#include "cxd56_spi.h"
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+/* Configuration ************************************************************/
+
+#ifndef CONFIG_CXD56_SPISD_SLOT_NO
+#  define CONFIG_CXD56_SPISD_SLOT_NO 0
+#endif
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: cxd56xx_spisdinitialize
+ * Name: board_spisd_initialize
  *
  * Description:
  *   Initialize the SPI-based SD card.
  *
  ****************************************************************************/
 
-int cxd56xx_spisdinitialize(int minor, FAR struct spi_dev_s *spi);
+int board_spisd_initialize(int minor, int bus)
+{
+  int ret;
+  FAR struct spi_dev_s *spi;
 
-#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_SPISD_H */
+  /* Initialize spi deivce */
+
+  spi = cxd56_spibus_initialize(bus);
+  if (!spi)
+    {
+      ferr("ERROR: Failed to initialize spi%d.\n", bus);
+      return -ENODEV;
+    }
+
+  /* Get the SPI driver instance for the SD chip select */
+
+  finfo("Initializing SPI for the MMC/SD slot\n");
+
+  ret = mmcsd_spislotinitialize(minor, CONFIG_CXD56_SPISD_SLOT_NO, spi);
+  if (ret < 0)
+    {
+      ferr("ERROR: Failed to bind SPI device to MMC/SD slot %d: %d\n",
+           CONFIG_CXD56_SPISD_SLOT_NO, ret);
+      return ret;
+    }
+
+  /* Mount filesystem */
+
+  ret = mount("/dev/mmcsd0", "/mnt/sd0", "vfat", 0, NULL);
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
+    }
+
+  return OK;
+}

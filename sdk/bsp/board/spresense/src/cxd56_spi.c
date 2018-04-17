@@ -91,6 +91,20 @@ void cxd56_spi4select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 uint8_t cxd56_spi4status(FAR struct spi_dev_s *dev, uint32_t devid)
 {
 #  ifdef CONFIG_CXD56_SPISD
+  static int initialized = 0;
+  if (initialized == 0)
+    {
+      /* Pin Configuration(AP_CLK = SD card detect pin) */
+
+      CXD56_PIN_CONFIGS(PINCONFS_AP_CLK_GPIO);
+
+      /* Input enable */
+
+      cxd56_gpio_config(PIN_AP_CLK, true);
+
+      initialized = 1;
+    }
+
   /* PIN_AP_CLK is mapping to SD Card detect pin
    * PIN_AP_CLK = 0: Inserted
    * PIN_AP_CLK = 1: Removed

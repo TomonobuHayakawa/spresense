@@ -88,10 +88,6 @@
 #  endif
 #endif
 
-#ifdef CONFIG_CXD56_SPISD
-#  include "cxd56_spisd.h"
-#endif
-
 #ifdef CONFIG_CXD56_CPUFIFO
 #  include "cxd56_cpufifo.h"
 #endif
@@ -259,9 +255,6 @@ int board_app_initialize(uintptr_t arg)
 {
   struct pm_cpu_wakelock_s wlock;
 
-#if defined(CONFIG_CXD56_SPI4) && defined(CONFIG_CXD56_SPISD)
-  FAR struct spi_dev_s *spi4;
-#endif
   int ret;
 
   ret = nsh_cpucom_initialize();
@@ -299,19 +292,6 @@ int board_app_initialize(uintptr_t arg)
 
 #ifdef CONFIG_CXD56_SCU
   scu_initialize();
-#endif
-
-#if defined(CONFIG_CXD56_SPI4) && defined(CONFIG_CXD56_SPISD)
-  /* globally initialize spi bus for peripherals */
-  spi4 = cxd56_spibus_initialize(4);
-  if (!spi4)
-  {
-    _err("ERROR: Failed to initialize spi bus.\n");
-    return -ENODEV;
-  }
-#ifdef HAVE_SPITOOL
-  cxd56_spi_register(spi4, 4);
-#endif
 #endif
 
 #ifdef CONFIG_FS_PROCFS
@@ -482,17 +462,11 @@ int board_app_initialize(uintptr_t arg)
 #ifdef CONFIG_CXD56_SPISD
   /* Mount the SPI-based MMC/SD block driver */
 
-  ret = cxd56xx_spisdinitialize(0, spi4);
+  ret = board_spisd_initialize(0, 4);
   if (ret < 0)
     {
       ferr("ERROR: Failed to initialize SPI device to MMC/SD: %d\n",
-            ret);
-    }
-
-  ret = mount("/dev/mmcsd0", "/mnt/sd0", "vfat", 0, NULL);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to mount the SDCARD. %d\n", errno);
+           ret);
     }
 #endif
 

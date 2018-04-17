@@ -62,6 +62,8 @@
 #include <arch/board/common/cxd56_rpr0521rs.h>
 #include <arch/board/common/cxd56_i2cdev.h>
 
+#include <arch/board/common/cxd56_spisd.h>
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/

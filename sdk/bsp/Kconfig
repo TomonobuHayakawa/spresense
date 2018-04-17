@@ -122,6 +122,21 @@ config CXD56_SDIO_ENABLE_MULTIFUNCTION
 
 endmenu # SDIO Configuration
 
+config CXD56_SPISD
+	bool "SPISD"
+	default n
+
+menu "SPISD Configuration"
+	depends on CXD56_SPISD
+
+config CXD56_SPISD_SLOT_NO
+	int "SPI SD Card Slot Number"
+	default 0
+	---help---
+		Select spi sd card slot number.
+
+endmenu # SPISD Configuration
+
 config CXD56_EMMC
 	bool "eMMC"
 	default y if BOARD_CORVO

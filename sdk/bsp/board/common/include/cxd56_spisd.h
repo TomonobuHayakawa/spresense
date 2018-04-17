@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/spresense/src/cxd56_spisd.c
+ * bsp/board/common/include/cxd56_spisd.h
  *
- *   Copyright (C) 2018 Sony Corporation.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,67 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SPISD_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SPISD_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-
-#include <debug.h>
-
-#include <nuttx/mmcsd.h>
-
-#include "cxd56_gpio.h"
-#include "cxd56_pinconfig.h"
-#include "cxd56_spisd.h"
+#include <sdk/config.h>
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Public Types
  ****************************************************************************/
-/* Configuration ************************************************************/
 
-#ifndef CONFIG_CXD56_SPISD_SLOT_NO
-#  define CONFIG_CXD56_SPISD_SLOT_NO 0
+#ifndef __ASSEMBLY__
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
 #endif
 
 /****************************************************************************
- * Public Functions
+ * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
- * Name: cxd56xx_spisdinitialize
+ * Name: board_spisd_initialize
  *
  * Description:
  *   Initialize the SPI-based SD card.
  *
  ****************************************************************************/
 
-int cxd56xx_spisdinitialize(int minor, FAR struct spi_dev_s *spi)
-{
-  int ret;
+#ifdef CONFIG_CXD56_SPISD
+int board_spisd_initialize(int minor, int bus);
+#endif
 
-  /* Pin Configuration(AP_CLK = SD card detect pin) */
-
-  CXD56_PIN_CONFIGS(PINCONFS_AP_CLK_GPIO);
-
-  /* Input enable */
-
-  cxd56_gpio_config(PIN_AP_CLK, true);
-
-  /* Get the SPI driver instance for the SD chip select */
-
-  finfo("Initializing bit bang SPI for the MMC/SD slot\n");
-
-  ret = mmcsd_spislotinitialize(minor, CONFIG_CXD56_SPISD_SLOT_NO, spi);
-  if (ret < 0)
-    {
-      ferr("ERROR: Failed to bind  bit bang SPI device to MMC/SD slot %d: %d\n",
-            0, ret);
-      return ret;
-    }
-
-  finfo("Successfuly bound  bit bang SPI device to MMC/SD slot %d\n",
-        CONFIG_CXD56_SPISD_SLOT_NO);
-
-  return OK;
+#undef EXTERN
+#if defined(__cplusplus)
 }
+#endif
+
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SPISD_H */
