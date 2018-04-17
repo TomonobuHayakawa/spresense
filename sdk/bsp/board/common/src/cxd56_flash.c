@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_emmcdev.c
+ * bsp/board/common/src/cxd56_flash.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -44,7 +44,13 @@
 #include <sys/mount.h>
 #include <nuttx/board.h>
 #include <arch/board/board.h>
-#include "cxd56_emmc.h"
+#include <nuttx/mtd/mtd.h>
+
+#ifdef CONFIG_FS_NXFFS
+#  include <nuttx/fs/nxffs.h>
+#endif
+
+#include "cxd56_sfc.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -59,42 +65,68 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_emmc_initialize
+ * Name: board_flash_initialize
  *
  * Description:
- *   Initialize the eMMC device and mount the file system.
+ *   Initialize the SPI-Flash device and mount the file system.
  *
  ****************************************************************************/
 
-int board_emmc_initialize(void)
+int board_flash_initialize(void)
 {
   int ret;
+  FAR struct mtd_dev_s *mtd;
 
-  /* Power on the eMMC device */
-
-  ret = board_power_control(POWER_EMMC, true);
-  if (ret)
+  mtd = cxd56_sfc_initialize();
+  if (!mtd)
     {
-      ferr("ERROR: Failed to power on eMMC. %d\n", ret);
+      ferr("ERROR: Failed to initialize SFC. %d\n ", ret);
       return -ENODEV;
     }
 
-  /* Initialize the eMMC deivce */
+  /* use the FTL layer to wrap the MTD driver as a block driver */
 
-  ret = cxd56_emmcinitialize();
+  ret = ftl_initialize(CONFIG_SFC_DEVNO, mtd);
   if (ret < 0)
     {
-      ferr("ERROR: Failed to initialize eMMC. %d\n ", ret);
-      return -ENODEV;
+      ferr("ERROR: Initializing the FTL layer: %d\n", ret);
+      return ret;
     }
 
-  /* Mount the eMMC deivce */
+#if defined(CONFIG_FS_SMARTFS)
+  /* Initialize to provide SMARTFS on the MTD interface */
 
-  ret = mount("/dev/emmc0", "/mnt/vfat", "vfat", 0, NULL);
+  ret = smart_initialize(CONFIG_SFC_DEVNO, mtd, NULL);
   if (ret < 0)
     {
-      ferr("ERROR: Failed to mount the eMMC. %d\n", errno);
+      ferr("ERROR: SmartFS initialization failed: %d\n", ret);
+      return ret;
     }
 
-  return ret;
+  ret = mount("/dev/smart0d1", "/mnt/spif", "smartfs", 0, NULL);
+  if (ret < 0)
+    {
+      ferr("ERROR: Failed to mount the SmartFS volume: %d\n", errno);
+      return ret;
+    }
+  
+#elif defined(CONFIG_FS_NXFFS)
+  /* Initialize to provide NXFFS on the MTD interface */
+
+  ret = nxffs_initialize(mtd);
+  if (ret < 0)
+    {
+      ferr("ERROR: NXFFS initialization failed: %d\n", ret);
+      return ret;
+    }
+
+  ret = mount(NULL, "/mnt/spif", "nxffs", 0, NULL);
+  if (ret < 0)
+    {
+      ferr("ERROR: Failed to mount the NXFFS volume: %d\n", errno);
+      return ret;
+    }
+#endif
+
+  return OK;
 }

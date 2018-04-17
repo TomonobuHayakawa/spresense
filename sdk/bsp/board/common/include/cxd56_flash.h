@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_emmcdev.c
+ * bsp/board/common/include/cxd56_flash.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,69 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_FLASH_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_FLASH_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-#include <stdio.h>
-#include <errno.h>
-#include <debug.h>
-#include <sys/mount.h>
-#include <nuttx/board.h>
-#include <arch/board/board.h>
-#include "cxd56_emmc.h"
-
 /****************************************************************************
- * Pre-processor Definitions
+ * Public Types
  ****************************************************************************/
 
-#ifndef CONFIG_SFC_DEVNO
-#  define CONFIG_SFC_DEVNO 0
+#ifndef __ASSEMBLY__
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
 #endif
 
 /****************************************************************************
- * Public Functions
+ * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_emmc_initialize
+ * Name: board_flash_initialize
  *
  * Description:
- *   Initialize the eMMC device and mount the file system.
+ *   Initialize the SPI-Flash device and mount the file system.
  *
  ****************************************************************************/
 
-int board_emmc_initialize(void)
-{
-  int ret;
+#ifdef CONFIG_CXD56_SFC
+int board_flash_initialize(void);
+#endif
 
-  /* Power on the eMMC device */
-
-  ret = board_power_control(POWER_EMMC, true);
-  if (ret)
-    {
-      ferr("ERROR: Failed to power on eMMC. %d\n", ret);
-      return -ENODEV;
-    }
-
-  /* Initialize the eMMC deivce */
-
-  ret = cxd56_emmcinitialize();
-  if (ret < 0)
-    {
-      ferr("ERROR: Failed to initialize eMMC. %d\n ", ret);
-      return -ENODEV;
-    }
-
-  /* Mount the eMMC deivce */
-
-  ret = mount("/dev/emmc0", "/mnt/vfat", "vfat", 0, NULL);
-  if (ret < 0)
-    {
-      ferr("ERROR: Failed to mount the eMMC. %d\n", errno);
-    }
-
-  return ret;
+#undef EXTERN
+#if defined(__cplusplus)
 }
+#endif
+
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_FLASH_H */

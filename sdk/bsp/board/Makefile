@@ -153,4 +153,8 @@ ifeq ($(CONFIG_CXD56_EMMC),y)
 CSRCS += cxd56_emmcdev.c
 endif
 
+ifeq ($(CONFIG_CXD56_SFC),y)
+CSRCS += cxd56_flash.c
+endif
+
 include $(SDKDIR)/bsp/scripts/Board.mk

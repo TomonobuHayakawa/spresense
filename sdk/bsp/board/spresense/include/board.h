@@ -51,6 +51,9 @@
 #  include <arch/chip/usbdev.h>
 #endif
 
+#include <arch/board/common/cxd56_flash.h>
+#include <arch/board/common/cxd56_spisd.h>
+
 #include <arch/board/common/cxd56_bmi160.h>
 #include <arch/board/common/cxd56_bmp280.h>
 #include <arch/board/common/cxd56_kx022.h>
@@ -61,8 +64,6 @@
 #include <arch/board/common/cxd56_bh1721fvc.h>
 #include <arch/board/common/cxd56_rpr0521rs.h>
 #include <arch/board/common/cxd56_i2cdev.h>
-
-#include <arch/board/common/cxd56_spisd.h>
 
 /****************************************************************************
  * Pre-processor Definitions

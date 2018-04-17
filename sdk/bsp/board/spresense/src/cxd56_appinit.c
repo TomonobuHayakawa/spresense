@@ -79,15 +79,6 @@
 #include <arch/chip/cxd56_adc.h>
 #endif
 
-#ifdef CONFIG_CXD56_SFC
-#  include <nuttx/mtd/mtd.h>
-#  include "cxd56_sfc.h"
-
-#  ifdef CONFIG_FS_NXFFS
-#    include <nuttx/fs/nxffs.h>
-#  endif
-#endif
-
 #ifdef CONFIG_CXD56_CPUFIFO
 #  include "cxd56_cpufifo.h"
 #endif
@@ -116,11 +107,6 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-/* Configuration ************************************************************/
-
-#ifndef CONFIG_SFC_DEVNO
-#  define CONFIG_SFC_DEVNO 0
-#endif
 
 /****************************************************************************
  * Private Data
@@ -132,75 +118,6 @@ static struct pm_cpu_freqlock_s g_hv_lock =
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-
-/****************************************************************************
- * Name: nsh_spifi_initialize
- *
- * Description:
- *
- ****************************************************************************/
-
-#ifdef CONFIG_CXD56_SFC
-static int nsh_sfc_initialize(void)
-{
-  FAR struct mtd_dev_s *mtd;
-  int ret;
-
-  mtd = cxd56_sfc_initialize();
-  if (!mtd)
-    {
-      ferr("ERROR: cxd56_spifi_initialize failed\n");
-      return -ENODEV;
-    }
-
-  /* use the FTL layer to wrap the MTD driver as a block driver */
-
-  ret = ftl_initialize(CONFIG_SFC_DEVNO, mtd);
-  if (ret < 0)
-    {
-      ferr("ERROR: Initializing the FTL layer: %d\n", ret);
-      return ret;
-    }
-
-#if defined(CONFIG_FS_SMARTFS)
-  /* Initialize to provide SMARTFS on the MTD interface */
-
-  ret = smart_initialize(CONFIG_SFC_DEVNO, mtd, NULL);
-  if (ret < 0)
-    {
-      ferr("ERROR: SmartFS initialization failed: %d\n", ret);
-      return ret;
-    }
-
-  ret = mount("/dev/smart0d1", "/mnt/spif", "smartfs", 0, NULL);
-  if (ret < 0)
-    {
-      ferr("ERROR: Failed to mount the SmartFS volume: %d\n", errno);
-      return ret;
-    }
-#elif defined(CONFIG_FS_NXFFS)
-  /* Initialize to provide NXFFS on the MTD interface */
-
-  ret = nxffs_initialize(mtd);
-  if (ret < 0)
-    {
-      ferr("ERROR: NXFFS initialization failed: %d\n", ret);
-      return ret;
-    }
-
-  ret = mount(NULL, "/mnt/spif", "nxffs", 0, NULL);
-  if (ret < 0)
-    {
-      ferr("ERROR: Failed to mount the NXFFS volume: %d\n", errno);
-      return ret;
-    }
-#endif
-
-  return OK;
-}
-#else
-#  define nsh_sfc_initialize() (OK)
-#endif
 
 #ifdef CONFIG_CXD56_CPUFIFO
 static int nsh_cpucom_initialize(void)
@@ -449,7 +366,13 @@ int board_app_initialize(uintptr_t arg)
   cxd56_isx012initialize("/dev/imager", 2);
 #endif
 
-  ret = nsh_sfc_initialize();
+#ifdef CONFIG_CXD56_SFC
+  ret = board_flash_initialize();
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialze SPI-Flash. %d\n", errno);
+    }
+#endif
 
 #if defined(CONFIG_CXD56_SDIO) && !defined(CONFIG_CXD56_SPISD)
   ret = board_sdcard_initialize();
