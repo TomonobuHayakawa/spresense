@@ -54,6 +54,8 @@
 #include <arch/board/common/cxd56_flash.h>
 #include <arch/board/common/cxd56_spisd.h>
 
+#include <arch/board/common/cxd56_pwm.h>
+
 #include <arch/board/common/cxd56_bmi160.h>
 #include <arch/board/common/cxd56_bmp280.h>
 #include <arch/board/common/cxd56_kx022.h>
@@ -490,16 +492,6 @@ void board_isx012_set_sleep(int kind);
 void board_isx012_release_sleep(void);
 
 #endif /* CONFIG_VIDEO_ISX012 */
-
-/****************************************************************************
- * Name: board_pwm_setup
- *
- * Description:
- *   Initialize PWM on the board.
- *
- ****************************************************************************/
-
-int board_pwm_setup(void);
 
 #undef EXTERN
 #if defined(__cplusplus)
