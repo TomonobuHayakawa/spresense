@@ -45,8 +45,6 @@
 
 #include "cxd56_pinconfig.h"
 
-struct spi_dev_s;
-
 /* LED definitions *********************************************************/
 
 #define GPIO_LED1           (PIN_PWM0)
@@ -91,22 +89,6 @@ int cxd56_userled_initialize(FAR const char *devname);
 
 #ifdef CONFIG_CXD56_GEOFENCE
 int cxd56_geofenceinitialize(FAR const char *devpath);
-#endif
-
-/****************************************************************************
- * Name: cxd56_lpm013m091a_initialize
- *
- * Description:
- *   Called to configure an LPM013M091A LCD driver for corvo board
- *
- ****************************************************************************/
-
-#ifdef CONFIG_LCD_LPM013M091A
-#  ifdef CONFIG_NX_LCDDRIVER
-FAR struct lcd_dev_s *cxd56_lpm013m091a_initialize(FAR struct spi_dev_s *spi);
-#  else
-FAR struct fb_vtable_s *cxd56_lpm013m091a_fb_initialize(FAR const char *devpath, FAR struct spi_dev_s *spi);
-#  endif
 #endif
 
 /****************************************************************************

@@ -45,8 +45,6 @@
 
 #include "cxd56_pinconfig.h"
 
-struct spi_dev_s;
-
 /* LED definitions *********************************************************/
 
 #define GPIO_LED1           (PIN_PWM2)
@@ -73,35 +71,6 @@ struct spi_dev_s;
 
 #ifdef CONFIG_CXD56_GNSS
 int cxd56_gnssinitialize(FAR const char *devpath);
-#endif
-
-/****************************************************************************
- * Name: cxd56_lpm013m091a_initialize
- *
- * Description:
- *   Called to configure an LPM013M091A LCD driver for collet board
- *
- ****************************************************************************/
-
-#ifdef CONFIG_LCD_LPM013M091A
-#  ifdef CONFIG_NX_LCDDRIVER
-FAR struct lcd_dev_s *cxd56_lpm013m091a_initialize(FAR struct spi_dev_s *spi);
-#  else
-FAR struct fb_vtable_s *cxd56_lpm013m091a_fb_initialize(FAR const char *devpath, FAR struct spi_dev_s *spi);
-#  endif
-#endif
-
-/****************************************************************************
- * Name: cxd56_et014tt1_initialize
- *
- * Description:
- *   Called to configure an ET014TT1 EInk driver for collet board
- *
- ****************************************************************************/
-
-#ifdef CONFIG_EINK_ET014TT1
-FAR struct fb_vtable_s *cxd56_et014tt1_initialize(FAR const char *devpath,
-                    FAR struct spi_dev_s *spi);
 #endif
 
 /****************************************************************************
