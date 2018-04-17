@@ -995,6 +995,10 @@ static int seq_oneshot(int bustype, int slave, FAR uint16_t *inst,
     {
       return -EINVAL;
     }
+  if (len <= 0 || len > 16)
+    {
+      return -EINVAL;
+    }
 
   flags = enter_critical_section();
   sid = seq_alloc();
