@@ -69,17 +69,6 @@
  ****************************************************************************/
 
 /* Clocking ****************************************************************/
-/* NOTE:  The following definitions require lpc43_cgu.h.  It is not included
- * here because the including C file may not have that file in its include
- * path.
- *
- * The Xplorer board has four crystals on board:
- *
- *     Y1 - RTC 32.768 MHz oscillator input,
- *     Y2 - 24.576 MHz input to the UDA 1380 audio codec,
- *     Y3 - 12.000 MHz LPC43xx crystal oscillator input
- *     Y4 - 50 MHz input for Ethernet
- */
 
 #define BOARD_XTAL_FREQUENCY        (26000000)  /* XTAL oscillator frequency (Y3) */
 #define BOARD_RTCCLK_FREQUENCY      (32768)     /* RTC oscillator frequency (Y1) */
@@ -89,47 +78,6 @@
 #  define BOARD_FCLKOUT_FREQUENCY   (80000000)
 #else
 #  define BOARD_FCLKOUT_FREQUENCY   (100000000)
-#endif
-
-#define CXD56_CCLK                  BOARD_FCLKOUT_FREQUENCY
-
-/* USB0 ********************************************************************/
-/* Settings needed in lpc43_cpu.c */
-
-#define BOARD_USB0_CLKSRC           PLL0USB_CLKSEL_XTAL
-#define BOARD_USB0_MDIV             0x06167ffa /* Table 149 datsheet, valid for 12Mhz Fclkin */
-#define BOARD_USB0_NP_DIV           0x00302062 /* Table 149 datsheet, valid for 12Mhz Fclkin */
-
-/* SPIFI clocking **********************************************************/
-/* The SPIFI will receive clocking from a divider per the settings provided
- * in this file.  The NuttX code will configure PLL1 as the input clock
- * for the selected divider
- */
-
-#undef  BOARD_SPIFI_PLL1                        /* No division */
-#undef  BOARD_SPIFI_DIVA                        /* Supports division by 1-4 */
-#undef  BOARD_SPIFI_DIVB                        /* Supports division by 1-16 */
-#undef  BOARD_SPIFI_DIVC                        /* Supports division by 1-16 */
-#undef  BOARD_SPIFI_DIVD                        /* Supports division by 1-16 */
-#undef  BOARD_SPIFI_DIVE                        /* Supports division by 1-256 */
-
-#if BOARD_FCLKOUT_FREQUENCY < 20000000
-#  define BOARD_SPIFI_PLL1          1           /* Use PLL1 directly */
-#else
-#  define BOARD_SPIFI_DIVB          1           /* Use IDIVB */
-#endif
-
-
-/* We need to configure the divider so that its output is as close to the
- * desired SCLK value.  The peak data transfer rate will be about half of
- * this frequency in bytes per second.
- */
-
-#if BOARD_FCLKOUT_FREQUENCY < 20000000
-#  define BOARD_SPIFI_FREQUENCY     BOARD_FCLKOUT_FREQUENCY  /* 72Mhz? */
-#else
-#  define BOARD_SPIFI_DIVIDER       (14)        /* 204MHz / 14 = 14.57MHz */
-#  define BOARD_SPIFI_FREQUENCY     (102000000) /* 204MHz / 14 = 14.57MHz */
 #endif
 
 /* UART clocking ***********************************************************/
