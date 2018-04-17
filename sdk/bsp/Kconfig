@@ -355,20 +355,22 @@ config CXD56_SPI5
 	bool "SPI5"
 
 if CXD56_SPI5
+choice
+	prompt "SPI5 pin configuration"
+	default CXD56_SPI5_PINMAP_EMMC
 
 config CXD56_SPI5_PINMAP_EMMC
 	bool "SPI5 pin assign to eMMC"
-	default n
 	depends on !CXD56_EMMC
 	---help---
 		SPI5 assigns to the shared pins with eMMC.
 
 config CXD56_SPI5_PINMAP_SDIO
 	bool "SPI5 pin assign to SDIO"
-	default n
 	depends on !CXD56_SDIO
 	---help---
 		SPI5 assigns to the shared pins with SDIO.
+endchoice
 
 config CXD56_DMAC_SPI5_TX
 	bool "DMAC support for SPI5 TX"
