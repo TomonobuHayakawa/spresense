@@ -54,13 +54,6 @@
 #define GPIO_BUT1           (PIN_SPI2_MOSI)
 #define GPIO_BUT2           (PIN_SPI2_MISO)
 
-/* Do we need to register SPI drivers on behalf of the SPI tool? */
-
-#define HAVE_SPITOOL 1
-#if !defined(CONFIG_SYSTEM_SPITOOL) || !defined(CONFIG_SPI_DRIVER)
-#  undef HAVE_SPITOOL
-#endif
-
 /****************************************************************************
  * Name: cxd56_gnssinitialize
  *

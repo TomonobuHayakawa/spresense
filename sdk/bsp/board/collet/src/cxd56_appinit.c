@@ -116,10 +116,6 @@
 #  include "cxd56_usbdev.h"
 #endif
 
-#ifdef HAVE_SPITOOL
-#  include <nuttx/spi/spi_transfer.h>
-#endif
-
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
