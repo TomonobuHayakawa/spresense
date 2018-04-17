@@ -179,6 +179,7 @@ enum board_power_device {
   POWER_AUDIO_MUTE      = PMIC_GPO(6),
   POWER_IMAGE_SENSOR    = PMIC_GPO(4) | PMIC_GPO(5) | PMIC_GPO(7),
 
+  POWER_EMMC            = PMIC_NONE,
 };
 
 /* CXD5247 power control definitions *******************************************/

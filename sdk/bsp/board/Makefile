@@ -149,4 +149,8 @@ ifeq ($(CONFIG_SYSTEM_I2CTOOL),y)
 CSRCS += cxd56_i2cdev.c
 endif
 
+ifeq ($(CONFIG_CXD56_EMMC),y)
+CSRCS += cxd56_emmcdev.c
+endif
+
 include $(SDKDIR)/bsp/scripts/Board.mk

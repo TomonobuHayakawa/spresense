@@ -84,10 +84,6 @@
 #  endif
 #endif
 
-#ifdef CONFIG_CXD56_EMMC
-#  include "cxd56_emmc.h"
-#endif
-
 #ifdef CONFIG_CXD56_CPUFIFO
 #  include "cxd56_cpufifo.h"
 #endif
@@ -362,26 +358,6 @@ int board_app_initialize(uintptr_t arg)
   if (ret < 0)
     {
       _err("ERROR: Failed to mount the procfs. %d\n", errno);
-    }
-#endif
-
-#ifdef CONFIG_CXD56_EMMC
-  ret = board_power_control(POWER_EMMC, true);
-  if (ret)
-    {
-      _err("ERROR: Failed to power on eMMC. %d\n", ret);
-      return -ENODEV;
-    }
-
-  ret = cxd56_emmcinitialize();
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize eMMC. %d\n ", errno);
-    }
-  ret = mount("/dev/emmc0", "/mnt/vfat", "vfat", 0, NULL);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to mount the eMMC. %d\n", errno);
     }
 #endif
 
