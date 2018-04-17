@@ -69,6 +69,10 @@ typedef void (*dma_callback_t)(DMA_HANDLE handle, uint8_t status, void *arg);
  * should be changed to a uint32_t.
  */
 
-typedef uint16_t dma_config_t;
+typedef struct {
+    uint16_t channel_cfg;
+    uint8_t dest_width;
+    uint8_t src_width;
+} dma_config_t;
 
 #endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_DMAC_COMMON_H */

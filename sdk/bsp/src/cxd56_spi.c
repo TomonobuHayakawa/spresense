@@ -626,6 +626,20 @@ static void spi_setbits(FAR struct spi_dev_s *dev, int nbits)
        */
 
       priv->nbits = nbits;
+      if (priv->nbits > 8)
+        {
+          priv->txconfig.dest_width = CXD56_DMAC_WIDTH16;
+          priv->txconfig.src_width = CXD56_DMAC_WIDTH16;
+          priv->rxconfig.dest_width = CXD56_DMAC_WIDTH16;
+          priv->rxconfig.src_width = CXD56_DMAC_WIDTH16;
+        }
+      else
+        {
+          priv->txconfig.dest_width = CXD56_DMAC_WIDTH8;
+          priv->txconfig.src_width = CXD56_DMAC_WIDTH8;
+          priv->rxconfig.dest_width = CXD56_DMAC_WIDTH8;
+          priv->rxconfig.src_width = CXD56_DMAC_WIDTH8;
+        }
     }
 }
 
@@ -1063,7 +1077,7 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
   if (port == 4)
     {
 #if defined(CONFIG_CXD56_DMAC_SPI4_TX)
-      priv->txconfig = CXD56_DMA_PERIPHERAL_SPI4_TX;
+      priv->txconfig.channel_cfg = CXD56_DMA_PERIPHERAL_SPI4_TX;
       priv->txdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI4_TX_CH,
                                         CONFIG_CXD56_DMAC_SPI4_TX_MAXSIZE);
       if (priv->txdmach == NULL)
@@ -1072,7 +1086,7 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
         }
 #endif
 #if defined(CONFIG_CXD56_DMAC_SPI4_RX)
-      priv->rxconfig = CXD56_DMA_PERIPHERAL_SPI4_RX;
+      priv->rxconfig.channel_cfg = CXD56_DMA_PERIPHERAL_SPI4_RX;
       priv->rxdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI4_RX_CH,
                                         CONFIG_CXD56_DMAC_SPI4_RX_MAXSIZE);
       if (priv->rxdmach == NULL)
@@ -1088,7 +1102,7 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
   if (port == 5)
     {
 #if defined(CONFIG_CXD56_DMAC_SPI5_TX)
-      priv->txconfig = CXD56_DMA_PERIPHERAL_SPI5_TX;
+      priv->txconfig.channel_cfg = CXD56_DMA_PERIPHERAL_SPI5_TX;
       priv->txdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI5_TX_CH,
                                         CONFIG_CXD56_DMAC_SPI5_TX_MAXSIZE);
       if (priv->txdmach == NULL)
@@ -1097,7 +1111,7 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
         }
 #endif
 #if defined(CONFIG_CXD56_DMAC_SPI5_RX)
-      priv->rxconfig = CXD56_DMA_PERIPHERAL_SPI5_RX;
+      priv->rxconfig.channel_cfg = CXD56_DMA_PERIPHERAL_SPI5_RX;
       priv->rxdmach  = cxd56_dmachannel(CONFIG_CXD56_DMAC_SPI5_RX_CH,
                                         CONFIG_CXD56_DMAC_SPI5_RX_MAXSIZE);
       if (priv->rxdmach == NULL)

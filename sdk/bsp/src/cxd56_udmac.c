@@ -150,7 +150,7 @@ static inline unsigned int cxd56_align_shift(dma_config_t config)
 {
   unsigned int shift;
 
-  shift = (config & CXD56_UDMA_XFERSIZE_MASK) >> CXD56_UDMA_XFERSIZE_SHIFT;
+  shift = (config.channel_cfg & CXD56_UDMA_XFERSIZE_MASK) >> CXD56_UDMA_XFERSIZE_SHIFT;
   DEBUGASSERT(shift != 3);
   return shift;
 }
@@ -484,7 +484,7 @@ void cxd56_rxudmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
 
   /* Do we need to increment the memory address? */
 
-  if ((config & CXD56_UDMA_MEMINCR_MASK) == CXD56_UDMA_MEMINCR)
+  if ((config.channel_cfg & CXD56_UDMA_MEMINCR_MASK) == CXD56_UDMA_MEMINCR)
     {
       regval |= incr;
     }
@@ -581,7 +581,7 @@ void cxd56_txudmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
 
   /* Do we need to increment the memory address? */
 
-  if ((config & CXD56_UDMA_MEMINCR_MASK) == CXD56_UDMA_MEMINCR)
+  if ((config.channel_cfg & CXD56_UDMA_MEMINCR_MASK) == CXD56_UDMA_MEMINCR)
     {
       regval |= incr;
     }
@@ -622,7 +622,7 @@ void cxd56_udmastart(DMA_HANDLE handle, dma_callback_t callback, void *arg)
   /* Finish configuring the channel */
 
   bit = 1 << dmach->chan;
-  if ((dmach->config & CXD56_UDMA_SINGLE_MASK) == CXD56_UDMA_BUFFER_FULL)
+  if ((dmach->config.channel_cfg & CXD56_UDMA_SINGLE_MASK) == CXD56_UDMA_BUFFER_FULL)
     {
       /* Disable the single requests for the channel (i.e. do not react to data
        * available, wait for buffer full)

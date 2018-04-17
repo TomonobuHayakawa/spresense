@@ -164,10 +164,6 @@ typedef struct {
 #define CXD56_DMAC_BSIZE128  6     /**< 128 burst */
 #define CXD56_DMAC_BSIZE256  7     /**< 256 burst */
 
-#define CXD56_DMAC_WIDTH8   0      /**< 8 bit width */
-#define CXD56_DMAC_WIDTH16  1      /**< 16 bit width */
-#define CXD56_DMAC_WIDTH32  2      /**< 32 bit width */
-
 #define CXD56_DMAC_LITTLE_ENDIAN  0  /**< Little endian */
 #define CXD56_DMAC_BIG_ENDIAN     1  /**< Bit endian */
 
@@ -796,7 +792,7 @@ void cxd56_rxdmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
       dmach->list[i].nextlli = (uint32_t)&dmach->list[i + 1];
       dmach->list[i].control = DMAC_EX_CTRL_HELPER(0, 1, 0,                                /* interrupt / Dest inc / Src inc */
                                                    CXD56_DMAC_MASTER1, CXD56_DMAC_MASTER2, /* AHB dst master / AHB src master (fixed) */
-                                                   CXD56_DMAC_WIDTH8, CXD56_DMAC_WIDTH8,   /* Dest / Src transfer width */
+                                                   config.dest_width, config.src_width,   /* Dest / Src transfer width */
                                                    CXD56_DMAC_BSIZE4, CXD56_DMAC_BSIZE4,   /* Dest / Src burst size (fixed) */
                                                    CXD56_DMAC_MAX_SIZE);
 
@@ -809,11 +805,11 @@ void cxd56_rxdmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
   dmach->list[i].nextlli = 0;
   dmach->list[i].control = DMAC_EX_CTRL_HELPER(1, 1, 0,                                /* interrupt / Dest inc / Src inc */
                                                CXD56_DMAC_MASTER1, CXD56_DMAC_MASTER2, /* AHB dst master / AHB src master (fixed) */
-                                               CXD56_DMAC_WIDTH8, CXD56_DMAC_WIDTH8,   /* Dest / Src transfer width */
+                                               config.dest_width, config.src_width,   /* Dest / Src transfer width */
                                                CXD56_DMAC_BSIZE4, CXD56_DMAC_BSIZE4,   /* Dest / Src burst size (fixed) */
                                                rest);
 
-  peri = config & CXD56_DMA_PERIPHERAL_MASK;
+  peri = config.channel_cfg & CXD56_DMA_PERIPHERAL_MASK;
   dma_setconfig(dmach->chan, 1, 1, CXD56_DMAC_P2M, 0, peri);
 }
 
@@ -855,7 +851,7 @@ void cxd56_txdmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
       dmach->list[i].nextlli = (uint32_t)&dmach->list[i + 1];
       dmach->list[i].control = DMAC_EX_CTRL_HELPER(0, 0, 1,                                /* interrupt / Dest inc / Src inc */
                                                    CXD56_DMAC_MASTER2, CXD56_DMAC_MASTER1, /* AHB dst master / AHB src master (fixed) */
-                                                   CXD56_DMAC_WIDTH8, CXD56_DMAC_WIDTH8,   /* Dest / Src transfer width (fixed) */
+                                                   config.dest_width, config.src_width,    /* Dest / Src transfer width (fixed) */
                                                    CXD56_DMAC_BSIZE1, CXD56_DMAC_BSIZE1,   /* Dest / Src burst size (fixed) */
                                                    CXD56_DMAC_MAX_SIZE);
 
@@ -868,11 +864,11 @@ void cxd56_txdmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
   dmach->list[i].nextlli = 0;
   dmach->list[i].control = DMAC_EX_CTRL_HELPER(1, 0, 1,                                /* interrupt / Dest inc / Src inc */
                                                CXD56_DMAC_MASTER2, CXD56_DMAC_MASTER1, /* AHB dst master / AHB src master (fixed) */
-                                               CXD56_DMAC_WIDTH8, CXD56_DMAC_WIDTH8,   /* Dest / Src transfer width (fixed) */
+                                               config.dest_width, config.src_width,    /* Dest / Src transfer width (fixed) */
                                                CXD56_DMAC_BSIZE4, CXD56_DMAC_BSIZE4,   /* Dest / Src burst size (fixed) */
                                                rest);
 
-  peri = config & CXD56_DMA_PERIPHERAL_MASK;
+  peri = config.channel_cfg & CXD56_DMA_PERIPHERAL_MASK;
   dma_setconfig(dmach->chan, 1, 1, CXD56_DMAC_M2P, peri, 0);
 }
 

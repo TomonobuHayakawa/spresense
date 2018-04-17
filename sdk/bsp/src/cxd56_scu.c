@@ -2956,30 +2956,30 @@ int seq_read(FAR struct seq_s *seq, int fifoid, FAR char *buffer, int length)
   /* Get sensor data from FIFO by uDMAC (PL230) */
   /* TODO: Check DMA transfer limit or restart DMA to get all data. */
 
-  config = CXD56_UDMA_SINGLE;
+  config.channel_cfg = CXD56_UDMA_SINGLE;
   if (buffer != NULL)
     {
-      config |= CXD56_UDMA_MEMINCR;
+      config.channel_cfg |= CXD56_UDMA_MEMINCR;
       dst = buffer;
     }
   else
     {
-      config |= CXD56_UDMA_NOINCR;
+      config.channel_cfg |= CXD56_UDMA_NOINCR;
       dst = (char *)&dstbuf;
     }
 
   if (length & 1)
     {
-      config |= CXD56_UDMA_XFERSIZE_BYTE;
+      config.channel_cfg |= CXD56_UDMA_XFERSIZE_BYTE;
     }
   else if (length & 2)
     {
-      config |= CXD56_UDMA_XFERSIZE_HWORD;
+      config.channel_cfg |= CXD56_UDMA_XFERSIZE_HWORD;
       maxlen = 2048;
     }
   else
     {
-      config |= CXD56_UDMA_XFERSIZE_WORD;
+      config.channel_cfg |= CXD56_UDMA_XFERSIZE_WORD;
       maxlen = 4096;
     }
   if (((uint32_t)dst >= CXD56_RAM_BASE)
