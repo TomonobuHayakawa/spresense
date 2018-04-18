@@ -52,6 +52,8 @@
 
 #include "i2ctool.h"
 
+#include <arch/board/common/cxd56_i2cdev.h>
+
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
@@ -379,6 +381,16 @@ int i2c_main(int argc, char *argv[])
   if (g_i2ctool.freq == 0)
     {
       g_i2ctool.freq = CONFIG_I2CTOOL_DEFFREQ;
+    }
+
+  /* Create /dev/i2cN device file */
+
+  for (int bus = CONFIG_I2CTOOL_MINBUS; bus <= CONFIG_I2CTOOL_MAXBUS; bus++)
+    {
+      if (i2cdev_exists(bus) == false)
+        {
+          board_i2cdev_initialize(bus);
+        }
     }
 
   /* Parse and process the command line */

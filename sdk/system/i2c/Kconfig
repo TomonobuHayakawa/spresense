@@ -22,9 +22,9 @@ config I2CTOOL_MINBUS
 
 config I2CTOOL_MAXBUS
 	int "Maximum bus number"
-	default 3
+	default 2
 	---help---
-		Largest bus index supported by the hardware (default 3)
+		Largest bus index supported by the hardware (default 2)
 
 config I2CTOOL_MINADDR
 	hex "Minimum I2C address"
