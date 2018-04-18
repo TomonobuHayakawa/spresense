@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_apds9960.h
+ * bsp/board/common/src/cxd56_sensor_kx022.c
  *
- *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,54 +32,75 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9960_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9960_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/config.h>
 #include <sdk/config.h>
 
-/****************************************************************************
- * Public Types
- ****************************************************************************/
+#include <stdio.h>
+#include <debug.h>
+#include <errno.h>
 
-#ifndef __ASSEMBLY__
+#include <nuttx/board.h>
 
-/****************************************************************************
- * Public Data
- ****************************************************************************/
+#include <nuttx/sensors/kx022.h>
+#ifdef CONFIG_KX022_SCU
+#include <arch/chip/cxd56_scu.h>
+#endif
 
-#undef EXTERN
-#if defined(__cplusplus)
-#define EXTERN extern "C"
-extern "C"
+#ifdef CONFIG_KX022_SCU
+#  ifdef CONFIG_CXD56_DECI_KX022
+#    define KX022_FIFO_CNT 3
+#  else
+#    define KX022_FIFO_CNT 1
+#  endif
+#endif
+
+#include "cxd56_i2c.h"
+
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_KX022)
+
+#ifdef CONFIG_KX022_SCU
+int board_kx022_initialize(FAR const char *devpath, int bus)
 {
-#else
-#define EXTERN extern
-#endif
+  int fifoid = 0;
+  int ret;
+  FAR struct i2c_master_s *i2c;
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+  sninfo("Initializing KX022...\n");
 
-/****************************************************************************
- * Name: board_apds9960_initialize
- *
- * Description:
- *   Initialize APDS9960 i2c driver and register the APDS9960 device.
- *
- ****************************************************************************/
+  /* Initialize i2c deivce */
 
-#ifdef CONFIG_APDS9960
-int board_apds9960_initialize(FAR const char *devpath, int bus);
-#endif
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
 
-#undef EXTERN
-#if defined(__cplusplus)
+  ret = kx022_init(i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error initialize KX022.\n");
+      return ret;
+    }
+
+  /* Register devices for each FIFOs at I2C bus */
+
+  for (fifoid = 0; fifoid < KX022_FIFO_CNT; fifoid++)
+    {
+      ret = kx022_register(devpath, fifoid, i2c, bus);
+      if (ret < 0)
+        {
+          snerr("Error registering KX022.\n");
+          return ret;
+        }
+    }
+
+  return ret;
 }
-#endif
+#endif /* CONFIG_KX022_SCU */
 
-#endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9960_H */
+#endif /* CONFIG_CXD56_I2C && CONFIG_KX022 */

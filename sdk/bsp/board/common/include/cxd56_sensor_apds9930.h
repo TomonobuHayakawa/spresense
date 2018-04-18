@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_apds9930.h
+ * bsp/board/common/include/cxd56_sensor_apds9930.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9930_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9930_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_APDS9930_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_APDS9930_H
 
 /****************************************************************************
  * Included Files
@@ -82,4 +82,4 @@ int board_apds9930_initialize(int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9930_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_APDS9930_H */

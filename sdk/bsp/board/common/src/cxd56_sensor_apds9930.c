@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_ak09912.h
+ * bsp/board/common/src/cxd56_sensor_apds9930.c
  *
- *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,54 +32,70 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_AK09912_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_AK09912_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/config.h>
 #include <sdk/config.h>
 
-/****************************************************************************
- * Public Types
- ****************************************************************************/
+#include <stdio.h>
+#include <debug.h>
+#include <errno.h>
 
-#ifndef __ASSEMBLY__
+#include <nuttx/board.h>
 
-/****************************************************************************
- * Public Data
- ****************************************************************************/
+#include <nuttx/sensors/apds9930.h>
+#ifdef CONFIG_APDS9930_SCU
+#include <arch/chip/cxd56_scu.h>
+#endif
 
-#undef EXTERN
-#if defined(__cplusplus)
-#define EXTERN extern "C"
-extern "C"
+#include "cxd56_i2c.h"
+
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_APDS9930)
+
+#ifdef CONFIG_APDS9930_SCU
+int board_apds9930_initialize(int bus)
 {
-#else
-#define EXTERN extern
-#endif
+  int ret;
+  FAR struct i2c_master_s *i2c;
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+  sninfo("Initializing APDS9930...\n");
 
-/****************************************************************************
- * Name: board_ak09912_initialize
- *
- * Description:
- *   Initialize AK09912 i2c driver and register the AK09912 device.
- *
- ****************************************************************************/
+  /* Initialize i2c deivce */
 
-#ifdef CONFIG_AK09912
-int board_ak09912_initialize(FAR const char *devpath, int bus);
-#endif
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
 
-#undef EXTERN
-#if defined(__cplusplus)
+  ret = apds9930_init(i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error initialize APDS9930.\n");
+      return ret;
+    }
+
+  /* Register devices for each FIFOs at I2C bus */
+
+  ret = apds9930als_register("/dev/light", 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering APDS9930[ALS].\n");
+      return ret;
+    }
+
+  ret = apds9930ps_register("/dev/proximity", 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering APDS9930[PS].\n");
+      return ret;
+    }
+
+  return ret;
 }
-#endif
+#endif /* CONFIG_APDS9930_SCU */
 
-#endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_AK09912_H */
+#endif /* CONFIG_CXD56_I2C && CONFIG_APDS9930 */

@@ -60,16 +60,8 @@
 
 #include <arch/board/common/cxd56_pwm.h>
 
-#include <arch/board/common/cxd56_bmi160.h>
-#include <arch/board/common/cxd56_bmp280.h>
-#include <arch/board/common/cxd56_kx022.h>
-#include <arch/board/common/cxd56_ak09912.h>
-#include <arch/board/common/cxd56_bh1745nuc.h>
-#include <arch/board/common/cxd56_apds9930.h>
-#include <arch/board/common/cxd56_lt1pa01.h>
-#include <arch/board/common/cxd56_bh1721fvc.h>
-#include <arch/board/common/cxd56_rpr0521rs.h>
 #include <arch/board/common/cxd56_i2cdev.h>
+#include <arch/board/common/cxd56_sensor.h>
 
 #include <arch/board/common/cxd56_isx012.h>
 
@@ -178,15 +170,21 @@ enum board_power_device {
   POWER_AUDIO_MUTE      = PMIC_GPO(6),
   POWER_IMAGE_SENSOR    = PMIC_GPO(4) | PMIC_GPO(5) | PMIC_GPO(7),
 
+  POWER_SENSOR          = PMIC_NONE,
   POWER_EMMC            = PMIC_NONE,
 };
 
-/* CXD5247 power control definitions *******************************************/
+/* CXD5247 power control definitions ***************************************/
 
 #define CXD5247_AVDD  (0x01)
 #define CXD5247_DVDD  (0x02)
 
-/* Display device pin definitions *******************************************/
+/* Sensor device bus definitions *******************************************/
+
+#define SENSOR_I2C      0
+#define SENSOR_SPI      3
+
+/* Display device pin definitions ******************************************/
 
 #define DISPLAY_RST     PIN_SPI2_MISO
 #define DISPLAY_DC      PIN_PWM2

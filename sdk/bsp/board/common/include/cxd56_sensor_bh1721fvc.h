@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_bh1721fvc.h
+ * bsp/board/common/include/cxd56_sensor_bh1721fvc.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1721FVC_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1721FVC_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BH1721FVC_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BH1721FVC_H
 
 /****************************************************************************
  * Included Files
@@ -82,4 +82,4 @@ int board_bh1721fvc_initialize(FAR const char *devpath, int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1721FVC_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BH1721FVC_H */

@@ -65,56 +65,60 @@ ifeq ($(CONFIG_USBDEV_COMPOSITE),y)
 CSRCS += cxd56_composite.c
 endif
 
-ifeq ($(CONFIG_BMP280),y)
-CSRCS += cxd56_bmp280.c
+ifeq ($(CONFIG_SENSORS),y)
+CSRCS += cxd56_sensor.c
 endif
 
 ifeq ($(CONFIG_BMI160),y)
 ifeq ($(CONFIG_BMI160_I2C),y)
-CSRCS += cxd56_bmi160_i2c.c
+CSRCS += cxd56_sensor_bmi160_i2c.c
 else
-CSRCS += cxd56_bmi160_spi.c
+CSRCS += cxd56_sensor_bmi160_spi.c
 endif
-endif
-
-ifeq ($(CONFIG_AK09912),y)
-CSRCS += cxd56_ak09912.c
-endif
-
-ifeq ($(CONFIG_APDS9930),y)
-CSRCS += cxd56_apds9930.c
-endif
-
-ifeq ($(CONFIG_APDS9960),y)
-CSRCS += cxd56_apds9960.c
-endif
-
-ifeq ($(CONFIG_LT1PA01),y)
-CSRCS += cxd56_lt1pa01.c
-endif
-
-ifeq ($(CONFIG_BH1721FVC),y)
-CSRCS += cxd56_bh1721fvc.c
 endif
 
 ifeq ($(CONFIG_KX022),y)
-CSRCS += cxd56_kx022.c
+CSRCS += cxd56_sensor_kx022.c
 endif
 
-ifeq ($(CONFIG_BM1422GMV),y)
-CSRCS += cxd56_bm1422gmv.c
+ifeq ($(CONFIG_BMP280),y)
+CSRCS += cxd56_sensor_bmp280.c
 endif
 
 ifeq ($(CONFIG_BM1383GLV),y)
-CSRCS += cxd56_bm1383glv.c
+CSRCS += cxd56_sensor_bm1383glv.c
 endif
 
-ifeq ($(CONFIG_BH1745NUC),y)
-CSRCS += cxd56_bh1745nuc.c
+ifeq ($(CONFIG_AK09912),y)
+CSRCS += cxd56_sensor_ak09912.c
+endif
+
+ifeq ($(CONFIG_BM1422GMV),y)
+CSRCS += cxd56_sensor_bm1422gmv.c
+endif
+
+ifeq ($(CONFIG_APDS9930),y)
+CSRCS += cxd56_sensor_apds9930.c
+endif
+
+ifeq ($(CONFIG_LT1PA01),y)
+CSRCS += cxd56_sensor_lt1pa01.c
+endif
+
+ifeq ($(CONFIG_BH1721FVC),y)
+CSRCS += cxd56_sensor_bh1721fvc.c
 endif
 
 ifeq ($(CONFIG_RPR0521RS),y)
-CSRCS += cxd56_rpr0521rs.c
+CSRCS += cxd56_sensor_rpr0521rs.c
+endif
+
+ifeq ($(CONFIG_APDS9960),y)
+CSRCS += cxd56_sensor_apds9960.c
+endif
+
+ifeq ($(CONFIG_BH1745NUC),y)
+CSRCS += cxd56_sensor_bh1745nuc.c
 endif
 
 ifeq ($(CONFIG_SPI),y)

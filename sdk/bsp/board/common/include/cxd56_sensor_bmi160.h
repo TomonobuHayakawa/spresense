@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_bm1383glv.h
+ * bsp/board/common/include/cxd56_sensor_bmi160.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_BM1383GLV_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_BM1383GLV_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BMI160_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BMI160_H
 
 /****************************************************************************
  * Included Files
@@ -65,15 +65,15 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_bm1383glv_initialize
+ * Name: board_bmi160_initialize
  *
  * Description:
- *   Initialize BM1383GLV i2c driver and register the BM1383GLV device.
+ *   Initialize BMI160 spi or i2c driver and register the BMI160 device.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_BM1383GLV
-int board_bm1383glv_initialize(FAR const char *devpath, int bus);
+#ifdef CONFIG_BMI160
+int board_bmi160_initialize(int bus);
 #endif
 
 #undef EXTERN
@@ -82,4 +82,4 @@ int board_bm1383glv_initialize(FAR const char *devpath, int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_BM1383GLV_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BMI160_H */

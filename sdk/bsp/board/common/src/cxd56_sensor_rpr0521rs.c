@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bh1745nuc.c
+ * bsp/board/common/src/cxd56_sensor_rpr0521rs.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
@@ -44,22 +44,22 @@
 
 #include <nuttx/board.h>
 
-#include <nuttx/sensors/bh1745nuc.h>
-#ifdef CONFIG_BH1745NUC_SCU
+#include <nuttx/sensors/rpr0521rs.h>
+#ifdef CONFIG_RPR0521RS_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
 #include "cxd56_i2c.h"
 
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BH1745NUC)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_RPR0521RS)
 
-#ifdef CONFIG_BH1745NUC_SCU
-int board_bh1745nuc_initialize(FAR const char *devpath, int bus)
+#ifdef CONFIG_RPR0521RS_SCU
+int board_rpr0521rs_initialize(int bus)
 {
   int ret;
   FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing BH1745NUC...\n");
+  sninfo("Initializing RPR0521RS...\n");
 
   /* Initialize i2c deivce */
 
@@ -70,24 +70,31 @@ int board_bh1745nuc_initialize(FAR const char *devpath, int bus)
       return -ENODEV;
     }
 
-  ret = bh1745nuc_init(i2c, bus);
+  ret = rpr0521rs_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize BH1745NUC.\n");
+      snerr("Error initialize RPR0521RS.\n");
       return ret;
     }
 
   /* Register devices for each FIFOs at I2C bus */
 
-  ret = bh1745nuc_register(devpath, 0, i2c, bus);
+  ret = rpr0521rsals_register("/dev/light", 0, i2c, bus);
   if (ret < 0)
     {
-      snerr("Error registering BH1745NUC.\n");
+      snerr("Error registering RPR0521RS[ALS].\n");
+      return ret;
+    }
+
+  ret = rpr0521rsps_register("/dev/proximity", 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering RPR0521RS[PS].\n");
       return ret;
     }
 
   return ret;
 }
-#endif /* CONFIG_BH1745NUC_SCU */
+#endif /* CONFIG_RPR0521RS_SCU */
 
-#endif /* CONFIG_CXD56_I2C && CONFIG_BH1745NUC */
+#endif /* CONFIG_CXD56_I2C && CONFIG_RPR0521RS */

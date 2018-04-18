@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_apds9960.c
+ * bsp/board/common/src/cxd56_sensor_bm1383glv.c
  *
- *   Copyright (C) 2017 Sony Corporation
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,7 +36,6 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
 #include <sdk/config.h>
 
 #include <stdio.h>
@@ -45,18 +44,22 @@
 
 #include <nuttx/board.h>
 
-#include <nuttx/sensors/apds9960.h>
+#include <nuttx/sensors/bm1383glv.h>
+#ifdef CONFIG_BM1383GLV_SCU
+#include <arch/chip/cxd56_scu.h>
+#endif
 
 #include "cxd56_i2c.h"
 
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_APDS9960)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BM1383GLV)
 
-int board_apds9960_initialize(FAR const char *devpath, int bus)
+#ifdef CONFIG_BM1383GLV_SCU
+int board_bm1383glv_initialize(FAR const char *devpath, int bus)
 {
   int ret;
   FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing APDS9960...\n");
+  sninfo("Initializing BM1383GLV...\n");
 
   /* Initialize i2c deivce */
 
@@ -67,23 +70,24 @@ int board_apds9960_initialize(FAR const char *devpath, int bus)
       return -ENODEV;
     }
 
-  ret = apds9960_init(i2c, bus);
+  ret = bm1383glv_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize APDS9960.\n");
+      snerr("Error initialize BM1383GLV.\n");
       return ret;
     }
 
   /* Register devices for each FIFOs at I2C bus */
 
-  ret = apds9960_register(devpath, i2c, bus);
+  ret = bm1383glv_register(devpath, 0, i2c, bus);
   if (ret < 0)
     {
-      snerr("Error registering APDS9960.\n");
+      snerr("Error registering BM1383GLV.\n");
       return ret;
     }
 
   return ret;
 }
+#endif /* CONFIG_BM1383GLV_SCU */
 
-#endif /* CONFIG_CXD56_I2C && CONFIG_APDS9960 */
+#endif /* CONFIG_CXD56_I2C && CONFIG_CXD56_I2C0 && CONFIG_BM1383GLV */

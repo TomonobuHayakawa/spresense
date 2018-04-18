@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bm1422gmv.c
+ * bsp/board/common/include/cxd56_sensor_apds9960.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,74 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_APDS9960_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_APDS9960_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-#include <stdio.h>
-#include <debug.h>
-#include <errno.h>
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-#include <nuttx/board.h>
+#ifndef __ASSEMBLY__
 
-#include <nuttx/sensors/bm1422gmv.h>
-#ifdef CONFIG_BM1422GMV_SCU
-#include <arch/chip/cxd56_scu.h>
-#endif
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
-#ifdef CONFIG_BM1422GMV_SCU
-#  ifdef CONFIG_CXD56_DECI_BM1422GMV
-#    define BM1422GMV_PATH_CNT 3
-#  else
-#    define BM1422GMV_PATH_CNT 1
-#  endif
-#endif
-
-#include "cxd56_i2c.h"
-
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BM1422GMV)
-
-#ifdef CONFIG_BM1422GMV_SCU
-int board_bm1422gmv_initialize(FAR const char *devpath, int bus)
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
 {
-  int id = 0;
-  int ret;
-  FAR struct i2c_master_s *i2c;
+#else
+#define EXTERN extern
+#endif
 
-  sninfo("Initializing BM1422GMV...\n");
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-  /* Initialize i2c deivce */
+/****************************************************************************
+ * Name: board_apds9960_initialize
+ *
+ * Description:
+ *   Initialize APDS9960 i2c driver and register the APDS9960 device.
+ *
+ ****************************************************************************/
 
-  i2c = cxd56_i2cbus_initialize(bus);
-  if (!i2c)
-    {
-      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
-      return -ENODEV;
-    }
+#ifdef CONFIG_APDS9960
+int board_apds9960_initialize(FAR const char *devpath, int bus);
+#endif
 
-  ret = bm1422gmv_init(i2c, bus);
-  if (ret < 0)
-    {
-      snerr("Error initialize BM1422GMV.\n");
-      return ret;
-    }
-
-  /* Register devices for each FIFOs at I2C bus */
-
-  for (id = 0; id < BM1422GMV_PATH_CNT; id++)
-    {
-      ret = bm1422gmv_register(devpath, id, i2c, bus);
-      if (ret < 0)
-        {
-          snerr("Error registering BM1422GMV.\n");
-          return ret;
-        }
-    }
-
-  return ret;
+#undef EXTERN
+#if defined(__cplusplus)
 }
-#endif /* CONFIG_BM1422GMV_SCU */
+#endif
 
-#endif /* CONFIG_CXD56_I2C && CONFIG_BM1422GMV */
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_APDS9960_H */

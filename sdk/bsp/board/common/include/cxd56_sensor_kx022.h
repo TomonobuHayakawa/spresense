@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_bh1745nuc.h
+ * bsp/board/common/include/cxd56_sensor_kx022.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1745NUC_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1745NUC_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_KX022_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_KX022_H
 
 /****************************************************************************
  * Included Files
@@ -65,15 +65,15 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_bh1745nuc_initialize
+ * Name: board_kx022_initialize
  *
  * Description:
- *   Initialize BH1745NUC i2c driver and register the BH1745NUC device.
+ *   Initialize KX022 i2c driver and register the KX022 device.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_BH1745NUC
-int board_bh1745nuc_initialize(FAR const char *devpath, int bus);
+#ifdef CONFIG_KX022
+int board_kx022_initialize(FAR const char *devpath, int bus);
 #endif
 
 #undef EXTERN
@@ -82,4 +82,4 @@ int board_bh1745nuc_initialize(FAR const char *devpath, int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1745NUC_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_KX022_H */

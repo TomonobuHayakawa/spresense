@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bmp280.c
+ * bsp/board/common/src/cxd56_sensor_bmp280.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

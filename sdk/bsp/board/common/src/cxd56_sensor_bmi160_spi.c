@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_bh1721fvc.c
+ * bsp/board/common/src/cxd56_sensor_bmi160_spi.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -43,51 +43,89 @@
 #include <errno.h>
 
 #include <nuttx/board.h>
-
-#include <nuttx/sensors/bh1721fvc.h>
-#ifdef CONFIG_BH1721FVC_SCU
+#include <nuttx/spi/spi.h>
+#include <nuttx/sensors/bmi160.h>
+#ifdef CONFIG_BMI160_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#include "cxd56_i2c.h"
+#include "cxd56_spi.h"
 
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BH1721FVC)
+#ifdef CONFIG_CXD56_DECI_GYRO
+#  define GYRO_NR_SEQS 3
+#else
+#  define GYRO_NR_SEQS 1
+#endif
 
-#ifdef CONFIG_BH1721FVC_SCU
-int board_bh1721fvc_initialize(FAR const char *devpath, int bus)
+#ifdef CONFIG_CXD56_DECI_ACCEL
+#  define ACCEL_NR_SEQS 3
+#else
+#  define ACCEL_NR_SEQS 1
+#endif
+
+#if defined(CONFIG_CXD56_SPI) && defined(CONFIG_BMI160)
+
+int board_bmi160_initialize(int bus)
 {
   int ret;
-  FAR struct i2c_master_s *i2c;
+  FAR struct spi_dev_s *spi;
 
-  sninfo("Initializing BH1721FVC...\n");
+  sninfo("Initializing BMI160..\n");
 
-  /* Initialize i2c deivce */
+  /* Initialize spi deivce */
 
-  i2c = cxd56_i2cbus_initialize(bus);
-  if (!i2c)
+  spi = cxd56_spibus_initialize(bus);
+  if (!spi)
     {
-      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      snerr("ERROR: Failed to initialize spi%d.\n", bus);
       return -ENODEV;
     }
 
-  ret = bh1721fvc_init(i2c, bus);
+#ifdef CONFIG_BMI160_SCU
+  int i;
+
+  ret = bmi160_init(spi);
   if (ret < 0)
     {
-      snerr("Error initialize BH1721FVC.\n");
+      snerr("Error initialize BMI160\n");
       return ret;
     }
 
-  /* Register devices for each FIFOs at I2C bus */
+  /* Create char devices for each FIFOs */
 
-  ret = bh1721fvc_register(devpath, 0, i2c, bus);
+  for (i = 0; i < GYRO_NR_SEQS; i++)
+    {
+      ret = bmi160gyro_register("/dev/gyro", i, spi);
+      if (ret < 0)
+        {
+          snerr("Error registering gyroscope. %d\n", ret);
+          return ret;
+        }
+    }
+
+  /* Create char devices for each FIFOs */
+
+  for (i = 0; i < ACCEL_NR_SEQS; i++)
+    {
+      ret = bmi160accel_register("/dev/accel", i, spi);
+      if (ret < 0)
+        {
+          snerr("Error registering accelerometer. %d\n", ret);
+          return ret;
+        }
+    }
+
+#else /* !CONFIG_BMI160_SCU */
+  ret = bmi160_register("/dev/accel0", spi);
   if (ret < 0)
     {
-      snerr("Error registering BH1721FVC.\n");
-      return ret;
+      snerr("Error registering BMI160\n");
     }
+
+#endif
 
   return ret;
 }
-#endif /* CONFIG_BH1721FVC_SCU */
 
-#endif /* CONFIG_CXD56_I2C && CONFIG_BH1721FVC */
+#endif
+

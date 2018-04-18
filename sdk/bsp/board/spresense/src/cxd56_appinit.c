@@ -111,10 +111,6 @@
 #endif
 
 /****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-/****************************************************************************
  * Private Data
  ****************************************************************************/
 
@@ -289,83 +285,8 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#ifdef CONFIG_BMP280
-  ret = board_bmp280_initialize(0);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize BMP280.\n");
-    }
-#endif
-
-#ifdef CONFIG_AK09912
-  ret = board_ak09912_initialize("/dev/mag", 0);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize AK09912.\n");
-    }
-#endif
-
-#ifdef CONFIG_BMI160
-  int bmi160_bus;
-
-#  ifdef CONFIG_BMI160_I2C
-  bmi160_bus = 0; /* I2C0 */
-#  else /*  CONFIG_BMI160_SPI */
-  bmi160_bus = 3; /* SPI3 */
-#  endif
-  ret = board_bmi160_initialize(bmi160_bus);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize BMI160.\n");
-    }
-#endif
-
-#ifdef CONFIG_KX022
-  ret = board_kx022_initialize("/dev/accel", 0);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize KX022.\n");
-    }
-#endif
-
-#ifdef CONFIG_APDS9930
-  ret = board_apds9930_initialize(0);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize APDS9930.\n");
-    }
-#endif
-
-#ifdef CONFIG_LT1PA01
-  ret = board_lt1pa01_initialize(0);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize LT1PA01.\n");
-    }
-#endif
-
-#ifdef CONFIG_RPR0521RS
-  ret = board_rpr0521rs_initialize(0);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize RPR0521RS.\n");
-    }
-#endif
-
-#ifdef CONFIG_BH1721FVC
-  ret = board_bh1721fvc_initialize("/dev/light", 0);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize BH1721FVC.\n");
-    }
-#endif
-
-#ifdef CONFIG_BH1745NUC
-  ret = board_bh1745nuc_initialize("/dev/color", 0);
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialize BH1745NUC.\n");
-    }
+#ifdef CONFIG_SENSORS
+  board_sensor_initialize();
 #endif
 
 #ifdef CONFIG_VIDEO_ISX012

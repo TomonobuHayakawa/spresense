@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_lt1pa01.c
+ * bsp/board/common/src/cxd56_sensor_lt1pa01.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
