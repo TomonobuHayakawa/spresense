@@ -52,6 +52,7 @@
 #endif
 
 #include <arch/board/common/cxd56_power.h>
+#include <arch/board/common/cxd56_audio.h>
 
 #include <arch/board/common/cxd56_flash.h>
 #include <arch/board/common/cxd56_emmcdev.h>
@@ -252,50 +253,6 @@ extern "C"
  ****************************************************************************/
 
 void cxd56_boardinitialize(void);
-
-/****************************************************************************
- * Name: board_aca_power_control
- *
- * Description:
- *   Power on/off the Aca device on the board.
- *
- ****************************************************************************/
-
-int board_aca_power_control(int target, bool en);
-
-/****************************************************************************
- * Name: board_aca_power_monitor
- *
- * Description:
- *   Get status of Power on/off the Aca device on the board.
- *
- ****************************************************************************/
-
-bool board_aca_power_monitor(int target);
-
-/****************************************************************************
- * Name: board_external_amp_mute_control
- *
- * Description:
- *   External Amp. Mute on/off.
- *    true:  Mute on
- *    false: Mute off
- *
- ****************************************************************************/
-
-#define board_external_amp_mute_control(en) (OK)
-
-/****************************************************************************
- * Name: board_external_amp_mute_monitor
- *
- * Description:
- *   Get External Amp. Mute status.
- *    true:  Mute on
- *    false: Mute off
- *
- ****************************************************************************/
-
-#define board_external_amp_mute_monitor() (false)
 
 #undef EXTERN
 #if defined(__cplusplus)

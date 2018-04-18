@@ -178,3 +178,38 @@ bool board_aca_power_monitor(int target)
   return avdd_stat && dvdd_stat;
 }
 
+
+/****************************************************************************
+ * Name: board_external_amp_mute_control
+ *
+ * Description:
+ *   External Amp. Mute on/off.
+ *    true:  Mute on
+ *    false: Mute off
+ *
+ ****************************************************************************/
+
+int board_external_amp_mute_control(bool en)
+{
+  /* Not connected */
+
+  return 0;
+}
+
+/****************************************************************************
+ * Name: board_external_amp_mute_monitor
+ *
+ * Description:
+ *   Get External Amp. Mute status.
+ *    true:  Mute on
+ *    false: Mute off
+ *
+ ****************************************************************************/
+
+bool board_external_amp_mute_monitor(void)
+{
+  /* Not connected */
+
+  return false;
+}
+

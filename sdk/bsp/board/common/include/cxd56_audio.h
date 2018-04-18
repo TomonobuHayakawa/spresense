@@ -1,7 +1,7 @@
 /****************************************************************************
- * config/collet/src/cxd56_audio.c
+ * bsp/board/common/include/cxd56_audio.h
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,56 +32,35 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_AUDIO_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_AUDIO_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
-#include <sys/types.h>
-#include <stdint.h>
 #include <stdbool.h>
-#include <errno.h>
-#include <assert.h>
-#include <debug.h>
-
-#include <nuttx/arch.h>
-
-#include "chip.h"
-#include "up_arch.h"
-
-#include <arch/board/board.h>
-#include "cxd56_pmic.h"
-#include "cxd56_gpio.h"
-#include "cxd56_pinconfig.h"
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Public Types
  ****************************************************************************/
 
-/* audio aca reset control */
-
-#define ACA_XRESET (PIN_SPI3_CS2_X)
-
-/****************************************************************************
- * Private Types
- ****************************************************************************/
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
+#ifndef __ASSEMBLY__
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
 
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
 
 /****************************************************************************
  * Name: board_aca_power_control
@@ -91,67 +70,7 @@
  *
  ****************************************************************************/
 
-int board_aca_power_control(int target, bool en)
-{
-  int ret = 0;
-  static int first = 1;
-  static bool avdd_on = false;
-  static bool dvdd_on = false;
-
-  if (first)
-    {
-      /* gpio configuration (output disabled yet) */
-
-      cxd56_gpio_config(ACA_XRESET, false);
-
-      first = 0;
-    }
-
-  if (en)
-    {
-      if (!dvdd_on && (target & CXD5247_DVDD))
-        {
-          /* reset assert */
-          cxd56_gpio_write(ACA_XRESET, false);
-        }
-
-      /* power on */
-      if (!avdd_on && (target & CXD5247_AVDD))
-        {
-          board_power_control(POWER_AUDIO_AVDD, true);
-          avdd_on = true;
-        }
-      if (!dvdd_on && (target & CXD5247_DVDD))
-        {
-          board_power_control(POWER_AUDIO_DVDD, true);
-          dvdd_on = true;
-
-          /* reset release */
-          cxd56_gpio_write(ACA_XRESET, true);
-        }
-    }
-  else
-    {
-      if (dvdd_on && (target & CXD5247_DVDD))
-        {
-          /* reset assert */
-          cxd56_gpio_write(ACA_XRESET, false);
-        }
-
-      /* power off */
-      if (avdd_on && (target & CXD5247_AVDD))
-        {
-          board_power_control(POWER_AUDIO_AVDD, false);
-          avdd_on = false;
-        }
-      if (dvdd_on && (target & CXD5247_DVDD))
-        {
-          board_power_control(POWER_AUDIO_DVDD, false);
-          dvdd_on = false;
-        }
-    }
-  return ret;
-}
+int board_aca_power_control(int target, bool en);
 
 /****************************************************************************
  * Name: board_aca_power_monitor
@@ -161,22 +80,7 @@ int board_aca_power_control(int target, bool en)
  *
  ****************************************************************************/
 
-bool board_aca_power_monitor(int target)
-{
-  bool avdd_stat = true;
-  bool dvdd_stat = true;
-
-  if (target & CXD5247_AVDD)
-    {
-      avdd_stat = board_power_monitor(POWER_AUDIO_AVDD);
-    }
-  if (target & CXD5247_DVDD)
-    {
-      dvdd_stat = board_power_monitor(POWER_AUDIO_DVDD);
-    }
-
-  return avdd_stat && dvdd_stat;
-}
+bool board_aca_power_monitor(int target);
 
 /****************************************************************************
  * Name: board_external_amp_mute_control
@@ -188,12 +92,7 @@ bool board_aca_power_monitor(int target)
  *
  ****************************************************************************/
 
-int board_external_amp_mute_control(bool en)
-{
-  /* Not connected */
-
-  return 0;
-}
+int board_external_amp_mute_control(bool en);
 
 /****************************************************************************
  * Name: board_external_amp_mute_monitor
@@ -205,10 +104,12 @@ int board_external_amp_mute_control(bool en)
  *
  ****************************************************************************/
 
-bool board_external_amp_mute_monitor(void)
-{
-  /* Not connected */
+bool board_external_amp_mute_monitor(void);
 
-  return false;
+#undef EXTERN
+#if defined(__cplusplus)
 }
+#endif
 
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_AUDIO_H */
