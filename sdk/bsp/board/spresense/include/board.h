@@ -60,7 +60,6 @@
 
 #include <arch/board/common/cxd56_pwm.h>
 
-#include <arch/board/common/cxd56_i2cdev.h>
 #include <arch/board/common/cxd56_sensor.h>
 
 #include <arch/board/common/cxd56_isx012.h>

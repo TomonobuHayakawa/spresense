@@ -263,15 +263,6 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#ifdef CONFIG_SYSTEM_I2CTOOL
-  /* Initialize to use system/i2ctool for all of the i2c bus */
-
-  for (int bus = 0; bus <= 2; bus++)
-    {
-      board_i2cdev_initialize(bus);
-    }
-#endif
-
 #ifdef CONFIG_SENSORS
   board_sensor_initialize();
 #endif

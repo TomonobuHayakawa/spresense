@@ -56,7 +56,6 @@
 
 #include <arch/board/common/cxd56_flash.h>
 
-#include <arch/board/common/cxd56_i2cdev.h>
 #include <arch/board/common/cxd56_sensor.h>
 
 /****************************************************************************
