@@ -207,42 +207,4 @@ enum board_power_device {
 
 #define BOARDIOC_USBDEV_SETNOTIFYSIG      (BOARDIOC_USER+0x0001)
 
-/****************************************************************************
- * Public Types
- ****************************************************************************/
-
-#ifndef __ASSEMBLY__
-
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-#undef EXTERN
-#if defined(__cplusplus)
-#define EXTERN extern "C"
-extern "C"
-{
-#else
-#define EXTERN extern
-#endif
-
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-/****************************************************************************
- * Name: cxd56_boardinitialize
- *
- * Description:
- *
- ****************************************************************************/
-
-void cxd56_boardinitialize(void);
-
-#undef EXTERN
-#if defined(__cplusplus)
-}
-#endif
-
-#endif /* __ASSEMBLY__ */
 #endif  /* _CONFIGS_SPRESENSE_INCLUDE_BOARD_H */
