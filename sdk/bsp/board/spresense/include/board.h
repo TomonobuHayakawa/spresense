@@ -52,6 +52,7 @@
 #endif
 
 #include <arch/board/common/cxd56_flash.h>
+#include <arch/board/common/cxd56_sdcard.h>
 #include <arch/board/common/cxd56_spisd.h>
 
 #include <arch/board/common/cxd56_pwm.h>
@@ -358,84 +359,6 @@ int board_external_amp_mute_control(bool en);
  ****************************************************************************/
 
 bool board_external_amp_mute_monitor(void);
-
-/****************************************************************************
- * Name: board_sdcard_initialize
- *
- * Description:
- *   Initialize SD Card on the board.
- *
- ****************************************************************************/
-
-int board_sdcard_initialize(void);
-
-/****************************************************************************
- * Name: board_sdcard_pin_initialize
- *
- * Description:
- *   Initialize SD Card pins on the board.
- *
- ****************************************************************************/
-
-void board_sdcard_pin_initialize(void);
-
-/****************************************************************************
- * Name: board_sdcard_pin_finalize
- *
- * Description:
- *   Finalize SD Card pins on the board.
- *
- ****************************************************************************/
-
-void board_sdcard_pin_finalize(void);
-/****************************************************************************
- * Name: board_sdcard_pin_configuraton
- *
- * Description:
- *   Configure SD Card pins on the board.
- *
- ****************************************************************************/
-
-void board_sdcard_pin_configuraton(void);
-/****************************************************************************
- * Name: board_sdcard_pin_enable
- *
- * Description:
- *   Enable SD Card pins on the board.
- *
- ****************************************************************************/
-
-void board_sdcard_pin_enable(void);
-
-/****************************************************************************
- * Name: board_sdcard_pin_disable
- *
- * Description:
- *   Disable SD Card pins on the board.
- *
- ****************************************************************************/
-
-void board_sdcard_pin_disable(void);
-
-/****************************************************************************
- * Name: board_sdcard_set_high_voltage
- *
- * Description:
- *   Set SD Card IO voltage to 3.3V
- *
- ****************************************************************************/
-
-void board_sdcard_set_high_voltage(void);
-
-/****************************************************************************
- * Name: board_sdcard_set_low_voltage
- *
- * Description:
- *   Set SD Card IO voltage to 1.8V
- *
- ****************************************************************************/
-
-void board_sdcard_set_low_voltage(void);
 
 #undef EXTERN
 #if defined(__cplusplus)
