@@ -306,7 +306,7 @@ void OutputMixToHPI2S::done_on_active(MsgPacket* msg)
     msg->moveParam<OutputMixObjParam>().renderdone_param.end_flag;
   if (end_flag)
     {
-      OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_INTERNAL_STATE_ERROR);
+      OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
       return;
     }
 

@@ -350,7 +350,7 @@ void AsDmaDrv::readyQuePush(const AudioDrvDmaRunParam &dmaParam)
   if (!m_ready_que.push(dmaParam))
     {
       ERROR_ATTENTION(AS_MODULE_ID_AUDIO_DRIVER,
-                      AS_ATTENTION_SUB_CODE_DMA_ERROR);
+                      AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
     }
 }
 
@@ -360,7 +360,7 @@ void AsDmaDrv::readyQuePop()
   if (!m_ready_que.pop())
     {
       ERROR_ATTENTION(AS_MODULE_ID_AUDIO_DRIVER,
-                      AS_ATTENTION_SUB_CODE_DMA_ERROR);
+                      AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
     }
 }
 
@@ -370,7 +370,7 @@ void AsDmaDrv::runningQuePush(const AudioDrvDmaRunParam &dmaParam)
   if (!m_running_que.push(dmaParam))
     {
       ERROR_ATTENTION(AS_MODULE_ID_AUDIO_DRIVER,
-                      AS_ATTENTION_SUB_CODE_DMA_ERROR);
+                      AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
     }
 }
 
@@ -380,7 +380,7 @@ void AsDmaDrv::runningQuePop()
   if (!m_running_que.pop())
     {
       ERROR_ATTENTION(AS_MODULE_ID_AUDIO_DRIVER,
-                      AS_ATTENTION_SUB_CODE_DMA_ERROR);
+                      AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
     }
 }
 

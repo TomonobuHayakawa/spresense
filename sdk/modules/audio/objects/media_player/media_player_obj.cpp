@@ -128,11 +128,6 @@ static bool decoder_comp_done_callback(void *p_response, FAR void *p_requester)
           cmplt.exec_dec_cmplt.is_valid_frame =
             ((packet->result.exec_result == Apu::ApuExecOK) ? true : false);
 
-          if (!cmplt.exec_dec_cmplt.is_valid_frame)
-            {
-              MEDIA_PLAYER_WARN(AS_ATTENTION_SUB_CODE_DSP_RESULT_ERROR);
-            }
-
           MEDIA_PLAYER_VDBG("Dec s %d v %d\n",
                             cmplt.exec_dec_cmplt.output_buffer.size,
                             cmplt.exec_dec_cmplt.is_valid_frame);
@@ -153,11 +148,6 @@ static bool decoder_comp_done_callback(void *p_response, FAR void *p_requester)
         cmplt.stop_dec_cmplt.output_buffer  = packet->flush_dec_cmd.output_buffer;
         cmplt.stop_dec_cmplt.is_valid_frame =
           ((packet->result.exec_result == Apu::ApuExecOK) ? true : false);
-
-        if (!cmplt.stop_dec_cmplt.is_valid_frame)
-          {
-            MEDIA_PLAYER_WARN(AS_ATTENTION_SUB_CODE_DSP_RESULT_ERROR);
-          }
 
         MEDIA_PLAYER_VDBG("FlsDec s %d v %d\n",
                           cmplt.stop_dec_cmplt.output_buffer.size,
