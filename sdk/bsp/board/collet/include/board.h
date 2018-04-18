@@ -51,6 +51,8 @@
 #  include <arch/chip/usbdev.h>
 #endif
 
+#include <arch/board/common/cxd56_power.h>
+
 #include <arch/board/common/cxd56_flash.h>
 
 #include <arch/board/common/cxd56_bmp280.h>
@@ -136,16 +138,6 @@
  *     GPO6      LTE
  *     GPO7      E-Ink
  */
-
-#define PMIC_NONE           (0)
-#define PMIC_TYPE_LSW       (1u << 8)
-#define PMIC_TYPE_GPO       (1u << 9)
-#define PMIC_TYPE_DDCLDO    (1u << 10)
-#define PMIC_GET_TYPE(v)    ((v) & 0xff00)
-#define PMIC_GET_CH(v)      ((v) & 0x00ff)
-#define PMIC_LSW(n)         (PMIC_TYPE_LSW | (1u << (n)))
-#define PMIC_GPO(n)         (PMIC_TYPE_GPO | (1u << (n)))
-#define PMIC_DDCLDO(n)      (PMIC_TYPE_DDCLDO | (1u << (n)))
 
 enum board_power_device {
 
@@ -240,76 +232,6 @@ extern "C"
  ****************************************************************************/
 
 void cxd56_boardinitialize(void);
-
-/****************************************************************************
- * Name: board_power_control
- *
- * Description:
- *   Power on/off the device on the board.
- *
- ****************************************************************************/
-
-int board_power_control(int target, bool en);
-
-/****************************************************************************
- * Name: board_power_monitor
- *
- * Description:
- *   Get status of Power on/off the device on the board.
- *
- ****************************************************************************/
-
-bool board_power_monitor(int target);
-
-/****************************************************************************
- * Name: board_flash_power_control
- *
- * Description:
- *   Power on/off the flash device on the board.
- *
- ****************************************************************************/
-
-int board_flash_power_control(bool en);
-
-/****************************************************************************
- * Name: board_flash_power_monitor
- *
- * Description:
- *   Get status of Power on/off the flash device on the board.
- *
- ****************************************************************************/
-
-bool board_flash_power_monitor(void);
-
-/****************************************************************************
- * Name: board_xtal_power_control
- *
- * Description:
- *   Power on/off the Xtal device on the board.
- *
- ****************************************************************************/
-
-int board_xtal_power_control(bool en);
-
-/****************************************************************************
- * Name: board_xtal_power_monitor
- *
- * Description:
- *   Get status of Power on/off the Xtal device on the board.
- *
- ****************************************************************************/
-
-bool board_xtal_power_monitor(void);
-
-/****************************************************************************
- * Name: board_lna_power_control
- *
- * Description:
- *   Power on/off the LNA device on the board.
- *
- ****************************************************************************/
-
-int board_lna_power_control(bool en);
 
 /****************************************************************************
  * Name: board_aca_power_control
