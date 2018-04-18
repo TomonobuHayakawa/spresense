@@ -747,7 +747,7 @@ _err0:
  *   Initialize GEOFENCE device
  *
  * Input Parameters:
- *   devpath - The full path to the driver to register. E.g., "/dev/gps"
+ *   devpath - The full path to the driver to register. E.g., "/dev/geofence"
  *
  * Returned Value:
  *   Zero (OK) on success; a negated errno value on failure.

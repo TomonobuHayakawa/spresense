@@ -56,18 +56,6 @@
 #define GPIO_BUT2           (PIN_SPI2_MISO)
 
 /****************************************************************************
- * Name: cxd56_gnssinitialize
- *
- * Description:
- *   Called to configure an CXD56xx internal GNSS for spresense board
- *
- ****************************************************************************/
-
-#ifdef CONFIG_CXD56_GNSS
-int cxd56_gnssinitialize(FAR const char *devpath);
-#endif
-
-/****************************************************************************
  * Name: cxd56_userled_initialize
  *
  * Description:
@@ -77,18 +65,6 @@ int cxd56_gnssinitialize(FAR const char *devpath);
 
 #ifdef CONFIG_USERLED_LOWER
 int cxd56_userled_initialize(FAR const char *devname);
-#endif
-
-/****************************************************************************
- * Name: cxd56_geofenceinitialize
- *
- * Description:
- *   Called to configure an CXD56xx internal GNSS for spresense board
- *
- ****************************************************************************/
-
-#ifdef CONFIG_CXD56_GEOFENCE
-int cxd56_geofenceinitialize(FAR const char *devpath);
 #endif
 
 #endif /* __CONFIGS_SPRESENSE_SRC_SPRESENSE_H */

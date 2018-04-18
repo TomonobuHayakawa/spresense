@@ -107,6 +107,14 @@
 #  include "cxd56_usbdev.h"
 #endif
 
+#ifdef CONFIG_CXD56_GNSS
+#  include "cxd56_gnss.h"
+#endif
+
+#ifdef CONFIG_CXD56_GEOFENCE
+#  include "cxd56_geofence.h"
+#endif
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -429,19 +437,19 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#ifdef CONFIG_CXD56_GNSS
-  ret = cxd56_gnssinitialize("/dev/gps");
-  if (ret < 0)
-    {
-      _err("ERROR: Failed to initialze gnss. \n");
-    }
-#endif
-
 #ifdef CONFIG_USERLED_LOWER
   ret = cxd56_userled_initialize("/dev/userleds");
   if (ret < 0)
     {
       _err("ERROR: Failed to initialze led. \n");
+    }
+#endif
+
+#ifdef CONFIG_CXD56_GNSS
+  ret = cxd56_gnssinitialize("/dev/gps");
+  if (ret < 0)
+    {
+      _err("ERROR: Failed to initialze gnss. \n");
     }
 #endif
 

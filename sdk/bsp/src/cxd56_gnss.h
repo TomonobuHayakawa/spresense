@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_gnssext.c
+ * sdk/bsp/src/cxd56_gnss.h
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016,2017 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,63 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_GNSS_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_GNSS_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <debug.h>
-#include <errno.h>
-
-#include <arch/board/board.h>
-
-#ifdef CONFIG_CXD56_GNSS
-
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-/****************************************************************************
- * Private Data
- ****************************************************************************/
+#ifndef __ASSEMBLY__
 
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: cxd56_gnssext_control_lna
+ * Name: cxd56_gnssinitialize
  *
  * Description:
- *   Control power for external LNA
+ *   Initialize GNSS device
  *
  * Input Parameters:
- *   en -- power on if true, power off if false
+ *   devpath - The full path to the driver to register. E.g., "/dev/gps"
  *
  * Returned Value:
  *   Zero (OK) on success; a negated errno value on failure.
  *
  ****************************************************************************/
 
-int cxd56_gnssext_control_lna(bool en)
-{
-  int ret;
+int cxd56_gnssinitialize(FAR const char *devpath);
 
-  ret = board_lna_power_control(en);
-  if (ret)
-    {
-      snerr("ERROR: Failed to power %s LNA. %d\n", en ? "on" : "off", ret);
-      return -ENODEV;
-    }
-
-  return ret;
+#undef EXTERN
+#if defined(__cplusplus)
 }
+#endif
 
-#endif /* CONFIG_CXD56_GNSS */
+#endif /* __ASSEMBLY__ */
+#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_GNSS_H */

@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/collet/src/collet.h
+ * sdk/bsp/src/cxd56_geofence.h
  *
- *   Copyright (C) 2017 Sony Corporation.
+ *   Copyright (C) 2016,2017 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,38 +32,54 @@
  *
  ****************************************************************************/
 
-#ifndef __CONFIGS_COLLET_SRC_COLLET_H
-#define __CONFIGS_COLLET_SRC_COLLET_H
+#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_GEOFENCE_H
+#define __ARCH_ARM_SRC_CXD56XX_CXD56_GEOFENCE_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-#include <nuttx/compiler.h>
-#include <stdint.h>
-
-#include "cxd56_pinconfig.h"
-
-/* LED definitions *********************************************************/
-
-#define GPIO_LED1           (PIN_PWM2)
-
-/* Buttons definitions *****************************************************/
-
-#define GPIO_BUT1           (PIN_SPI2_MOSI)
-#define GPIO_BUT2           (PIN_SPI2_MISO)
+#include <sdk/config.h>
 
 /****************************************************************************
- * Name: cxd56_userled_initialize
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#ifndef __ASSEMBLY__
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: cxd56_geofenceinitialize
  *
  * Description:
- *   Called to configure an leds for collet board
+ *   Initialize GEOFENCE device
+ *
+ * Input Parameters:
+ *   devpath - The full path to the driver to register. E.g., "/dev/geofence"
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_USERLED_LOWER
-int cxd56_userled_initialize(FAR const char *devname);
+int cxd56_geofenceinitialize(FAR const char *devpath);
+
+#undef EXTERN
+#if defined(__cplusplus)
+}
 #endif
 
-#endif /* __CONFIGS_COLLET_SRC_COLLET_H */
+#endif /* __ASSEMBLY__ */
+#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_GEOFENCE_H */
