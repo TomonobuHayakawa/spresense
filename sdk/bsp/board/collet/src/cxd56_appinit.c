@@ -49,7 +49,6 @@
 #include <arch/board/board.h>
 
 #include "chip.h"
-#include "collet.h"
 #include "cxd56_spi.h"
 #include "cxd56_i2c.h"
 #include "cxd56_sysctl.h"
@@ -109,6 +108,10 @@
 
 #ifdef CONFIG_CXD56_GEOFENCE
 #  include "cxd56_geofence.h"
+#endif
+
+#ifdef CONFIG_USERLED
+#  include <nuttx/leds/userled.h>
 #endif
 
 /****************************************************************************
@@ -434,7 +437,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_USERLED_LOWER
-  ret = cxd56_userled_initialize("/dev/userleds");
+  ret = userled_lower_initialize("/dev/userleds");
   if (ret < 0)
     {
       _err("ERROR: Failed to initialze led. \n");

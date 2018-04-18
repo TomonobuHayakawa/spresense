@@ -48,14 +48,17 @@
 #include <nuttx/leds/userled.h>
 #endif
 
-#include "corvo.h"
 #include "cxd56_gpio.h"
+#include "cxd56_pinconfig.h"
 
 #ifndef CONFIG_ARCH_LEDS
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+
+#define GPIO_LED1           (PIN_PWM0)
+#define GPIO_LED2           (PIN_PWM1)
 
 /****************************************************************************
  * Private Data
@@ -98,16 +101,5 @@ void board_userled_all(uint8_t ledset)
   cxd56_gpio_write(GPIO_LED1, (bool)(ledset & BOARD_LED1_BIT));
   cxd56_gpio_write(GPIO_LED2, (bool)(ledset & BOARD_LED2_BIT));
 }
-
-#ifdef CONFIG_USERLED_LOWER
-/****************************************************************************
- * Name: cxd56_userled_initialize
- ****************************************************************************/
-
-int cxd56_userled_initialize(FAR const char *devname)
-{
-  return userled_lower_initialize(devname);
-}
-#endif
 
 #endif /* !CONFIG_ARCH_LEDS */

@@ -45,14 +45,17 @@
 #include <nuttx/board.h>
 #include <arch/board/board.h>
 
-#include "spresense.h"
 #include "cxd56_gpio.h"
+#include "cxd56_pinconfig.h"
 
 #ifdef CONFIG_ARCH_LEDS
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+
+#define GPIO_LED1           (PIN_PWM0)
+#define GPIO_LED2           (PIN_PWM1)
 
 /****************************************************************************
  * Private Data

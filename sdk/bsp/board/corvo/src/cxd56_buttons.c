@@ -48,9 +48,9 @@
 
 #include <arch/board/board.h>
 
-#include "corvo.h"
 #include "cxd56_gpio.h"
 #include "cxd56_gpioint.h"
+#include "cxd56_pinconfig.h"
 
 #ifdef CONFIG_ARCH_BUTTONS
 
@@ -58,11 +58,14 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#define GPIO_BUT1           (PIN_SPI2_MOSI)
+#define GPIO_BUT2           (PIN_SPI2_MISO)
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 /* Pin configuration for each CXD56XX button.  This array is indexed
- * by the GPIO_* definitions in corvo.h
+ * by the GPIO_* definitions.
  */
 
 static const uint16_t g_buttoncfg[BOARD_NUM_BUTTONS] =
