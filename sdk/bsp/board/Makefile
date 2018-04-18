@@ -157,4 +157,8 @@ ifeq ($(CONFIG_CXD56_SFC),y)
 CSRCS += cxd56_flash.c
 endif
 
+ifeq ($(CONFIG_VIDEO_ISX012),y)
+CSRCS += cxd56_isx012.c
+endif
+
 include $(SDKDIR)/bsp/scripts/Board.mk

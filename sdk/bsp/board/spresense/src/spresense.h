@@ -91,16 +91,4 @@ int cxd56_userled_initialize(FAR const char *devname);
 int cxd56_geofenceinitialize(FAR const char *devpath);
 #endif
 
-/****************************************************************************
- * Name: cxd56_isx012initialize
- *
- * Description:
- *   Called to configure an I2C and to register ISX012 for the corvo board.
- *
- ****************************************************************************/
-
-#ifdef CONFIG_VIDEO_ISX012
-int cxd56_isx012initialize(FAR const char *devpath, int bus);
-#endif
-
 #endif /* __CONFIGS_SPRESENSE_SRC_SPRESENSE_H */

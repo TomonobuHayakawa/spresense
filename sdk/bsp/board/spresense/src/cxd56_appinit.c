@@ -99,11 +99,6 @@
 #  include "cxd56_usbdev.h"
 #endif
 
-#ifdef CONFIG_VIDEO_ISX012
-#  include "cxd56_gpio.h"
-#  include <nuttx/video/isx012.h>
-#endif
-
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -363,7 +358,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_VIDEO_ISX012
-  cxd56_isx012initialize("/dev/imager", 2);
+  board_isx012_initialize("/dev/imager", 2);
 #endif
 
 #ifdef CONFIG_CXD56_SFC

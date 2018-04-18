@@ -67,6 +67,7 @@
 #include <arch/board/common/cxd56_rpr0521rs.h>
 #include <arch/board/common/cxd56_i2cdev.h>
 
+#include <arch/board/common/cxd56_isx012.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -210,6 +211,12 @@ enum board_power_device {
 #define EINK_CS     PIN_PWM3
 #define EINK_OEI    -1
 #define EINK_POWER  -1
+
+/* Imager device pin definitions *******************************************/
+
+#define IMAGER_RST      PIN_SPI0_MISO
+#define IMAGER_SLEEP    PIN_SPI0_MOSI
+#define IMAGER_ALERT    PIN_SDIO_CLKI
 
 /*
  * Set signal id for notify USB device connection status and supply current value.
@@ -428,69 +435,6 @@ int board_bcm20707_get_firmware_size_in_flash(const char* firmware, int* firmwar
 
 int board_bcm20707_load_firmware_from_flash(const char* firmwareName, uint32_t* loadbuf);
 #endif /* CONFIG_BCM20707 */
-
-#ifdef CONFIG_VIDEO_ISX012
-/****************************************************************************
- * Name: board_isx012_power_on
- *
- * Description:
- *   Power on ISX012
- *
- ****************************************************************************/
-
-int board_isx012_power_on(void);
-
-/****************************************************************************
- * Name: board_isx012_power_off
- *
- * Description:
- *   Power off ISX012
- *
- ****************************************************************************/
-
-int board_isx012_power_off(void);
-
-/****************************************************************************
- * Name: board_isx012_set_reset
- *
- * Description:
- *   Set reset ISX012
- *
- ****************************************************************************/
-
-void board_isx012_set_reset(void);
-
-/****************************************************************************
- * Name: board_isx012_release_reset
- *
- * Description:
- *   Release reset ISX012
- *
- ****************************************************************************/
-
-void board_isx012_release_reset(void);
-
-/****************************************************************************
- * Name: board_isx012_set_sleep
- *
- * Description:
- *   Set sleep ISX012
- *
- ****************************************************************************/
-
-void board_isx012_set_sleep(int kind);
-
-/****************************************************************************
- * Name: board_isx012_release_sleep
- *
- * Description:
- *   Release sleep ISX012
- *
- ****************************************************************************/
-
-void board_isx012_release_sleep(void);
-
-#endif /* CONFIG_VIDEO_ISX012 */
 
 /****************************************************************************
  * Name: board_sdcard_initialize

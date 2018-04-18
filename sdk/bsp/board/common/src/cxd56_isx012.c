@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_isx012.c
+ * bsp/board/common/src/cxd56_isx012.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *
@@ -36,7 +36,6 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
 #include <sdk/config.h>
 
 #include <stdio.h>
@@ -99,7 +98,7 @@ int board_isx012_power_off(void)
   uint32_t stat;
   int i;
 
-  /* 'POWER_IMAGE_SENSOR==PMIC_GPO(4/5/7)' */
+  /* POWER_IMAGE_SENSOR==PMIC_GPO(4/5/7) */
 
   ret = board_power_control(POWER_IMAGE_SENSOR, false);
   if (ret)
@@ -129,17 +128,17 @@ int board_isx012_power_off(void)
 
 void board_isx012_set_reset(void)
 {
-  cxd56_gpio_write(PIN_SPI0_MISO, false);
+  cxd56_gpio_write(IMAGER_RST, false);
 }
 
 void board_isx012_release_reset(void)
 {
-  cxd56_gpio_write(PIN_SPI0_MISO, true);
+  cxd56_gpio_write(IMAGER_RST, true);
 }
 
 void board_isx012_set_sleep(int kind)
 {
-  cxd56_gpio_write(PIN_SPI0_MOSI, false);
+  cxd56_gpio_write(IMAGER_SLEEP, false);
   if (kind == 0)
     {
       /* PowerON -> sleep */
@@ -156,13 +155,13 @@ void board_isx012_set_sleep(int kind)
 
 void board_isx012_release_sleep(void)
 {
-  cxd56_gpio_write(PIN_SPI0_MOSI, true);
+  cxd56_gpio_write(IMAGER_SLEEP, true);
   usleep(SLEEP_CANCEL_TIME);
 }
 
 int isx012_register(FAR const char *devpath, FAR struct i2c_master_s *i2c);
 
-int cxd56_isx012initialize(FAR const char *devpath, int bus)
+int board_isx012_initialize(FAR const char *devpath, int bus)
 {
   int ret;
   uint32_t pinconf;
@@ -170,11 +169,13 @@ int cxd56_isx012initialize(FAR const char *devpath, int bus)
 
   _info("Initializing ISX012...\n");
 
-  cxd56_gpio_config(PIN_SDIO_CLKI, true);
-  cxd56_gpio_config(PIN_SPI0_MOSI,false);
-  cxd56_gpio_config(PIN_SPI0_MISO,false);
+#ifdef IMAGER_ALERT
+  cxd56_gpio_config(IMAGER_ALERT, true);
+#endif
+  cxd56_gpio_config(IMAGER_SLEEP,false);
+  cxd56_gpio_config(IMAGER_RST,false);
   board_isx012_set_reset();
-  cxd56_gpio_write(PIN_SDIO_DIR0, false);
+  cxd56_gpio_write(IMAGER_SLEEP, false);
 
   pinconf = PINCONF_SET(PIN_IS_CLK,   PINCONF_MODE1, PINCONF_INPUT_ENABLE,
                         PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);

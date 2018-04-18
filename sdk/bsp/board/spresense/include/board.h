@@ -67,6 +67,8 @@
 #include <arch/board/common/cxd56_rpr0521rs.h>
 #include <arch/board/common/cxd56_i2cdev.h>
 
+#include <arch/board/common/cxd56_isx012.h>
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -196,6 +198,11 @@ enum board_power_device {
 #define DISPLAY_DC      PIN_PWM2
 
 #define DISPLAY_SPI     4
+
+/* Imager device pin definitions *******************************************/
+
+#define IMAGER_RST      PIN_SDIO_DIR1_3
+#define IMAGER_SLEEP    PIN_SDIO_DIR0
 
 /*
  * Set signal id for notify USB device connection status and supply current value.
@@ -429,69 +436,6 @@ void board_sdcard_set_high_voltage(void);
  ****************************************************************************/
 
 void board_sdcard_set_low_voltage(void);
-
-#ifdef CONFIG_VIDEO_ISX012
-/****************************************************************************
- * Name: board_isx012_power_on
- *
- * Description:
- *   Power on ISX012
- *
- ****************************************************************************/
-
-int board_isx012_power_on(void);
-
-/****************************************************************************
- * Name: board_isx012_power_off
- *
- * Description:
- *   Power off ISX012
- *
- ****************************************************************************/
-
-int board_isx012_power_off(void);
-
-/****************************************************************************
- * Name: board_isx012_set_reset
- *
- * Description:
- *   Set reset ISX012
- *
- ****************************************************************************/
-
-void board_isx012_set_reset(void);
-
-/****************************************************************************
- * Name: board_isx012_release_reset
- *
- * Description:
- *   Release reset ISX012
- *
- ****************************************************************************/
-
-void board_isx012_release_reset(void);
-
-/****************************************************************************
- * Name: board_isx012_set_sleep
- *
- * Description:
- *   Set sleep ISX012
- *
- ****************************************************************************/
-
-void board_isx012_set_sleep(int kind);
-
-/****************************************************************************
- * Name: board_isx012_release_sleep
- *
- * Description:
- *   Release sleep ISX012
- *
- ****************************************************************************/
-
-void board_isx012_release_sleep(void);
-
-#endif /* CONFIG_VIDEO_ISX012 */
 
 #undef EXTERN
 #if defined(__cplusplus)
