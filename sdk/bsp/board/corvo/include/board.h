@@ -69,6 +69,8 @@
 
 #include <arch/board/common/cxd56_isx012.h>
 
+#include <arch/board/common/cxd56_bcm20706.h>
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -372,69 +374,6 @@ bool board_aca_power_monitor(int target);
  ****************************************************************************/
 
 #define board_external_amp_mute_monitor() (false)
-
-#ifdef CONFIG_BCM20707
-
-/****************************************************************************
- * Name: board_bcm20707_pin_cfg
- *
- * Description:
- *   Initialize bcm20707 control pins, it must be called before any operation
- *   to do power control, wake up and reset.
- *
- ****************************************************************************/
-
-int board_bcm20707_pin_cfg(void);
-
-/****************************************************************************
- * Name: board_bcm20707_reset
- *
- * Description:
- *   Reset bcm20707 chip
- *
- ****************************************************************************/
-
-void board_bcm20707_reset(void);
-
-/****************************************************************************
- * Name: board_bcm20707_power_control
- *
- * Description:
- *   Power on/off bcm20707 chip
- *
- ****************************************************************************/
-
-int board_bcm20707_power_control(bool en);
-
-/****************************************************************************
- * Name: board_bcm20707_enable_sleep
- *
- * Description:
- *   Enable/disable bcm20707 enters sleep mode
- *
- ****************************************************************************/
-
-void board_bcm20707_enable_sleep(bool en);
-
-/****************************************************************************
- * Name: board_bcm20707_get_firmware_size_in_flash
- *
- * Description:
- *   Get bcm20707 size of firmware in SPI Flash
- *
- ****************************************************************************/
-
-int board_bcm20707_get_firmware_size_in_flash(const char* firmware, int* firmware_size);
-/****************************************************************************
- * Name: board_bcm20707_load_firmware_from_flash
- *
- * Description:
- *   Load bcm20707 firmware from SPI Flash
- *
- ****************************************************************************/
-
-int board_bcm20707_load_firmware_from_flash(const char* firmwareName, uint32_t* loadbuf);
-#endif /* CONFIG_BCM20707 */
 
 #undef EXTERN
 #if defined(__cplusplus)
