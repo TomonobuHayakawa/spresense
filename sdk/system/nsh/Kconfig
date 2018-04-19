@@ -24,7 +24,7 @@ config EXAMPLES_NSH_PROGNAME
 config EXAMPLES_NSH_CXXINITIALIZE
 	bool "C++ Initialization"
 	default y
-	depends on HAVE_CXX && HAVE_CXXINITIALIZE
+#	depends on HAVE_CXX && HAVE_CXXINITIALIZE
 	---help---
 		If HAVE_CXX and HAVE_CXXINITIALIZE are slected, then this NSH
 		example can be configured to initialize C++ constructors when it
