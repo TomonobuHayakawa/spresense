@@ -59,6 +59,22 @@
 #if defined(CONFIG_LCD_ILI9340)
 
 /****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/* Check if the following are defined in the board.h */
+
+#ifndef DISPLAY_RST
+#  error "DISPLAY_RST must be defined in board.h !!"
+#endif
+#ifndef DISPLAY_DC
+#  error "DISPLAY_DC must be defined in board.h !!"
+#endif
+#ifndef DISPLAY_SPI
+#  error "DISPLAY_SPI must be defined in board.h !!"
+#endif
+
+/****************************************************************************
  * Private Type Definition
  ****************************************************************************/
 

@@ -43,7 +43,6 @@
 #include <debug.h>
 #include <errno.h>
 #include <sys/mount.h>
-#include <sys/stat.h>
 
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
@@ -57,9 +56,6 @@
 #include "cxd56_uart.h"
 #include "cxd56_timerisr.h"
 #include <arch/chip/pm.h>
-
-#include "cxd56_pinconfig.h"
-#include "cxd56_gpio.h"
 
 #ifdef CONFIG_CXD56_RTC
 #  include <nuttx/timers/rtc.h>

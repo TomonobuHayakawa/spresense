@@ -50,6 +50,19 @@
 #include <nuttx/board.h>
 #include <arch/board/board.h>
 
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/* Check if the following are defined in the board.h */
+
+#ifndef IMAGER_RST
+#  error "IMAGER_RST must be defined in board.h !!"
+#endif
+#ifndef IMAGER_SLEEP
+#  error "IMAGER_SLEEP must be defined in board.h !!"
+#endif
+
 #define STANDBY_TIME                (600*1000) /* TODO: (max100ms/30fps)*/
 #define DEVICE_STARTUP_TIME           (6*1000) /* ms */
 #define SLEEP_CANCEL_TIME            (13*1000) /* ms */

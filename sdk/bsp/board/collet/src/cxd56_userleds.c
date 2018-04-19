@@ -57,6 +57,12 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+/* Check if the following are defined in the board.h */
+
+#ifndef BOARD_LED1_BIT
+#  error "BOARD_LED1_BIT must be defined in board.h !!"
+#endif
+
 #define GPIO_LED1           (PIN_PWM2)
 
 /****************************************************************************

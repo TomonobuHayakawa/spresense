@@ -62,10 +62,17 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* Configuration Sanity check */
+/* Check if the following are defined in the board.h */
+
+#ifndef SENSOR_I2C
+#  error "SENSOR_I2C must be defined in board.h !!"
+#endif
+#ifndef SENSOR_SPI
+#  error "SENSOR_SPI must be defined in board.h !!"
+#endif
 
 #if defined(CONFIG_BMI160) && defined(CONFIG_KX022)
-# error "Duplicate accelerometer sensor device."
+#  error "Duplicate accelerometer sensor device."
 #endif
 
 #if defined(CONFIG_BMP280) && defined(CONFIG_BM1383GLV)
@@ -73,8 +80,10 @@
 #endif
 
 #if defined(CONFIG_AK09912) && defined(CONFIG_BM1422GMV)
-# error "Duplicate magnetic sensor device."
+#  error "Duplicate magnetic sensor device."
 #endif
+
+/* Configuration Sanity check */
 
 #ifdef CONFIG_APDS9930
 #  define _APDS9930  1

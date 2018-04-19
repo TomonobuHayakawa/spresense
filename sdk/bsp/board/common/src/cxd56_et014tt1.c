@@ -60,6 +60,31 @@
 #if defined(CONFIG_LCD_ET014TT1)
 
 /****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/* Check if the following are defined in the board.h */
+
+#ifndef DISPLAY_SPI
+#  error "DISPLAY_SPI must be defined in board.h !!"
+#endif
+#ifndef EINK_RST
+#  error "EINK_RST must be defined in board.h !!"
+#endif
+#ifndef EINK_BUSY
+#  error "EINK_BUSY must be defined in board.h !!"
+#endif
+#ifndef EINK_CS
+#  error "EINK_CS must be defined in board.h !!"
+#endif
+#ifndef EINK_OEI
+#  error "EINK_OEI must be defined in board.h !!"
+#endif
+#ifndef EINK_POWER
+#  error "EINK_POWER must be defined in board.h !!"
+#endif
+
+/****************************************************************************
  * Private Types
  ****************************************************************************/
 

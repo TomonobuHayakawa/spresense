@@ -58,6 +58,12 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+/* Check if the following are defined in the board.h */
+
+#ifndef BOARD_NUM_BUTTONS
+#  error "BOARD_NUM_BUTTONS must be defined in board.h !!"
+#endif
+
 #define GPIO_BUT1           (PIN_SPI2_MOSI)
 #define GPIO_BUT2           (PIN_SPI2_MISO)
 

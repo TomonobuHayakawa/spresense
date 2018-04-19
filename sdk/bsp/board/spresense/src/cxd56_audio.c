@@ -59,6 +59,18 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+/* Check if the following are defined in the board.h */
+
+#ifndef CXD5247_XRST
+#  error "CXD5247_XRST must be defined in board.h !!"
+#endif
+#ifndef CXD5247_AVDD
+#  error "CXD5247_AVDD must be defined in board.h !!"
+#endif
+#ifndef CXD5247_DVDD
+#  error "CXD5247_DVDD must be defined in board.h !!"
+#endif
+
 #define MUTE_OFF_DELAY  (1250 * 1000) /* ms */
 #define MUTE_ON_DELAY   (150 * 1000) /* ms */
 

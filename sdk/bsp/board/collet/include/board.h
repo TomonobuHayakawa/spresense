@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/collet/include/board.h
+ * bsp/board/collet/include/board.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright 2017 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,20 +32,16 @@
  *
  ****************************************************************************/
 
-#ifndef _CONFIGS_COLLET_INCLUDE_BOARD_H
-#define _CONFIGS_COLLET_INCLUDE_BOARD_H
+#ifndef __BSP_BOARD_COLLET_INCLUDE_BOARD_H
+#define __BSP_BOARD_COLLET_INCLUDE_BOARD_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
-#include <sys/boardctl.h>
-#include <stdbool.h>
 
-#if defined(CONFIG_ARCH_IRQBUTTONS) && defined(CONFIG_GPIO_IRQ)
-#  include <nuttx/irq.h>
-#endif
+#include <sys/boardctl.h>
 
 #if defined(CONFIG_BOARDCTL_IOCTL) && defined(CONFIG_USBDEV)
 #  include <arch/chip/usbdev.h>
@@ -53,9 +49,7 @@
 
 #include <arch/board/common/cxd56_power.h>
 #include <arch/board/common/cxd56_audio.h>
-
 #include <arch/board/common/cxd56_flash.h>
-
 #include <arch/board/common/cxd56_sensor.h>
 
 /****************************************************************************
@@ -63,10 +57,6 @@
  ****************************************************************************/
 
 /* Clocking ****************************************************************/
-
-#define BOARD_XTAL_FREQUENCY        (26000000)  /* XTAL oscillator frequency (Y3) */
-#define BOARD_RTCCLK_FREQUENCY      (32768)     /* RTC oscillator frequency (Y1) */
-#define BOARD_INTRCOSC_FREQUENCY    (8192000)   /* Internal RC oscillator frequency */
 
 #ifdef CONFIG_CXD56_80MHz
 #  define BOARD_FCLKOUT_FREQUENCY   (80000000)
@@ -77,9 +67,9 @@
 /* UART clocking ***********************************************************/
 /* Configure all UARTs to use the XTAL input frequency */
 
-#define BOARD_UART0_BASEFREQ        BOARD_XTAL_FREQUENCY
+#define BOARD_UART0_BASEFREQ        CONFIG_CXD56_XOSC_CLOCK
 #define BOARD_UART1_BASEFREQ        BOARD_FCLKOUT_FREQUENCY
-#define BOARD_UART2_BASEFREQ        BOARD_XTAL_FREQUENCY
+#define BOARD_UART2_BASEFREQ        CONFIG_CXD56_XOSC_CLOCK
 
 /* LED definitions *********************************************************/
 
@@ -159,6 +149,7 @@ enum board_power_device {
   POWER_LFOUR           = PMIC_GPO(5),
   POWER_LTE             = PMIC_GPO(6),
   POWER_IMAGE_SENSOR    = PMIC_NONE,
+
 };
 
 /* CXD5247 audio control definitions ***************************************/
@@ -196,4 +187,4 @@ enum board_power_device {
 
 #define BOARDIOC_USBDEV_SETNOTIFYSIG      (BOARDIOC_USER+0x0001)
 
-#endif  /* _CONFIGS_COLLET_INCLUDE_BOARD_H */
+#endif  /* __BSP_BOARD_COLLET_INCLUDE_BOARD_H */
