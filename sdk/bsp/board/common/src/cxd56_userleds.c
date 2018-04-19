@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/spresense/src/cxd56_autoleds.c
+ * bsp/board/common/src/cxd56_userleds.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,97 +36,58 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <debug.h>
 
-#include <nuttx/board.h>
 #include <arch/board/board.h>
+
+#ifdef CONFIG_USERLED_LOWER
+#include <nuttx/leds/userled.h>
+#endif
 
 #include "cxd56_gpio.h"
 #include "cxd56_pinconfig.h"
 
-#ifdef CONFIG_ARCH_LEDS
+#ifndef CONFIG_ARCH_LEDS
 
 /****************************************************************************
  * Pre-processor Definitions
- ****************************************************************************/
-
-#define GPIO_LED1           (PIN_PWM0)
-#define GPIO_LED2           (PIN_PWM1)
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-/****************************************************************************
- * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
+/* Below functions are template to support the User LED for NuttX original
+ * debug feature. If you support the feature, copy this file into your board
+ * directory and implement the contents.
+ */
+
 /****************************************************************************
- * Name: board_autoled_initialize
+ * Name: board_userled_initialize
  ****************************************************************************/
 
-void board_autoled_initialize(void)
+void board_userled_initialize(void)
 {
-  cxd56_gpio_config(GPIO_LED1, false);
-  cxd56_gpio_config(GPIO_LED2, false);
 }
 
 /****************************************************************************
- * Name: board_autoled_on
+ * Name: board_userled
  ****************************************************************************/
 
-void board_autoled_on(int led)
+void board_userled(int led, bool ledon)
 {
-  switch (led)
-    {
-      default:
-      case 0:
-        /* LED1 OFF , LED2 OFF */
-
-        cxd56_gpio_write(GPIO_LED1, false);
-        cxd56_gpio_write(GPIO_LED2, false);
-        break;
-
-      case 1:
-        /* LED1 ON , LED2 OFF*/
-
-        cxd56_gpio_write(GPIO_LED1, true);
-        cxd56_gpio_write(GPIO_LED2, false);
-        break;
-
-      case 2:
-        /* LED2 ON */
-        cxd56_gpio_write(GPIO_LED2, true);
-        break;
-    }
 }
 
 /****************************************************************************
- * Name: board_autoled_off
+ * Name: board_userled_all
  ****************************************************************************/
 
-void board_autoled_off(int led)
+void board_userled_all(uint8_t ledset)
 {
-  switch (led)
-    {
-      default:
-      case 0:
-      case 1:
-        break;
-
-      case 2:
-        /* LED2 OFF */
-        cxd56_gpio_write(GPIO_LED2, false);
-        break;
-    }
 }
 
-#endif /* CONFIG_ARCH_LEDS */
+#endif /* !CONFIG_ARCH_LEDS */

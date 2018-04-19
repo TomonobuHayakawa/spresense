@@ -1,8 +1,7 @@
-/************************************************************************************
+/****************************************************************************
  * bsp/board/spresense/src/cxd56_spi.c
  *
- *   Copyright (C) 2018 Sony Semiconductor Solutions Corp.
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,11 +30,11 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ************************************************************************************/
+ ****************************************************************************/
 
-/************************************************************************************
+/****************************************************************************
  * Included Files
- ************************************************************************************/
+ ****************************************************************************/
 
 #include <sdk/config.h>
 
@@ -53,12 +52,18 @@
 #include "cxd56_clock.h"
 #include "cxd56_gpio.h"
 
-/************************************************************************************
+/****************************************************************************
  * Pre-processor Definitions
- ************************************************************************************/
+ ****************************************************************************/
+
+#define MMCSD_DETECT    PIN_AP_CLK
 
 /****************************************************************************
- * Name:  cxd56_spi1/2/3select and cxd56_spi1/2/3status
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name:  cxd56_spi0/3/4/5select and cxd56_spi0/3/4/5status
  *
  * Description:
  *   The external functions, cxd56_spi1/2/3select and cxd56_spi1/2/3status must be
@@ -70,7 +75,7 @@
  *
  *   1. Provide logic in cxd56_boardinitialize() to configure SPI chip select
  *      pins.
- *   2. Provide cxd56_spi1/2/3select() and cxd56_spi1/2/3status() functions in your
+ *   2. Provide cxd56_spi0/3/4/5select() and cxd56_spi0/3/4/5status() functions in your
  *      board-specific logic.  These functions will perform chip selection and
  *      status operations using GPIOs in the way your board is configured.
  *   3. Add a calls to cxd56_spibus_initialize() in your low level application
@@ -81,52 +86,6 @@
  *      the SPI MMC/SD driver).
  *
  ****************************************************************************/
-
-#ifdef CONFIG_CXD56_SPI4
-void cxd56_spi4select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
-{
-  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
-}
-
-uint8_t cxd56_spi4status(FAR struct spi_dev_s *dev, uint32_t devid)
-{
-#  ifdef CONFIG_CXD56_SPISD
-  static int initialized = 0;
-  if (initialized == 0)
-    {
-      /* Pin Configuration(AP_CLK = SD card detect pin) */
-
-      CXD56_PIN_CONFIGS(PINCONFS_AP_CLK_GPIO);
-
-      /* Input enable */
-
-      cxd56_gpio_config(PIN_AP_CLK, true);
-
-      initialized = 1;
-    }
-
-  /* PIN_AP_CLK is mapping to SD Card detect pin
-   * PIN_AP_CLK = 0: Inserted
-   * PIN_AP_CLK = 1: Removed
-   */
-  return cxd56_gpio_read(PIN_AP_CLK) ? 0 : SPI_STATUS_PRESENT;
-#  else
-  return 0;
-#  endif
-}
-#endif
-
-#ifdef CONFIG_CXD56_SPI5
-void cxd56_spi5select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
-{
-  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
-}
-
-uint8_t cxd56_spi5status(FAR struct spi_dev_s *dev, uint32_t devid)
-{
-  return 0;
-}
-#endif
 
 #ifdef CONFIG_CXD56_SPI0
 void cxd56_spi0select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
@@ -164,6 +123,50 @@ void cxd56_spi3select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 }
 
 uint8_t cxd56_spi3status(FAR struct spi_dev_s *dev, uint32_t devid)
+{
+  return 0;
+}
+#endif
+
+#ifdef CONFIG_CXD56_SPI4
+void cxd56_spi4select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
+{
+  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
+}
+
+uint8_t cxd56_spi4status(FAR struct spi_dev_s *dev, uint32_t devid)
+{
+#  ifdef CONFIG_CXD56_SPISD
+  if (devid == SPIDEV_MMCSD(0))
+    {
+      static bool initialized = false;
+      if (initialized == false)
+        {
+          /* Input enable */
+
+          cxd56_gpio_config(MMCSD_DETECT, true);
+
+          initialized = true;
+        }
+
+      /* MMCSD_DETECT is mapping to SD Card detect pin
+       * MMCSD_DETECT = 0: Inserted
+       * MMCSD_DETECT = 1: Removed
+       */
+      return cxd56_gpio_read(MMCSD_DETECT) ? 0 : SPI_STATUS_PRESENT;
+    }
+#  endif
+  return 0;
+}
+#endif
+
+#ifdef CONFIG_CXD56_SPI5
+void cxd56_spi5select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
+{
+  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
+}
+
+uint8_t cxd56_spi5status(FAR struct spi_dev_s *dev, uint32_t devid)
 {
   return 0;
 }

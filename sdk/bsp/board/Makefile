@@ -165,4 +165,24 @@ ifeq ($(CONFIG_VIDEO_ISX012),y)
 CSRCS += cxd56_isx012.c
 endif
 
+ifeq ($(CONFIG_CXD56_AUDIO), y)
+CSRCS += cxd56_audio.c
+endif
+
+ifeq ($(CONFIG_CXD56_SPISD),y)
+CSRCS += cxd56_spisd.c
+endif
+
+ifeq ($(CONFIG_ARCH_LEDS),y)
+CSRCS += cxd56_autoleds.c
+else
+ifeq ($(CONFIG_USERLED),y)
+CSRCS += cxd56_userleds.c
+endif
+endif
+
+ifeq ($(CONFIG_ARCH_BUTTONS),y)
+CSRCS += cxd56_buttons.c
+endif
+
 include $(SDKDIR)/bsp/scripts/Board.mk

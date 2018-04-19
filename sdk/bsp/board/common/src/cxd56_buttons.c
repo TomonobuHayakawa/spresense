@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/spresense/src/cxd56_userleds.c
+ * bsp/board/common/src/cxd56_buttons.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -40,66 +40,60 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include <debug.h>
+#include <nuttx/arch.h>
+#include <nuttx/board.h>
+#include <nuttx/irq.h>
 
 #include <arch/board/board.h>
 
-#ifdef CONFIG_USERLED_LOWER
-#include <nuttx/leds/userled.h>
-#endif
-
 #include "cxd56_gpio.h"
+#include "cxd56_gpioint.h"
 #include "cxd56_pinconfig.h"
 
-#ifndef CONFIG_ARCH_LEDS
+#ifdef CONFIG_ARCH_BUTTONS
 
 /****************************************************************************
  * Pre-processor Definitions
- ****************************************************************************/
-
-#define GPIO_LED1           (PIN_PWM0)
-#define GPIO_LED2           (PIN_PWM1)
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-/****************************************************************************
- * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
+/* Below functions are template to support the Board button for NuttX original
+ * feature. If you support the feature, copy this file into your board
+ * directory and implement the contents.
+ */
+
 /****************************************************************************
- * Name: board_userled_initialize
+ * Name: board_button_initialize
  ****************************************************************************/
 
-void board_userled_initialize(void)
+void board_button_initialize(void)
 {
-  cxd56_gpio_config(GPIO_LED1, false);
-  cxd56_gpio_config(GPIO_LED2, false);
 }
 
 /****************************************************************************
- * Name: board_userled
+ * Name: board_buttons
  ****************************************************************************/
 
-void board_userled(int led, bool ledon)
+uint32_t board_buttons(void)
 {
-  uint32_t pin = (led == BOARD_LED1 ? GPIO_LED1 : GPIO_LED2);
-  cxd56_gpio_write(pin, ledon);
+  uint8_t ret = 0;
+  return ret;
 }
 
 /****************************************************************************
- * Name: board_userled_all
+ * Name: board_button_irq
  ****************************************************************************/
 
-void board_userled_all(uint8_t ledset)
+#ifdef CONFIG_ARCH_IRQBUTTONS
+int board_button_irq(int id, xcpt_t irqhandler, FAR void *arg)
 {
-  cxd56_gpio_write(GPIO_LED1, (bool)(ledset & BOARD_LED1_BIT));
-  cxd56_gpio_write(GPIO_LED2, (bool)(ledset & BOARD_LED2_BIT));
+  return OK;
 }
+#endif
 
-#endif /* !CONFIG_ARCH_LEDS */
+#endif /* CONFIG_ARCH_BUTTONS */

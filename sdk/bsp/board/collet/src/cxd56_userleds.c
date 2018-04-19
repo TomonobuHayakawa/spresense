@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/collet/src/cxd56_userleds.c
+ * bsp/board/collet/src/cxd56_userleds.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,7 +36,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -58,14 +58,6 @@
  ****************************************************************************/
 
 #define GPIO_LED1           (PIN_PWM2)
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
 
 /****************************************************************************
  * Public Functions

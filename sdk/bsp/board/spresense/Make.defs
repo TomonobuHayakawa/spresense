@@ -1,7 +1,7 @@
 ############################################################################
 # bsp/board/spresense/Make.defs
 #
-#   Copyright (C) 2017 Sony Corporation. All rights reserved.
+#   Copyright 2017 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -32,7 +32,7 @@
 #
 ############################################################################
 
-VPATH += spresense/src
+VPATH   += spresense/src
 DEPPATH += --dep-path spresense/src
 
 CSRCS += spresense_main.c
@@ -42,31 +42,7 @@ CSRCS += cxd56_appinit.c
 CSRCS += cxd56_power.c
 endif
 
-ifeq ($(CONFIG_ARCH_LEDS),y)
-CSRCS += cxd56_autoleds.c
-else
-ifeq ($(CONFIG_USERLED),y)
-CSRCS += cxd56_userleds.c
-endif
-endif
-
-ifeq ($(CONFIG_ARCH_BUTTONS),y)
-CSRCS += cxd56_buttons.c
-endif
-
-ifeq ($(CONFIG_CXD56_AUDIO), y)
-CSRCS += cxd56_audio.c
-endif
-
-ifeq ($(CONFIG_IOEXPANDER_TCA64XX),y)
-CSRCS += cxd56_tca6416.c
-endif
-
 ifeq ($(CONFIG_CXD56_SDIO),y)
 CSRCS += cxd56_sdcard.c
-endif
-
-ifeq ($(CONFIG_CXD56_SPISD),y)
-CSRCS += cxd56_spisd.c
 endif
 

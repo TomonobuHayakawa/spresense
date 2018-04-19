@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/collet/src/cxd56_autoleds.c
+ * bsp/board/common/src/cxd56_autoleds.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -54,17 +54,14 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define GPIO_LED1           (PIN_PWM2)
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-static bool g_ncstate;
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
+/* Below functions are template to support the Board LED for NuttX original
+ * debug feature. If you support the feature, copy this file into your board
+ * directory and implement the contents.
+ */
 
 /****************************************************************************
  * Name: board_autoled_initialize
@@ -72,7 +69,6 @@ static bool g_ncstate;
 
 void board_autoled_initialize(void)
 {
-  cxd56_gpio_config(GPIO_LED1, false);
 }
 
 /****************************************************************************
@@ -81,25 +77,6 @@ void board_autoled_initialize(void)
 
 void board_autoled_on(int led)
 {
-  bool val;
-
-  switch (led)
-    {
-    case 0:
-    case 2:
-      val = false;
-      break;
-
-    case 1:
-      val       = true;
-      g_ncstate = true;
-      break;
-
-    default:
-      return;
-    }
-
-  cxd56_gpio_write(GPIO_LED1, val);
 }
 
 /****************************************************************************
@@ -108,24 +85,6 @@ void board_autoled_on(int led)
 
 void board_autoled_off(int led)
 {
-  bool val;
-
-  switch (led)
-    {
-    case 0:
-    case 1:
-      val = true;
-      break;
-
-    case 2:
-      val = g_ncstate;
-      break;
-
-    default:
-      return;
-    }
-
-  cxd56_gpio_write(GPIO_LED1, val);
 }
 
 #endif /* CONFIG_ARCH_LEDS */

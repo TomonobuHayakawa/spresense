@@ -161,8 +161,9 @@ enum board_power_device {
   POWER_IMAGE_SENSOR    = PMIC_NONE,
 };
 
-/* CXD5247 power control definitions ***************************************/
+/* CXD5247 audio control definitions ***************************************/
 
+#define CXD5247_XRST  PIN_SPI3_CS2_X
 #define CXD5247_AVDD  (0x01)
 #define CXD5247_DVDD  (0x02)
 

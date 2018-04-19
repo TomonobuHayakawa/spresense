@@ -1,7 +1,7 @@
 /****************************************************************************
- * config/corvo/src/cxd56_audio.c
+ * bsp/board/spresense/src/cxd56_audio.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,7 +36,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -59,28 +59,8 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* audio aca reset control */
-
-#define ACA_XRESET (PIN_SPI3_CS2_X)
-
 #define MUTE_OFF_DELAY  (1250 * 1000) /* ms */
 #define MUTE_ON_DELAY   (150 * 1000) /* ms */
-
-/****************************************************************************
- * Private Types
- ****************************************************************************/
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
 
 /****************************************************************************
  * Public Functions
@@ -105,7 +85,7 @@ int board_aca_power_control(int target, bool en)
     {
       /* gpio configuration (output disabled yet) */
 
-      cxd56_gpio_config(ACA_XRESET, false);
+      cxd56_gpio_config(CXD5247_XRST, false);
 
       first = 0;
     }
@@ -115,7 +95,7 @@ int board_aca_power_control(int target, bool en)
       if (!dvdd_on && (target & CXD5247_DVDD))
         {
           /* reset assert */
-          cxd56_gpio_write(ACA_XRESET, false);
+          cxd56_gpio_write(CXD5247_XRST, false);
         }
 
       /* power on */
@@ -130,7 +110,7 @@ int board_aca_power_control(int target, bool en)
           dvdd_on = true;
 
           /* reset release */
-          cxd56_gpio_write(ACA_XRESET, true);
+          cxd56_gpio_write(CXD5247_XRST, true);
         }
     }
   else
@@ -138,7 +118,7 @@ int board_aca_power_control(int target, bool en)
       if (dvdd_on && (target & CXD5247_DVDD))
         {
           /* reset assert */
-          cxd56_gpio_write(ACA_XRESET, false);
+          cxd56_gpio_write(CXD5247_XRST, false);
         }
 
       /* power off */

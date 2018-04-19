@@ -44,6 +44,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <debug.h>
+#include <semaphore.h>
 
 #include <nuttx/arch.h>
 
@@ -376,6 +377,12 @@ int board_reset(int status)
 #ifdef CONFIG_BOARDCTL_POWEROFF
 int board_power_off(int status)
 {
+  /* Power off explicitly because GPOs are kept during deep sleeping */
+
+  board_power_control(PMIC_GPO(0) | PMIC_GPO(1) | PMIC_GPO(2) | PMIC_GPO(3) |
+                      PMIC_GPO(4) | PMIC_GPO(5) | PMIC_GPO(6) | PMIC_GPO(7),
+                      false);
+
   /* Enter deep sleep mode */
 
   up_pm_sleep(PM_SLEEP_DEEP); /* this function never returns */

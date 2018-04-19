@@ -1,7 +1,7 @@
 /****************************************************************************
- * configs/corvo/src/cxd56_buttons.c
+ * bsp/board/corvo/src/cxd56_buttons.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -82,22 +82,7 @@ static xcpt_t g_buttonisr[BOARD_NUM_BUTTONS];
 #endif
 
 /****************************************************************************
- * Private Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-/****************************************************************************
  * Name: board_button_initialize
- *
- * Description:
- *   board_button_initialize() must be called to initialize button resources.  After
- *   that, board_buttons() may be called to collect the current state of all
- *   buttons or board_button_irq() may be called to register button interrupt
- *   handlers.
- *
  ****************************************************************************/
 
 void board_button_initialize(void)
@@ -108,18 +93,6 @@ void board_button_initialize(void)
 
 /****************************************************************************
  * Name: board_buttons
- *
- * Description:
- *   board_button_initialize() must be called to initialize button resources.  After
- *   that, board_buttons() may be called to collect the current state of all
- *   buttons.
- *
- *   board_buttons() may be called at any time to harvest the state of every
- *   button.  The state of the buttons is returned as a bitset with one
- *   bit corresponding to each button:  If the bit is set, then the button
- *   is pressed.  See the BOARD_BUTTON_*_BIT and BOARD_JOYSTICK_*_BIT
- *   definitions in board.h for the meaning of each bit.
- *
  ****************************************************************************/
 
 uint32_t board_buttons(void)
@@ -147,24 +120,7 @@ uint32_t board_buttons(void)
 }
 
 /****************************************************************************
- * Button support.
- *
- * Description:
- *   board_button_initialize() must be called to initialize button resources.  After
- *   that, board_button_irq() may be called to register button interrupt handlers.
- *
- *   board_button_irq() may be called to register an interrupt handler that will
- *   be called when a button is depressed or released.  The ID value is a
- *   button enumeration value that uniquely identifies a button resource. See the
- *   BOARD_BUTTON_* and BOARD_JOYSTICK_* definitions in board.h for the meaning
- *   of enumeration values.  The previous interrupt handler address is returned
- *   (so that it may restored, if so desired).
- *
- *   Note that board_button_irq() also enables button interrupts.  Button
- *   interrupts will remain enabled after the interrupt handler is attached.
- *   Interrupts may be disabled (and detached) by calling board_button_irq with
- *   irqhandler equal to NULL.
- *
+ * Name: board_button_irq
  ****************************************************************************/
 
 #ifdef CONFIG_ARCH_IRQBUTTONS
