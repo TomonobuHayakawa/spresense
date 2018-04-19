@@ -35,9 +35,9 @@
 #ifndef __BSP_SRC_CXD56_CISIF_H
 #define __BSP_SRC_CXD56_CISIF_H
 
-/************************************************************************************
+/****************************************************************************
  * Public Types
- ************************************************************************************/
+ ****************************************************************************/
 
 typedef void (*notify_callback_t)(uint8_t code, uint32_t size, uint32_t addr);
 typedef void (*comp_callback_t)(uint8_t code, uint8_t last_frame, uint32_t size, uint32_t addr);
@@ -109,14 +109,26 @@ extern "C"
 #define EXTERN extern
 #endif
 
-/************************************************************************************
+/****************************************************************************
  * Public Function Prototypes
- ************************************************************************************/
+ ****************************************************************************/
 
-int cxd56_cisifinit(cisif_param_t *pCisifPar);
-int cxd56_cisifcaptureframe(cisif_sarea_t *yuv_area, cisif_sarea_t *jpg_area);
-int cxd56_cisifstartmonitoring(cisif_bank_sarea_t *yuv_area, cisif_bank_sarea_t *jpg_area);
+int cxd56_cisifinit(void);
+int cxd56_cisiffinalize(void);
+int cxd56_cisifcaptureframe(
+  cisif_param_t *param,
+  cisif_sarea_t *yuv_sarea,
+  cisif_sarea_t *jpg_sarea);
+int cxd56_cisifstartmonitoring(
+  cisif_param_t      *param,
+  cisif_bank_sarea_t *yuv_area,
+  cisif_bank_sarea_t *jpg_area);
 int cxd56_cisifstopmonitoring(void);
+int cxd56_cisifcontinuouscapture(
+  cisif_param_t *param,
+  cisif_sarea_t *sarea,
+  uint32_t capnum,
+  uint32_t interval);
 
 #undef EXTERN
 #if defined(__cplusplus)

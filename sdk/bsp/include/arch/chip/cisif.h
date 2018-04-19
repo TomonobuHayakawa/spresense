@@ -99,23 +99,36 @@ struct cisif_bank_sarea_s
 typedef struct cisif_bank_sarea_s cisif_bank_sarea_t;
 
 #ifndef __ASSEMBLY__
-#  undef EXTERN
-#  if defined(__cplusplus)
-#    define EXTERN extern "C"
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
 extern "C"
 {
-#  else
-#    define EXTERN extern
-#  endif
+#else
+#define EXTERN extern
+#endif
 
-/************************************************************************************
+/****************************************************************************
  * Public Function Prototypes
- ************************************************************************************/
+ ****************************************************************************/
 
-int cxd56_cisifinit(cisif_param_t *pCisifPar);
-int cxd56_cisifcaptureframe(cisif_sarea_t *yuv_area, cisif_sarea_t *jpg_area);
-int cxd56_cisifstartmonitoring(cisif_bank_sarea_t *yuv_area, cisif_bank_sarea_t *jpg_area);
+int cxd56_cisifinit(void);
+int cxd56_cisiffinalize(void);
+int cxd56_cisifcaptureframe(
+  cisif_param_t *param,
+  cisif_sarea_t *yuv_sarea,
+  cisif_sarea_t *jpg_sarea);
+int cxd56_cisifstartmonitoring(
+  cisif_param_t      *param,
+  cisif_bank_sarea_t *yuv_area,
+  cisif_bank_sarea_t *jpg_area);
 int cxd56_cisifstopmonitoring(void);
+int cxd56_cisifcontinuouscapture(
+  cisif_param_t *param,
+  cisif_sarea_t *sarea,
+  uint32_t capnum,
+  uint32_t interval);
 
 #  undef EXTERN
 #  if defined(__cplusplus)

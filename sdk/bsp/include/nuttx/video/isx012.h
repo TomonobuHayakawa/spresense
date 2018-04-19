@@ -58,11 +58,16 @@
 
 #define IMGIOC_SETSTATE   _IMGIOC(0x0001)
 #define IMGIOC_SETMODE    _IMGIOC(0x0002)
+#define IMGIOC_SETMODEP   _IMGIOC(0x0003)
+#define IMGIOC_READREG    _IMGIOC(0x0004)
+#define IMGIOC_WRITEREG   _IMGIOC(0x0005)
+#define IMGIOC_MONIREF    _IMGIOC(0x0006)
 
 enum isx012_state_e {
   STATE_ISX012_PRESLEEP,
   STATE_ISX012_SLEEP,
   STATE_ISX012_ACTIVE,
+  STATE_ISX012_POWEROFF,
 };
 
 typedef enum isx012_state_e isx012_state_t;
@@ -94,6 +99,7 @@ typedef enum isx012_rate_e isx012_rate_t;
 enum isx012_mode_e {
   MODE_ISX012_MONITORING,
   MODE_ISX012_CAPTURE,
+  MODE_ISX012_HALFRELEASE,
 };
 
 typedef enum isx012_mode_e isx012_mode_t;
@@ -132,6 +138,14 @@ struct isx012_dev_s
 };
 
 typedef struct isx012_dev_s isx012_dev_t;
+
+struct isx012_reg_s {
+  uint16_t regaddr;
+  uint16_t regval;
+  uint8_t  regsize;
+};
+
+typedef struct isx012_reg_s isx012_reg_t;
 
 /****************************************************************************
  * Public Data
