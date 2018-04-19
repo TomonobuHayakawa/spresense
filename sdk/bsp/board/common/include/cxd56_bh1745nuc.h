@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_sensor_bmi160.h
+ * bsp/board/common/include/cxd56_bh1745nuc.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BMI160_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BMI160_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1745NUC_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1745NUC_H
 
 /****************************************************************************
  * Included Files
@@ -65,15 +65,15 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_bmi160_initialize
+ * Name: board_bh1745nuc_initialize
  *
  * Description:
- *   Initialize BMI160 spi or i2c driver and register the BMI160 device.
+ *   Initialize BH1745NUC i2c driver and register the BH1745NUC device.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_BMI160
-int board_bmi160_initialize(int bus);
+#ifdef CONFIG_BH1745NUC
+int board_bh1745nuc_initialize(FAR const char *devpath, int bus);
 #endif
 
 #undef EXTERN
@@ -82,4 +82,4 @@ int board_bmi160_initialize(int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BMI160_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_BH1745NUC_H */

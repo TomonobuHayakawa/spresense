@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_sensor_bm1422gmv.h
+ * bsp/board/common/include/cxd56_ak09912.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BM1422GMV_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BM1422GMV_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_AK09912_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_AK09912_H
 
 /****************************************************************************
  * Included Files
@@ -65,15 +65,15 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_bm1422gmv_initialize
+ * Name: board_ak09912_initialize
  *
  * Description:
- *   Initialize BM1422GMV i2c driver and register the BM1422GMV device.
+ *   Initialize AK09912 i2c driver and register the AK09912 device.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_BM1422GMV
-int board_bm1422gmv_initialize(FAR const char *devpath, int bus);
+#ifdef CONFIG_AK09912
+int board_ak09912_initialize(FAR const char *devpath, int bus);
 #endif
 
 #undef EXTERN
@@ -82,4 +82,4 @@ int board_bm1422gmv_initialize(FAR const char *devpath, int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BM1422GMV_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_AK09912_H */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_sensor_kx022.h
+ * bsp/board/common/include/cxd56_apds9930.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_KX022_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_KX022_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9930_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9930_H
 
 /****************************************************************************
  * Included Files
@@ -65,15 +65,15 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_kx022_initialize
+ * Name: board_apds9930_initialize
  *
  * Description:
- *   Initialize KX022 i2c driver and register the KX022 device.
+ *   Initialize APDS9930 i2c driver and register the APDS9930 device.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_KX022
-int board_kx022_initialize(FAR const char *devpath, int bus);
+#ifdef CONFIG_APDS9930
+int board_apds9930_initialize(int bus);
 #endif
 
 #undef EXTERN
@@ -82,4 +82,4 @@ int board_kx022_initialize(FAR const char *devpath, int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_KX022_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9930_H */

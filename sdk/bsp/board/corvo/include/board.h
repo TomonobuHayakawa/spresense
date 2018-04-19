@@ -51,7 +51,7 @@
 #include <arch/board/common/cxd56_audio.h>
 #include <arch/board/common/cxd56_flash.h>
 #include <arch/board/common/cxd56_emmcdev.h>
-#include <arch/board/common/cxd56_sensor.h>
+#include <arch/board/common/cxd56_sensors.h>
 #include <arch/board/common/cxd56_isx012.h>
 #include <arch/board/common/cxd56_bcm20706.h>
 

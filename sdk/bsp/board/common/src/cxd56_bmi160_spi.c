@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_bmp280.c
+ * bsp/board/common/src/cxd56_bmi160_spi.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -43,106 +43,89 @@
 #include <errno.h>
 
 #include <nuttx/board.h>
-
-#include <nuttx/sensors/bmp280.h>
-#ifdef CONFIG_BMP280_SCU
+#include <nuttx/spi/spi.h>
+#include <nuttx/sensors/bmi160.h>
+#ifdef CONFIG_BMI160_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
-#ifdef CONFIG_BMP280_SCU
-#  ifdef CONFIG_CXD56_DECI_PRESS
-#    define PRESS_NR_SEQS 3
-#  else
-#    define PRESS_NR_SEQS 1
-#  endif
-#  ifdef CONFIG_CXD56_DECI_TEMP
-#    define TEMP_NR_SEQS 3
-#  else
-#    define TEMP_NR_SEQS 1
-#  endif
+#include "cxd56_spi.h"
+
+#ifdef CONFIG_CXD56_DECI_GYRO
+#  define GYRO_NR_SEQS 3
+#else
+#  define GYRO_NR_SEQS 1
 #endif
 
-#include "cxd56_i2c.h"
+#ifdef CONFIG_CXD56_DECI_ACCEL
+#  define ACCEL_NR_SEQS 3
+#else
+#  define ACCEL_NR_SEQS 1
+#endif
 
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BMP280)
+#if defined(CONFIG_CXD56_SPI) && defined(CONFIG_BMI160)
 
-#ifdef CONFIG_BMP280_SCU
-int board_bmp280_initialize(int bus)
+int board_bmi160_initialize(int bus)
 {
-  int i;
   int ret;
-  FAR struct i2c_master_s *i2c;
+  FAR struct spi_dev_s *spi;
 
-  sninfo("Initializing BMP280..\n");
+  sninfo("Initializing BMI160..\n");
 
-  /* Initialize i2c deivce */
+  /* Initialize spi deivce */
 
-  i2c = cxd56_i2cbus_initialize(bus);
-  if (!i2c)
+  spi = cxd56_spibus_initialize(bus);
+  if (!spi)
     {
-      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      snerr("ERROR: Failed to initialize spi%d.\n", bus);
       return -ENODEV;
     }
 
-  ret = bmp280_init(i2c, bus);
+#ifdef CONFIG_BMI160_SCU
+  int i;
+
+  ret = bmi160_init(spi);
   if (ret < 0)
     {
-      snerr("Error initialize BMP280.\n");
+      snerr("Error initialize BMI160\n");
       return ret;
     }
 
   /* Create char devices for each FIFOs */
 
-  for (i = 0; i < PRESS_NR_SEQS; i++)
+  for (i = 0; i < GYRO_NR_SEQS; i++)
     {
-      ret = bmp280press_register("/dev/press", i, i2c, bus);
+      ret = bmi160gyro_register("/dev/gyro", i, spi);
       if (ret < 0)
         {
-          snerr("Error registering pressure. %d\n", ret);
+          snerr("Error registering gyroscope. %d\n", ret);
           return ret;
         }
     }
 
   /* Create char devices for each FIFOs */
 
-  for (i = 0; i < TEMP_NR_SEQS; i++)
+  for (i = 0; i < ACCEL_NR_SEQS; i++)
     {
-      ret = bmp280temp_register("/dev/temp", i, i2c, bus);
+      ret = bmi160accel_register("/dev/accel", i, spi);
       if (ret < 0)
         {
-          snerr("Error registering temperature. %d\n", ret);
+          snerr("Error registering accelerometer. %d\n", ret);
           return ret;
         }
     }
 
-  return ret;
-}
-#else
-int board_bmp280_initialize(int bus)
-{
-  int ret;
-  FAR struct i2c_master_s *i2c;
-
-  snerr("Initializing BMP280..\n");
-
-  /* Initialize i2c deivce */
-
-  i2c = cxd56_i2cbus_initialize(bus);
-  if (!i2c)
-    {
-      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
-      return -ENODEV;
-    }
-
-  ret = bmp280_register("/dev/press0", i2c);
+#else /* !CONFIG_BMI160_SCU */
+  ret = bmi160_register("/dev/accel0", spi);
   if (ret < 0)
     {
-      snerr("Error registering BMP280\n");
+      snerr("Error registering BMI160\n");
     }
+
+#endif
 
   return ret;
 }
-#endif
 
 #endif
 

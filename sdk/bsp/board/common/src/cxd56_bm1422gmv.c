@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_bmi160_i2c.c
+ * bsp/board/common/src/cxd56_bm1422gmv.c
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -43,33 +43,32 @@
 #include <errno.h>
 
 #include <nuttx/board.h>
-#include <nuttx/sensors/bmi160.h>
-#ifdef CONFIG_BMI160_SCU
+
+#include <nuttx/sensors/bm1422gmv.h>
+#ifdef CONFIG_BM1422GMV_SCU
 #include <arch/chip/cxd56_scu.h>
+#endif
+
+#ifdef CONFIG_BM1422GMV_SCU
+#  ifdef CONFIG_CXD56_DECI_BM1422GMV
+#    define BM1422GMV_PATH_CNT 3
+#  else
+#    define BM1422GMV_PATH_CNT 1
+#  endif
 #endif
 
 #include "cxd56_i2c.h"
 
-#ifdef CONFIG_CXD56_DECI_GYRO
-#  define GYRO_NR_SEQS 3
-#else
-#  define GYRO_NR_SEQS 1
-#endif
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BM1422GMV)
 
-#ifdef CONFIG_CXD56_DECI_ACCEL
-#  define ACCEL_NR_SEQS 3
-#else
-#  define ACCEL_NR_SEQS 1
-#endif
-
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BMI160)
-
-int board_bmi160_initialize(int bus)
+#ifdef CONFIG_BM1422GMV_SCU
+int board_bm1422gmv_initialize(FAR const char *devpath, int bus)
 {
+  int id = 0;
   int ret;
   FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing BMI160..\n");
+  sninfo("Initializing BM1422GMV...\n");
 
   /* Initialize i2c deivce */
 
@@ -80,51 +79,27 @@ int board_bmi160_initialize(int bus)
       return -ENODEV;
     }
 
-#ifdef CONFIG_BMI160_SCU
-  int i;
-
-  ret = bmi160_init(i2c, bus);
+  ret = bm1422gmv_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize BMI160\n");
+      snerr("Error initialize BM1422GMV.\n");
       return ret;
     }
 
-  /* Create char devices for each FIFOs */
+  /* Register devices for each FIFOs at I2C bus */
 
-  for (i = 0; i < GYRO_NR_SEQS; i++)
+  for (id = 0; id < BM1422GMV_PATH_CNT; id++)
     {
-      ret = bmi160gyro_register("/dev/gyro", i, i2c, bus);
+      ret = bm1422gmv_register(devpath, id, i2c, bus);
       if (ret < 0)
         {
-          snerr("Error registering gyroscope. %d\n", ret);
+          snerr("Error registering BM1422GMV.\n");
           return ret;
         }
     }
-
-  /* Create char devices for each FIFOs */
-
-  for (i = 0; i < ACCEL_NR_SEQS; i++)
-    {
-      ret = bmi160accel_register("/dev/accel", i, i2c, bus);
-      if (ret < 0)
-        {
-          snerr("Error registering accelerometer. %d\n", ret);
-          return ret;
-        }
-    }
-
-#else /* !CONFIG_BMI160_SCU */
-  ret = bmi160_register("/dev/accel0", i2c);
-  if (ret < 0)
-    {
-      snerr("Error registering BMI160\n");
-    }
-
-#endif
 
   return ret;
 }
+#endif /* CONFIG_BM1422GMV_SCU */
 
-#endif
-
+#endif /* CONFIG_CXD56_I2C && CONFIG_BM1422GMV */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_sensor_lt1pa01.h
+ * bsp/board/common/include/cxd56_rpr0521rs.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_LT1PA01_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_LT1PA01_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_RPR0521RS_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_RPR0521RS_H
 
 /****************************************************************************
  * Included Files
@@ -65,15 +65,15 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_lt1pa01_initialize
+ * Name: board_rpr0521rs_initialize
  *
  * Description:
- *   Initialize LT1PA01 i2c driver and register the LT1PA01 device.
+ *   Initialize RPR0521RS i2c driver and register the RPR0521RS device.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_LT1PA01
-int board_lt1pa01_initialize(int bus);
+#ifdef CONFIG_RPR0521RS
+int board_rpr0521rs_initialize(int bus);
 #endif
 
 #undef EXTERN
@@ -82,4 +82,4 @@ int board_lt1pa01_initialize(int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_LT1PA01_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_RPR0521RS_H */

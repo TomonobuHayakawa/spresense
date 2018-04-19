@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_bh1721fvc.c
+ * bsp/board/common/src/cxd56_bm1383glv.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
@@ -44,22 +44,22 @@
 
 #include <nuttx/board.h>
 
-#include <nuttx/sensors/bh1721fvc.h>
-#ifdef CONFIG_BH1721FVC_SCU
+#include <nuttx/sensors/bm1383glv.h>
+#ifdef CONFIG_BM1383GLV_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
 
 #include "cxd56_i2c.h"
 
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BH1721FVC)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BM1383GLV)
 
-#ifdef CONFIG_BH1721FVC_SCU
-int board_bh1721fvc_initialize(FAR const char *devpath, int bus)
+#ifdef CONFIG_BM1383GLV_SCU
+int board_bm1383glv_initialize(FAR const char *devpath, int bus)
 {
   int ret;
   FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing BH1721FVC...\n");
+  sninfo("Initializing BM1383GLV...\n");
 
   /* Initialize i2c deivce */
 
@@ -70,24 +70,24 @@ int board_bh1721fvc_initialize(FAR const char *devpath, int bus)
       return -ENODEV;
     }
 
-  ret = bh1721fvc_init(i2c, bus);
+  ret = bm1383glv_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize BH1721FVC.\n");
+      snerr("Error initialize BM1383GLV.\n");
       return ret;
     }
 
   /* Register devices for each FIFOs at I2C bus */
 
-  ret = bh1721fvc_register(devpath, 0, i2c, bus);
+  ret = bm1383glv_register(devpath, 0, i2c, bus);
   if (ret < 0)
     {
-      snerr("Error registering BH1721FVC.\n");
+      snerr("Error registering BM1383GLV.\n");
       return ret;
     }
 
   return ret;
 }
-#endif /* CONFIG_BH1721FVC_SCU */
+#endif /* CONFIG_BM1383GLV_SCU */
 
-#endif /* CONFIG_CXD56_I2C && CONFIG_BH1721FVC */
+#endif /* CONFIG_CXD56_I2C && CONFIG_CXD56_I2C0 && CONFIG_BM1383GLV */

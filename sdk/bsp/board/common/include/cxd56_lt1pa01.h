@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_sensor_bmp280.h
+ * bsp/board/common/include/cxd56_lt1pa01.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BMP280_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BMP280_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_LT1PA01_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_LT1PA01_H
 
 /****************************************************************************
  * Included Files
@@ -65,15 +65,15 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_bmp280_initialize
+ * Name: board_lt1pa01_initialize
  *
  * Description:
- *   Initialize BMP280 i2c driver and register the BMP280 device.
+ *   Initialize LT1PA01 i2c driver and register the LT1PA01 device.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_BMP280
-int board_bmp280_initialize(int bus);
+#ifdef CONFIG_LT1PA01
+int board_lt1pa01_initialize(int bus);
 #endif
 
 #undef EXTERN
@@ -82,4 +82,4 @@ int board_bmp280_initialize(int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BMP280_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_LT1PA01_H */

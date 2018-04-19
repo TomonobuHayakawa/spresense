@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_bm1422gmv.c
+ * bsp/board/common/src/cxd56_lt1pa01.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
@@ -44,31 +44,22 @@
 
 #include <nuttx/board.h>
 
-#include <nuttx/sensors/bm1422gmv.h>
-#ifdef CONFIG_BM1422GMV_SCU
+#include <nuttx/sensors/lt1pa01.h>
+#ifdef CONFIG_LT1PA01_SCU
 #include <arch/chip/cxd56_scu.h>
-#endif
-
-#ifdef CONFIG_BM1422GMV_SCU
-#  ifdef CONFIG_CXD56_DECI_BM1422GMV
-#    define BM1422GMV_PATH_CNT 3
-#  else
-#    define BM1422GMV_PATH_CNT 1
-#  endif
 #endif
 
 #include "cxd56_i2c.h"
 
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BM1422GMV)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_LT1PA01)
 
-#ifdef CONFIG_BM1422GMV_SCU
-int board_bm1422gmv_initialize(FAR const char *devpath, int bus)
+#ifdef CONFIG_LT1PA01_SCU
+int board_lt1pa01_initialize(int bus)
 {
-  int id = 0;
   int ret;
   FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing BM1422GMV...\n");
+  sninfo("Initializing LT1PA01...\n");
 
   /* Initialize i2c deivce */
 
@@ -79,27 +70,31 @@ int board_bm1422gmv_initialize(FAR const char *devpath, int bus)
       return -ENODEV;
     }
 
-  ret = bm1422gmv_init(i2c, bus);
+  ret = lt1pa01_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize BM1422GMV.\n");
+      snerr("Error initialize LT1PA01.\n");
       return ret;
     }
 
   /* Register devices for each FIFOs at I2C bus */
 
-  for (id = 0; id < BM1422GMV_PATH_CNT; id++)
+  ret = lt1pa01als_register("/dev/light", 0, i2c, bus);
+  if (ret < 0)
     {
-      ret = bm1422gmv_register(devpath, id, i2c, bus);
-      if (ret < 0)
-        {
-          snerr("Error registering BM1422GMV.\n");
-          return ret;
-        }
+      snerr("Error registering LT1PA01[ALS].\n");
+      return ret;
+    }
+
+  ret = lt1pa01prox_register("/dev/proximity", 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering LT1PA01[PS].\n");
+      return ret;
     }
 
   return ret;
 }
-#endif /* CONFIG_BM1422GMV_SCU */
+#endif /* CONFIG_LT1PA01_SCU */
 
-#endif /* CONFIG_CXD56_I2C && CONFIG_BM1422GMV */
+#endif /* CONFIG_CXD56_I2C && CONFIG_LT1PA01 */

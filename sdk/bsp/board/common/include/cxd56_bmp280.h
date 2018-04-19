@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_kx022.c
+ * bsp/board/common/include/cxd56_bmp280.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,75 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_BMP280_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_BMP280_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
 #include <sdk/config.h>
 
-#include <stdio.h>
-#include <debug.h>
-#include <errno.h>
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-#include <nuttx/board.h>
+#ifndef __ASSEMBLY__
 
-#include <nuttx/sensors/kx022.h>
-#ifdef CONFIG_KX022_SCU
-#include <arch/chip/cxd56_scu.h>
-#endif
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
-#ifdef CONFIG_KX022_SCU
-#  ifdef CONFIG_CXD56_DECI_KX022
-#    define KX022_FIFO_CNT 3
-#  else
-#    define KX022_FIFO_CNT 1
-#  endif
-#endif
-
-#include "cxd56_i2c.h"
-
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_KX022)
-
-#ifdef CONFIG_KX022_SCU
-int board_kx022_initialize(FAR const char *devpath, int bus)
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
 {
-  int fifoid = 0;
-  int ret;
-  FAR struct i2c_master_s *i2c;
+#else
+#define EXTERN extern
+#endif
 
-  sninfo("Initializing KX022...\n");
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-  /* Initialize i2c deivce */
+/****************************************************************************
+ * Name: board_bmp280_initialize
+ *
+ * Description:
+ *   Initialize BMP280 i2c driver and register the BMP280 device.
+ *
+ ****************************************************************************/
 
-  i2c = cxd56_i2cbus_initialize(bus);
-  if (!i2c)
-    {
-      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
-      return -ENODEV;
-    }
+#ifdef CONFIG_BMP280
+int board_bmp280_initialize(int bus);
+#endif
 
-  ret = kx022_init(i2c, bus);
-  if (ret < 0)
-    {
-      snerr("Error initialize KX022.\n");
-      return ret;
-    }
-
-  /* Register devices for each FIFOs at I2C bus */
-
-  for (fifoid = 0; fifoid < KX022_FIFO_CNT; fifoid++)
-    {
-      ret = kx022_register(devpath, fifoid, i2c, bus);
-      if (ret < 0)
-        {
-          snerr("Error registering KX022.\n");
-          return ret;
-        }
-    }
-
-  return ret;
+#undef EXTERN
+#if defined(__cplusplus)
 }
-#endif /* CONFIG_KX022_SCU */
+#endif
 
-#endif /* CONFIG_CXD56_I2C && CONFIG_KX022 */
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_BMP280_H */

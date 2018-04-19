@@ -264,7 +264,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_SENSORS
-  board_sensor_initialize();
+  board_sensors_initialize();
 #endif
 
 #ifdef CONFIG_CXD56_ADC

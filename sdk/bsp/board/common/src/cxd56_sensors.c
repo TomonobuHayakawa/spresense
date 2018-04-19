@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor.c
+ * bsp/board/common/src/cxd56_sensors.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -45,18 +45,18 @@
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
 #include <arch/board/board.h>
-#include <arch/board/common/cxd56_sensor_bmi160.h>
-#include <arch/board/common/cxd56_sensor_kx022.h>
-#include <arch/board/common/cxd56_sensor_bmp280.h>
-#include <arch/board/common/cxd56_sensor_bm1383glv.h>
-#include <arch/board/common/cxd56_sensor_ak09912.h>
-#include <arch/board/common/cxd56_sensor_bm1422gmv.h>
-#include <arch/board/common/cxd56_sensor_apds9930.h>
-#include <arch/board/common/cxd56_sensor_apds9960.h>
-#include <arch/board/common/cxd56_sensor_lt1pa01.h>
-#include <arch/board/common/cxd56_sensor_bh1721fvc.h>
-#include <arch/board/common/cxd56_sensor_rpr0521rs.h>
-#include <arch/board/common/cxd56_sensor_bh1745nuc.h>
+#include <arch/board/common/cxd56_bmi160.h>
+#include <arch/board/common/cxd56_kx022.h>
+#include <arch/board/common/cxd56_bmp280.h>
+#include <arch/board/common/cxd56_bm1383glv.h>
+#include <arch/board/common/cxd56_ak09912.h>
+#include <arch/board/common/cxd56_bm1422gmv.h>
+#include <arch/board/common/cxd56_apds9930.h>
+#include <arch/board/common/cxd56_apds9960.h>
+#include <arch/board/common/cxd56_lt1pa01.h>
+#include <arch/board/common/cxd56_bh1721fvc.h>
+#include <arch/board/common/cxd56_rpr0521rs.h>
+#include <arch/board/common/cxd56_bh1745nuc.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -213,14 +213,14 @@ static struct sensor_device_s sensor_device[] =
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_sensor_initialize
+ * Name: board_sensors_initialize
  *
  * Description:
- *   Perform sensor device initialization
+ *   Perform sensor devices initialization
  *
  ****************************************************************************/
 
-int board_sensor_initialize(void)
+int board_sensors_initialize(void)
 {
   int ret = 0;
   int i;

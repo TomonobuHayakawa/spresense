@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_sensor_bh1721fvc.h
+ * bsp/board/common/include/cxd56_bm1422gmv.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BH1721FVC_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BH1721FVC_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_BM1422GMV_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_BM1422GMV_H
 
 /****************************************************************************
  * Included Files
@@ -65,15 +65,15 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_bh1721fvc_initialize
+ * Name: board_bm1422gmv_initialize
  *
  * Description:
- *   Initialize BH1721FVC i2c driver and register the BH1721FVC device.
+ *   Initialize BM1422GMV i2c driver and register the BM1422GMV device.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_BH1721FVC
-int board_bh1721fvc_initialize(FAR const char *devpath, int bus);
+#ifdef CONFIG_BM1422GMV
+int board_bm1422gmv_initialize(FAR const char *devpath, int bus);
 #endif
 
 #undef EXTERN
@@ -82,4 +82,4 @@ int board_bh1721fvc_initialize(FAR const char *devpath, int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_BH1721FVC_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_BM1422GMV_H */

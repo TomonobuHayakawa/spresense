@@ -50,7 +50,7 @@
 #include <arch/board/common/cxd56_power.h>
 #include <arch/board/common/cxd56_audio.h>
 #include <arch/board/common/cxd56_flash.h>
-#include <arch/board/common/cxd56_sensor.h>
+#include <arch/board/common/cxd56_sensors.h>
 
 /****************************************************************************
  * Pre-processor Definitions

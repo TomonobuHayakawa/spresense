@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_bmi160_spi.c
+ * bsp/board/common/include/cxd56_apds9960.h
  *
- *   Copyright (C) 2016 Sony Corporation
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,100 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9960_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9960_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-#include <stdio.h>
-#include <debug.h>
-#include <errno.h>
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-#include <nuttx/board.h>
-#include <nuttx/spi/spi.h>
-#include <nuttx/sensors/bmi160.h>
-#ifdef CONFIG_BMI160_SCU
-#include <arch/chip/cxd56_scu.h>
-#endif
+#ifndef __ASSEMBLY__
 
-#include "cxd56_spi.h"
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
-#ifdef CONFIG_CXD56_DECI_GYRO
-#  define GYRO_NR_SEQS 3
-#else
-#  define GYRO_NR_SEQS 1
-#endif
-
-#ifdef CONFIG_CXD56_DECI_ACCEL
-#  define ACCEL_NR_SEQS 3
-#else
-#  define ACCEL_NR_SEQS 1
-#endif
-
-#if defined(CONFIG_CXD56_SPI) && defined(CONFIG_BMI160)
-
-int board_bmi160_initialize(int bus)
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
 {
-  int ret;
-  FAR struct spi_dev_s *spi;
-
-  sninfo("Initializing BMI160..\n");
-
-  /* Initialize spi deivce */
-
-  spi = cxd56_spibus_initialize(bus);
-  if (!spi)
-    {
-      snerr("ERROR: Failed to initialize spi%d.\n", bus);
-      return -ENODEV;
-    }
-
-#ifdef CONFIG_BMI160_SCU
-  int i;
-
-  ret = bmi160_init(spi);
-  if (ret < 0)
-    {
-      snerr("Error initialize BMI160\n");
-      return ret;
-    }
-
-  /* Create char devices for each FIFOs */
-
-  for (i = 0; i < GYRO_NR_SEQS; i++)
-    {
-      ret = bmi160gyro_register("/dev/gyro", i, spi);
-      if (ret < 0)
-        {
-          snerr("Error registering gyroscope. %d\n", ret);
-          return ret;
-        }
-    }
-
-  /* Create char devices for each FIFOs */
-
-  for (i = 0; i < ACCEL_NR_SEQS; i++)
-    {
-      ret = bmi160accel_register("/dev/accel", i, spi);
-      if (ret < 0)
-        {
-          snerr("Error registering accelerometer. %d\n", ret);
-          return ret;
-        }
-    }
-
-#else /* !CONFIG_BMI160_SCU */
-  ret = bmi160_register("/dev/accel0", spi);
-  if (ret < 0)
-    {
-      snerr("Error registering BMI160\n");
-    }
-
+#else
+#define EXTERN extern
 #endif
 
-  return ret;
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: board_apds9960_initialize
+ *
+ * Description:
+ *   Initialize APDS9960 i2c driver and register the APDS9960 device.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_APDS9960
+int board_apds9960_initialize(FAR const char *devpath, int bus);
+#endif
+
+#undef EXTERN
+#if defined(__cplusplus)
 }
-
 #endif
 
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_APDS9960_H */

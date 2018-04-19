@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_sensor_apds9930.h
+ * bsp/board/common/src/cxd56_rpr0521rs.c
  *
- *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,54 +32,69 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_APDS9930_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_APDS9930_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <sdk/config.h>
 
-/****************************************************************************
- * Public Types
- ****************************************************************************/
+#include <stdio.h>
+#include <debug.h>
+#include <errno.h>
 
-#ifndef __ASSEMBLY__
+#include <nuttx/board.h>
 
-/****************************************************************************
- * Public Data
- ****************************************************************************/
+#include <nuttx/sensors/rpr0521rs.h>
+#ifdef CONFIG_RPR0521RS_SCU
+#include <arch/chip/cxd56_scu.h>
+#endif
 
-#undef EXTERN
-#if defined(__cplusplus)
-#define EXTERN extern "C"
-extern "C"
+#include "cxd56_i2c.h"
+
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_RPR0521RS)
+
+#ifdef CONFIG_RPR0521RS_SCU
+int board_rpr0521rs_initialize(int bus)
 {
-#else
-#define EXTERN extern
-#endif
+  int ret;
+  FAR struct i2c_master_s *i2c;
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+  sninfo("Initializing RPR0521RS...\n");
 
-/****************************************************************************
- * Name: board_apds9930_initialize
- *
- * Description:
- *   Initialize APDS9930 i2c driver and register the APDS9930 device.
- *
- ****************************************************************************/
+  /* Initialize i2c deivce */
 
-#ifdef CONFIG_APDS9930
-int board_apds9930_initialize(int bus);
-#endif
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
 
-#undef EXTERN
-#if defined(__cplusplus)
+  ret = rpr0521rs_init(i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error initialize RPR0521RS.\n");
+      return ret;
+    }
+
+  /* Register devices for each FIFOs at I2C bus */
+
+  ret = rpr0521rsals_register("/dev/light", 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering RPR0521RS[ALS].\n");
+      return ret;
+    }
+
+  ret = rpr0521rsps_register("/dev/proximity", 0, i2c, bus);
+  if (ret < 0)
+    {
+      snerr("Error registering RPR0521RS[PS].\n");
+      return ret;
+    }
+
+  return ret;
 }
-#endif
+#endif /* CONFIG_RPR0521RS_SCU */
 
-#endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_APDS9930_H */
+#endif /* CONFIG_CXD56_I2C && CONFIG_RPR0521RS */

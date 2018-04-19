@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_sensor.h
+ * bsp/board/common/include/cxd56_kx022.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_KX022_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_KX022_H
 
 /****************************************************************************
  * Included Files
@@ -61,14 +61,20 @@ extern "C"
 #endif
 
 /****************************************************************************
- * Name: board_sensor_initialize
+ * Public Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: board_kx022_initialize
  *
  * Description:
- *   Perform sensor device initialization
+ *   Initialize KX022 i2c driver and register the KX022 device.
  *
  ****************************************************************************/
 
-int board_sensor_initialize(void);
+#ifdef CONFIG_KX022
+int board_kx022_initialize(FAR const char *devpath, int bus);
+#endif
 
 #undef EXTERN
 #if defined(__cplusplus)
@@ -76,4 +82,4 @@ int board_sensor_initialize(void);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_KX022_H */

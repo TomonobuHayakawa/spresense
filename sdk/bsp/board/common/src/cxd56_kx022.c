@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_bh1745nuc.c
+ * bsp/board/common/src/cxd56_kx022.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
@@ -36,6 +36,7 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/config.h>
 #include <sdk/config.h>
 
 #include <stdio.h>
@@ -44,22 +45,31 @@
 
 #include <nuttx/board.h>
 
-#include <nuttx/sensors/bh1745nuc.h>
-#ifdef CONFIG_BH1745NUC_SCU
+#include <nuttx/sensors/kx022.h>
+#ifdef CONFIG_KX022_SCU
 #include <arch/chip/cxd56_scu.h>
+#endif
+
+#ifdef CONFIG_KX022_SCU
+#  ifdef CONFIG_CXD56_DECI_KX022
+#    define KX022_FIFO_CNT 3
+#  else
+#    define KX022_FIFO_CNT 1
+#  endif
 #endif
 
 #include "cxd56_i2c.h"
 
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BH1745NUC)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_KX022)
 
-#ifdef CONFIG_BH1745NUC_SCU
-int board_bh1745nuc_initialize(FAR const char *devpath, int bus)
+#ifdef CONFIG_KX022_SCU
+int board_kx022_initialize(FAR const char *devpath, int bus)
 {
+  int fifoid = 0;
   int ret;
   FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing BH1745NUC...\n");
+  sninfo("Initializing KX022...\n");
 
   /* Initialize i2c deivce */
 
@@ -70,24 +80,27 @@ int board_bh1745nuc_initialize(FAR const char *devpath, int bus)
       return -ENODEV;
     }
 
-  ret = bh1745nuc_init(i2c, bus);
+  ret = kx022_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize BH1745NUC.\n");
+      snerr("Error initialize KX022.\n");
       return ret;
     }
 
   /* Register devices for each FIFOs at I2C bus */
 
-  ret = bh1745nuc_register(devpath, 0, i2c, bus);
-  if (ret < 0)
+  for (fifoid = 0; fifoid < KX022_FIFO_CNT; fifoid++)
     {
-      snerr("Error registering BH1745NUC.\n");
-      return ret;
+      ret = kx022_register(devpath, fifoid, i2c, bus);
+      if (ret < 0)
+        {
+          snerr("Error registering KX022.\n");
+          return ret;
+        }
     }
 
   return ret;
 }
-#endif /* CONFIG_BH1745NUC_SCU */
+#endif /* CONFIG_KX022_SCU */
 
-#endif /* CONFIG_CXD56_I2C && CONFIG_BH1745NUC */
+#endif /* CONFIG_CXD56_I2C && CONFIG_KX022 */

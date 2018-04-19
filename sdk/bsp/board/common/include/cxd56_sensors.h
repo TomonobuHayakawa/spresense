@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/include/cxd56_sensor_rpr0521rs.h
+ * bsp/board/common/include/cxd56_sensors.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,8 +32,8 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_RPR0521RS_H
-#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_RPR0521RS_H
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSORS_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSORS_H
 
 /****************************************************************************
  * Included Files
@@ -61,20 +61,14 @@ extern "C"
 #endif
 
 /****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-/****************************************************************************
- * Name: board_rpr0521rs_initialize
+ * Name: board_sensors_initialize
  *
  * Description:
- *   Initialize RPR0521RS i2c driver and register the RPR0521RS device.
+ *   Perform sensor devices initialization
  *
  ****************************************************************************/
 
-#ifdef CONFIG_RPR0521RS
-int board_rpr0521rs_initialize(int bus);
-#endif
+int board_sensors_initialize(void);
 
 #undef EXTERN
 #if defined(__cplusplus)
@@ -82,4 +76,4 @@ int board_rpr0521rs_initialize(int bus);
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSOR_RPR0521RS_H */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_SENSORS_H */

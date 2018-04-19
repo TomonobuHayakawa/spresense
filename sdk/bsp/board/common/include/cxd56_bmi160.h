@@ -1,7 +1,7 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_ak09912.c
+ * bsp/board/common/include/cxd56_bmi160.h
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,101 +32,54 @@
  *
  ****************************************************************************/
 
+#ifndef __BSP_BOARD_COMMON_INCLUDE_CXD56_BMI160_H
+#define __BSP_BOARD_COMMON_INCLUDE_CXD56_BMI160_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
 #include <sdk/config.h>
 
-#include <stdio.h>
-#include <debug.h>
-#include <errno.h>
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-#include <nuttx/board.h>
+#ifndef __ASSEMBLY__
 
-#include <nuttx/sensors/ak09912.h>
-#ifdef CONFIG_AK09912_SCU
-#include <arch/chip/cxd56_scu.h>
-#endif
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
-#ifdef CONFIG_AK09912_SCU
-#  ifdef CONFIG_CXD56_DECI_AK09912
-#    define MAG_NR_SEQS 3
-#  else
-#    define MAG_NR_SEQS 1
-#  endif
-#endif
-
-#include "cxd56_i2c.h"
-
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_AK09912)
-
-#ifdef CONFIG_AK09912_SCU
-int board_ak09912_initialize(FAR const char *devpath, int bus)
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
 {
-  int i;
-  int ret;
-  FAR struct i2c_master_s *i2c;
-
-  sninfo("Initializing AK09912...\n");
-
-  /* Initialize i2c deivce */
-
-  i2c = cxd56_i2cbus_initialize(bus);
-  if (!i2c)
-    {
-      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
-      return -ENODEV;
-    }
-
-  ret = ak09912_init(i2c, bus);
-  if (ret < 0)
-    {
-      snerr("Error initialize AK09912.\n");
-      return ret;
-    }
-
-  for (i = 0; i < MAG_NR_SEQS; i++)
-    {
-      /* register deivce at I2C bus */
-
-      ret = ak09912_register(devpath, i, i2c, bus);
-      if (ret < 0)
-        {
-          snerr("Error registering AK09912.\n");
-          return ret;
-        }
-    }
-
-  return ret;
-}
 #else
-int board_ak09912_initialize(FAR const char *devpath, int bus)
-{
-  int ret;
-  FAR struct i2c_master_s *i2c;
+#define EXTERN extern
+#endif
 
-  sninfo("Initializing AK09912...\n");
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-  /* Initialize i2c deivce */
+/****************************************************************************
+ * Name: board_bmi160_initialize
+ *
+ * Description:
+ *   Initialize BMI160 spi or i2c driver and register the BMI160 device.
+ *
+ ****************************************************************************/
 
-  i2c = cxd56_i2cbus_initialize(bus);
-  if (!i2c)
-    {
-      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
-      return -ENODEV;
-    }
+#ifdef CONFIG_BMI160
+int board_bmi160_initialize(int bus);
+#endif
 
-  ret = ak09912_register(devpath, i2c);
-  if (ret < 0)
-    {
-      snerr("Error registering AK09912.\n");
-    }
-
-  return ret;
+#undef EXTERN
+#if defined(__cplusplus)
 }
 #endif
 
-#endif
-
+#endif /* __ASSEMBLY__ */
+#endif /* __BSP_BOARD_COMMON_INCLUDE_CXD56_BMI160_H */

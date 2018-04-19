@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_apds9930.c
+ * bsp/board/common/src/cxd56_apds9930.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

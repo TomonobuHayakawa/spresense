@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/common/src/cxd56_sensor_lt1pa01.c
+ * bsp/board/common/src/cxd56_bmp280.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *
@@ -44,22 +44,36 @@
 
 #include <nuttx/board.h>
 
-#include <nuttx/sensors/lt1pa01.h>
-#ifdef CONFIG_LT1PA01_SCU
+#include <nuttx/sensors/bmp280.h>
+#ifdef CONFIG_BMP280_SCU
 #include <arch/chip/cxd56_scu.h>
+#endif
+
+#ifdef CONFIG_BMP280_SCU
+#  ifdef CONFIG_CXD56_DECI_PRESS
+#    define PRESS_NR_SEQS 3
+#  else
+#    define PRESS_NR_SEQS 1
+#  endif
+#  ifdef CONFIG_CXD56_DECI_TEMP
+#    define TEMP_NR_SEQS 3
+#  else
+#    define TEMP_NR_SEQS 1
+#  endif
 #endif
 
 #include "cxd56_i2c.h"
 
-#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_LT1PA01)
+#if defined(CONFIG_CXD56_I2C) && defined(CONFIG_BMP280)
 
-#ifdef CONFIG_LT1PA01_SCU
-int board_lt1pa01_initialize(int bus)
+#ifdef CONFIG_BMP280_SCU
+int board_bmp280_initialize(int bus)
 {
+  int i;
   int ret;
   FAR struct i2c_master_s *i2c;
 
-  sninfo("Initializing LT1PA01...\n");
+  sninfo("Initializing BMP280..\n");
 
   /* Initialize i2c deivce */
 
@@ -70,31 +84,65 @@ int board_lt1pa01_initialize(int bus)
       return -ENODEV;
     }
 
-  ret = lt1pa01_init(i2c, bus);
+  ret = bmp280_init(i2c, bus);
   if (ret < 0)
     {
-      snerr("Error initialize LT1PA01.\n");
+      snerr("Error initialize BMP280.\n");
       return ret;
     }
 
-  /* Register devices for each FIFOs at I2C bus */
+  /* Create char devices for each FIFOs */
 
-  ret = lt1pa01als_register("/dev/light", 0, i2c, bus);
-  if (ret < 0)
+  for (i = 0; i < PRESS_NR_SEQS; i++)
     {
-      snerr("Error registering LT1PA01[ALS].\n");
-      return ret;
+      ret = bmp280press_register("/dev/press", i, i2c, bus);
+      if (ret < 0)
+        {
+          snerr("Error registering pressure. %d\n", ret);
+          return ret;
+        }
     }
 
-  ret = lt1pa01prox_register("/dev/proximity", 0, i2c, bus);
-  if (ret < 0)
+  /* Create char devices for each FIFOs */
+
+  for (i = 0; i < TEMP_NR_SEQS; i++)
     {
-      snerr("Error registering LT1PA01[PS].\n");
-      return ret;
+      ret = bmp280temp_register("/dev/temp", i, i2c, bus);
+      if (ret < 0)
+        {
+          snerr("Error registering temperature. %d\n", ret);
+          return ret;
+        }
     }
 
   return ret;
 }
-#endif /* CONFIG_LT1PA01_SCU */
+#else
+int board_bmp280_initialize(int bus)
+{
+  int ret;
+  FAR struct i2c_master_s *i2c;
 
-#endif /* CONFIG_CXD56_I2C && CONFIG_LT1PA01 */
+  snerr("Initializing BMP280..\n");
+
+  /* Initialize i2c deivce */
+
+  i2c = cxd56_i2cbus_initialize(bus);
+  if (!i2c)
+    {
+      snerr("ERROR: Failed to initialize i2c%d.\n", bus);
+      return -ENODEV;
+    }
+
+  ret = bmp280_register("/dev/press0", i2c);
+  if (ret < 0)
+    {
+      snerr("Error registering BMP280\n");
+    }
+
+  return ret;
+}
+#endif
+
+#endif
+
