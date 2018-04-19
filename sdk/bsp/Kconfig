@@ -32,22 +32,6 @@ source "$SDKDIR/bsp/board/spresense/Kconfig"
 
 endmenu
 
-if BOARD_SPRESENSE
-menu "Variant Configuration"
-choice
-	prompt "Variant Selection"
-	default VARIANT_PROTO3
-
-	config VARIANT_PROTO3
-		bool "SPRESENSE Proto 3 board"
-
-	config VARIANT_DVT
-		bool "SPRESENSE DVT board"
-
-endchoice
-endmenu
-endif # BOARD_SPRESENSE
-
 menu "CXD56xx Configuration Options"
 
 config CXD56_XOSC_CLOCK
