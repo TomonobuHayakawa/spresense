@@ -40,7 +40,3 @@ CSRCS += cxd56_appinit.c
 CSRCS += cxd56_power.c
 endif
 
-ifeq ($(CONFIG_BCM20707),y)
-CSRCS += cxd56_bcm20706.c
-endif
-
