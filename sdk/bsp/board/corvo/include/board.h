@@ -197,6 +197,8 @@ enum board_power_device {
 #define IMAGER_SLEEP    PIN_SPI0_MOSI
 #define IMAGER_ALERT    PIN_SDIO_CLKI
 
+#define IMAGER_I2C      1
+
 /*
  * Set signal id for notify USB device connection status and supply current value.
  * signal returns "usbdev_notify_s" struct pointer in sival_ptr.

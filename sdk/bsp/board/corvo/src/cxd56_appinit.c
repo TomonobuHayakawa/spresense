@@ -308,7 +308,7 @@ int board_app_initialize(uintptr_t arg)
 #endif
 
 #ifdef CONFIG_VIDEO_ISX012
-  board_isx012_initialize("/dev/imager", 1);
+  board_isx012_initialize("/dev/imager", IMAGER_I2C);
 #endif
 
 #ifdef CONFIG_CXD5247_CHARGER
