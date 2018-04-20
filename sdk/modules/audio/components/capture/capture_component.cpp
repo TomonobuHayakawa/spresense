@@ -795,11 +795,12 @@ bool CaptureComponent::execOnPreAct(const CaptureComponentParam& param)
           asReadDmacParam dmac_param;
           CaptureComponentParam pre = m_cap_pre_que.top();
 
-          dmac_param.dmacId = m_dmac_id;
-          dmac_param.addr   = (uint32_t)getCapBuf(pre.exec_param.pcm_sample);
-          dmac_param.size   = pre.exec_param.pcm_sample;
-          dmac_param.addr2  = 0;
-          dmac_param.size2  = 0;
+          dmac_param.dmacId   = m_dmac_id;
+          dmac_param.addr     = (uint32_t)getCapBuf(pre.exec_param.pcm_sample);
+          dmac_param.size     = pre.exec_param.pcm_sample;
+          dmac_param.addr2    = 0;
+          dmac_param.size2    = 0;
+          dmac_param.validity = true;
 
           if (E_AS_OK != AS_ReadDmac(&dmac_param))
             {
@@ -828,11 +829,12 @@ bool CaptureComponent::execOnAct(const CaptureComponentParam& param)
 {
   asReadDmacParam dmac_param;
 
-  dmac_param.dmacId = m_dmac_id;
-  dmac_param.addr   = (uint32_t)getCapBuf(param.exec_param.pcm_sample);
-  dmac_param.size   = param.exec_param.pcm_sample;
-  dmac_param.addr2  = 0;
-  dmac_param.size2  = 0;
+  dmac_param.dmacId   = m_dmac_id;
+  dmac_param.addr     = (uint32_t)getCapBuf(param.exec_param.pcm_sample);
+  dmac_param.size     = param.exec_param.pcm_sample;
+  dmac_param.addr2    = 0;
+  dmac_param.size2    = 0;
+  dmac_param.validity = true;
 
   if (E_AS_OK != AS_ReadDmac(&dmac_param))
     {
