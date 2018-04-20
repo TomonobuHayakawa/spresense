@@ -354,6 +354,8 @@ int main(int argc, FAR char *argv[])
 int i2c_main(int argc, char *argv[])
 #endif
 {
+  int bus;
+
   /* Verify settings */
 
   if (g_i2ctool.bus < CONFIG_I2CTOOL_MINBUS ||
@@ -385,7 +387,7 @@ int i2c_main(int argc, char *argv[])
 
   /* Create /dev/i2cN device file */
 
-  for (int bus = CONFIG_I2CTOOL_MINBUS; bus <= CONFIG_I2CTOOL_MAXBUS; bus++)
+  for (bus = CONFIG_I2CTOOL_MINBUS; bus <= CONFIG_I2CTOOL_MAXBUS; bus++)
     {
       if (i2cdev_exists(bus) == false)
         {
