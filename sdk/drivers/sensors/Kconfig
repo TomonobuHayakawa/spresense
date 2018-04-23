@@ -156,11 +156,11 @@ config BH1721FVC_SCU
 endif # BH1721FVC
 
 config KX022
-	bool "Kionix KX022 Acceleration Sensor"
+	bool "Kionix KX022/KX122 Acceleration Sensor"
 	default n
 	select CXD56_I2C
 	---help---
-		Enable driver for the Kionix KX0222 acceleration sensor.
+		Enable driver for the Kionix KX022/KX122 acceleration sensor.
 
 if KX022
 
@@ -171,6 +171,12 @@ config KX022_SCU
 	---help---
 		Use the sensor control unit (SCU) sequencer.
 		Support only driver with the sensor control unit (SCU) sequencer.
+
+config KX122
+	bool "KX122"
+	default n
+	---help---
+		Use KX122 which has the register upper compatibility with KX022.
 
 endif # KX022
 

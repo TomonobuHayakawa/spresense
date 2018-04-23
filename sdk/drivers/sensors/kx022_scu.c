@@ -65,8 +65,13 @@
 #  define KX022_SEQ_TYPE SEQ_TYPE_NORMAL
 #endif
 
-#define KX022_ADDR              0x1E    /* I2C Slave Address */
-#define KX022_DEVID             0x14    /* Device ID */
+#ifdef CONFIG_KX122
+#  define KX022_ADDR            0x1F    /* I2C Slave Address */
+#  define KX022_DEVID           0x1B    /* Device ID */
+#else
+#  define KX022_ADDR            0x1E    /* I2C Slave Address */
+#  define KX022_DEVID           0x14    /* Device ID */
+#endif
 #define KX022_BYTESPERSAMPLE    6
 #define KX022_ELEMENTSIZE       2
 
