@@ -66,6 +66,10 @@
 #  include "cxd56_timer.h"
 #endif
 
+#ifdef CONFIG_CXD56_WDT
+#  include "cxd56_wdt.h"
+#endif
+
 #ifdef CONFIG_CXD56_SCU
 #include <arch/chip/cxd56_scu.h>
 #endif
@@ -190,6 +194,10 @@ int board_app_initialize(uintptr_t arg)
 
 #ifdef CONFIG_TIMER
   timer_initialize();
+#endif
+
+#ifdef CONFIG_CXD56_WDT
+  cxd56_wdt_initialize();
 #endif
 
   cxd56_uart_initialize();
