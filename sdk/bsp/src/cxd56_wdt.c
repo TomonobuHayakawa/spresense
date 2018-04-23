@@ -52,7 +52,7 @@
 #include "cxd56_wdt.h"
 #include "cxd56_powermgr.h"
 
-#if defined(CONFIG_WATCHDOG) && defined(CONFIG_CXD56_WDT)
+#ifdef CONFIG_CXD56_WDT
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -634,7 +634,7 @@ static int cxd56_pm_event(uint8_t id)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: up_wdginitialize
+ * Name: cxd56_wdt_initialize
  *
  * Description:
  *   Initialize the WDT watchdog time.  The watchdog timer is initialized and
@@ -649,7 +649,7 @@ static int cxd56_pm_event(uint8_t id)
  *
  ****************************************************************************/
 
-int up_wdginitialize(void)
+int cxd56_wdt_initialize(void)
 {
   FAR struct cxd56_lowerhalf_s *priv = &g_wdtdev;
 
@@ -679,4 +679,4 @@ int up_wdginitialize(void)
   return OK;
 }
 
-#endif /* CONFIG_WATCHDOG && CONFIG_CXD56_WDT */
+#endif /* CONFIG_CXD56_WDT */

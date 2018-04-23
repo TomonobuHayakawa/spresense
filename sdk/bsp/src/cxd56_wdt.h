@@ -44,7 +44,7 @@
 #include "chip.h"
 #include "chip/cxd56_wdt.h"
 
-#ifdef CONFIG_WATCHDOG
+#ifdef CONFIG_CXD56_WDT
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -65,11 +65,29 @@ extern "C"
  * Public Functions
  ****************************************************************************/
 
+/****************************************************************************
+ * Name: cxd56_wdt_initialize
+ *
+ * Description:
+ *   Initialize the WDT watchdog time.  The watchdog timer is initialized and
+ *   registered as 'devpath.  The initial state of the watchdog time is
+ *   disabled.
+ *
+ * Input Parameters:
+ *   None
+ *
+ * Returned Values:
+ *   None
+ *
+ ****************************************************************************/
+
+int cxd56_wdt_initialize(void);
+
 #undef EXTERN
 #if defined(__cplusplus)
 }
 #endif
 
 #endif /* __ASSEMBLY__ */
-#endif /* CONFIG_WATCHDOG */
+#endif /* CONFIG_CXD56_WDT */
 #endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_WDT_H */
