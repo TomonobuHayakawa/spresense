@@ -23,7 +23,7 @@ config SYSTEM_COMPOSITE_DEFCONFIG
 		this is the default configuration that the conn command will use if
 		no configuration ID is provided on the command line.
 
-if CDCACM_COMPOSITE
+# if CDCACM_COMPOSITE
 
 config SYSTEM_COMPOSITE_SERDEV
 	string "USB serial device path"
@@ -40,7 +40,7 @@ config SYSTEM_COMPOSITE_BUFSIZE
 	---help---
 		The size of the serial I/O buffer in bytes.  Default 256 bytes.
 
-endif # CDCACM_COMPOSITE
+# endif # CDCACM_COMPOSITE
 
 if USBDEV_TRACE || DEBUG_USB
 
