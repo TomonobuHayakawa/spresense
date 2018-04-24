@@ -49,10 +49,10 @@
 
 /* Decoder Version. */
 
-#define DSP_AACDEC_VERSION    0x010301    /* 01.03.01 */
-#define DSP_MP3DEC_VERSION    0x010301    /* 01.03.01 */
-#define DSP_OPUSDEC_VERSION   0x010302    /* 01.03.02 */
-#define DSP_WAVDEC_VERSION    0x010301    /* 01.03.01 */
+#define DSP_AACDEC_VERSION    0x010302    /* 01.03.02 */
+#define DSP_MP3DEC_VERSION    0x010302    /* 01.03.02 */
+#define DSP_OPUSDEC_VERSION   0x010303    /* 01.03.03 */
+#define DSP_WAVDEC_VERSION    0x010302    /* 01.03.02 */
 
 /* Encoder Version. */
 
