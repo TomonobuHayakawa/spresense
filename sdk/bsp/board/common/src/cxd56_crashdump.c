@@ -178,6 +178,9 @@ void board_crashdump(uintptr_t currentsp, FAR void *tcb,
 
   if (CURRENT_REGS)
     {
+#if CONFIG_ARCH_INTERRUPTSTACK > 3
+      pdump->info.stacks.interrupt.sp = currentsp;
+#endif
       pdump->info.flags |= (REGS_PRESENT | USERSTACK_PRESENT | \
                             INTSTACK_PRESENT);
       memcpy(pdump->info.regs, (void *)CURRENT_REGS,
