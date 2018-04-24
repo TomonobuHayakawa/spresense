@@ -374,13 +374,11 @@ choice
 
 config CXD56_SPI5_PINMAP_EMMC
 	bool "SPI5 pin assign to eMMC"
-	depends on !CXD56_EMMC
 	---help---
 		SPI5 assigns to the shared pins with eMMC.
 
 config CXD56_SPI5_PINMAP_SDIO
 	bool "SPI5 pin assign to SDIO"
-	depends on !CXD56_SDIO
 	---help---
 		SPI5 assigns to the shared pins with SDIO.
 endchoice
