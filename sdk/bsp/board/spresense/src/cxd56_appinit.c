@@ -360,12 +360,3 @@ int board_ioctl(unsigned int cmd, uintptr_t arg)
   return OK;
 }
 #endif
-
-/* This function is provided outside exported SDK, therefore here is defined
- * as weak symbol to avoid link error.
- */
-
-int weak_function spresense_main(int argc, char *argv[])
-{
-  return 0;
-}
