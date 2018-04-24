@@ -47,7 +47,9 @@
  * as weak symbol to avoid link error.
  */
 
+int nsh_main(int argc, char *argv[]);
+
 int weak_function spresense_main(int argc, char *argv[])
 {
-  return 0;
+  return nsh_main(argc, argv);
 }
