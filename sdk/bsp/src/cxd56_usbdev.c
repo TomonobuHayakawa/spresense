@@ -1981,9 +1981,13 @@ static void cxd56_ep0initialize(FAR struct cxd56_usbdev_s *priv)
 static void cxd56_ctrlinitialize(FAR struct cxd56_usbdev_s *priv)
 {
   uint32_t ctrl;
+  uint32_t config;
 
-  putreg32(USB_CONFIG_CSR_PRG | USB_CONFIG_PI | USB_CONFIG_SP | USB_CONFIG_RWKP,
-           CXD56_USB_DEV_CONFIG);
+  config = USB_CONFIG_CSR_PRG | USB_CONFIG_PI | USB_CONFIG_RWKP;
+#ifdef CONFIG_USBDEV_SELFPOWERED
+  config |= USB_CONFIG_SP;
+#endif
+  putreg32(config, CXD56_USB_DEV_CONFIG);
   ctrl = USB_CTRL_SD | USB_CTRL_RES;
   putreg32(ctrl, CXD56_USB_DEV_CONTROL);
 
