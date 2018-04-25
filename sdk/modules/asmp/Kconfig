@@ -26,7 +26,7 @@ if ASMP_DEBUG_FEATURE
 	bool "ASMP Framework debug warn"
 
 	config ASMP_DEBUG_INFO
-	bool "ASMP Framework debug error"
+	bool "ASMP Framework debug info"
 endif
 
 endif
