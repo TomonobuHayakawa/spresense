@@ -58,6 +58,7 @@
 #include "include/msgq_pool.h"
 #include "include/pool_layout.h"
 #include "include/fixed_fence.h"
+#include "container_format_lib/wav_containerformat.h"
 
 #include <arch/chip/cxd56_audio.h>
 
@@ -98,15 +99,6 @@ using namespace MemMgrLite;
 
 #define STDIO_BUFFER_SIZE 4096
 
-/* For wave header. */
-
-#define CHUNKID_RIFF      "RIFF"
-#define FORMAT_WAVE       "WAVE"
-#define SUBCHUNKID_FMT    "fmt "
-#define SUBCHUNKID_DATA   "data"
-#define AUDIO_FORMAT_PCM  0x0001
-#define FMT_SIZE          0x10
-
 /* Length of recording file name */
 
 #define MAX_PATH_LENGTH 128
@@ -123,24 +115,6 @@ using namespace MemMgrLite;
  * Private Type Declarations
  ****************************************************************************/
 
-struct wav_format_s
-{
-  uint8_t  riff[4];    /* "RIFF" */
-  uint32_t total_size;
-  uint8_t  wave[4];    /* "WAVE" */
-  uint8_t  fmt[4];     /* "fmt " */
-  uint32_t fmt_size;   /* fmt chunk size */
-  uint16_t format;     /* format type */
-  uint16_t channel;
-  uint32_t rate;       /* sampling rate */
-  uint32_t avgbyte;    /* rate * block */
-  uint16_t block;      /* channels * bit / 8 */
-  uint16_t bit;        /* bit length */
-  uint8_t  data[4];    /* "data" */
-  uint32_t data_size;
-};
-typedef struct wav_format_s WAVEFORMAT;
-
 /* For FIFO */
 
 struct recorder_fifo_info_s
@@ -156,6 +130,7 @@ struct recorder_file_info_s
   uint32_t  sampling_rate;
   uint8_t   channel_number;
   uint8_t   codec_type;
+  uint16_t  format_type;
   uint32_t  size;
   DIR      *dirp;
   FILE     *fd;
@@ -165,7 +140,6 @@ struct recorder_info_s
 {
   struct recorder_fifo_info_s  fifo;
   struct recorder_file_info_s  file;
-  WAVEFORMAT wav_header;
 };
 
 /* Recording parameter. */
@@ -203,6 +177,14 @@ enum microphone_device_e
   MICROPHONE_NUM
 };
 
+enum format_type_e
+{
+  FORMAT_TYPE_RAW = 0,
+  FORMAT_TYPE_WAV,
+  FORMAT_TYPE_OGG,
+  FORMAT_TYPE_NUM
+};
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -213,6 +195,8 @@ static recorder_info_s s_recorder_info;
 
 static mpshm_t s_shm;
 
+static WavContainerFormat* s_container_format = NULL;
+static WAVHEADER  s_wav_header;
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -222,27 +206,45 @@ static void outputDeviceCallback(uint32_t size)
     /* do nothing */
 }
 
-static void app_update_wav_file_size(void)
+static bool app_update_wav_file_size(void)
 {
   fseek(s_recorder_info.file.fd, 0, SEEK_SET);
-  s_recorder_info.wav_header.total_size =
-    s_recorder_info.file.size + sizeof(WAVEFORMAT) - 8;
-  s_recorder_info.wav_header.data_size  =
-    s_recorder_info.file.size;
-}
 
-static bool app_write_wav_header(void)
-{
-  size_t ret = fwrite((const void *)&s_recorder_info.wav_header,
+  s_container_format->getHeader(&s_wav_header, s_recorder_info.file.size);
+
+  size_t ret = fwrite((const void *)&s_wav_header,
                       1,
-                      sizeof(WAVEFORMAT),
+                      sizeof(WAVHEADER),
                       s_recorder_info.file.fd);
-  if (ret != sizeof(WAVEFORMAT))
+  if (ret != sizeof(WAVHEADER))
     {
       printf("Fail to write file(wav header)\n");
       return false;
     }
   return true;
+}
+
+static bool app_write_wav_header(void)
+{
+  s_container_format->getHeader(&s_wav_header, 0);
+
+  size_t ret = fwrite((const void *)&s_wav_header,
+                      1,
+                      sizeof(WAVHEADER),
+                      s_recorder_info.file.fd);
+  if (ret != sizeof(WAVHEADER))
+    {
+      printf("Fail to write file(wav header)\n");
+      return false;
+    }
+  return true;
+}
+
+static bool app_init_wav_header(void)
+{
+  return s_container_format->init(FORMAT_ID_PCM,
+                                 s_recorder_info.file.channel_number,
+                                 s_recorder_info.file.sampling_rate);
 }
 
 static bool app_open_output_file(void)
@@ -255,7 +257,8 @@ static bool app_open_output_file(void)
   clock_gettime(CLOCK_REALTIME, &cur_sec);
   cur_time = gmtime(&cur_sec.tv_sec);
 
-  if (s_recorder_info.file.codec_type == AS_CODECTYPE_MP3)
+  if ((s_recorder_info.file.codec_type == AS_CODECTYPE_MP3) &&
+      (s_recorder_info.file.format_type == FORMAT_TYPE_RAW))
     {
       snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.mp3",
         CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
@@ -268,7 +271,33 @@ static bool app_open_output_file(void)
     }
   else if (s_recorder_info.file.codec_type == AS_CODECTYPE_LPCM)
     {
-      snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.wav",
+      if (s_recorder_info.file.format_type == FORMAT_TYPE_WAV)
+        {
+          snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.wav",
+            CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
+            cur_time->tm_year,
+            cur_time->tm_mon,
+            cur_time->tm_mday,
+            cur_time->tm_hour,
+            cur_time->tm_min,
+            cur_time->tm_sec);
+        }
+      else
+        {
+          snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.pcm",
+            CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
+            cur_time->tm_year,
+            cur_time->tm_mon,
+            cur_time->tm_mday,
+            cur_time->tm_hour,
+            cur_time->tm_min,
+            cur_time->tm_sec);
+        }
+    }
+  else if ((s_recorder_info.file.codec_type == AS_CODECTYPE_OPUS) &&
+           (s_recorder_info.file.format_type == FORMAT_TYPE_RAW))
+    {
+      snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.raw",
         CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
         cur_time->tm_year,
         cur_time->tm_mon,
@@ -279,14 +308,8 @@ static bool app_open_output_file(void)
     }
   else
     {
-      snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.opus",
-        CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
-        cur_time->tm_year,
-        cur_time->tm_mon,
-        cur_time->tm_mday,
-        cur_time->tm_hour,
-        cur_time->tm_min,
-        cur_time->tm_sec);
+      printf("Unsupported format\n");
+      return false;
     }
 
   s_recorder_info.file.fd = fopen(fname, "w");
@@ -298,8 +321,14 @@ static bool app_open_output_file(void)
   setvbuf(s_recorder_info.file.fd, NULL, _IOLBF, STDIO_BUFFER_SIZE);
   printf("Record data to %s.\n", &fname[0]);
 
-  if (s_recorder_info.file.codec_type == AS_CODECTYPE_LPCM)
+  if (s_recorder_info.file.format_type == FORMAT_TYPE_WAV)
     {
+      if (!app_init_wav_header())
+      {
+        printf("Error: app_init_wav_header() failure.\n");
+        return false;
+      }
+
       if (!app_write_wav_header())
       {
         printf("Error: app_write_wav_header() failure.\n");
@@ -652,30 +681,15 @@ static bool app_set_recorder_status(void)
 
 static void app_init_recorder_wav(AudioCommand* command)
 {
-  /* Update wave header */
-
-  memcpy(s_recorder_info.wav_header.riff, CHUNKID_RIFF,    strlen(CHUNKID_RIFF));
-  memcpy(s_recorder_info.wav_header.wave, FORMAT_WAVE,     strlen(FORMAT_WAVE));
-  memcpy(s_recorder_info.wav_header.fmt,  SUBCHUNKID_FMT,  strlen(SUBCHUNKID_FMT));
-  memcpy(s_recorder_info.wav_header.data, SUBCHUNKID_DATA, strlen(SUBCHUNKID_DATA));
-  s_recorder_info.wav_header.total_size = 0;
-  s_recorder_info.wav_header.fmt_size   = FMT_SIZE;
-  s_recorder_info.wav_header.format     = AUDIO_FORMAT_PCM;
-  s_recorder_info.wav_header.channel    = s_recorder_info.file.channel_number;
-  s_recorder_info.wav_header.rate       = s_recorder_info.file.sampling_rate;
-  s_recorder_info.wav_header.avgbyte    =
-    s_recorder_info.file.sampling_rate * s_recorder_info.file.channel_number * 2;
-  s_recorder_info.wav_header.block      = s_recorder_info.file.channel_number * 2;
-  s_recorder_info.wav_header.bit        = 2 * 8;
-  s_recorder_info.wav_header.data_size  = 0;
-
   command->init_recorder_param.codec_type = AS_CODECTYPE_LPCM;
+  s_recorder_info.file.format_type = FORMAT_TYPE_WAV;
 }
 
 static void app_init_recorder_mp3(AudioCommand* command)
 {
   command->init_recorder_param.codec_type = AS_CODECTYPE_MP3;
   command->init_recorder_param.bitrate    = AS_BITRATE_96000;
+  s_recorder_info.file.format_type = FORMAT_TYPE_RAW;
 }
 
 static void app_init_recorder_opus(AudioCommand* command)
@@ -683,6 +697,7 @@ static void app_init_recorder_opus(AudioCommand* command)
   command->init_recorder_param.codec_type = AS_CODECTYPE_OPUS;
   command->init_recorder_param.bitrate    = AS_BITRATE_8000;
   command->init_recorder_param.computational_complexity = AS_INITREC_COMPLEXITY_0;
+  s_recorder_info.file.format_type = FORMAT_TYPE_RAW;
 }
 
 static bool app_init_recorder(codec_type_e codec_type,
@@ -774,10 +789,9 @@ static bool app_stop_recorder(void)
       occupied_simple_fifo_size = CMN_SimpleFifoGetOccupiedSize(&s_recorder_info.fifo.handle);
     }
 
-  if (s_recorder_info.file.codec_type == AS_CODECTYPE_LPCM)
+  if (s_recorder_info.file.format_type == FORMAT_TYPE_WAV)
     {
-      app_update_wav_file_size();
-      if (!app_write_wav_header())
+      if (!app_update_wav_file_size())
         {
           printf("Error: app_write_wav_header() failure.\n");
         }
@@ -886,6 +900,12 @@ static bool app_init_libraries(void)
       return false;
     }
 
+  if (s_container_format != NULL)
+    {
+      return false;
+    }
+  s_container_format = new WavContainerFormat();
+
   return true;
 }
 
@@ -918,6 +938,12 @@ static bool app_finalize_libraries(void)
     {
       printf("Error: mpshm_destroy() failure. %d\n", ret);
       return false;
+    }
+
+  if (s_container_format != NULL)
+    {
+      delete s_container_format;
+      s_container_format = NULL;
     }
 
   return true;
