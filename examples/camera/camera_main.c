@@ -52,6 +52,7 @@
 #include <nuttx/fs/mkfatfs.h>
 #include <nuttx/drivers/ramdisk.h>
 #include <nuttx/video/isx012.h>
+#include <nuttx/video/isx012_camfw.h>
 
 #include <sys/ioctl.h>
 #include <sys/boardctl.h>
@@ -68,8 +69,6 @@
 #include <nuttx/nx/nxglib.h>
 #include "nximage.h"
 #endif
-
-#include "camfw/camfw.h"
 
 /****************************************************************************
  * Pre-processor Definitions
