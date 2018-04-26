@@ -563,6 +563,14 @@ int cmd_cp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       goto errout_with_allocpath;
     }
 
+  /* Check if the destination does not match the source */
+
+  if (strcmp(destpath, srcpath) == 0)
+    {
+      nsh_output(vtbl, g_fmtsyntax, argv[0]);
+      goto errout_with_wrfd;
+    }
+
   /* Now copy the file */
 
   for (;;)
