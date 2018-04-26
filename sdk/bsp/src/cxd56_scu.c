@@ -995,7 +995,10 @@ static int seq_oneshot(int bustype, int slave, FAR uint16_t *inst,
     {
       return -EINVAL;
     }
-  if (len <= 0 || len > 16)
+
+  /* If buffer is non NULL, check receive length is valid */
+
+  if (buffer && (len <= 0 || len > 16))
     {
       return -EINVAL;
     }
