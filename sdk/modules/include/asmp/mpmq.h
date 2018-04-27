@@ -94,6 +94,7 @@ extern "C"
  *
  * mpmq_init() initialize MP message queue object. This function needs raw CPU
  * ID at @a cpuid. User can use mptask_getcpuid() to get asigned CPU ID.
+ * When call this API on the worker side, @a cpuid is ignored.
  *
  * @param [in,out] mq: MP message queue object
  * @param [in] key: Unique object ID
