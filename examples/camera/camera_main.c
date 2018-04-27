@@ -1576,6 +1576,7 @@ int camera_main(int argc, char *argv[])
         }
 
     }
+#if 0 //@@@
   else if( strncmp(argv[1], "cisif", 5)==0 )
     {
       if ( argc != 3 )
@@ -1599,6 +1600,7 @@ int camera_main(int argc, char *argv[])
           printf("cxd56_cisiffinalize() : ret=%d, time=%d[ms]\n", ret, time);
         }
     }
+#endif
   else if( strncmp(argv[1], "win", 3)==0 )
     {
       if ( argc != 3 )
