@@ -332,6 +332,8 @@ int mptask_join(mptask_t *task, int *exit_status)
   return -EPERM;
 }
 
+#ifdef SDK_EXPERIMENTAL
+
 int mptask_pause(mptask_t *task)
 {
   if (!task)
@@ -383,6 +385,8 @@ int mptask_restart(mptask_t *task)
 
   return OK;
 }
+
+#endif /* SDK_EXPERIMENTAL */
 
 void mptask_initialize(void)
 {

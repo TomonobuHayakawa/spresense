@@ -444,8 +444,10 @@ int mptask_exec(mptask_t *task);
 
 int mptask_join(mptask_t *task, int *exit_status);
 
+#ifdef SDK_EXPERIMENTAL
+
 /**
- * Pause MP task
+ * Pause MP task (experimental)
  *
  * mptask_pause() stop task temporary, and can be restart by mptask_restart().
  * This function is stop the running CPU's clock, so it reduce power consumption.
@@ -461,7 +463,7 @@ int mptask_join(mptask_t *task, int *exit_status);
 int mptask_pause(mptask_t *task);
 
 /**
- * Restart paused MP task
+ * Restart paused MP task (experimental)
  *
  * mptask_restart() restart paused task by mptask_pause().
  *
@@ -474,6 +476,8 @@ int mptask_pause(mptask_t *task);
  */
 
 int mptask_restart(mptask_t *task);
+
+#endif /* SDK_EXPERIMENTAL */
 
 /** @} mptask_funcs */
 
