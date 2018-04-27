@@ -288,7 +288,9 @@ static int  camfw_WriteImgSnsRegister(CamfwApiImgSnsReg_t *p);
 static int  camfw_ReadImgSnsRegister(CamfwApiImgSnsReg_t *p);
 static int  camfw_SetFrameInfo(CamfwApiCapFrame_t *p, CamfwCisifResult_t *res);
 static int  camfw_GetPictureInfo(CamfwPictureInfo_t *pict_info);
+#if 0 //@@@
 static void camfw_CreateCisifParam(CamfwMode_e mode, cisif_param_t *p);
+#endif
 static int  camfw_SetImgSnsCrop(CamfwCapParam_t *param, CamfwCrop_t *crop);
 static int  camfw_SetImgSnsCropOff(void);
 static int  camfw_DoHalfRelease(CamfwApiDoHalfRelease_t *p);
@@ -417,52 +419,6 @@ static uint32_t camfw_time_stop;
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-static const CamfwIsx012Reg_t camfw_ae_depend_regs[] =
-{
-  { 0x7C99, 1 }, /* AELEVEL */
-  { 0x7C9A, 1 }, /* REFLEVEL */
-  { 0x7C9B, 1 }, /* ILMLEVEL */
-  { 0x7C9C, 1 }, /* ERRLEVEL */
-  { 0x7C9D, 1 }, /* GAIN_LEVEL */
-  { 0x7C9E, 1 }, /* NOCRCT_GAIN_LEVEL*/
-  { 0x7C9F, 1 }, /* DARK_LEVEL */
-  { 0x7CA0, 1 }, /* AFCTRL_LEVEL */
-  { 0x7CAC, 2 }, /* ERRSCL */
-  { 0x7CAE, 2 }  /* ILMSCL */
-};
-
-static const char *camfw_ae_depend_regs_str[] =
-{
-  "AELEVEL",
-  "REFLEVEL",
-  "ILMLEVEL",
-  "ERRLEVEL",
-  "GAIN_LEVEL",
-  "NOCRCT_GAIN_LEVEL",
-  "DARK_LEVEL",
-  "AFCTRL_LEVEL",
-  "ERRSCL",
-  "ILMSCL"
-};
-
-static void camfw_show_ae_dependparam(void)
-{
-  isx012_reg_t reg;
-  int idx;
-
-  for (idx = 0;
-       idx < sizeof(camfw_ae_depend_regs)/sizeof(CamfwIsx012Reg_t);
-       idx++ )
-    {
-      reg.regval  = 0;
-      reg.regsize = camfw_ae_depend_regs[idx].regsize;
-      reg.regaddr = camfw_ae_depend_regs[idx].addr;
-
-      ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
-      camfw_printf("%s : %d\n", camfw_ae_depend_regs_str[idx], reg.regval);
-    }
-}
-
 void camfw_set_cap_shtagc(int mode, uint16_t shutter, int8_t agc)
 {
 #define CAP_HALF_AE_CTRL_ADDR     (0x0181)
@@ -954,13 +910,13 @@ static int camfw_ChangeImgSnsState(CamfwApiChgImgSnsState_t *p)
           {
             camfw_mng.fd = -1;
           }
-
+#if 0 //@@@
         ret = cxd56_cisiffinalize();
         if (ret != 0)
           {
             camfw_printf("ERROR: cxd56_cisiffinalize() %d.\n", ret);
           }
-
+#endif
         break;
 
       case CAMFW_STATE_POWON:
@@ -980,13 +936,13 @@ static int camfw_ChangeImgSnsState(CamfwApiChgImgSnsState_t *p)
             next_state = CAMFW_STATE_SLEEP;
 #endif /* CAMFW_INIT_ACTIVE */
           }
-
+#if 0 //@@@
         ret = cxd56_cisifinit();
         if (ret != 0)
           {
             camfw_printf("ERROR: cxd56_cisifinit() %d.\n", ret);
           }
-
+#endif
         break;
 
       default:
@@ -1197,7 +1153,7 @@ static void  camfw_SetImgSnsCaptureRegister(void)
     }
 }
 #endif
-
+#if 0 //@@@
 static void camfw_CreateCisifParam(CamfwMode_e mode, cisif_param_t *p)
 {
   CamfwImgResolution_e resolution;
@@ -1221,13 +1177,17 @@ static void camfw_CreateCisifParam(CamfwMode_e mode, cisif_param_t *p)
       p->jpg_param.comp_func = camfw_CallbackCisif;
     }
 }
-
+#endif
 static int camfw_CaptureFrame(CamfwApiCapFrame_t *p)
 {
-  int ret;
+  int ret = 0;
+#if 0 //@@@
   cisif_sarea_t cis_area;
   cisif_param_t cis_param;
-
+#else //@@@
+  cisif_param_t    cis;
+  CamfwImgFormat_e format;
+#endif
   if (camfw_mng.fd < 0)
     {
       return -ENODEV;
@@ -1267,8 +1227,9 @@ static int camfw_CaptureFrame(CamfwApiCapFrame_t *p)
     }
 
   memset(&camfw_cisif_result, 0, sizeof(camfw_cisif_result));
-
+#if 0 //@@@
   camfw_CreateCisifParam(p->mode, &cis_param);
+
   cis_area.strg_addr = (uint8_t *)p->buffer.addr;
   cis_area.strg_size = p->buffer.size;
 
@@ -1281,7 +1242,22 @@ static int camfw_CaptureFrame(CamfwApiCapFrame_t *p)
     {
       ret = cxd56_cisifcaptureframe(&cis_param, NULL, &cis_area);
     }
+#else //@@@
+  format = camfw_mng.cap_param[p->mode].format;
+  if (format == CAMFW_FORMAT_YUV)
+    {
+      cis.yuv_param.comp_func = camfw_CallbackCisif;
+    }
+  else
+    {
+      cis.jpg_param.comp_func = camfw_CallbackCisif;
+    }
 
+  cis.sarea.strg_addr = (uint8_t *)p->buffer.addr;
+  cis.sarea.strg_size = p->buffer.size;
+  cis.sarea.capnum    = 1;
+  ioctl(camfw_mng.fd, IMGIOC_SETCISIF, (unsigned long)&cis);
+#endif
   if (ret != OK)
     {
       camfw_printf("ERROR: cxd56_cisifcaptureframe() %d\n", ret);
@@ -1892,7 +1868,6 @@ static int  camfw_DoHalfRelease(CamfwApiDoHalfRelease_t *p)
       p->info.awb.awb_sts = (uint8_t)getval[2];
 
       camfw_GetIntmean(&p->info.intmean[0], &p->info.intmean_free);
-      camfw_show_ae_dependparam();
 
       camfw_mng.imgsns_mode  = CAMFW_IMGSNS_MODE_HALFREL;
 
@@ -2022,14 +1997,14 @@ static int camfw_MainTask(int argc, char *argv[])
     {
       goto err_exit;
     }
-
+#if 0 //@@@
   ret = cxd56_cisifinit();
   if (ret != 0)
     {
       camfw_printf("ERROR: cxd56_cisifinit() %d.\n", ret);
       goto err_exit;
     }
-
+#endif
   camfw_mng.init = CAMFW_TRUE;
   if (0 != sem_post(&camfw_mng.sem_apisync))
     {
@@ -2442,8 +2417,12 @@ int camfw_continuous_capture(CamfwContiParam_t *param,
 
 static int camfw_ContinuousCapture(CamfwApiContiCap_t *p)
 {
+#if 0 //@@@
   cisif_sarea_t cis_area;
   cisif_param_t cis_param;
+#else //@@@
+  cisif_param_t    cis;
+#endif
   uint32_t conti_capnum = 0;
   uint32_t correct_size = 0;
   int conti_end = CAMFW_FALSE;
@@ -2497,7 +2476,7 @@ static int camfw_ContinuousCapture(CamfwApiContiCap_t *p)
 
   camfw_mng.imgsns_mode = CAMFW_IMGSNS_MODE_CAP;
   memset(&camfw_cisif_result, 0, sizeof(camfw_cisif_result));
-
+#if 0 //@@@
   camfw_CreateCisifParam(p->mode, &cis_param);
   cis_param.jpg_param.comp_func = camfw_CallbackCisifConti;
   cis_area.strg_addr  = (uint8_t *)p->buffer.addr;
@@ -2514,7 +2493,14 @@ static int camfw_ContinuousCapture(CamfwApiContiCap_t *p)
       camfw_printf("ERROR: cxd56_cisifcontinuouscapture() %d\n", ret);
       goto exit;
     }
-
+#else //@@@
+  cis.jpg_param.comp_func = camfw_CallbackCisifConti;
+  cis.sarea.strg_addr = (uint8_t *)p->buffer.addr;
+  cis.sarea.strg_size = p->buffer.size;
+  cis.sarea.capnum    = p->capnum;
+  cis.sarea.interval  = p->interval;
+  ioctl(camfw_mng.fd, IMGIOC_SETCISIF, (unsigned long)&cis);
+#endif
   while (!conti_end)
     {
       ret = camfw_twaisem(&camfw_mng.sem_cisifsync,

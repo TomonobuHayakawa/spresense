@@ -49,6 +49,7 @@
 #include <nuttx/i2c/i2c_master.h>
 #include <nuttx/video/isx012.h>
 #include <arch/board/board.h>
+#include <arch/chip/cisif.h>
 
 #include "isx012_reg.h"
 
@@ -689,6 +690,7 @@ static int isx012_set_mode_param(isx012_dev_t *priv,
         }
 
     }
+
   if (cparam->format == REGVAL_OUTFMT_INTERLEAVE)
     {
       ret = isx012_putreg(priv, HSIZE_TN, cparam->int_hsize, sizeof(uint16_t));
@@ -704,7 +706,88 @@ static int isx012_set_mode_param(isx012_dev_t *priv,
         }
 
     }
+
   return OK;
+}
+
+static int isx012_change_cisif(isx012_dev_t *priv, cisif_param_t *param) //@@@
+{
+  int ret = 0;
+  isx012_format_t format;
+  uint16_t        hsize;
+  uint16_t        vsize;
+  cisif_sarea_t cis_area;
+  cisif_param_t cis_param;
+
+  memset(&cis_param, 0, sizeof(cisif_param_t));
+  cis_area.strg_addr = (uint8_t *)param->sarea.strg_addr;
+  cis_area.strg_size = param->sarea.strg_size;
+  cis_area.capnum    = param->sarea.capnum;
+  cis_area.interval  = param->sarea.interval;
+
+  if (g_mode == MODE_ISX012_MONITORING)
+    {
+      format = priv->image.moni_param.format;
+      if (format == FORMAT_ISX012_YUV)
+        {
+          hsize  = priv->image.moni_param.yuv_hsize;
+          vsize  = priv->image.moni_param.yuv_vsize;
+
+          cis_param.format = FORMAT_CISIF_YUV;
+          cis_param.yuv_param.hsize = hsize;
+          cis_param.yuv_param.vsize = vsize;
+          cis_param.yuv_param.comp_func = param->yuv_param.comp_func;
+        }
+      else if (format == FORMAT_ISX012_JPEG_MODE1)
+        {
+          hsize  = priv->image.moni_param.jpeg_hsize;
+          vsize  = priv->image.moni_param.jpeg_vsize;
+
+          cis_param.format = FORMAT_CISIF_JPEG;
+          cis_param.jpg_param.comp_func = param->jpg_param.comp_func;
+        }
+    }
+  else if (g_mode == MODE_ISX012_CAPTURE)
+    {
+      format = priv->image.cap_param.format;
+      if (format == FORMAT_ISX012_YUV)
+        {
+          hsize  = priv->image.cap_param.yuv_hsize;
+          vsize  = priv->image.cap_param.yuv_vsize;
+
+          cis_param.format = FORMAT_CISIF_YUV;
+          cis_param.yuv_param.hsize = hsize;
+          cis_param.yuv_param.vsize = vsize;
+          cis_param.yuv_param.comp_func = param->yuv_param.comp_func;
+        }
+      else if (format == FORMAT_ISX012_JPEG_MODE1)
+        {
+          hsize  = priv->image.cap_param.jpeg_hsize;
+          vsize  = priv->image.cap_param.jpeg_vsize;
+
+          cis_param.format = FORMAT_CISIF_JPEG;
+          cis_param.jpg_param.comp_func = param->jpg_param.comp_func;
+        }
+    }
+  else
+    {
+      format = FORMAT_ISX012_JPEG_MODE1;
+    }
+
+  if (param->sarea.capnum > 1)
+    {
+      ret = cxd56_cisifcontinuouscapture(&cis_param, &cis_area);
+    }
+  else if (format == FORMAT_ISX012_YUV)
+    {
+      ret = cxd56_cisifcaptureframe(&cis_param, &cis_area, NULL);
+    }
+  else
+    {
+      ret = cxd56_cisifcaptureframe(&cis_param, NULL, &cis_area);
+    }
+
+  return ret;
 }
 
 static int isx012_change_camera_mode(isx012_dev_t *priv, isx012_mode_t mode)
@@ -958,6 +1041,19 @@ static int isx012_change_mode_param(isx012_dev_t *priv, FAR isx012_t *imager)
       return ret;
     }
 
+  priv->image.moni_param.format     = imager->moni_param.format;
+  priv->image.moni_param.rate       = imager->moni_param.rate;
+  priv->image.cap_param.format      = imager->cap_param.format;
+  priv->image.cap_param.rate        = imager->cap_param.rate;
+  priv->image.moni_param.yuv_hsize  = imager->moni_param.yuv_hsize;
+  priv->image.moni_param.yuv_vsize  = imager->moni_param.yuv_vsize;
+  priv->image.moni_param.jpeg_hsize = imager->moni_param.jpeg_hsize;
+  priv->image.moni_param.jpeg_vsize = imager->moni_param.jpeg_vsize;
+  priv->image.cap_param.yuv_hsize   = imager->cap_param.yuv_hsize;
+  priv->image.cap_param.yuv_vsize   = imager->cap_param.yuv_vsize;
+  priv->image.cap_param.jpeg_hsize  = imager->cap_param.jpeg_hsize;
+  priv->image.cap_param.jpeg_vsize  = imager->cap_param.jpeg_vsize;
+
   return OK;
 }
 
@@ -1171,17 +1267,23 @@ static int isx012_open(FAR struct file *filep)
   ret = board_isx012_power_on();
   if (ret < 0)
     {
-      imagererr("Failed to power on.\n");
+      imagererr("Failed to power on %d\n", ret);
       return ret;
     }
 
   ret = isx012_initialize(priv);
   if (ret < 0)
     {
-      imagererr("Failed to open\n");
+      imagererr("Failed to open %d\n", ret);
       board_isx012_set_reset();
       board_isx012_power_off();
       return ret;
+    }
+
+  ret = cxd56_cisifinit();
+  if (ret < 0)
+    {
+      imagererr("Fail cxd56_cisifinit %d\n", ret);
     }
 
   return ret;
@@ -1201,7 +1303,14 @@ static int isx012_close(FAR struct file *filep)
   ret = board_isx012_power_off();
   if (ret < 0)
     {
-      imagererr("Failed to power off.\n");
+      imagererr("Failed to power off %d\n", ret);
+      return ret;
+    }
+
+  ret = cxd56_cisiffinalize();
+  if (ret < 0)
+    {
+      imagererr("Fail cxd56_cisiffinalize %d\n", ret);
       return ret;
     }
 
@@ -1228,6 +1337,9 @@ static int isx012_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
         break;
       case IMGIOC_SETMODEP:
         ret = isx012_change_mode_param(priv, (isx012_t *)arg);
+        break;
+      case IMGIOC_SETCISIF: //@@@
+        ret = isx012_change_cisif(priv, (cisif_param_t *)arg);
         break;
       case IMGIOC_READREG:
         ret = isx012_read_reg(priv, (isx012_reg_t *)arg);

@@ -1020,11 +1020,7 @@ int cxd56_cisifstopmonitoring(void)
 /****************************************************************************
  * cxd56_cisifcontinuouscapture
  ****************************************************************************/
-int cxd56_cisifcontinuouscapture(
-  cisif_param_t *param,
-  cisif_sarea_t *sarea,
-  uint32_t capnum,
-  uint32_t interval)
+int cxd56_cisifcontinuouscapture(cisif_param_t *param, cisif_sarea_t *sarea)
 {
   int ret;
   uint32_t interrupts = VS_INT | JPG_INT_ALL;
@@ -1056,10 +1052,10 @@ int cxd56_cisifcontinuouscapture(
   cisif_set_jpg_param(param);
   cisif_set_jpg_sarea(SAREA_FLAT, sarea);
 
-  g_conti_max_capnum = capnum;
-  g_conti_interval   = interval;
+  g_conti_max_capnum = sarea->capnum;
+  g_conti_interval   = sarea->interval;
   g_conti_capnum     = 0;
-  g_conti_vcnt       = interval;
+  g_conti_vcnt       = sarea->interval;
   g_conti_lastframe  = 0;
 
   g_state = STATE_CONTI_CAPTURE;

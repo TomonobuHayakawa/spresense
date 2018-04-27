@@ -72,22 +72,25 @@ struct cisif_init_jpeg_param_s
 
 typedef struct cisif_init_jpeg_param_s cisif_init_jpeg_param_t;
 
+struct cisif_sarea_s
+{
+  uint8_t *strg_addr;
+  uint32_t strg_size;
+  uint32_t capnum;
+  uint32_t interval;
+};
+
+typedef struct cisif_sarea_s cisif_sarea_t;
+
 struct cisif_param_s
 {
   format_cisif_t          format;
   cisif_init_yuv_param_t  yuv_param;
   cisif_init_jpeg_param_t jpg_param;
+  cisif_sarea_t           sarea;
 };
 
 typedef struct cisif_param_s cisif_param_t;
-
-struct cisif_sarea_s
-{
-  uint8_t *strg_addr;
-  uint32_t strg_size;
-};
-
-typedef struct cisif_sarea_s cisif_sarea_t;
 
 struct cisif_bank_sarea_s
 {
@@ -126,9 +129,7 @@ int cxd56_cisifstartmonitoring(
 int cxd56_cisifstopmonitoring(void);
 int cxd56_cisifcontinuouscapture(
   cisif_param_t *param,
-  cisif_sarea_t *sarea,
-  uint32_t capnum,
-  uint32_t interval);
+  cisif_sarea_t *sarea);
 
 #undef EXTERN
 #if defined(__cplusplus)
