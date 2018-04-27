@@ -68,6 +68,7 @@
 #define AK09912_ADDR         0x0C
 #define AK09912_FREQ         400000
 #define AK09912_DEVID        0x0448
+#define AK09911_DEVID        0x0548
 
 /* REGISTER: WIA
  * Who I am. */
@@ -280,7 +281,7 @@ static int ak09912_getreg(FAR struct ak09912_dev_s *priv, uint8_t regaddr, uint8
  * Name: ak09912_checkid
  *
  * Description:
- *   Read and verify the AK09912 chip ID
+ *   Read and verify the AK09911/AK09912 chip ID
  *
  ****************************************************************************/
 
@@ -294,7 +295,7 @@ static int ak09912_checkid(FAR struct ak09912_dev_s *priv)
   devid += ak09912_getreg8(priv, AK09912_WIA2) << 8;
   sninfo("devid: 0x%04x\n", devid);
 
-  if (devid != AK09912_DEVID)
+  if (devid != AK09911_DEVID && devid != AK09912_DEVID)
     {
       /* ID is not Correct */
 
