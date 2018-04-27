@@ -312,9 +312,6 @@ static uint64_t camfw_GetMsecTime(void)
 }
 #endif /* CAMFW_TIME_MEASURE */
 
-#if 1 //@@@
-#define ioctl(a, b, c) isx012_ioctl(b, c)
-#endif
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -437,17 +434,17 @@ void camfw_set_cap_shtagc(int mode, uint16_t shutter, int8_t agc)
       reg.regaddr = CAP_SHT_ADDR;
       reg.regsize = 2;
       reg.regval  = shutter;
-      ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 
       reg.regaddr = CAP_AGC_ADDR;
       reg.regsize = 1;
       reg.regval  = (uint16_t)agc;
-      ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 
       reg.regaddr = CAP_HALF_AE_CTRL_ADDR;
       reg.regsize = 1;
       reg.regval  = 3;
-      ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
     }
   else
     {
@@ -455,7 +452,7 @@ void camfw_set_cap_shtagc(int mode, uint16_t shutter, int8_t agc)
       reg.regaddr = CAP_HALF_AE_CTRL_ADDR;
       reg.regsize = 1;
       reg.regval  = 0x01;
-      ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
     }
 }
 
@@ -471,12 +468,12 @@ static int camfw_set_spot_window(uint8_t no)
   reg.regaddr = SPOT_FRM_NUM_ADDR;
   reg.regsize = 1;
   reg.regval  = (uint16_t)no;
-  ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 
   reg.regaddr = SPOT_SIDEWEIGHT;
   reg.regsize = 1;
   reg.regval  = 75;
-  ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 
   return 0;
 }
@@ -497,7 +494,7 @@ static int camfw_show_ae_intmean(void)
   for(idx = 0; idx < INTMEAN_REG_NUM; idx++)
     {
       reg.regaddr = INTMEAN_00_ADDR + (idx << 1);
-      ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+      isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
       intmean_val[idx] = (uint16_t)reg.regval;
     }
 
@@ -537,7 +534,7 @@ static int camfw_set_evref_type(int idx)
   reg.regsize = 2;
   reg.regval  = evref_type_val[idx];
 
-  ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 
   camfw_printf("EVREF_TYPE_VAL = %d\n", reg.regval);
   return 0;
@@ -611,7 +608,7 @@ static int camfw_set_gamma_table(int idx)
 
   for(no = 0; no < CAMFW_GAMMA_REGNUM; no++)
     {
-      ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)p_gamma_reg);
+      isx012_ioctl(IMGIOC_READREG, (unsigned long)p_gamma_reg);
       p_gamma_reg++;
     }
 
@@ -621,7 +618,7 @@ static int camfw_set_gamma_table(int idx)
     {
       reg.regaddr = (uint16_t)(GAMMA0_ADDR + (no << 1));
       reg.regval  = (uint16_t)gamma_reg_val[idx][no];
-      ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
       camfw_printf("[Knot%02d]%3d\n", no, reg.regval);
     }
 
@@ -794,7 +791,7 @@ static int camfw_InitImageSensor(void)
   DBG_TIME_STOP("open isx012 driver");
 
   /* Set Monitoring / Capture parameter */
-  ret = ioctl(camfw_mng.fd, IMGIOC_SETMODEP, (unsigned long)&camfw_isx);
+  ret = isx012_ioctl(IMGIOC_SETMODEP, (unsigned long)&camfw_isx);
   if (ret < 0)
     {
       camfw_printf("ERROR: Failed to ioctl IMGIOC_SETMODEP. %d\n", ret);
@@ -804,9 +801,7 @@ static int camfw_InitImageSensor(void)
   /* Set Initial parameter */
   for (idx = 0; idx < sizeof(camfw_init_regs)/sizeof(isx012_reg_t); idx++)
     {
-      ret = ioctl(camfw_mng.fd,
-                  IMGIOC_WRITEREG,
-                  (unsigned long)&camfw_init_regs[idx]);
+      ret = isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&camfw_init_regs[idx]);
       if (ret < 0)
         {
           camfw_printf("ERROR: Failed to ioctl IMGIOC_WRITEREG. %d\n", ret);
@@ -825,7 +820,7 @@ static int camfw_InitImageSensor(void)
 #ifdef CAMFW_INIT_ACTIVE
   /* Cmera Device status Sleep -> Active */
   DBG_TIME_START();
-  ret = ioctl(camfw_mng.fd, IMGIOC_SETSTATE, STATE_ISX012_ACTIVE);
+  ret = isx012_ioctl(IMGIOC_SETSTATE, STATE_ISX012_ACTIVE);
   DBG_TIME_STOP("ioctl IMGIOC_SETSTATE ACTIVE");
   if (ret < 0)
     {
@@ -898,7 +893,7 @@ static int camfw_ChangeImgSnsState(CamfwApiChgImgSnsState_t *p)
           }
 
         DBG_TIME_START();
-        ret = ioctl(camfw_mng.fd, IMGIOC_SETSTATE, STATE_ISX012_ACTIVE);
+        ret = isx012_ioctl(IMGIOC_SETSTATE, STATE_ISX012_ACTIVE);
         DBG_TIME_STOP("ioctl IMGIOC_SETSTATE(ACTIVE)");
         break;
 
@@ -909,7 +904,7 @@ static int camfw_ChangeImgSnsState(CamfwApiChgImgSnsState_t *p)
           }
 
         DBG_TIME_START();
-        ret = ioctl(camfw_mng.fd, IMGIOC_SETSTATE, STATE_ISX012_SLEEP);
+        ret = isx012_ioctl(IMGIOC_SETSTATE, STATE_ISX012_SLEEP);
         DBG_TIME_STOP("ioctl IMGIOC_SETSTATE(SLEEP)");
         break;
 
@@ -1029,7 +1024,7 @@ static int camfw_SetCaptureParam(CamfwApiSetCapParam_t *p)
     }
 
   DBG_TIME_START();
-  ret = ioctl(camfw_mng.fd, IMGIOC_SETMODEP, (unsigned long)&camfw_isx);
+  ret = isx012_ioctl(IMGIOC_SETMODEP, (unsigned long)&camfw_isx);
   DBG_TIME_STOP("ioctl IMGIOC_SETMODEP");
   if (ret < 0)
     {
@@ -1045,7 +1040,7 @@ static int camfw_SetCaptureParam(CamfwApiSetCapParam_t *p)
     }
 
   DBG_TIME_START();
-  ret = ioctl(camfw_mng.fd, IMGIOC_MONIREF, 0);
+  ret = isx012_ioctl(IMGIOC_MONIREF, 0);
   DBG_TIME_STOP("ioctl IMGIOC_MONIREF");
   if (ret < 0)
     {
@@ -1062,9 +1057,7 @@ static int camfw_SetImgSnsCropOff(void)
 
   for (idx = 0; idx < CAMFW_EZOOM_REGNUM; idx++)
     {
-      ret = ioctl(camfw_mng.fd,
-                  IMGIOC_WRITEREG,
-                  (unsigned long)&camfw_ezoom_regs[idx]);
+      ret = isx012_ioctl(IMGIOC_WRITEREG,(unsigned long)&camfw_ezoom_regs[idx]);
       if (ret < 0)
         {
           break;
@@ -1134,7 +1127,7 @@ static int camfw_SetImgSnsCrop(CamfwCapParam_t *param, CamfwCrop_t *crop)
       reg.regval  = ezoom_val[idx];
       reg.regsize = camfw_ezoom_regs[idx].regsize;
 
-      ret = ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+      ret = isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
       if (ret < 0)
         {
           break;
@@ -1158,9 +1151,7 @@ static void  camfw_SetImgSnsCaptureRegister(void)
 
   for (idx = 0; idx < sizeof(cap_regs)/sizeof(isx012_reg_t); idx++)
     {
-      ret = ioctl(camfw_mng.fd,
-                  IMGIOC_WRITEREG,
-                  (unsigned long)&cap_regs[idx]);
+      ret = isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&cap_regs[idx]);
       if (ret < 0)
         {
           break;
@@ -1231,7 +1222,7 @@ static int camfw_CaptureFrame(CamfwApiCapFrame_t *p)
     {
       camfw_printf("ioctl IMGIOC_SETMODE(CAPTURE) call.\n");
       DBG_TIME_START();
-      ret = ioctl(camfw_mng.fd, IMGIOC_SETMODE, MODE_ISX012_CAPTURE);
+      ret = isx012_ioctl(IMGIOC_SETMODE, MODE_ISX012_CAPTURE);
       DBG_TIME_STOP("ioctl IMGIOC_SETMODE(CAPTURE)");
       if (ret < 0)
         {
@@ -1271,7 +1262,7 @@ static int camfw_CaptureFrame(CamfwApiCapFrame_t *p)
   cis.sarea.strg_addr = (uint8_t *)p->buffer.addr;
   cis.sarea.strg_size = p->buffer.size;
   cis.sarea.capnum    = 1;
-  ioctl(camfw_mng.fd, IMGIOC_SETCISIF, (unsigned long)&cis);
+  isx012_ioctl(IMGIOC_SETCISIF, (unsigned long)&cis);
 #endif
   if (ret != OK)
     {
@@ -1303,7 +1294,7 @@ exit:
     {
       camfw_printf("ioctl IMGIOC_SETMODE(MONITORING) call.\n");
       DBG_TIME_START();
-      ret = ioctl(camfw_mng.fd, IMGIOC_SETMODE, MODE_ISX012_MONITORING);
+      ret = isx012_ioctl(IMGIOC_SETMODE, MODE_ISX012_MONITORING);
       DBG_TIME_STOP("ioctl IMGIOC_SETMODE(MONITORING)");
       if (ret < 0)
         {
@@ -1396,7 +1387,7 @@ static int camfw_GetPictureInfo(CamfwPictureInfo_t *pict_info)
   /* ISO */
   reg.regaddr = camfw_exif_regs[0].addr;
   reg.regsize = camfw_exif_regs[0].regsize;
-  ret = ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+  ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
   if (ret < 0)
     {
       return ret;
@@ -1406,7 +1397,7 @@ static int camfw_GetPictureInfo(CamfwPictureInfo_t *pict_info)
   /* Shutter low */
   reg.regaddr = camfw_exif_regs[1].addr;
   reg.regsize = camfw_exif_regs[1].regsize;
-  ret = ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+  ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
   if (ret < 0)
     {
       return ret;
@@ -1416,7 +1407,7 @@ static int camfw_GetPictureInfo(CamfwPictureInfo_t *pict_info)
   /* Shutter high */
   reg.regaddr = camfw_exif_regs[2].addr;
   reg.regsize = camfw_exif_regs[2].regsize;
-  ret = ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+  ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
   if (ret < 0)
     {
       return ret;
@@ -1513,7 +1504,7 @@ static int camfw_SetImgSnsParam(CamfwApiSetImgSnsParam_t *p)
 
   reg.regaddr = camfw_set_imgsns_regs[p->param.id].addr;
   reg.regsize = camfw_set_imgsns_regs[p->param.id].regsize;
-  ret = ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+  ret = isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
   if (ret < 0)
     {
       return ret;
@@ -1525,7 +1516,7 @@ static int camfw_SetImgSnsParam(CamfwApiSetImgSnsParam_t *p)
     }
 
   DBG_TIME_START();
-  ret = ioctl(camfw_mng.fd, IMGIOC_MONIREF, 0);
+  ret = isx012_ioctl(IMGIOC_MONIREF, 0);
   DBG_TIME_STOP("ioctl IMGIOC_MONIREF");
   if (ret < 0)
     {
@@ -1617,7 +1608,7 @@ static int camfw_SetImgSnsParamAll(CamfwApiSetImgSnsParamAll_t *p)
 
       reg.regaddr = camfw_set_imgsns_regs[idx].addr;
       reg.regsize = camfw_set_imgsns_regs[idx].regsize;
-      ret = ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+      ret = isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
       if (ret < 0)
         {
           break;
@@ -1630,7 +1621,7 @@ static int camfw_SetImgSnsParamAll(CamfwApiSetImgSnsParamAll_t *p)
     }
 
   DBG_TIME_START();
-  ret = ioctl(camfw_mng.fd, IMGIOC_MONIREF, 0);
+  ret = isx012_ioctl(IMGIOC_MONIREF, 0);
   DBG_TIME_STOP("ioctl IMGIOC_MONIREF");
   if (ret < 0)
     {
@@ -1655,7 +1646,7 @@ static int camfw_WriteImgSnsRegister(CamfwApiImgSnsReg_t *p)
   reg.regsize = p->regsize;
 
   DBG_TIME_START();
-  ret = ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+  ret = isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
   DBG_TIME_STOP("ioctl IMGIOC_WRITEREG");
 
   return ret;
@@ -1676,7 +1667,7 @@ static int camfw_ReadImgSnsRegister(CamfwApiImgSnsReg_t *p)
   reg.regval  = 0;
 
   DBG_TIME_START();
-  ret = ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+  ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
   DBG_TIME_STOP("ioctl IMGIOC_READREG");
   if (ret < 0)
     {
@@ -1700,7 +1691,7 @@ static int camfw_WaitAutoProcessEnd(void)
 
   while(time < CAMFW_ISX012_HALFREL_TIMEOUT)
     {
-      ret = ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+      ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
       if (ret < 0)
         {
           return ret;
@@ -1741,13 +1732,13 @@ static int  camfw_GetIntmean(uint16_t *buf, uint16_t *free)
   for(idx = 0; idx < CAMFW_AE_WINDOW_MAX; idx++)
     {
       reg.regaddr = INTMEAN_00_ADDR + (idx << 1);
-      ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+      isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
       *buf = (uint16_t)reg.regval;
       buf++;
     }
 
   reg.regaddr = INTMEAN_FREE_ADDR;
-  ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+  isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
   *free = (uint16_t)reg.regval;
 
   return 0;
@@ -1795,7 +1786,7 @@ static int  camfw_DoHalfRelease(CamfwApiDoHalfRelease_t *p)
         }
 
       DBG_TIME_START();
-      ret = ioctl(camfw_mng.fd, IMGIOC_SETMODE, MODE_ISX012_MONITORING);
+      ret = isx012_ioctl(IMGIOC_SETMODE, MODE_ISX012_MONITORING);
       DBG_TIME_STOP("ioctl IMGIOC_SETMODE(MONITORING)");
       if (ret < 0)
         {
@@ -1828,7 +1819,7 @@ static int  camfw_DoHalfRelease(CamfwApiDoHalfRelease_t *p)
 #endif /* CAMFW_IMG_TUNING */
 
       DBG_TIME_START();
-      ret = ioctl(camfw_mng.fd, IMGIOC_SETMODE, MODE_ISX012_HALFRELEASE);
+      ret = isx012_ioctl(IMGIOC_SETMODE, MODE_ISX012_HALFRELEASE);
       DBG_TIME_STOP("ioctl IMGIOC_SETMODE(HALFRELEASE)");
       if (ret < 0)
         {
@@ -1843,7 +1834,7 @@ static int  camfw_DoHalfRelease(CamfwApiDoHalfRelease_t *p)
       if (ret != 0)
         {
           camfw_printf("ERROR: camfw_WaitAutoProcessEnd() timeout:%d\n", ret);
-          ioctl(camfw_mng.fd, IMGIOC_SETMODE, MODE_ISX012_MONITORING);
+          isx012_ioctl(IMGIOC_SETMODE, MODE_ISX012_MONITORING);
           return ret;
       }
 
@@ -1851,7 +1842,7 @@ static int  camfw_DoHalfRelease(CamfwApiDoHalfRelease_t *p)
         {
           reg.regaddr = camfw_ae_now_regs[idx].addr;
           reg.regsize = camfw_ae_now_regs[idx].regsize;
-          ret = ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+          ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
           if (ret < 0)
             {
               return ret;
@@ -1870,7 +1861,7 @@ static int  camfw_DoHalfRelease(CamfwApiDoHalfRelease_t *p)
         {
           reg.regaddr = camfw_awb_now_regs[idx].addr;
           reg.regsize = camfw_awb_now_regs[idx].regsize;
-          ret = ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+          ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
           if (ret < 0)
             {
               return ret;
@@ -1930,7 +1921,7 @@ static int  camfw_GetAutoParam(CamfwApiGetAutoParam_t *p)
     {
       reg.regaddr = camfw_ae_auto_regs[idx].addr;
       reg.regsize = camfw_ae_auto_regs[idx].regsize;
-      ret = ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+      ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
       if (ret < 0)
         {
           return ret;
@@ -1949,7 +1940,7 @@ static int  camfw_GetAutoParam(CamfwApiGetAutoParam_t *p)
     {
       reg.regaddr = camfw_awb_auto_regs[idx].addr;
       reg.regsize = camfw_awb_auto_regs[idx].regsize;
-      ret = ioctl(camfw_mng.fd, IMGIOC_READREG, (unsigned long)&reg);
+      ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
       if (ret < 0)
         {
           return ret;
@@ -2476,12 +2467,12 @@ static int camfw_ContinuousCapture(CamfwApiContiCap_t *p)
   reg.regval  = 0x7;
   reg.regaddr = 0x0181;
   reg.regsize = 1;
-  ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 #endif /* CAMFW_CONTI_BRACKET */
 
   camfw_printf("ioctl IMGIOC_SETMODE(CAPTURE) call.\n");
   DBG_TIME_START();
-  ret = ioctl(camfw_mng.fd, IMGIOC_SETMODE, MODE_ISX012_CAPTURE);
+  ret = isx012_ioctl(IMGIOC_SETMODE, MODE_ISX012_CAPTURE);
   DBG_TIME_STOP("ioctl IMGIOC_SETMODE(CAPTURE)");
   if (ret < 0)
     {
@@ -2514,7 +2505,7 @@ static int camfw_ContinuousCapture(CamfwApiContiCap_t *p)
   cis.sarea.strg_size = p->buffer.size;
   cis.sarea.capnum    = p->capnum;
   cis.sarea.interval  = p->interval;
-  ioctl(camfw_mng.fd, IMGIOC_SETCISIF, (unsigned long)&cis);
+  isx012_ioctl(IMGIOC_SETCISIF, (unsigned long)&cis);
 #endif
   while (!conti_end)
     {
@@ -2549,13 +2540,13 @@ static int camfw_ContinuousCapture(CamfwApiContiCap_t *p)
       reg.regaddr = camfw_set_imgsns_regs[CAMFW_PARAM_ID_EV].addr;
       reg.regsize = camfw_set_imgsns_regs[CAMFW_PARAM_ID_EV].regsize;
       camfw_printf("IMGIOC_WRITEREG : EV:\n", reg.regval);
-      ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 
       reg.regval = (uint16_t)127;
       reg.regaddr = camfw_set_imgsns_regs[CAMFW_PARAM_ID_BRIGHTNESS].addr;
       reg.regsize = camfw_set_imgsns_regs[CAMFW_PARAM_ID_BRIGHTNESS].regsize;
       camfw_printf("IMGIOC_WRITEREG : BRIGHTNESS:\n", reg.regval);
-      ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 #endif /* CAMFW_CONTI_BRACKET */
 
       if (conti_capnum == p->capnum)
@@ -2579,24 +2570,24 @@ exit:
   reg.regval  = 0x1;
   reg.regaddr = 0x0181;
   reg.regsize = 1;
-  ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 
   reg.regval = (uint16_t)CAMFW_EV_OFF;
   reg.regaddr = camfw_set_imgsns_regs[CAMFW_PARAM_ID_EV].addr;
   reg.regsize = camfw_set_imgsns_regs[CAMFW_PARAM_ID_EV].regsize;
   camfw_printf("IMGIOC_WRITEREG : EV:\n", reg.regval);
-  ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 
   reg.regval = (uint16_t)0;
   reg.regaddr = camfw_set_imgsns_regs[CAMFW_PARAM_ID_BRIGHTNESS].addr;
   reg.regsize = camfw_set_imgsns_regs[CAMFW_PARAM_ID_BRIGHTNESS].regsize;
   camfw_printf("IMGIOC_WRITEREG : BRIGHTNESS:\n", reg.regval);
-  ioctl(camfw_mng.fd, IMGIOC_WRITEREG, (unsigned long)&reg);
+  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
 #endif /* CAMFW_CONTI_BRACKET */
 
   camfw_printf("ioctl IMGIOC_SETMODE(MONITORING) call.\n");
   DBG_TIME_START();
-  ret = ioctl(camfw_mng.fd, IMGIOC_SETMODE, MODE_ISX012_MONITORING);
+  ret = isx012_ioctl(IMGIOC_SETMODE, MODE_ISX012_MONITORING);
   DBG_TIME_STOP("ioctl IMGIOC_SETMODE(MONITORING)");
   if (ret < 0)
     {

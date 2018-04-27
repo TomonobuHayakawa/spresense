@@ -164,6 +164,9 @@ extern "C"
  ****************************************************************************/
 
 int isx012_initialize(isx012_dev_t *priv);
+int isx012_open( void );
+int isx012_close( void );
+int isx012_ioctl(int cmd, unsigned long arg);
 
 #undef EXTERN
 #ifdef __cplusplus

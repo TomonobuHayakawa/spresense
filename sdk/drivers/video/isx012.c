@@ -1343,8 +1343,6 @@ int isx012_ioctl(int cmd, unsigned long arg)
 int isx012_register(FAR struct i2c_master_s *i2c)
 {
   FAR struct isx012_dev_s *priv = &g_private;
-  char path[16];
-  int ret;
 
   g_i2c_freq = I2CFREQ_STANDARD;
   g_state    = STATE_ISX012_POWEROFF;
@@ -1369,5 +1367,5 @@ int isx012_register(FAR struct i2c_master_s *i2c)
   priv->image.cap_param.jpeg_vsize  = 480;
   sem_init(&priv->wait, 0, 0);
 
-  return ret;
+  return OK;
 }

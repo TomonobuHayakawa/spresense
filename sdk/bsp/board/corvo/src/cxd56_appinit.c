@@ -314,10 +314,6 @@ int board_app_initialize(uintptr_t arg)
   cxd224x_initialize("/dev/cxd224x-i2c", 1);
 #endif
 
-#ifdef CONFIG_VIDEO_ISX012
-  board_isx012_initialize("/dev/imager", IMAGER_I2C);
-#endif
-
 #ifdef CONFIG_CXD5247_CHARGER
   charger = cxd5247_charger_initialize();
   ret = battery_charger_register("/dev/charger", charger);
