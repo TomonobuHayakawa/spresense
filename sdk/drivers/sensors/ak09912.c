@@ -67,7 +67,8 @@
  * REGISTER: WIA
  * Who I am.
  */
-  #define AK09912_DEVADD    0x01
+#define AK09912_WIA1       0x00
+#define AK09912_WIA2       0x01
 
 /**
  * REGISTER: CNTL2
@@ -468,20 +469,21 @@ static int ak09912_read_mag_data(FAR struct ak09912_dev_s* priv, FAR struct mag_
  * Name: ak09912_checkid
  *
  * Description:
- *   Read and verify the BMP280 chip ID
+ *   Read and verify the AK09911/AK09912 chip ID
  *
  ****************************************************************************/
 
 static int ak09912_checkid(FAR struct ak09912_dev_s *priv)
 {
-  uint8_t devid = 0;
+  uint16_t devid = 0;
 
   /* Read device ID */
 
-  devid = ak09912_getreg8(priv, AK09912_DEVADD);
+  devid = ak09912_getreg8(priv, AK09912_WIA1);
+  devid += ak09912_getreg8(priv, AK09912_WIA2) << 8;
   sninfo("devid: 0x%02x\n", devid);
 
-  if (devid != (uint16_t) AK09912_DEVID)
+  if (devid != AK09911_DEVID && devid != AK09912_DEVID)
     {
       /* ID is not Correct */
 
@@ -515,7 +517,7 @@ static int ak09912_initialize(FAR struct ak09912_dev_s *priv)
  * Name: ak09912_open
  *
  * Description:
- *   This function is called whenever the BMP2801 device is opened.
+ *   This function is called whenever the AK09912 device is opened.
  *
  ****************************************************************************/
 
@@ -538,7 +540,7 @@ static int ak09912_open(FAR struct file *filep)
  * Name: ak09912_close
  *
  * Description:
- *   This routine is called when the BMP280 device is closed.
+ *   This routine is called when the AK09912 device is closed.
  *
  ****************************************************************************/
 
@@ -698,7 +700,7 @@ int ak09912_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   ret = ak09912_initialize(priv);
   if (ret < 0)
     {
-      snerr("Failed to initialize physical device bmp280:%d\n", ret);
+      snerr("Failed to initialize physical device ak09912:%d\n", ret);
       kmm_free(priv);
       return ret;
     }
