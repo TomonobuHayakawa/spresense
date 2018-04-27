@@ -207,14 +207,11 @@ static int isx012_read_reg(isx012_dev_t *priv, isx012_reg_t *reg);
 static int isx012_change_mode_param(isx012_dev_t *priv, FAR isx012_t *imager);
 static int isx012_set_moni_refresh(isx012_dev_t *priv, unsigned long arg);
 
-static int isx012_open(FAR struct file *filep);
-static int isx012_close(FAR struct file *filep);
-static int isx012_ioctl(FAR struct file *filep, int cmd, unsigned long arg);
-
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
+static isx012_dev_t   g_private;
 static isx012_state_t g_state;
 static isx012_mode_t  g_mode;
 static uint32_t g_i2c_freq = I2CFREQ_STANDARD;
@@ -317,20 +314,6 @@ static const isx012_reg_t g_isx012_def_init[] = {
 #endif
 };
 #define ISX012_RESET_NENTRIES ARRAY_NENTRIES(g_isx012_def_init)
-
-static const struct file_operations g_isx012fops =
-{
-  isx012_open,              /* open */
-  isx012_close,             /* close */
-  0,                        /* read */
-  0,                        /* write */
-  0,                        /* seek */
-  isx012_ioctl,             /* ioctl */
-#ifndef CONFIG_DISABLE_POLL
-  0,                        /* poll */
-#endif
-  0                         /* unlink */
-};
 
 /****************************************************************************
  * Private Function Prototypes
@@ -710,7 +693,7 @@ static int isx012_set_mode_param(isx012_dev_t *priv,
   return OK;
 }
 
-static int isx012_change_cisif(isx012_dev_t *priv, cisif_param_t *param) //@@@
+static int isx012_change_cisif(isx012_dev_t *priv, cisif_param_t *param)
 {
   int ret = 0;
   isx012_format_t format;
@@ -1258,10 +1241,9 @@ int isx012_initialize(isx012_dev_t *priv)
   return OK;
 }
 
-static int isx012_open(FAR struct file *filep)
+int isx012_open( void )
 {
-  FAR struct inode        *inode = filep->f_inode;
-  FAR struct isx012_dev_s *priv = inode->i_private;
+  FAR struct isx012_dev_s *priv = &g_private;
   int ret = 0;
 
   ret = board_isx012_power_on();
@@ -1289,7 +1271,7 @@ static int isx012_open(FAR struct file *filep)
   return ret;
 }
 
-static int isx012_close(FAR struct file *filep)
+int isx012_close( void )
 {
   int ret = 0;
 
@@ -1321,10 +1303,9 @@ static int isx012_close(FAR struct file *filep)
   return ret;
 }
 
-static int isx012_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
+int isx012_ioctl(int cmd, unsigned long arg)
 {
-  FAR struct inode *inode = filep->f_inode;
-  FAR struct isx012_dev_s *priv  = inode->i_private;
+  FAR struct isx012_dev_s *priv  = &g_private;
   int ret = OK;
 
   switch (cmd)
@@ -1338,7 +1319,7 @@ static int isx012_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
       case IMGIOC_SETMODEP:
         ret = isx012_change_mode_param(priv, (isx012_t *)arg);
         break;
-      case IMGIOC_SETCISIF: //@@@
+      case IMGIOC_SETCISIF:
         ret = isx012_change_cisif(priv, (cisif_param_t *)arg);
         break;
       case IMGIOC_READREG:
@@ -1359,20 +1340,11 @@ static int isx012_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
   return ret;
 }
 
-int isx012_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
+int isx012_register(FAR struct i2c_master_s *i2c)
 {
-  FAR struct isx012_dev_s *priv;
+  FAR struct isx012_dev_s *priv = &g_private;
   char path[16];
   int ret;
-
-  /* Initialize the ISX012 device structure */
-
-  priv = (FAR struct isx012_dev_s *)kmm_malloc(sizeof(struct isx012_dev_s));
-  if (!priv)
-    {
-      imagererr("Failed to allocate instance\n");
-      return -ENOMEM;
-    }
 
   g_i2c_freq = I2CFREQ_STANDARD;
   g_state    = STATE_ISX012_POWEROFF;
@@ -1396,20 +1368,6 @@ int isx012_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
   priv->image.cap_param.jpeg_hsize  = 640;
   priv->image.cap_param.jpeg_vsize  = 480;
   sem_init(&priv->wait, 0, 0);
-
-  /* Register the character driver */
-
-  (void) snprintf(path, sizeof(path), "%s%d", devpath, 0);
-  ret = register_driver(path, &g_isx012fops, 0666, priv);
-  if (ret < 0)
-    {
-      imagererr("Failed to register driver: %d\n", ret);
-      kmm_free(priv);
-    }
-  else
-    {
-      imagerinfo("ISX012 driver loaded successfully!\n");
-    }
 
   return ret;
 }

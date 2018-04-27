@@ -172,7 +172,7 @@ void board_isx012_release_sleep(void)
   usleep(SLEEP_CANCEL_TIME);
 }
 
-int isx012_register(FAR const char *devpath, FAR struct i2c_master_s *i2c);
+int isx012_register(FAR struct i2c_master_s *i2c);
 
 int board_isx012_initialize(FAR const char *devpath, int bus)
 {
@@ -232,7 +232,7 @@ int board_isx012_initialize(FAR const char *devpath, int bus)
       return -ENODEV;
     }
 
-  ret = isx012_register(devpath, i2c);
+  ret = isx012_register(i2c);
   if (ret < 0)
     {
       _err("Error registering ISX012.\n");

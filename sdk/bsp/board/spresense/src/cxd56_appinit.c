@@ -283,10 +283,6 @@ int board_app_initialize(uintptr_t arg)
   board_sensors_initialize();
 #endif
 
-#ifdef CONFIG_VIDEO_ISX012
-  board_isx012_initialize("/dev/imager", IMAGER_I2C);
-#endif
-
 #ifdef CONFIG_CXD56_SFC
   ret = board_flash_initialize();
   if (ret < 0)

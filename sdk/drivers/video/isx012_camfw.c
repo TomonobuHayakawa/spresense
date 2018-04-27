@@ -312,6 +312,9 @@ static uint64_t camfw_GetMsecTime(void)
 }
 #endif /* CAMFW_TIME_MEASURE */
 
+#if 1 //@@@
+#define ioctl(a, b, c) isx012_ioctl(b, c)
+#endif
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -778,13 +781,17 @@ static int camfw_InitImageSensor(void)
   int idx;
 
   DBG_TIME_START();
+#if 0 //@@@
   camfw_mng.fd = open("/dev/imager0", O_CREAT);
-  DBG_TIME_STOP("open isx012 driver");
   if (camfw_mng.fd < 0)
     {
       camfw_printf("ERROR: Failed to open isx012. %d\n", errno);
       return -ENODEV;
     }
+#else //@@@
+  isx012_open();
+#endif
+  DBG_TIME_STOP("open isx012 driver");
 
   /* Set Monitoring / Capture parameter */
   ret = ioctl(camfw_mng.fd, IMGIOC_SETMODEP, (unsigned long)&camfw_isx);
@@ -866,7 +873,11 @@ static int camfw_ChangeImgSnsState(CamfwApiChgImgSnsState_t *p)
   int ret;
   CamfwImgSnsState_e next_state;
 
+#if 0 //@@@
   if ((camfw_mng.imgsns_state != CAMFW_STATE_POWOFF) && (camfw_mng.fd < 0))
+#else //@@@
+  if (camfw_mng.imgsns_state != CAMFW_STATE_POWOFF)
+#endif
     {
       return -ENODEV;
     }
@@ -904,12 +915,16 @@ static int camfw_ChangeImgSnsState(CamfwApiChgImgSnsState_t *p)
 
       case CAMFW_STATE_POWOFF:
         DBG_TIME_START();
+#if 0 //@@@
         ret = close(camfw_mng.fd);
-        DBG_TIME_STOP("close -> IMGSNS_POWER_OFF");
+#else //@@@
+        ret = isx012_close();
+#endif
         if (ret == 0)
           {
             camfw_mng.fd = -1;
           }
+        DBG_TIME_STOP("close -> IMGSNS_POWER_OFF");
 #if 0 //@@@
         ret = cxd56_cisiffinalize();
         if (ret != 0)
