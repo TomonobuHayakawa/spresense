@@ -203,24 +203,6 @@ static int run_worker(const char *filename)
       return ret;
     }
 
-  /* Pause worker */
-
-  ret = mptask_pause(&mptask);
-  if (ret < 0)
-    {
-      err("mptask_pause() failure. %d\n", ret);
-      return ret;
-    }
-
-  /* Restart worker */
-
-  ret = mptask_restart(&mptask);
-  if (ret < 0)
-    {
-      err("mptask_restart() failure. %d\n", ret);
-      return ret;
-    }
-
   /* Send command to worker */
 
   ret = mpmq_send(&mq, MSG_ID_SAYHELLO, 0xdeadbeef);
