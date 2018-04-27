@@ -63,11 +63,11 @@ config BMP280_SCU
 endif # BMP280
 
 config AK09912
-	bool "Asahi AK09912 Compass Sensor"
+	bool "Asahi AK09911/AK09912 Compass Sensor"
 	default n
 	select CXD56_I2C
 	---help---
-		Enable driver for AK09912 Compass sensor.
+		Enable driver for AK09911/AK09912 Compass sensor.
 
 if AK09912
 
