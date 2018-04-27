@@ -23,10 +23,4 @@ config EXAMPLES_AUDIO_PLAYER_PRIORITY
 config EXAMPLES_AUDIO_PLAYER_STACKSIZE
 	int "Audio player stack size"
 	default 2048
-
-config EXAMPLES_AUDIO_PLAYER_USE_SUBPLAYER
-    bool "Use subplayer" 
-    default n
-    ---help---
-        Use subplayer or not
 endif
