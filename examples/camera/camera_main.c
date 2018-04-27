@@ -368,6 +368,10 @@ static int camera_main_init(void)
 
   printf("CPU BaseClock:%dHz\n", cxd56_get_cpu_baseclk());
 
+#ifdef CONFIG_VIDEO_ISX012
+  board_isx012_initialize("/dev/imager", IMAGER_I2C);
+#endif
+
 #ifdef CONFIG_SYSTEM_USBMSC
   /* Create a RAMDISK */
   if (0 < ramdisk_register(RAMDISK_MINOR,
@@ -399,6 +403,7 @@ static void camera_main_disable_unused_board_power(void)
   board_xtal_power_control(0);  /* IS_MCLK = INCK */
   board_lna_power_control(0);
 #endif
+#ifdef CONFIG_BOARD_SPRESENSE
   board_flash_power_control(0);
 
   board_power_control(POWER_LDO_PERI, 0);
@@ -408,6 +413,7 @@ static void camera_main_disable_unused_board_power(void)
   /* Defaut Off */
   board_power_control(POWER_AUDIO_AVDD, 0);
   board_power_control(POWER_AUDIO_MUTE, 0);
+#endif
 }
 
 static int camera_main_write_ramdisk(
