@@ -51,8 +51,8 @@
 #include <nuttx/board.h>
 #include <nuttx/fs/mkfatfs.h>
 #include <nuttx/drivers/ramdisk.h>
+#include <nuttx/video/video.h>
 #include <nuttx/video/isx012.h>
-#include <nuttx/video/isx012_camfw.h>
 
 #include <sys/ioctl.h>
 #include <sys/boardctl.h>
@@ -133,16 +133,16 @@ struct capture_info_s
  ****************************************************************************/
 static int  camera_main_init(void);
 static int  camera_main_write_ramdisk(uint8_t *data, size_t len,
-                                      CamfwCapFrameInfo_t *info,
-                                      CamfwCrop_t *crop);
+                                      video_cap_frame_info_t *info,
+                                      video_crop_t *crop);
 static int camera_main_thread_stop(void);
-static int camera_main_thread_start(CamfwMode_e mode);
+static int camera_main_thread_start(video_mode_e mode);
 static void *camera_main_moni_thread(void *arg);
 static void *camera_main_cap_thread(void *arg);
 
 #ifdef CAMERA_MAIN_JPEG_INFO
-static int camera_main_create_info(CamfwCapFrameInfo_t *info,
-                                   CamfwCrop_t *crop);
+static int camera_main_create_info(video_cap_frame_info_t *info,
+                                   video_crop_t *crop);
 #endif /* CAMERA_MAIN_JPEG_INFO */
 
 static uint64_t camera_main_get_mstime(void);
@@ -180,7 +180,7 @@ static uint64_t camera_main_time_start;
 static uint8_t camera_main_file_count = 0;
 static char camera_main_filename[32];
 
-static const char *iso_str[CAMFW_ISO_MAX] =
+static const char *iso_str[VIDEO_ISO_MAX] =
   {
     "NONE   ", "ISO25  ", "ISO32  ", "ISO40  ", "ISO50  ", "ISO64  ",
     "ISO100 ", "ISO125 ", "ISO160 ", "ISO200 ", "ISO250 ", "ISO320 ",
@@ -419,8 +419,8 @@ static void camera_main_disable_unused_board_power(void)
 static int camera_main_write_ramdisk(
   uint8_t *data,
   size_t len,
-  CamfwCapFrameInfo_t *info,
-  CamfwCrop_t *crop
+  video_cap_frame_info_t *info,
+  video_crop_t *crop
 )
 {
   FILE *fp;
@@ -445,7 +445,7 @@ static int camera_main_write_ramdisk(
 
   memset(camera_main_filename, 0, sizeof(camera_main_filename));
   sprintf(camera_main_filename,
-         "/mnt/vfat/CAMFW%03d.JPG",
+         "/mnt/vfat/VIDEO%03d.JPG",
           camera_main_file_count);
   printf("FILENAME:%s\n", camera_main_filename);
 
@@ -490,31 +490,31 @@ static int camera_main_write_ramdisk(
 
 static void *camera_main_cap_thread(void *arg)
 {
-  CamfwBuffer_t buffer;
-  CamfwCapFrameInfo_t info;
-  CamfwCapParam_t param;
-  CamfwImgSnsParam_t imgsns_param;
-  CamfwAutoInfo_t auto_info;
+  video_buffer_t buffer;
+  video_cap_frame_info_t info;
+  video_cap_param_t param;
+  video_img_sns_param_t imgsns_param;
+  video_auto_info_t auto_info;
   int ret;
 
   pthread_detach(pthread_self());
 
   printf("camera_main_cap_thread() start. \n");
 
-  printf("camfw_change_imgsns_state(POWOFF) call.\n");
-  ret = camfw_change_imgsns_state(CAMFW_STATE_POWOFF);
+  printf("video_change_imgsns_state(POWOFF) call.\n");
+  ret = video_change_imgsns_state(VIDEO_STATE_POWOFF);
   if (ret != 0)
     {
-      printf("camfw_change_imgsns_state(POWOFF) error %d\n", ret);
+      printf("video_change_imgsns_state(POWOFF) error %d\n", ret);
       goto exit;
     }
   usleep(MAX_SLEEP_TIME);
 
-  param.format = CAMFW_FORMAT_JPEG;
-  param.resolution = CAMFW_QUADVGA;
-  param.framerate = CAMFW_15FPS;
+  param.format = VIDEO_FORMAT_JPEG;
+  param.resolution = VIDEO_QUADVGA;
+  param.framerate = VIDEO_15FPS;
 
-  imgsns_param.id = CAMFW_PARAM_ID_JPEG_QUALITIY;
+  imgsns_param.id = VIDEO_PARAM_ID_JPEG_QUALITIY;
   imgsns_param.val.jpeg_qualitiy = 75;
 
   buffer.addr = (uint32_t)camera_img_buf;
@@ -525,70 +525,70 @@ static void *camera_main_cap_thread(void *arg)
       up_pm_acquire_freqlock(&img_lock_hv);
       printf("CPU BaseClock:%dHz\n", cxd56_get_cpu_baseclk());
 
-      printf("camfw_change_imgsns_state(POWON) call.\n");
-      ret = camfw_change_imgsns_state(CAMFW_STATE_POWON);
+      printf("video_change_imgsns_state(POWON) call.\n");
+      ret = video_change_imgsns_state(VIDEO_STATE_POWON);
       if (ret != 0)
         {
-          printf("camfw_change_imgsns_state(POWON) error %d\n", ret);
+          printf("video_change_imgsns_state(POWON) error %d\n", ret);
           goto exit;
         }
 
       usleep(MAX_SLEEP_TIME);
 
-      printf("camfw_set_capture_param() call.\n");
-      ret = camfw_set_capture_param(CAMFW_MODE_CAPTURE, &param);
+      printf("video_id_set_capture_param() call.\n");
+      ret = video_id_set_capture_param(VIDEO_MODE_CAPTURE, &param);
       if (ret != 0)
         {
-          printf("camfw_set_capture_param() error %d\n", ret);
+          printf("video_id_set_capture_param() error %d\n", ret);
           goto exit;
         }
 
-      printf("camfw_set_imgsns_param() call.\n");
-      ret = camfw_set_imgsns_param(&imgsns_param);
+      printf("video_set_imgsns_param() call.\n");
+      ret = video_set_imgsns_param(&imgsns_param);
       if (ret != 0)
         {
-          printf("camfw_set_imgsns_param() error %d\n", ret);
+          printf("video_set_imgsns_param() error %d\n", ret);
           goto exit;
         }
 
-      printf("camfw_change_imgsns_state(ACTIVE) call.\n");
-      ret = camfw_change_imgsns_state(CAMFW_STATE_ACTIVE);
+      printf("video_change_imgsns_state(ACTIVE) call.\n");
+      ret = video_change_imgsns_state(VIDEO_STATE_ACTIVE);
       if (ret != 0)
         {
-          printf("camfw_change_imgsns_state(ACTIVE) error %d\n", ret);
+          printf("video_change_imgsns_state(ACTIVE) error %d\n", ret);
           goto exit;
         }
 
-      printf("camfw_do_halfrelease() call.\n");
-      ret = camfw_do_halfrelease(&auto_info, CAMFW_DISABLE);
+      printf("video_do_halfrelease() call.\n");
+      ret = video_do_halfrelease(&auto_info, VIDEO_DISABLE);
       if (ret != 0)
         {
-          printf("camfw_do_halfrelease() error %d\n", ret);
+          printf("video_do_halfrelease() error %d\n", ret);
           goto exit;
         }
 
-      printf("camfw_capture_frame() call.\n");
-      ret = camfw_capture_frame(CAMFW_MODE_CAPTURE, &buffer, NULL, &info);
+      printf("video_id_capture_frame() call.\n");
+      ret = video_id_capture_frame(VIDEO_MODE_CAPTURE, &buffer, NULL, &info);
       if (ret != 0)
         {
-          printf("camfw_capture_frame() error %d\n", ret);
+          printf("video_id_capture_frame() error %d\n", ret);
           goto exit;
         }
 
-      printf("camfw_change_imgsns_state(SLEEP) call.\n");
-      ret = camfw_change_imgsns_state(CAMFW_STATE_SLEEP);
+      printf("video_change_imgsns_state(SLEEP) call.\n");
+      ret = video_change_imgsns_state(VIDEO_STATE_SLEEP);
       if (ret != 0)
         {
-          printf("camfw_change_imgsns_state(SLEEP) error %d\n", ret);
+          printf("video_change_imgsns_state(SLEEP) error %d\n", ret);
           goto exit;
         }
       usleep(MAX_SLEEP_TIME);
 
-      printf("camfw_change_imgsns_state(POWOFF) call.\n");
-      ret = camfw_change_imgsns_state(CAMFW_STATE_POWOFF);
+      printf("video_change_imgsns_state(POWOFF) call.\n");
+      ret = video_change_imgsns_state(VIDEO_STATE_POWOFF);
       if (ret != 0)
         {
-          printf("camfw_change_imgsns_state(POWOFF) error %d\n", ret);
+          printf("video_change_imgsns_state(POWOFF) error %d\n", ret);
           goto exit;
         }
 
@@ -626,9 +626,9 @@ exit:
 
 static void *camera_main_moni_thread(void *arg)
 {
-  CamfwBuffer_t buffer;
-  CamfwCapFrameInfo_t info;
-  CamfwCapParam_t param;
+  video_buffer_t buffer;
+  video_cap_frame_info_t info;
+  video_cap_param_t param;
   int ret;
 
   pthread_detach(pthread_self());
@@ -643,14 +643,14 @@ static void *camera_main_moni_thread(void *arg)
     }
 #endif
 
-  param.format = CAMFW_FORMAT_YUV;
-  param.resolution = CAMFW_QVGA;
-  param.framerate = CAMFW_120FPS;
+  param.format = VIDEO_FORMAT_YUV;
+  param.resolution = VIDEO_QVGA;
+  param.framerate = VIDEO_120FPS;
 
-  ret = camfw_set_capture_param(CAMFW_MODE_MONITORING, &param);
+  ret = video_id_set_capture_param(VIDEO_MODE_MONITORING, &param);
   if (ret != 0)
     {
-      printf("camfw_set_capture_param() error %d\n", ret);
+      printf("video_id_set_capture_param() error %d\n", ret);
       goto exit;
     }
 
@@ -659,10 +659,10 @@ static void *camera_main_moni_thread(void *arg)
 
   while(camera_main_thread_active)
     {
-      ret = camfw_capture_frame(CAMFW_MODE_MONITORING, &buffer, NULL, &info);
+      ret = video_id_capture_frame(VIDEO_MODE_MONITORING, &buffer, NULL, &info);
       if (ret != 0)
         {
-          printf("camfw_capture_frame() error %d\n", ret);
+          printf("video_id_capture_frame() error %d\n", ret);
           goto exit;
         }
 
@@ -683,14 +683,14 @@ exit:
   return NULL;
 }
 
-static int camera_main_thread_start(CamfwMode_e mode)
+static int camera_main_thread_start(video_mode_e mode)
 {
   int ret;
 
   if(!camera_main_thread_active)
     {
       camera_main_thread_active = 1;
-      if (mode == CAMFW_MODE_MONITORING)
+      if (mode == VIDEO_MODE_MONITORING)
         {
           ret = pthread_create(&camera_main_thread_id,
                                NULL,
@@ -732,8 +732,8 @@ static int camera_main_thread_stop(void)
 
 #ifdef CAMERA_MAIN_JPEG_INFO
 static int camera_main_create_info(
-  CamfwCapFrameInfo_t *info,
-  CamfwCrop_t *crop)
+  video_cap_frame_info_t *info,
+  video_crop_t *crop)
 {
   uint16_t offset;
   uint16_t com_marker_len;
@@ -823,7 +823,7 @@ static int camera_main_show_centerweitedwindow(int idx)
               printf(" ");
             }
 
-          camfw_write_imgsns_register(addr, size, val);
+          video_write_imgsns_register(addr, size, val);
         }
 
       return 0;
@@ -835,7 +835,7 @@ static int camera_main_show_centerweitedwindow(int idx)
     {
       addr = reg_addr[idx] + no;
       val  = 0;
-      camfw_read_imgsns_register(addr, size, &val);
+      video_read_imgsns_register(addr, size, &val);
       printf("%3d", (uint8_t)val);
       if ((no % CENTER_WEITED_REG_H_NUM) == (CENTER_WEITED_REG_H_NUM-1))
         {
@@ -855,7 +855,7 @@ static int camera_main_show_centerweitedwindow(int idx)
     {
       addr += (no << 1);
       val   = 0;
-      camfw_read_imgsns_register(addr, size, &val);
+      video_read_imgsns_register(addr, size, &val);
       printf("%5d", (uint16_t)val);
       if ((no % CENTER_WEITED_REG_H_NUM) == (CENTER_WEITED_REG_H_NUM-1))
         {
@@ -874,7 +874,7 @@ static int camera_main_show_centerweitedwindow(int idx)
     {
       addr += no;
       val   = 0;
-      camfw_read_imgsns_register(addr, size, &val);
+      video_read_imgsns_register(addr, size, &val);
       printf("%3d", (uint8_t)val);
       if ((no % CENTER_WEITED_REG_H_NUM) == (CENTER_WEITED_REG_H_NUM-1))
         {
@@ -919,35 +919,35 @@ int camera_main(int argc, char *argv[])
         }
 
       DBG_TIME_START();
-      ret = camfw_init();
+      ret = video_init();
       time = DBG_TIME_STOP();
-      printf("camfw_init() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("video_init() : ret=%d, time=%d[ms]\n", ret, time);
       if (ret == 0)
         {
-          CamfwCapParam_t cap_param;
-          CamfwImgSnsParam_t imgsns_param;
+          video_cap_param_t cap_param;
+          video_img_sns_param_t imgsns_param;
 
-          cap_param.format     = CAMFW_FORMAT_YUV;
-          cap_param.resolution = CAMFW_QVGA;
-          cap_param.framerate  = CAMFW_30FPS;
-          ret = camfw_set_capture_param(CAMFW_MODE_MONITORING, &cap_param);
+          cap_param.format     = VIDEO_FORMAT_YUV;
+          cap_param.resolution = VIDEO_QVGA;
+          cap_param.framerate  = VIDEO_30FPS;
+          ret = video_id_set_capture_param(VIDEO_MODE_MONITORING, &cap_param);
           if (ret == 0)
             {
               printf("change Monitoring param : YUV QVGA@30fps\n");
             }
 
-          cap_param.format     = CAMFW_FORMAT_JPEG;
-          cap_param.resolution = CAMFW_QUADVGA;
-          cap_param.framerate  = CAMFW_15FPS;
-          ret = camfw_set_capture_param(CAMFW_MODE_CAPTURE, &cap_param);
+          cap_param.format     = VIDEO_FORMAT_JPEG;
+          cap_param.resolution = VIDEO_QUADVGA;
+          cap_param.framerate  = VIDEO_15FPS;
+          ret = video_id_set_capture_param(VIDEO_MODE_CAPTURE, &cap_param);
           if (ret == 0)
             {
               printf("change Capture param    : JPEG VGA@15fps\n");
             }
 
-          imgsns_param.id = CAMFW_PARAM_ID_JPEG_QUALITIY;
+          imgsns_param.id = VIDEO_PARAM_ID_JPEG_QUALITIY;
           imgsns_param.val.jpeg_qualitiy = 75;
-          ret = camfw_set_imgsns_param(&imgsns_param);
+          ret = video_set_imgsns_param(&imgsns_param);
           if (ret == 0)
             {
               printf("change JPEG Quality     : 75\n");
@@ -957,7 +957,7 @@ int camera_main(int argc, char *argv[])
     }
   else if ( strncmp(argv[1], "chgsts", 6)==0 )
     {
-      CamfwImgSnsState_e sts;
+      video_img_sns_state_e sts;
 
       if ( argc != 3 )
         {
@@ -967,37 +967,37 @@ int camera_main(int argc, char *argv[])
 
       if ( strncmp(argv[2], "active", 6)==0 )
         {
-          sts = CAMFW_STATE_ACTIVE;
+          sts = VIDEO_STATE_ACTIVE;
         }
       else if ( strncmp(argv[2], "sleep", 5)==0 )
         {
-          sts = CAMFW_STATE_SLEEP;
+          sts = VIDEO_STATE_SLEEP;
         }
       else if ( strncmp(argv[2], "powoff", 6)==0 )
         {
-          sts = CAMFW_STATE_POWOFF;
+          sts = VIDEO_STATE_POWOFF;
         }
       else if ( strncmp(argv[2], "powon", 5)==0 )
         {
-          sts = CAMFW_STATE_POWON;
+          sts = VIDEO_STATE_POWON;
         }
       else
         {
           /* parameter error */
-          sts = (CamfwImgSnsState_e)atoi(argv[2]);
+          sts = (video_img_sns_state_e)atoi(argv[2]);
         }
 
       CISIF_INTR_TRACE_START(20);
 
       DBG_TIME_START();
-      ret = camfw_change_imgsns_state(sts);
+      ret = video_change_imgsns_state(sts);
       time = DBG_TIME_STOP();
-      printf("camfw_change_imgsns_state() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("video_change_imgsns_state() : ret=%d, time=%d[ms]\n", ret, time);
     }
   else if ( strncmp(argv[1], "setcap", 6)==0 )
     {
-      CamfwMode_e mode;
-      CamfwCapParam_t cap_param;
+      video_mode_e mode;
+      video_cap_param_t cap_param;
 
       if ( argc != 6 )
         {
@@ -1007,33 +1007,33 @@ int camera_main(int argc, char *argv[])
 
       if ( strncmp(argv[2], "cap", 3)==0 )
         {
-          mode = CAMFW_MODE_CAPTURE;
+          mode = VIDEO_MODE_CAPTURE;
         }
       else if ( strncmp(argv[2], "moni", 4)==0 )
         {
-          mode = CAMFW_MODE_MONITORING;
+          mode = VIDEO_MODE_MONITORING;
         }
       else
         {
           /* parameter error */
-          mode = (CamfwMode_e)atoi(argv[2]);
+          mode = (video_mode_e)atoi(argv[2]);
         }
 
-      cap_param.format     = (CamfwImgFormat_e)atoi(argv[3]);
-      cap_param.resolution = (CamfwImgResolution_e)atoi(argv[4]);
-      cap_param.framerate  = (CamfwFrameRate_e)atoi(argv[5]);
+      cap_param.format     = (video_img_format_e)atoi(argv[3]);
+      cap_param.resolution = (video_img_resolution_e)atoi(argv[4]);
+      cap_param.framerate  = (video_frame_rate_e)atoi(argv[5]);
 
       DBG_TIME_START();
-      ret = camfw_set_capture_param(mode, &cap_param);
+      ret = video_id_set_capture_param(mode, &cap_param);
       time = DBG_TIME_STOP();
-      printf("camfw_set_capture_param() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("video_id_set_capture_param() : ret=%d, time=%d[ms]\n", ret, time);
     }
   else if ( strncmp(argv[1], "cap", 3)==0 )
     {
-      CamfwMode_e mode;
-      CamfwBuffer_t buffer;
-      CamfwCapFrameInfo_t info;
-      CamfwCrop_t crop;
+      video_mode_e mode;
+      video_buffer_t buffer;
+      video_cap_frame_info_t info;
+      video_crop_t crop;
 
       if (( argc != 3 ) && ( argc != 5 ))
         {
@@ -1046,16 +1046,16 @@ int camera_main(int argc, char *argv[])
 
       if ( strncmp(argv[2], "cap", 3)==0 )
         {
-          mode = CAMFW_MODE_CAPTURE;
+          mode = VIDEO_MODE_CAPTURE;
         }
       else if ( strncmp(argv[2], "moni", 4)==0 )
         {
-          mode = CAMFW_MODE_MONITORING;
+          mode = VIDEO_MODE_MONITORING;
         }
       else
         {
           /* parameter error */
-          mode = (CamfwMode_e)atoi(argv[2]);
+          mode = (video_mode_e)atoi(argv[2]);
         }
 
       camera_main_thread_stop();
@@ -1075,16 +1075,16 @@ int camera_main(int argc, char *argv[])
           crop.x_offset = (uint16_t)atoi(argv[3]);
           crop.y_offset = (uint16_t)atoi(argv[4]);
           DBG_TIME_START();
-          ret = camfw_capture_frame(mode, &buffer, &crop, &info);
+          ret = video_id_capture_frame(mode, &buffer, &crop, &info);
           time = DBG_TIME_STOP();
         }
       else
         {
           DBG_TIME_START();
-          ret = camfw_capture_frame(mode, &buffer, NULL, &info);
+          ret = video_id_capture_frame(mode, &buffer, NULL, &info);
           time = DBG_TIME_STOP();
         }
-      printf("camfw_capture_frame() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("video_id_capture_frame() : ret=%d, time=%d[ms]\n", ret, time);
 
       printf("Out data addr     : 0x%08X\n", info.out_addr);
       printf("Out data size     : %d\n", info.out_size);
@@ -1108,7 +1108,7 @@ int camera_main(int argc, char *argv[])
               return -EINVAL;
             }
 
-          if (info.cap_param.format == CAMFW_FORMAT_JPEG)
+          if (info.cap_param.format == VIDEO_FORMAT_JPEG)
             {
               camera_main_write_ramdisk((uint8_t *)info.out_addr,
                                         (size_t)info.out_size,
@@ -1116,8 +1116,8 @@ int camera_main(int argc, char *argv[])
                                         NULL);
             }
 
-          if ((info.cap_param.format == CAMFW_FORMAT_YUV) &&
-              (info.cap_param.resolution == CAMFW_QVGA))
+          if ((info.cap_param.format == VIDEO_FORMAT_YUV) &&
+              (info.cap_param.resolution == VIDEO_QVGA))
             {
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
               camera_main_lcd_open();
@@ -1138,7 +1138,7 @@ int camera_main(int argc, char *argv[])
     }
   else if ( strncmp(argv[1], "setimgsns", 9)==0 )
     {
-      CamfwImgSnsParam_t imgsns_param;
+      video_img_sns_param_t imgsns_param;
 
       if ( argc != 4 )
         {
@@ -1148,53 +1148,53 @@ int camera_main(int argc, char *argv[])
 
       if ( strncmp(argv[2], "color", 5)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_COLOR;
-          imgsns_param.val.color_mode = (CamfwColorMode_e)atoi(argv[3]);
+          imgsns_param.id = VIDEO_PARAM_ID_COLOR;
+          imgsns_param.val.color_mode = (video_color_mode_e)atoi(argv[3]);
         }
       else if ( strncmp(argv[2], "iso", 3)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_ISO;
-          imgsns_param.val.iso = (CamfwIso_e)atoi(argv[3]);
+          imgsns_param.id = VIDEO_PARAM_ID_ISO;
+          imgsns_param.val.iso = (video_iso_e)atoi(argv[3]);
         }
       else if ( strncmp(argv[2], "shutter", 7)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_SHUTTER;
+          imgsns_param.id = VIDEO_PARAM_ID_SHUTTER;
           imgsns_param.val.shutter = (uint16_t)atoi(argv[3]);
         }
       else if ( strncmp(argv[2], "ev", 2)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_EV;
-          imgsns_param.val.ev = (CamfwEv_e)atoi(argv[3]);
+          imgsns_param.id = VIDEO_PARAM_ID_EV;
+          imgsns_param.val.ev = (video_ev_e)atoi(argv[3]);
         }
       else if ( strncmp(argv[2], "bright", 6)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_BRIGHTNESS;
+          imgsns_param.id = VIDEO_PARAM_ID_BRIGHTNESS;
           imgsns_param.val.brightness = (int8_t)atoi(argv[3]);
         }
       else if ( strncmp(argv[2], "contr", 5)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_CONTRAST;
+          imgsns_param.id = VIDEO_PARAM_ID_CONTRAST;
           imgsns_param.val.contrast = (int8_t)atoi(argv[3]);
         }
       else if ( strncmp(argv[2], "jpegq", 5)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_JPEG_QUALITIY;
+          imgsns_param.id = VIDEO_PARAM_ID_JPEG_QUALITIY;
           imgsns_param.val.jpeg_qualitiy = (uint8_t)atoi(argv[3]);
         }
       else if ( strncmp(argv[2], "gamma", 4)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_YGAMMA;
-          imgsns_param.val.ygamma = (CamfwCtrl_e)atoi(argv[3]);
+          imgsns_param.id = VIDEO_PARAM_ID_YGAMMA;
+          imgsns_param.val.ygamma = (video_ctrl_e)atoi(argv[3]);
         }
       else if ( strncmp(argv[2], "awb", 3)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_AWB;
-          imgsns_param.val.awb = (CamfwAwb_e)atoi(argv[3]);
+          imgsns_param.id = VIDEO_PARAM_ID_AWB;
+          imgsns_param.val.awb = (video_awb_e)atoi(argv[3]);
         }
       else if ( strncmp(argv[2], "photo", 5)==0 )
         {
-          imgsns_param.id = CAMFW_PARAM_ID_PHOTOMETRY;
-          imgsns_param.val.photometry = (CamfwPhotometry_e)atoi(argv[3]);
+          imgsns_param.id = VIDEO_PARAM_ID_PHOTOMETRY;
+          imgsns_param.val.photometry = (video_photometry_e)atoi(argv[3]);
         }
       else
         {
@@ -1203,13 +1203,13 @@ int camera_main(int argc, char *argv[])
         }
 
       DBG_TIME_START();
-      ret = camfw_set_imgsns_param(&imgsns_param);
+      ret = video_set_imgsns_param(&imgsns_param);
       time = DBG_TIME_STOP();
-      printf("camfw_set_imgsns_param() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("video_set_imgsns_param() : ret=%d, time=%d[ms]\n", ret, time);
     }
   else if ( strncmp(argv[1], "setimgsnsall", 12)==0 )
     {
-      CamfwImgSnsParamAll_t imgsns_param_all;
+      video_img_sns_param_all_t imgsns_param_all;
 
       if ( argc != 12 )
         {
@@ -1217,21 +1217,21 @@ int camera_main(int argc, char *argv[])
           return -EINVAL;
         }
 
-      imgsns_param_all.color_mode = (CamfwColorMode_e)atoi(argv[2]);
-      imgsns_param_all.iso = (CamfwIso_e)atoi(argv[3]);
-      imgsns_param_all.shutter = (uint16_t)atoi(argv[4]);
-      imgsns_param_all.ev = (CamfwEv_e)atoi(argv[5]);
-      imgsns_param_all.brightness = (int8_t)atoi(argv[6]);
-      imgsns_param_all.contrast = (uint8_t)atoi(argv[7]);
+      imgsns_param_all.color_mode    = (video_color_mode_e)atoi(argv[2]);
+      imgsns_param_all.iso           = (video_iso_e)atoi(argv[3]);
+      imgsns_param_all.shutter       = (uint16_t)atoi(argv[4]);
+      imgsns_param_all.ev            = (video_ev_e)atoi(argv[5]);
+      imgsns_param_all.brightness    = (int8_t)atoi(argv[6]);
+      imgsns_param_all.contrast      = (uint8_t)atoi(argv[7]);
       imgsns_param_all.jpeg_qualitiy = (uint8_t)atoi(argv[8]);
-      imgsns_param_all.ygamma = (CamfwYGamma_e)atoi(argv[9]);
-      imgsns_param_all.awb = (CamfwAwb_e)atoi(argv[10]);
-      imgsns_param_all.photometry = (CamfwPhotometry_e)atoi(argv[11]);
+      imgsns_param_all.ygamma        = (video_ygamma_e)atoi(argv[9]);
+      imgsns_param_all.awb           = (video_awb_e)atoi(argv[10]);
+      imgsns_param_all.photometry    = (video_photometry_e)atoi(argv[11]);
 
       DBG_TIME_START();
-      ret = camfw_set_imgsns_param_all(&imgsns_param_all);
+      ret = video_set_imgsns_param_all(&imgsns_param_all);
       time = DBG_TIME_STOP();
-      printf("camfw_set_imgsns_param_all() : ret=%d, time=%d[ms]\n",
+      printf("video_set_imgsns_param_all() : ret=%d, time=%d[ms]\n",
               ret, time);
     }
   else if ( strncmp(argv[1], "wr", 2)==0 )
@@ -1255,9 +1255,9 @@ int camera_main(int argc, char *argv[])
       printf("val   :%d\n", val);
 
       DBG_TIME_START();
-      ret = camfw_write_imgsns_register(addr, size, val);
+      ret = video_write_imgsns_register(addr, size, val);
       time = DBG_TIME_STOP();
-      printf("camfw_write_imgsns_register() : ret=%d, time=%d[ms]\n",
+      printf("video_write_imgsns_register() : ret=%d, time=%d[ms]\n",
               ret, time);
     }
   else if ( strncmp(argv[1], "rr", 2)==0 )
@@ -1276,9 +1276,9 @@ int camera_main(int argc, char *argv[])
       size = (uint16_t)atoi(argv[3]);
 
       DBG_TIME_START();
-      ret = camfw_read_imgsns_register(addr, size, &val);
+      ret = video_read_imgsns_register(addr, size, &val);
       time = DBG_TIME_STOP();
-      printf("camfw_read_imgsns_register() : ret=%d, time=%d[ms]\n",
+      printf("video_read_imgsns_register() : ret=%d, time=%d[ms]\n",
               ret, time);
       printf("addr  :0x%04X\n", addr);
       printf("size  :%d\n", size);
@@ -1301,12 +1301,12 @@ int camera_main(int argc, char *argv[])
 
       if ( strncmp(argv[2], "monistart", 9)==0 )
         {
-          ret = camera_main_thread_start(CAMFW_MODE_MONITORING);
+          ret = camera_main_thread_start(VIDEO_MODE_MONITORING);
           printf("camera_main_thread_start() : ret=%d\n", ret);
         }
       else if ( strncmp(argv[2], "capstart", 8)==0 )
         {
-          ret = camera_main_thread_start(CAMFW_MODE_CAPTURE);
+          ret = camera_main_thread_start(VIDEO_MODE_CAPTURE);
           printf("camera_main_thread_start() : ret=%d\n", ret);
         }
       else if ( strncmp(argv[2], "stop", 4)==0 )
@@ -1322,14 +1322,14 @@ int camera_main(int argc, char *argv[])
     }
   else if ( strncmp(argv[1], "halfrel", 2)==0 )
     {
-      CamfwAutoInfo_t info;
-      CamfwCtrl_e  cancel = CAMFW_DISABLE;
+      video_auto_info_t info;
+      video_ctrl_e  cancel = VIDEO_DISABLE;
 
       if ( argc == 3 )
         {
           if ( strncmp(argv[2], "stop", 4)==0 )
             {
-              cancel = CAMFW_ENABLE;
+              cancel = VIDEO_ENABLE;
             }
 
         }
@@ -1337,16 +1337,16 @@ int camera_main(int argc, char *argv[])
       CISIF_INTR_TRACE_START(20);
 
       DBG_TIME_START();
-      ret = camfw_do_halfrelease(&info, cancel);
+      ret = video_do_halfrelease(&info, cancel);
       time = DBG_TIME_STOP();
-      printf("camfw_do_halfrelease() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("video_do_halfrelease() : ret=%d, time=%d[ms]\n", ret, time);
 
       if (ret != 0)
         {
           return ret;
         }
 
-      if (cancel != CAMFW_ENABLE)
+      if (cancel != VIDEO_ENABLE)
         {
           int idx;
 
@@ -1363,7 +1363,7 @@ int camera_main(int argc, char *argv[])
           printf("awb_sts         : %d\n", info.awb.awb_sts);
 
           printf("### OPD ###\n");
-          for(idx = 0; idx < CAMFW_AE_WINDOW_MAX; idx++)
+          for(idx = 0; idx < VIDEO_AE_WINDOW_MAX; idx++)
             {
               printf("[%2d]%5d", idx, (uint16_t)info.intmean[idx]);
               if ((idx % 9) == (9-1))
@@ -1381,13 +1381,13 @@ int camera_main(int argc, char *argv[])
     }
   else if ( strncmp(argv[1], "auto", 4)==0 )
     {
-      CamfwAutoInfo_t info;
+      video_auto_info_t info;
       int idx;
 
       DBG_TIME_START();
-      ret = camfw_get_auto_param(&info);
+      ret = video_id_get_auto_param(&info);
       time = DBG_TIME_STOP();
-      printf("camfw_get_auto_param() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("video_id_get_auto_param() : ret=%d, time=%d[ms]\n", ret, time);
 
       if (ret != 0)
         {
@@ -1407,7 +1407,7 @@ int camera_main(int argc, char *argv[])
       printf("awb_sts         : %d\n", info.awb.awb_sts);
 
       printf("### OPD ###\n");
-      for(idx = 0; idx < CAMFW_AE_WINDOW_MAX; idx++)
+      for(idx = 0; idx < VIDEO_AE_WINDOW_MAX; idx++)
         {
           printf("[%2d]%5d", idx, (uint16_t)info.intmean[idx]);
           if ((idx % 9) == (9-1))
@@ -1424,21 +1424,21 @@ int camera_main(int argc, char *argv[])
     }
   else if ( strncmp(argv[1], "seq", 3)==0 )
     {
-      CamfwBuffer_t buffer;
-      CamfwCapFrameInfo_t info;
-      CamfwAutoInfo_t auto_info;
-      CamfwMode_e mode = CAMFW_MODE_CAPTURE;
+      video_buffer_t buffer;
+      video_cap_frame_info_t info;
+      video_auto_info_t auto_info;
+      video_mode_e mode = VIDEO_MODE_CAPTURE;
       int half_ctrl = 0;
       int wait_ctrl = 0;
       int pow_onoff = 0;
 
-      camfw_change_imgsns_state(CAMFW_STATE_SLEEP);
+      video_change_imgsns_state(VIDEO_STATE_SLEEP);
 
       if ( argc >= 3 )
         {
           if ( strncmp(argv[2], "moni", 4)==0 )
             {
-              mode = CAMFW_MODE_MONITORING;
+              mode = VIDEO_MODE_MONITORING;
             }
         }
 
@@ -1460,7 +1460,7 @@ int camera_main(int argc, char *argv[])
           if ( strncmp(argv[5], "pow", 3)==0 )
             {
               pow_onoff = 1;
-              camfw_change_imgsns_state(CAMFW_STATE_POWOFF);
+              video_change_imgsns_state(VIDEO_STATE_POWOFF);
             }
         }
 
@@ -1470,26 +1470,26 @@ int camera_main(int argc, char *argv[])
 
       if (pow_onoff)
         {
-          printf("camfw_change_imgsns_state(POWON) call.\n");
+          printf("video_change_imgsns_state(POWON) call.\n");
           DBG_TIME_START();
-          camfw_change_imgsns_state(CAMFW_STATE_POWON);
+          video_change_imgsns_state(VIDEO_STATE_POWON);
           time = DBG_TIME_STOP();
-          printf("camfw_change_imgsns_state(POWON) time=%d[ms]\n", time);
+          printf("video_change_imgsns_state(POWON) time=%d[ms]\n", time);
         }
 
-      printf("camfw_change_imgsns_state(ACTIVE) call.\n");
+      printf("video_change_imgsns_state(ACTIVE) call.\n");
       DBG_TIME_START();
-      camfw_change_imgsns_state(CAMFW_STATE_ACTIVE);
+      video_change_imgsns_state(VIDEO_STATE_ACTIVE);
       time = DBG_TIME_STOP();
-      printf("camfw_change_imgsns_state(ACTIVE) time=%d[ms]\n", time);
+      printf("video_change_imgsns_state(ACTIVE) time=%d[ms]\n", time);
 
       if (half_ctrl)
         {
-          printf("camfw_do_halfrelease() call.\n");
+          printf("video_do_halfrelease() call.\n");
           DBG_TIME_START();
-          camfw_do_halfrelease(&auto_info, CAMFW_DISABLE);
+          video_do_halfrelease(&auto_info, VIDEO_DISABLE);
           time = DBG_TIME_STOP();
-          printf("camfw_do_halfrelease() time=%d[ms]\n", time);
+          printf("video_do_halfrelease() time=%d[ms]\n", time);
 
           printf("### AE  ###\n");
           printf("errscl          : %d\n", auto_info.ae.errscl);
@@ -1517,36 +1517,36 @@ int camera_main(int argc, char *argv[])
       buffer.size = IMG_BUF_MAXSIZE - IMG_BUF_INFO_SIZE;
 #endif /* CAMERA_MAIN_JPEG_INFO */
 
-      printf("camfw_capture_frame() call.\n");
+      printf("video_id_capture_frame() call.\n");
       DBG_TIME_START();
-      camfw_capture_frame(mode, &buffer, NULL, &info);
+      video_id_capture_frame(mode, &buffer, NULL, &info);
       time = DBG_TIME_STOP();
-      if (mode == CAMFW_MODE_CAPTURE)
+      if (mode == VIDEO_MODE_CAPTURE)
         {
-          printf("camfw_capture_frame(CAP) time=%d[ms]\n", time);
+          printf("video_id_capture_frame(CAP) time=%d[ms]\n", time);
         }
       else
         {
-          printf("camfw_capture_frame(MONI) time=%d[ms]\n", time);
+          printf("video_id_capture_frame(MONI) time=%d[ms]\n", time);
           if (half_ctrl)
             {
-              camfw_do_halfrelease(&auto_info, CAMFW_ENABLE);
+              video_do_halfrelease(&auto_info, VIDEO_ENABLE);
             }
         }
 
-      printf("camfw_change_imgsns_state(SLEEP) call.\n");
+      printf("video_change_imgsns_state(SLEEP) call.\n");
       DBG_TIME_START();
-      camfw_change_imgsns_state(CAMFW_STATE_SLEEP);
+      video_change_imgsns_state(VIDEO_STATE_SLEEP);
       time = DBG_TIME_STOP();
-      printf("camfw_change_imgsns_state(SLEEP) time=%d[ms]\n", time);
+      printf("video_change_imgsns_state(SLEEP) time=%d[ms]\n", time);
 
       if (pow_onoff)
         {
-          printf("camfw_change_imgsns_state(POWOFF) call.\n");
+          printf("video_change_imgsns_state(POWOFF) call.\n");
           DBG_TIME_START();
-          camfw_change_imgsns_state(CAMFW_STATE_POWOFF);
+          video_change_imgsns_state(VIDEO_STATE_POWOFF);
           time = DBG_TIME_STOP();
-          printf("camfw_change_imgsns_state(POWOFF) time=%d[ms]\n", time);
+          printf("video_change_imgsns_state(POWOFF) time=%d[ms]\n", time);
         }
 
       if (info.out_addr != buffer.addr)
@@ -1563,7 +1563,7 @@ int camera_main(int argc, char *argv[])
       printf("ISO Sens          : %s\n", iso_str[info.pict_info.iso_sens]);
       printf("Shutter Speed     : %d[us]\n", info.pict_info.shutter_speed);
 
-      if (info.cap_param.format == CAMFW_FORMAT_JPEG)
+      if (info.cap_param.format == VIDEO_FORMAT_JPEG)
         {
           camera_main_write_ramdisk((uint8_t *)info.out_addr,
                                     (size_t)info.out_size,
@@ -1571,8 +1571,8 @@ int camera_main(int argc, char *argv[])
                                     NULL);
         }
 
-      if ((info.cap_param.format == CAMFW_FORMAT_YUV) &&
-          (info.cap_param.resolution == CAMFW_QVGA))
+      if ((info.cap_param.format == VIDEO_FORMAT_YUV) &&
+          (info.cap_param.resolution == VIDEO_QVGA))
         {
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
           camera_main_lcd_open();
@@ -1619,10 +1619,10 @@ int camera_main(int argc, char *argv[])
     }
   else if ( strncmp(argv[1], "conti", 5)==0 )
     {
-      CamfwContiParam_t param;
-      CamfwContiCapInfo_t info;
-      CamfwBuffer_t buffer;
-      CamfwContiFrame_t *f;
+      video_conti_param_t param;
+      video_conti_cap_info_t info;
+      video_buffer_t buffer;
+      video_conti_frame_t *f;
       uint32_t cnt;
 
       if (argc != 4)
@@ -1631,7 +1631,7 @@ int camera_main(int argc, char *argv[])
           return -EINVAL;
         }
 
-      param.mode = CAMFW_MODE_CAPTURE;
+      param.mode = VIDEO_MODE_CAPTURE;
       param.num = (uint32_t)atoi(argv[2]);
       param.interval = (uint32_t)atoi(argv[3]);
 
@@ -1641,9 +1641,9 @@ int camera_main(int argc, char *argv[])
       CISIF_INTR_TRACE_START(30);
 
       DBG_TIME_START();
-      ret = camfw_continuous_capture(&param, &buffer, NULL, &info);
+      ret = video_id_continuous_capture(&param, &buffer, NULL, &info);
       time = DBG_TIME_STOP();
-      printf("camfw_continuous_capture() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("video_id_continuous_capture() : ret=%d, time=%d[ms]\n", ret, time);
 
       if (ret != 0)
         {
