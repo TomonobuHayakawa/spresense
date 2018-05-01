@@ -1,5 +1,5 @@
 ############################################################################
-# drivers/imager/Make.defs
+# drivers/video/Make.defs
 #
 #   Copyright (C) 2016 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -39,7 +39,7 @@ ifeq ($(CONFIG_I2C),y)
 
 ifeq ($(CONFIG_VIDEO_ISX012),y)
 CSRCS += isx012.c \
-         isx012_camfw.c
+         video.c
 endif
 
 DEPPATH += --dep-path video
