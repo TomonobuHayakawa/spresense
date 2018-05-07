@@ -46,7 +46,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define _IMGIOCBASE   (0x1000)
+#define _IMGIOCBASE   (0x1100)
 
 #define _IMGIOC(nr)       _IOC(_IMGIOCBASE,nr)
 

@@ -238,5 +238,11 @@ int board_isx012_initialize(FAR const char *devpath, int bus)
       _err("Error registering ISX012.\n");
     }
 
+  ret = video_register(devpath);
+  if (ret < 0)
+    {
+      _err("Error registering video.\n");
+    }
+
   return ret;
 }

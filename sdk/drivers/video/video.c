@@ -47,8 +47,10 @@
 
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
+#include <nuttx/kmalloc.h>
 
 #include <arch/chip/cisif.h>
+#include <arch/board/board.h>
 #include <nuttx/video/video.h>
 #include <nuttx/video/isx012.h>
 
@@ -106,7 +108,6 @@
 #define VIDEO_HSIZE_3M          (2048)
 #define VIDEO_VSIZE_3M          (1536)
 
-#define VIDEO_ALING32_CHECK(x)  (x % 32)
 #define VIDEO_EOI_CORRECT_MAX_SIZE  (32)
 
 #define VIDEO_EZOOM_OFFSET_PX   (16)
@@ -124,10 +125,29 @@
 #define VIDEO_ISX012_MOVE_AE_F            (0x02)
 #define VIDEO_CISIF_TRANSEND_TIMEOUT      (1*1000)        /* msec */
 
+/* Debug option */
+#ifdef CONFIG_DEBUG_VIDEO_ERROR
+#  define videoerr(format, ...)     _err(format, ##__VA_ARGS__)
+#else
+#  define videoerr(x...)
+#endif
+
+#ifdef CONFIG_DEBUG_VIDEO_WARN
+#  define videowarn(format, ...)   _warn(format, ##__VA_ARGS__)
+#else
+#  define videowarn(x...)
+#endif
+
+#ifdef CONFIG_DEBUG_VIDEO_INFO
+#  define videoinfo(format, ...)   _info(format, ##__VA_ARGS__)
+#else
+#  define videoinfo(x...)
+#endif
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
-typedef enum 
+typedef enum
 {
   VIDEO_APIID_CHG_IMGSNS_STATE = 0,
   VIDEO_APIID_CAP_FRAME,
@@ -158,66 +178,7 @@ enum video_ezoom_reg_e
   VIDEO_EZOOM_REGNUM
 };
 
-typedef struct
-{
-  video_img_sns_state_e state;
-} video_api_chg_img_sns_state_t;
-
-typedef struct
-{
-  video_mode_e mode;
-  video_buffer_t buffer;
-  video_cap_frame_info_t info;
-  video_crop_t crop;
-  video_ctrl_e crop_ctrl;
-} video_api_cap_frame_t;
-
-typedef struct
-{
-  video_mode_e mode;
-  uint32_t capnum;
-  uint32_t interval;
-  video_buffer_t buffer;
-  video_conti_cap_info_t info;
-  video_crop_t crop;
-  video_ctrl_e crop_ctrl;
-} video_api_conti_cap_t;
-
-typedef struct
-{
-  video_mode_e mode;
-  video_cap_param_t param;
-} video_api_set_cap_param_t;
-
-typedef struct
-{
-  video_img_sns_param_t param;
-} video_api_set_img_sns_param_t;
-
-typedef struct
-{
-  video_img_sns_param_all_t param;
-} video_api_set_img_sns_param_all_t;
-
-typedef struct
-{
-  uint16_t addr;
-  uint16_t regsize;
-  uint16_t val;
-} video_api_img_sns_reg_t;
-
-typedef struct
-{
-  video_ctrl_e cancel;
-  video_auto_info_t info;
-} video_api_do_half_rel_t;
-
-typedef struct
-{
-  video_auto_info_t info;
-} video_api_get_auto_param_t;
-
-typedef struct
+struct video_api_msg_s
 {
   video_api_id_e api_id;
   int result;
@@ -234,72 +195,90 @@ typedef struct
     video_api_get_auto_param_t get_auto;
     video_api_conti_cap_t conti_cap;
   } u;
-} video_api_msg_t;
+};
 
-typedef struct
+typedef struct video_api_msg_s video_api_msg_t;
+
+struct video_mng_s
 {
   int fd;
   pid_t pid_main;
-  sem_t sem_apisync;
   sem_t sem_cisifsync;
   video_cap_param_t cap_param[VIDEO_MODE_MAX];
   video_img_sns_param_all_t imgsns_param_all;
   video_img_sns_state_e imgsns_state;
   video_img_sns_mode_e imgsns_mode;
   uint8_t init;
-} video_mng_t;
+};
 
-typedef struct
+typedef struct video_mng_s video_mng_t;
+
+struct video_cisif_result_s
 {
   uint32_t addr;
   uint32_t size;
   uint8_t code;
   uint8_t last_frame;
   uint8_t errint;
-} video_cisif_result_t;
+};
 
-typedef struct
+typedef struct video_cisif_result_s video_cisif_result_t;
+
+struct video_size_s
 {
   uint16_t h;
   uint16_t v;
-} video_size_t;
+};
 
-typedef struct
+typedef struct video_size_s video_size_t;
+
+struct video_sensor_reg_s
 {
   uint16_t addr;
   uint16_t regsize;
-} video_sensor_reg_t;
+};
+
+typedef struct video_sensor_reg_s video_sensor_reg_t;
 
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
-static int  video_main_task(int argc, char *argv[]);
-static void video_callback_cisif(
-  uint8_t code, uint8_t last_frame, uint32_t size, uint32_t addr);
-static int  video_snd_msg(video_api_id_e api_id, void *param, int size);
-static void video_init_internal_param(void);
-static int  video_init_image_sensor(void);
-static int  video_chg_img_sns_state(video_api_chg_img_sns_state_t *p);
-static int  video_set_capture_param(video_api_set_cap_param_t *p);
-static int  video_capture_frame(video_api_cap_frame_t *p);
-static int  video_set_img_sns_param(video_api_set_img_sns_param_t *p);
-static int  video_set_img_sns_param_all(video_api_set_img_sns_param_all_t *p);
-static int  video_write_img_sns_reg(video_api_img_sns_reg_t *p);
-static int  video_read_img_sns_reg(video_api_img_sns_reg_t *p);
-static int  video_set_frame_info(video_api_cap_frame_t *p, video_cisif_result_t *res);
+static void video_callback_cisif(uint8_t code, uint8_t last_frame,
+                                 uint32_t size, uint32_t addr);
+static void video_init_internal_param(video_mng_t *priv);
+static int  video_init_image_sensor(video_mng_t *priv);
+static int  video_chg_img_sns_state(video_mng_t *priv,
+                                    video_api_chg_img_sns_state_t *p);
+static int  video_set_capture_param(video_mng_t *priv,
+                                    video_api_set_cap_param_t *p);
+static int  video_capture_frame(video_mng_t *priv, video_api_cap_frame_t *p);
+static int  video_set_img_sns_param(video_mng_t *priv,
+                                    video_api_set_img_sns_param_t *p);
+static int  video_set_img_sns_param_all(video_mng_t *priv,
+                                        video_api_set_img_sns_param_all_t *p);
+static int  video_write_img_sns_reg(video_mng_t *priv,
+                                    video_api_img_sns_reg_t *p);
+static int  video_read_img_sns_reg(video_mng_t *priv,
+                                   video_api_img_sns_reg_t *p);
+static int  video_set_frame_info(video_mng_t *priv,
+                                 video_api_cap_frame_t *p,
+                                 video_cisif_result_t *res);
 static int  video_get_picture_info(video_picture_info_t *pict_info);
-static int  video_set_img_sns_crop(video_cap_param_t *param, video_crop_t *crop);
+static int  video_set_img_sns_crop(video_cap_param_t *param,
+                                   video_crop_t *crop);
 static int  video_set_img_sns_crop_off(void);
-static int  video_do_half_rel(video_api_do_half_rel_t *p);
-static int  video_get_auto_param(video_api_get_auto_param_t *p);
-static int  video_continuous_capture(video_api_conti_cap_t *p);
+static int  video_do_half_rel(video_mng_t *priv, video_api_do_half_rel_t *p);
+static int  video_get_auto_param(video_mng_t *priv,
+                                 video_api_get_auto_param_t *p);
+static int  video_continuous_capture(video_mng_t *priv,
+                                     video_api_conti_cap_t *p);
 
 static int  video_get_int_mean(uint16_t *buf, uint16_t *free);
 static uint32_t video_correct_jpeg_size(uint32_t addr, uint32_t size);
 static int  video_twaisem(sem_t *sem, uint32_t timeout_ms);
 
 #ifdef VIDEO_TIME_MEASURE
-static uint64_t video_GetMsecTime(void)
+static uint64_t video_get_msec_tim(void)
 {
     struct timespec tp;
     if (clock_gettime(CLOCK_REALTIME, &tp)) {
@@ -312,9 +291,9 @@ static uint64_t video_GetMsecTime(void)
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-static isx012_t           video_isx;
-static video_cisif_result_t video_cisif_result;
-static video_mng_t         video_mng;
+static isx012_t             g_v_isx;
+static video_cisif_result_t g_v_cisif;
+static video_mng_t         *g_v_mng;
 
 static const isx012_rate_t video_convfps[VIDEO_FRAME_RATE_MAX] =
 {
@@ -397,9 +376,9 @@ static const uint8_t video_convawb[VIDEO_AWB_MAX] =
 static uint32_t video_time_start;
 static uint32_t video_time_stop;
 #define DBG_MS_TIME_START()    \
-  video_time_start = (uint32_t)video_GetMsecTime()
+  video_time_start = (uint32_t)video_get_msec_tim()
 #define DBG_MS_TIME_STOP(x)     \
-  video_time_stop = (uint32_t)video_GetMsecTime(); \
+  video_time_stop = (uint32_t)video_get_msec_tim(); \
   video_printf("%s: time:%d[ms]\n", \
                 x,(uint32_t)(video_time_stop - video_time_start))
 #define DBG_TIME_START()      DBG_MS_TIME_START()
@@ -412,6 +391,19 @@ static uint32_t video_time_stop;
  * Public Data
  ****************************************************************************/
 
+static const struct file_operations g_videofops =
+{
+  video_open,               /* open */
+  video_close,              /* close */
+  0,                        /* read */
+  0,                        /* write */
+  0,                        /* seek */
+  video_ioctl,              /* ioctl */
+#ifndef CONFIG_DISABLE_POLL
+  0,                        /* poll */
+#endif
+  0                         /* unlink */
+};
 
 /****************************************************************************
  * Private Functions
@@ -635,7 +627,7 @@ static int video_twaisem(sem_t *sem, uint32_t timeout_ms)
   abstime.tv_sec += tmp / 1000;
   abstime.tv_nsec = tmp % 1000 * 1000000 + abstime.tv_nsec % 1000000;
 
-  ret = sem_timedwait(&video_mng.sem_cisifsync, &abstime);
+  ret = sem_timedwait(sem, &abstime);
   if (ret != 0)
     {
       video_printf("ERROR: sem_timedwait() error. %d\n", errno);
@@ -652,20 +644,20 @@ static void video_callback_cisif(
   uint32_t addr)
 {
 
-  video_cisif_result.size += size;
+  g_v_cisif.size += size;
 
   if (code == 0)
     {
-      video_cisif_result.addr = addr;
-      video_cisif_result.code = code;
-      video_cisif_result.last_frame = last_frame;
-      sem_post(&video_mng.sem_cisifsync);
+      g_v_cisif.addr = addr;
+      g_v_cisif.code = code;
+      g_v_cisif.last_frame = last_frame;
+      sem_post(&g_v_mng->sem_cisifsync);
     }
   else
     {
-      if (video_cisif_result.errint == 0)
+      if (g_v_cisif.errint == 0)
         {
-          video_cisif_result.errint = code;
+          g_v_cisif.errint = code;
         }
     }
 }
@@ -678,117 +670,36 @@ static void video_callback_cisif_conti(
 {
   if (code == 0)
     {
-      if (video_cisif_result.errint == 0)
+      if (g_v_cisif.errint == 0)
         {
-          video_cisif_result.size = size;
-          video_cisif_result.addr = addr;
+          g_v_cisif.size = size;
+          g_v_cisif.addr = addr;
         }
 
-      video_cisif_result.code = code;
-      video_cisif_result.last_frame = last_frame;
-      sem_post(&video_mng.sem_cisifsync);
+      g_v_cisif.code = code;
+      g_v_cisif.last_frame = last_frame;
+      sem_post(&g_v_mng->sem_cisifsync);
     }
   else
     {
-      if (video_cisif_result.errint == 0)
+      if (g_v_cisif.errint == 0)
         {
-          video_cisif_result.errint = code;
+          g_v_cisif.errint = code;
         }
     }
 }
 
-static int video_snd_msg(video_api_id_e api_id, void *param, int size)
-{
-  video_api_msg_t *p;
-  unsigned long value;
-  mqd_t mqd_req = (mqd_t)ERROR;
-  mqd_t mqd_resp = (mqd_t)ERROR;
-  int ret;
-
-  p = malloc(sizeof(video_api_msg_t));
-  if (p == NULL)
-    {
-      return -ENOMEM;
-    }
-
-  p->api_id = api_id;
-  memcpy(&p->u, param, size);
-
-  mqd_req = mq_open(VIDEO_API_REQ_QUEUE, O_WRONLY);
-  if (mqd_req == (mqd_t)ERROR)
-    {
-      video_printf("ERROR: mq_open(VIDEO_API_REQ_QUEUE). %d\n", errno);
-      ret = -errno;
-      goto exit;
-    }
-
-  mqd_resp = mq_open(VIDEO_API_RESP_QUEUE, O_RDONLY);
-  if (mqd_resp == (mqd_t)ERROR)
-    {
-      video_printf("ERROR: mq_open(VIDEO_API_RESP_QUEUE). %d\n", errno);
-      ret = -errno;
-      goto exit;
-    }
-
-  ret = mq_send(mqd_req, (const char *)&p, sizeof(p), 0U);
-  if (ret < 0)
-    {
-      video_printf("ERROR: mq_send(VIDEO_API_REQ_QUEUE). %d\n", errno);
-      ret = -errno;
-      goto exit;
-    }
-
-  /* Wait until API operation has finished */
-  ret = mq_receive(mqd_resp, (char *)&value, sizeof(value), NULL);
-  if (ret < 0)
-    {
-      video_printf("ERROR: mq_receive(VIDEO_API_RESP_QUEUE). %d\n", errno);
-      ret = -errno;
-      goto exit;
-    }
-
-  memcpy(param, &p->u, size);
-  ret = p->result;
-
-exit:
-  if (mqd_resp != (mqd_t)ERROR)
-    {
-      mq_close(mqd_resp);
-    }
-
-  if (mqd_req != (mqd_t)ERROR)
-    {
-      mq_close(mqd_req);
-    }
-
-  if (p)
-    {
-      free(p);
-    }
-
-  return ret;
-}
-
-static int video_init_image_sensor(void)
+static int video_init_image_sensor(video_mng_t *priv)
 {
   int ret;
   int idx;
 
   DBG_TIME_START();
-#if 0 //@@@
-  video_mng.fd = open("/dev/imager0", O_CREAT);
-  if (video_mng.fd < 0)
-    {
-      video_printf("ERROR: Failed to open isx012. %d\n", errno);
-      return -ENODEV;
-    }
-#else //@@@
   isx012_open();
-#endif
   DBG_TIME_STOP("open isx012 driver");
 
   /* Set Monitoring / Capture parameter */
-  ret = isx012_ioctl(IMGIOC_SETMODEP, (unsigned long)&video_isx);
+  ret = isx012_ioctl(IMGIOC_SETMODEP, (unsigned long)&g_v_isx);
   if (ret < 0)
     {
       video_printf("ERROR: Failed to ioctl IMGIOC_SETMODEP. %d\n", ret);
@@ -826,55 +737,47 @@ static int video_init_image_sensor(void)
     }
   /* After Camera mode -> Monitoring */
 
-  video_mng.imgsns_state = VIDEO_STATE_ACTIVE;
+  priv->imgsns_state = VIDEO_STATE_ACTIVE;
 #else
-  video_mng.imgsns_state = VIDEO_STATE_SLEEP;
+  priv->imgsns_state = VIDEO_STATE_SLEEP;
 #endif /* VIDEO_INIT_NOT_ACTIVE */
-  video_mng.imgsns_mode  = VIDEO_IMGSNS_MODE_MONI;
+  priv->imgsns_mode  = VIDEO_IMGSNS_MODE_MONI;
 
   return 0;
 }
 
-static void video_init_internal_param(void)
+static void video_init_internal_param(video_mng_t *priv)
 {
-  video_isx.cap_param.format = FORMAT_ISX012_JPEG_MODE1;
-  video_isx.cap_param.rate = RATE_ISX012_15FPS;
-  video_isx.cap_param.yuv_hsize = video_rs2sz[VIDEO_VGA].h;
-  video_isx.cap_param.yuv_vsize = video_rs2sz[VIDEO_VGA].v;
-  video_isx.cap_param.jpeg_hsize = video_rs2sz[VIDEO_VGA].h;
-  video_isx.cap_param.jpeg_vsize = video_rs2sz[VIDEO_VGA].v;
+  g_v_isx.cap_param.format = FORMAT_ISX012_JPEG_MODE1;
+  g_v_isx.cap_param.rate = RATE_ISX012_15FPS;
+  g_v_isx.cap_param.yuv_hsize = video_rs2sz[VIDEO_VGA].h;
+  g_v_isx.cap_param.yuv_vsize = video_rs2sz[VIDEO_VGA].v;
+  g_v_isx.cap_param.jpeg_hsize = video_rs2sz[VIDEO_VGA].h;
+  g_v_isx.cap_param.jpeg_vsize = video_rs2sz[VIDEO_VGA].v;
 
-  video_isx.moni_param.format = FORMAT_ISX012_YUV;
-  video_isx.moni_param.rate = RATE_ISX012_30FPS;
-  video_isx.moni_param.yuv_hsize = video_rs2sz[VIDEO_QVGA].h;
-  video_isx.moni_param.yuv_vsize = video_rs2sz[VIDEO_QVGA].v;
-  video_isx.moni_param.jpeg_hsize = video_rs2sz[VIDEO_QVGA].h;
-  video_isx.moni_param.jpeg_vsize = video_rs2sz[VIDEO_QVGA].v;
+  g_v_isx.moni_param.format = FORMAT_ISX012_YUV;
+  g_v_isx.moni_param.rate = RATE_ISX012_30FPS;
+  g_v_isx.moni_param.yuv_hsize = video_rs2sz[VIDEO_QVGA].h;
+  g_v_isx.moni_param.yuv_vsize = video_rs2sz[VIDEO_QVGA].v;
+  g_v_isx.moni_param.jpeg_hsize = video_rs2sz[VIDEO_QVGA].h;
+  g_v_isx.moni_param.jpeg_vsize = video_rs2sz[VIDEO_QVGA].v;
 
-  video_mng.cap_param[VIDEO_MODE_CAPTURE].format = VIDEO_FORMAT_JPEG;
-  video_mng.cap_param[VIDEO_MODE_CAPTURE].resolution = VIDEO_VGA;
-  video_mng.cap_param[VIDEO_MODE_CAPTURE].framerate = VIDEO_15FPS;
+  priv->cap_param[VIDEO_MODE_CAPTURE].format = VIDEO_FORMAT_JPEG;
+  priv->cap_param[VIDEO_MODE_CAPTURE].resolution = VIDEO_VGA;
+  priv->cap_param[VIDEO_MODE_CAPTURE].framerate = VIDEO_15FPS;
 
-  video_mng.cap_param[VIDEO_MODE_MONITORING].format = VIDEO_FORMAT_YUV;
-  video_mng.cap_param[VIDEO_MODE_MONITORING].resolution = VIDEO_QVGA;
-  video_mng.cap_param[VIDEO_MODE_MONITORING].framerate = VIDEO_30FPS;
+  priv->cap_param[VIDEO_MODE_MONITORING].format = VIDEO_FORMAT_YUV;
+  priv->cap_param[VIDEO_MODE_MONITORING].resolution = VIDEO_QVGA;
+  priv->cap_param[VIDEO_MODE_MONITORING].framerate = VIDEO_30FPS;
 }
 
-static int video_chg_img_sns_state(video_api_chg_img_sns_state_t *p)
+static int video_chg_img_sns_state(video_mng_t *priv,
+                                   video_api_chg_img_sns_state_t *p)
 {
   int ret;
   video_img_sns_state_e next_state;
 
-#if 0 //@@@
-  if ((video_mng.imgsns_state != VIDEO_STATE_POWOFF) && (video_mng.fd < 0))
-#else //@@@
-  if (video_mng.imgsns_state != VIDEO_STATE_POWOFF)
-#endif
-    {
-      return -ENODEV;
-    }
-
-  if (video_mng.imgsns_state == p->state)
+  if (priv->imgsns_state == p->state)
     {
       /* no change state */
       return 0;
@@ -884,7 +787,7 @@ static int video_chg_img_sns_state(video_api_chg_img_sns_state_t *p)
   switch (next_state)
     {
       case VIDEO_STATE_ACTIVE:
-        if (video_mng.imgsns_state != VIDEO_STATE_SLEEP)
+        if (priv->imgsns_state != VIDEO_STATE_SLEEP)
           {
             return -EINVAL;
           }
@@ -895,7 +798,7 @@ static int video_chg_img_sns_state(video_api_chg_img_sns_state_t *p)
         break;
 
       case VIDEO_STATE_SLEEP:
-        if (video_mng.imgsns_state != VIDEO_STATE_ACTIVE)
+        if (priv->imgsns_state != VIDEO_STATE_ACTIVE)
           {
             return -EINVAL;
           }
@@ -907,33 +810,18 @@ static int video_chg_img_sns_state(video_api_chg_img_sns_state_t *p)
 
       case VIDEO_STATE_POWOFF:
         DBG_TIME_START();
-#if 0 //@@@
-        ret = close(video_mng.fd);
-#else //@@@
         ret = isx012_close();
-#endif
-        if (ret == 0)
-          {
-            video_mng.fd = -1;
-          }
         DBG_TIME_STOP("close -> IMGSNS_POWER_OFF");
-#if 0 //@@@
-        ret = cxd56_cisiffinalize();
-        if (ret != 0)
-          {
-            video_printf("ERROR: cxd56_cisiffinalize() %d.\n", ret);
-          }
-#endif
         break;
 
       case VIDEO_STATE_POWON:
-        if (video_mng.imgsns_state != VIDEO_STATE_POWOFF)
+        if (priv->imgsns_state != VIDEO_STATE_POWOFF)
           {
             return -EINVAL;
           }
 
         DBG_TIME_START();
-        ret = video_init_image_sensor();
+        ret = video_init_image_sensor(priv);
         DBG_TIME_STOP("open -> IMGSNS_POWER_ON");
         if (ret == 0)
           {
@@ -943,13 +831,6 @@ static int video_chg_img_sns_state(video_api_chg_img_sns_state_t *p)
             next_state = VIDEO_STATE_SLEEP;
 #endif /* VIDEO_INIT_ACTIVE */
           }
-#if 0 //@@@
-        ret = cxd56_cisifinit();
-        if (ret != 0)
-          {
-            video_printf("ERROR: cxd56_cisifinit() %d.\n", ret);
-          }
-#endif
         break;
 
       default:
@@ -959,69 +840,65 @@ static int video_chg_img_sns_state(video_api_chg_img_sns_state_t *p)
 
   if (ret == 0)
     {
-      video_mng.imgsns_state = next_state;
-      video_mng.imgsns_mode  = VIDEO_IMGSNS_MODE_MONI;
+      priv->imgsns_state = next_state;
+      priv->imgsns_mode  = VIDEO_IMGSNS_MODE_MONI;
     }
 
   return ret;
 }
 
-static int video_set_capture_param(video_api_set_cap_param_t *p)
+static int video_set_capture_param(video_mng_t *priv,
+                                   video_api_set_cap_param_t *p)
 {
   int ret;
 
-  if (video_mng.fd < 0)
-    {
-      return -ENODEV;
-    }
-
-  if (video_mng.imgsns_mode != VIDEO_IMGSNS_MODE_MONI)
+  if (priv->imgsns_mode != VIDEO_IMGSNS_MODE_MONI)
     {
       return ERROR;
     }
 
   if (p->mode == VIDEO_MODE_CAPTURE)
       {
-        video_isx.cap_param.rate = video_convfps[p->param.framerate];
+        g_v_isx.cap_param.rate = video_convfps[p->param.framerate];
       }
     else
       {
-        video_isx.moni_param.rate = video_convfps[p->param.framerate];
+        g_v_isx.moni_param.rate = video_convfps[p->param.framerate];
       }
 
   if (p->param.format == VIDEO_FORMAT_YUV)
     {
       if (p->mode == VIDEO_MODE_CAPTURE)
         {
-          video_isx.cap_param.format = FORMAT_ISX012_YUV;
-          video_isx.cap_param.yuv_hsize = video_rs2sz[p->param.resolution].h;
-          video_isx.cap_param.yuv_vsize = video_rs2sz[p->param.resolution].v;
+          g_v_isx.cap_param.format = FORMAT_ISX012_YUV;
+          g_v_isx.cap_param.yuv_hsize = video_rs2sz[p->param.resolution].h;
+          g_v_isx.cap_param.yuv_vsize = video_rs2sz[p->param.resolution].v;
         }
       else
         {
-          video_isx.moni_param.format = FORMAT_ISX012_YUV;
-          video_isx.moni_param.yuv_hsize = video_rs2sz[p->param.resolution].h;
-          video_isx.moni_param.yuv_vsize = video_rs2sz[p->param.resolution].v;
+          g_v_isx.moni_param.format = FORMAT_ISX012_YUV;
+          g_v_isx.moni_param.yuv_hsize = video_rs2sz[p->param.resolution].h;
+          g_v_isx.moni_param.yuv_vsize = video_rs2sz[p->param.resolution].v;
         }
     }
   else
     {
       if (p->mode == VIDEO_MODE_CAPTURE)
         {
-          video_isx.cap_param.format = FORMAT_ISX012_JPEG_MODE1;
-          video_isx.cap_param.jpeg_hsize = video_rs2sz[p->param.resolution].h;
-          video_isx.cap_param.jpeg_vsize = video_rs2sz[p->param.resolution].v;
+          g_v_isx.cap_param.format = FORMAT_ISX012_JPEG_MODE1;
+          g_v_isx.cap_param.jpeg_hsize = video_rs2sz[p->param.resolution].h;
+          g_v_isx.cap_param.jpeg_vsize = video_rs2sz[p->param.resolution].v;
         }
       else
         {
-          video_isx.moni_param.format = FORMAT_ISX012_JPEG_MODE1;
-          video_isx.moni_param.jpeg_hsize = video_rs2sz[p->param.resolution].h;
-          video_isx.moni_param.jpeg_vsize = video_rs2sz[p->param.resolution].v;
+          g_v_isx.moni_param.format = FORMAT_ISX012_JPEG_MODE1;
+          g_v_isx.moni_param.jpeg_hsize = video_rs2sz[p->param.resolution].h;
+          g_v_isx.moni_param.jpeg_vsize = video_rs2sz[p->param.resolution].v;
         }
     }
 
   DBG_TIME_START();
-  ret = isx012_ioctl(IMGIOC_SETMODEP, (unsigned long)&video_isx);
+  ret = isx012_ioctl(IMGIOC_SETMODEP, (unsigned long)&g_v_isx);
   DBG_TIME_STOP("ioctl IMGIOC_SETMODEP");
   if (ret < 0)
     {
@@ -1029,9 +906,9 @@ static int video_set_capture_param(video_api_set_cap_param_t *p)
       return ret;
     }
 
-  memcpy(&video_mng.cap_param[p->mode], &p->param, sizeof(video_cap_param_t));
+  memcpy(&priv->cap_param[p->mode], &p->param, sizeof(video_cap_param_t));
 
-  if (video_mng.imgsns_state == VIDEO_STATE_SLEEP)
+  if (priv->imgsns_state == VIDEO_STATE_SLEEP)
     {
       return ret;
     }
@@ -1157,23 +1034,14 @@ static void  video_SetImgSnsCaptureRegister(void)
 }
 #endif
 
-static int video_capture_frame(video_api_cap_frame_t *p)
+static int video_capture_frame(video_mng_t *priv, video_api_cap_frame_t *p)
 {
   int ret = 0;
-#if 0 //@@@
-  cisif_sarea_t cis_area;
-  cisif_param_t cis_param;
-#else //@@@
   cisif_param_t    cis;
   video_img_format_e format;
-#endif
-  if (video_mng.fd < 0)
-    {
-      return -ENODEV;
-    }
 
-  if ((video_mng.imgsns_state == VIDEO_STATE_SLEEP) ||
-      (video_mng.imgsns_mode == VIDEO_IMGSNS_MODE_CAP))
+  if ((priv->imgsns_state == VIDEO_STATE_SLEEP) ||
+      (priv->imgsns_mode == VIDEO_IMGSNS_MODE_CAP))
     {
       return -EBUSY;
     }
@@ -1183,7 +1051,7 @@ static int video_capture_frame(video_api_cap_frame_t *p)
   if (p->crop_ctrl == VIDEO_ENABLE)
     {
       DBG_TIME_START();
-      video_set_img_sns_crop(&video_mng.cap_param[p->mode], &p->crop);
+      video_set_img_sns_crop(&priv->cap_param[p->mode], &p->crop);
       DBG_TIME_STOP("video_set_img_sns_crop");
     }
 
@@ -1202,27 +1070,11 @@ static int video_capture_frame(video_api_cap_frame_t *p)
           video_printf("ERROR: ioctl IMGIOC_SETMODE(CAPTURE):%d\n", ret);
           return ret;
         }
-      video_mng.imgsns_mode = VIDEO_IMGSNS_MODE_CAP;
+      priv->imgsns_mode = VIDEO_IMGSNS_MODE_CAP;
     }
 
-  memset(&video_cisif_result, 0, sizeof(video_cisif_result));
-#if 0 //@@@
-  video_CreateCisifParam(p->mode, &cis_param);
-
-  cis_area.strg_addr = (uint8_t *)p->buffer.addr;
-  cis_area.strg_size = p->buffer.size;
-
-  DBG_TIME_START();
-  if (cis_param.format == FORMAT_CISIF_YUV)
-    {
-      ret = cxd56_cisifcaptureframe(&cis_param, &cis_area, NULL);
-    }
-  else
-    {
-      ret = cxd56_cisifcaptureframe(&cis_param, NULL, &cis_area);
-    }
-#else //@@@
-  format = video_mng.cap_param[p->mode].format;
+  memset(&g_v_cisif, 0, sizeof(g_v_cisif));
+  format = priv->cap_param[p->mode].format;
   if (format == VIDEO_FORMAT_YUV)
     {
       cis.yuv_param.comp_func = video_callback_cisif;
@@ -1236,29 +1088,29 @@ static int video_capture_frame(video_api_cap_frame_t *p)
   cis.sarea.strg_size = p->buffer.size;
   cis.sarea.capnum    = 1;
   isx012_ioctl(IMGIOC_SETCISIF, (unsigned long)&cis);
-#endif
+
   if (ret != OK)
     {
       video_printf("ERROR: cxd56_cisifcaptureframe() %d\n", ret);
-      video_cisif_result.errint = ret;
+      g_v_cisif.errint = ret;
       goto exit;
     }
 
-  ret = video_twaisem(&video_mng.sem_cisifsync, VIDEO_CISIF_TRANSEND_TIMEOUT);
+  ret = video_twaisem(&priv->sem_cisifsync, VIDEO_CISIF_TRANSEND_TIMEOUT);
   if (ret != 0)
     {
-      video_cisif_result.errint = ret;
+      g_v_cisif.errint = ret;
     }
 
   DBG_TIME_STOP("cxd56_cisifcaptureframe() -> trans end.");
 
-  if ((video_cisif_result.code != 0) || (video_cisif_result.errint != 0))
+  if ((g_v_cisif.code != 0) || (g_v_cisif.errint != 0))
     {
-      video_printf("ERROR :cisif err = %d\n", video_cisif_result.errint);
+      video_printf("ERROR :cisif err = %d\n", g_v_cisif.errint);
     }
   else
     {
-      video_set_frame_info(p, &video_cisif_result);
+      video_set_frame_info(priv, p, &g_v_cisif);
       video_get_picture_info(&p->info.pict_info);
     }
 
@@ -1275,13 +1127,13 @@ exit:
         }
       else
         {
-          video_mng.imgsns_mode = VIDEO_IMGSNS_MODE_MONI;
+          priv->imgsns_mode = VIDEO_IMGSNS_MODE_MONI;
         }
     }
 
-  if (video_cisif_result.errint != 0)
+  if (g_v_cisif.errint != 0)
     {
-      ret = -video_cisif_result.errint;
+      ret = -g_v_cisif.errint;
     }
 
   return ret;
@@ -1305,27 +1157,29 @@ static uint32_t video_correct_jpeg_size(uint32_t addr, uint32_t size)
   return (size - eoi_offset);
 }
 
-static int video_set_frame_info(video_api_cap_frame_t *p, video_cisif_result_t *res)
+static int video_set_frame_info(video_mng_t *priv, 
+                                video_api_cap_frame_t *p,
+                                video_cisif_result_t *res)
 {
   p->info.mode = p->mode;
   memcpy(&p->info.cap_param,
-         &video_mng.cap_param[p->mode],
+         &priv->cap_param[p->mode],
          sizeof(video_cap_param_t));
 
   p->info.out_addr = res->addr;
   p->info.out_size = res->size;
 
-  if (video_mng.cap_param[p->mode].format == VIDEO_FORMAT_YUV)
+  if (priv->cap_param[p->mode].format == VIDEO_FORMAT_YUV)
     {
       if (p->mode == VIDEO_MODE_CAPTURE)
         {
-          p->info.h_size = video_isx.cap_param.yuv_hsize;
-          p->info.v_size = video_isx.cap_param.yuv_vsize;
+          p->info.h_size = g_v_isx.cap_param.yuv_hsize;
+          p->info.v_size = g_v_isx.cap_param.yuv_vsize;
         }
       else
         {
-          p->info.h_size = video_isx.moni_param.yuv_hsize;
-          p->info.v_size = video_isx.moni_param.yuv_vsize;
+          p->info.h_size = g_v_isx.moni_param.yuv_hsize;
+          p->info.v_size = g_v_isx.moni_param.yuv_vsize;
         }
     }
   else
@@ -1337,13 +1191,13 @@ static int video_set_frame_info(video_api_cap_frame_t *p, video_cisif_result_t *
 
       if (p->mode == VIDEO_MODE_CAPTURE)
         {
-          p->info.h_size = video_isx.cap_param.jpeg_hsize;
-          p->info.v_size = video_isx.cap_param.jpeg_vsize;
+          p->info.h_size = g_v_isx.cap_param.jpeg_hsize;
+          p->info.v_size = g_v_isx.cap_param.jpeg_vsize;
         }
       else
         {
-          p->info.h_size = video_isx.moni_param.jpeg_hsize;
-          p->info.v_size = video_isx.moni_param.jpeg_vsize;
+          p->info.h_size = g_v_isx.moni_param.jpeg_hsize;
+          p->info.v_size = g_v_isx.moni_param.jpeg_vsize;
         }
     }
 
@@ -1393,17 +1247,13 @@ static int video_get_picture_info(video_picture_info_t *pict_info)
   return 0;
 }
 
-static int video_set_img_sns_param(video_api_set_img_sns_param_t *p)
+static int video_set_img_sns_param(video_mng_t *priv,
+                                   video_api_set_img_sns_param_t *p)
 {
   isx012_reg_t reg;
   int ret;
 
-  if (video_mng.fd < 0)
-    {
-      return -ENODEV;
-    }
-
-  if (video_mng.imgsns_mode != VIDEO_IMGSNS_MODE_MONI)
+  if (priv->imgsns_mode != VIDEO_IMGSNS_MODE_MONI)
     {
       return -EBUSY;
     }
@@ -1483,7 +1333,7 @@ static int video_set_img_sns_param(video_api_set_img_sns_param_t *p)
       return ret;
     }
 
-  if (video_mng.imgsns_state == VIDEO_STATE_SLEEP)
+  if (priv->imgsns_state == VIDEO_STATE_SLEEP)
     {
       return ret;
     }
@@ -1499,18 +1349,14 @@ static int video_set_img_sns_param(video_api_set_img_sns_param_t *p)
   return ret;
 }
 
-static int video_set_img_sns_param_all(video_api_set_img_sns_param_all_t *p)
+static int video_set_img_sns_param_all(video_mng_t *priv,
+                                       video_api_set_img_sns_param_all_t *p)
 {
   isx012_reg_t reg;
   video_img_sns_param_id_e idx;
   int ret;
 
-  if (video_mng.fd < 0)
-    {
-      return -ENODEV;
-    }
-
-  if (video_mng.imgsns_mode != VIDEO_IMGSNS_MODE_MONI)
+  if (priv->imgsns_mode != VIDEO_IMGSNS_MODE_MONI)
     {
       return -EBUSY;
     }
@@ -1588,7 +1434,7 @@ static int video_set_img_sns_param_all(video_api_set_img_sns_param_all_t *p)
         }
     }
 
-  if (video_mng.imgsns_state == VIDEO_STATE_SLEEP)
+  if (priv->imgsns_state == VIDEO_STATE_SLEEP)
     {
       return ret;
     }
@@ -1604,15 +1450,11 @@ static int video_set_img_sns_param_all(video_api_set_img_sns_param_all_t *p)
   return ret;
 }
 
-static int video_write_img_sns_reg(video_api_img_sns_reg_t *p)
+static int video_write_img_sns_reg(video_mng_t *priv,
+                                   video_api_img_sns_reg_t *p)
 {
   isx012_reg_t reg;
   int ret;
-
-  if (video_mng.fd < 0)
-    {
-      return -ENODEV;
-    }
 
   reg.regaddr = p->addr;
   reg.regval  = p->val;
@@ -1625,15 +1467,11 @@ static int video_write_img_sns_reg(video_api_img_sns_reg_t *p)
   return ret;
 }
 
-static int video_read_img_sns_reg(video_api_img_sns_reg_t *p)
+static int video_read_img_sns_reg(video_mng_t *priv,
+                                  video_api_img_sns_reg_t *p)
 {
   isx012_reg_t reg;
   int ret;
-
-  if (video_mng.fd < 0)
-    {
-      return -ENODEV;
-    }
 
   reg.regaddr = p->addr;
   reg.regsize = p->regsize;
@@ -1717,7 +1555,7 @@ static int  video_get_int_mean(uint16_t *buf, uint16_t *free)
   return 0;
 }
 
-static int  video_do_half_rel(video_api_do_half_rel_t *p)
+static int  video_do_half_rel(video_mng_t *priv, video_api_do_half_rel_t *p)
 {
   isx012_reg_t reg;
   uint16_t getval[VIDEO_AE_NOW_REGNUM];
@@ -1741,19 +1579,14 @@ static int  video_do_half_rel(video_api_do_half_rel_t *p)
     { 0x01BB, 1 }   /* AWB_STS_NOW */
   };
 
-  if (video_mng.fd < 0)
-    {
-      return -ENODEV;
-    }
-
-  if (video_mng.imgsns_state == VIDEO_STATE_SLEEP)
+  if (priv->imgsns_state == VIDEO_STATE_SLEEP)
     {
       return -EBUSY;
     }
 
   if (p->cancel == VIDEO_ENABLE)
     {
-      if (video_mng.imgsns_mode == VIDEO_IMGSNS_MODE_MONI)
+      if (priv->imgsns_mode == VIDEO_IMGSNS_MODE_MONI)
         {
           return 0;
         }
@@ -1766,11 +1599,11 @@ static int  video_do_half_rel(video_api_do_half_rel_t *p)
           video_printf("ERROR: ioctl IMGIOC_SETMODE(MONITORING):%d\n", ret);
           return ret;
         }
-      video_mng.imgsns_mode  = VIDEO_IMGSNS_MODE_MONI;
+      priv->imgsns_mode  = VIDEO_IMGSNS_MODE_MONI;
     }
   else
     {
-      if (video_mng.imgsns_mode != VIDEO_IMGSNS_MODE_MONI)
+      if (priv->imgsns_mode != VIDEO_IMGSNS_MODE_MONI)
         {
           return -EBUSY;
         }
@@ -1848,14 +1681,15 @@ static int  video_do_half_rel(video_api_do_half_rel_t *p)
 
       video_get_int_mean(&p->info.intmean[0], &p->info.intmean_free);
 
-      video_mng.imgsns_mode  = VIDEO_IMGSNS_MODE_HALFREL;
+      priv->imgsns_mode  = VIDEO_IMGSNS_MODE_HALFREL;
 
     }
 
   return 0;
 }
 
-static int  video_get_auto_param(video_api_get_auto_param_t *p)
+static int  video_get_auto_param(video_mng_t *priv,
+                                 video_api_get_auto_param_t *p)
 {
   isx012_reg_t reg;
   uint16_t getval[VIDEO_AE_AUTO_REGNUM];
@@ -1879,13 +1713,8 @@ static int  video_get_auto_param(video_api_get_auto_param_t *p)
     { 0x01BA, 1 }   /* AWB_STS_AUTO */
   };
 
-  if (video_mng.fd < 0)
-    {
-      return -ENODEV;
-    }
-
-  if ((video_mng.imgsns_state == VIDEO_STATE_SLEEP) ||
-      (video_mng.imgsns_mode  != VIDEO_IMGSNS_MODE_MONI))
+  if ((priv->imgsns_state == VIDEO_STATE_SLEEP) ||
+      (priv->imgsns_mode  != VIDEO_IMGSNS_MODE_MONI))
     {
       return -EBUSY;
     }
@@ -1930,478 +1759,12 @@ static int  video_get_auto_param(video_api_get_auto_param_t *p)
   return 0;
 }
 
-static int video_main_task(int argc, char *argv[])
-{
-  video_api_msg_t *p;
-  unsigned long value = 0;
-  struct mq_attr mq_attr;
-  mode_t mode = 0666;
-  mqd_t mqd_req;
-  mqd_t mqd_resp;
-  int ret;
-
-  video_mng.init = VIDEO_FALSE;
-
-  mq_attr.mq_maxmsg  = 5;
-  mq_attr.mq_msgsize = sizeof(video_api_msg_t *);
-  mq_attr.mq_flags   = 0;
-
-  mqd_req=mq_open(VIDEO_API_REQ_QUEUE, O_RDONLY | O_CREAT, mode, &mq_attr);
-  if (mqd_req < 0)
-    {
-      video_printf("ERROR: Failed to mq_open(VIDEO_API_REQ).\n");
-      goto err_exit;
-    }
-
-  mq_attr.mq_maxmsg  = 1;
-  mq_attr.mq_msgsize = sizeof(value);
-  mq_attr.mq_flags   = 0;
-
-  mqd_resp=mq_open(VIDEO_API_RESP_QUEUE, O_WRONLY | O_CREAT, mode, &mq_attr);
-  if (mqd_resp < 0)
-    {
-      video_printf("ERROR: Failed to mq_open(VIDEO_API_RESP).\n");
-      goto err_exit;
-    }
-
-  if (0 != sem_init(&video_mng.sem_cisifsync, 0, 0))
-    {
-      video_printf("ERROR: Failed to sem_init(sem_cisifsync).\n");
-      goto err_exit;
-    }
-
-  video_init_internal_param();
-  ret = video_init_image_sensor();
-  if (ret != 0)
-    {
-      goto err_exit;
-    }
-#if 0 //@@@
-  ret = cxd56_cisifinit();
-  if (ret != 0)
-    {
-      video_printf("ERROR: cxd56_cisifinit() %d.\n", ret);
-      goto err_exit;
-    }
-#endif
-  video_mng.init = VIDEO_TRUE;
-  if (0 != sem_post(&video_mng.sem_apisync))
-    {
-      video_printf("ERROR: Failed to sem_post(sem_apisync).\n");
-      goto exit;
-    }
-
-  for (;;)
-    {
-      p = NULL;
-      mq_receive(mqd_req, (char *)&p, sizeof(p), NULL);
-      if (p == NULL)
-        {
-          continue;
-        }
-
-      switch (p->api_id)
-        {
-          case VIDEO_APIID_CHG_IMGSNS_STATE:
-            ret = video_chg_img_sns_state(&p->u.chg_state);
-            break;
-
-          case VIDEO_APIID_CAP_FRAME:
-            ret = video_capture_frame(&p->u.cap_frame);
-            break;
-
-          case VIDEO_APIID_SET_CAP_PARAM:
-            ret = video_set_capture_param(&p->u.cap);
-            break;
-
-          case VIDEO_APIID_SET_IMGSNS_PARAM:
-            ret = video_set_img_sns_param(&p->u.imgsns);
-            break;
-
-          case VIDEO_APIID_SET_IMGSNS_PARAM_ALL:
-            ret = video_set_img_sns_param_all(&p->u.imgsns_all);
-            break;
-
-          case VIDEO_APIID_WRITE_IMGSNS_REG:
-            ret = video_write_img_sns_reg(&p->u.w_reg);
-            break;
-
-          case VIDEO_APIID_READ_IMGSNS_REG:
-            ret = video_read_img_sns_reg(&p->u.r_reg);
-            break;
-
-          case VIDEO_APIID_DO_HALFRELEASE:
-            ret = video_do_half_rel(&p->u.halfrel);
-            break;
-
-          case VIDEO_APIID_GET_AUTO_PARAM:
-            ret = video_get_auto_param(&p->u.get_auto);
-            break;
-
-          case VIDEO_APIID_CONTI_CAP:
-            ret = video_continuous_capture(&p->u.conti_cap);
-            break;
-
-          default:
-            video_printf("ERROR: Unknown API ID=%d\n", p->api_id);
-            continue;
-        }
-
-      p->result = ret;
-      mq_send(mqd_resp, (const char *)&value, sizeof(value), 0U);
-
-    }
-
-err_exit:
-  if (0 != sem_post(&video_mng.sem_apisync))
-    {
-      video_printf("ERROR: Failed to sem_post(sem_apisync).\n");
-    }
-
-exit:
-  mq_close(mqd_req);
-  mq_close(mqd_resp);
-  sem_destroy(&video_mng.sem_cisifsync);
-  close(video_mng.fd);
-  video_mng.init = VIDEO_FALSE;
-
-  return 0;
-}
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
-int video_init(void)
+static int video_continuous_capture(video_mng_t *priv, video_api_conti_cap_t *p)
 {
-  int ret = ERROR;
-
-  if (video_mng.init)
-    {
-      return 0;
-    }
-
-  if (0 != sem_init(&video_mng.sem_apisync, 0, 0))
-    {
-      return ERROR;
-    }
-
-  video_mng.pid_main = task_create("video_main_task",
-                                    CONFIG_VIDEO_TASK_PRIORITY,
-                                    CONFIG_VIDEO_TASK_STKSIZE,
-                                    video_main_task, NULL);
-  if (video_mng.pid_main == ERROR)
-    {
-      goto err_exit;
-    }
-
-  if (0 !=sem_wait(&video_mng.sem_apisync))
-    {
-      goto err_exit;
-    }
-
-  if (!video_mng.init)
-    {
-      goto err_exit;
-    }
-
-  ret = 0;
-
-err_exit:
-  sem_destroy(&video_mng.sem_apisync);
-
-  return ret;
-}
-
-int video_change_imgsns_state(video_img_sns_state_e state)
-{
-  video_api_chg_img_sns_state_t p;
-
-  if (state >= VIDEO_STATE_MAX)
-    {
-      return -EINVAL;
-    }
-
-  p.state = state;
-
-  return video_snd_msg(VIDEO_APIID_CHG_IMGSNS_STATE,
-                           &p,
-                           sizeof(video_api_chg_img_sns_state_t));
-}
-
-int video_id_set_capture_param(video_mode_e mode, video_cap_param_t *cap_param)
-{
-  video_api_set_cap_param_t p;
-
-  if ((mode != VIDEO_MODE_CAPTURE) && (mode != VIDEO_MODE_MONITORING))
-    {
-      return -EINVAL;
-    }
-
-  if (cap_param == NULL) 
-    {
-      return -EINVAL;
-    }
-
-  if ((cap_param->resolution < VIDEO_QVGA) ||
-      (cap_param->resolution >= VIDEO_RESOLUTION_MAX) ||
-      (cap_param->format < VIDEO_FORMAT_YUV) ||
-      (cap_param->format >= VIDEO_FORMAT_MAX) ||
-      (cap_param->framerate < VIDEO_120FPS) ||
-      (cap_param->framerate >= VIDEO_FRAME_RATE_MAX))
-    {
-      return -EINVAL;
-    }
-
-  p.mode = mode;
-  memcpy(&p.param, cap_param, sizeof(video_cap_param_t));
-
-  return video_snd_msg(VIDEO_APIID_SET_CAP_PARAM,
-                           &p,
-                           sizeof(video_api_set_cap_param_t));
-}
-
-int video_id_capture_frame(
-  video_mode_e mode,
-  video_buffer_t *buffer,
-  video_crop_t *crop,
-  video_cap_frame_info_t *info)
-{
-  video_api_cap_frame_t p;
-  int ret;
-
-  if ((mode != VIDEO_MODE_CAPTURE) && (mode != VIDEO_MODE_MONITORING))
-    {
-      return -EINVAL;
-    }
-
-  if ((buffer == NULL) || (info == NULL))
-    {
-      return -EINVAL;
-    }
-
-  if ((VIDEO_ALING32_CHECK(buffer->addr) != 0) ||
-      (VIDEO_ALING32_CHECK(buffer->size) != 0))
-    {
-      return -EINVAL;
-    }
-
-  p.mode = mode;
-  p.buffer.addr = buffer->addr;
-  p.buffer.size = buffer->size;
-  memset(&p.info, 0, sizeof(video_cap_frame_info_t));
-
-  if (crop == NULL)
-    {
-      p.crop_ctrl = VIDEO_DISABLE;
-    }
-  else
-    {
-      p.crop_ctrl = VIDEO_ENABLE;
-      p.crop.x_offset = crop->x_offset;
-      p.crop.y_offset = crop->y_offset;
-    }
-
-  ret = video_snd_msg(VIDEO_APIID_CAP_FRAME,
-                          &p,
-                          sizeof(video_api_cap_frame_t));
-
-  memcpy(info, &p.info, sizeof(video_cap_frame_info_t));
-
-  return ret;
-}
-
-int video_set_imgsns_param(video_img_sns_param_t *param)
-{
-  video_api_set_img_sns_param_t p;
-
-  if (param == NULL)
-    {
-      return -EINVAL;
-    }
-
-  if ((param->id < VIDEO_PARAM_ID_COLOR) ||
-      (param->id >= VIDEO_PARAM_ID_MAX))
-    {
-      return -EINVAL;
-    }
-
-  memcpy(&p.param, param, sizeof(video_img_sns_param_t));
-
-  return video_snd_msg(VIDEO_APIID_SET_IMGSNS_PARAM,
-                           &p,
-                           sizeof(video_api_set_img_sns_param_t));
-}
-
-int video_set_imgsns_param_all(video_img_sns_param_all_t *param)
-{
-  video_api_set_img_sns_param_all_t p;
-
-  if (param == NULL)
-    {
-      return -EINVAL;
-    }
-
-  memcpy(&p.param, param, sizeof(video_api_set_img_sns_param_all_t));
-
-  return video_snd_msg(VIDEO_APIID_SET_IMGSNS_PARAM_ALL,
-                           &p,
-                           sizeof(video_api_set_img_sns_param_all_t));
-}
-
-int video_write_imgsns_register(
-  uint16_t addr, uint16_t regsize, uint16_t value)
-{
-  video_api_img_sns_reg_t p;
-
-  if ((regsize != 1) && (regsize != 2))
-    {
-      return -EINVAL;
-    }
-
-  p.addr = addr;
-  p.regsize = regsize;
-  p.val = value;
-
-  return video_snd_msg(VIDEO_APIID_WRITE_IMGSNS_REG,
-                           &p,
-                           sizeof(video_api_img_sns_reg_t));
-}
-
-int video_read_imgsns_register(
-  uint16_t addr, uint16_t regsize, uint16_t *value)
-{
-  video_api_img_sns_reg_t p;
-  int ret;
-
-  if (value == NULL)
-    {
-      return -EINVAL;
-    }
-
-  if ((regsize != 1) && (regsize != 2))
-    {
-      return -EINVAL;
-    }
-
-  p.addr = addr;
-  p.regsize = regsize;
-
-  ret = video_snd_msg(VIDEO_APIID_READ_IMGSNS_REG,
-                          &p,
-                          sizeof(video_api_img_sns_reg_t));
-  if (ret == 0)
-    {
-      *value = p.val;
-    }
-
-  return ret;
-}
-
-int video_do_halfrelease(video_auto_info_t *info, video_ctrl_e cancel)
-{
-  video_api_do_half_rel_t p;
-  int ret;
-
-  if (info == NULL)
-    {
-      return -EINVAL;
-    }
-
-  p.cancel = cancel;
-  ret = video_snd_msg(VIDEO_APIID_DO_HALFRELEASE,
-                          &p,
-                          sizeof(video_api_do_half_rel_t));
-  if ((ret == 0) && (cancel != VIDEO_ENABLE))
-    {
-      memcpy(info, &p.info, sizeof(video_auto_info_t));
-    }
-
-  return ret;
-}
-
-int video_id_get_auto_param(video_auto_info_t *info)
-{
-  video_api_get_auto_param_t p;
-  int ret;
-
-  if (info == NULL)
-    {
-      return -EINVAL;
-    }
-
-  memset(&p, 0, sizeof(video_api_get_auto_param_t));
-  ret = video_snd_msg(VIDEO_APIID_GET_AUTO_PARAM,
-                          &p,
-                          sizeof(video_api_get_auto_param_t));
-  if (ret == 0)
-    {
-      memcpy(info, &p.info, sizeof(video_auto_info_t));
-    }
-
-  return ret;
-}
-
-int video_id_continuous_capture(video_conti_param_t *param,
-                        video_buffer_t *buffer,
-                        video_crop_t *crop,
-                        video_conti_cap_info_t *info)
-{
-  video_api_conti_cap_t p;
-  int ret;
-
-  if ((param == NULL) || (buffer == NULL) || (info == NULL))
-    {
-      return -EINVAL;
-    }
-
-  if ((param->mode != VIDEO_MODE_CAPTURE) ||
-      (param->num > VIDEO_CONTI_CAPNUM_MAX))
-    {
-      return -EINVAL;
-    }
-
-  if ((VIDEO_ALING32_CHECK(buffer->addr) != 0) ||
-      (VIDEO_ALING32_CHECK(buffer->size) != 0))
-
-  {
-      return -EINVAL;
-    }
-
-  p.mode = param->mode;
-  p.capnum = param->num;
-  p.interval = param->interval;
-  p.buffer.addr = buffer->addr;
-  p.buffer.size = buffer->size;
-  memset(&p.info, 0, sizeof(video_conti_cap_info_t));
-
-  if (crop == NULL)
-    {
-      p.crop_ctrl = VIDEO_DISABLE;
-    }
-  else
-    {
-      p.crop_ctrl = VIDEO_ENABLE;
-      p.crop.x_offset = crop->x_offset;
-      p.crop.y_offset = crop->y_offset;
-    }
-
-  ret = video_snd_msg(VIDEO_APIID_CONTI_CAP,
-                          &p,
-                          sizeof(video_api_conti_cap_t));
-
-  memcpy(info, &p.info, sizeof(video_conti_cap_info_t));
-
-  return ret;
-}
-
-static int video_continuous_capture(video_api_conti_cap_t *p)
-{
-#if 0 //@@@
-  cisif_sarea_t cis_area;
-  cisif_param_t cis_param;
-#else //@@@
   cisif_param_t    cis;
-#endif
   uint32_t conti_capnum = 0;
   uint32_t correct_size = 0;
   int conti_end = VIDEO_FALSE;
@@ -2410,18 +1773,13 @@ static int video_continuous_capture(video_api_conti_cap_t *p)
   isx012_reg_t reg;
 #endif /* VIDEO_CONTI_BRACKET */
 
-  if (video_mng.fd < 0)
-    {
-      return -ENODEV;
-    }
-
-  if ((video_mng.imgsns_state == VIDEO_STATE_SLEEP) ||
-      (video_mng.imgsns_mode == VIDEO_IMGSNS_MODE_CAP))
+  if ((priv->imgsns_state == VIDEO_STATE_SLEEP) ||
+      (priv->imgsns_mode == VIDEO_IMGSNS_MODE_CAP))
     {
       return -EBUSY;
     }
 
-  if (video_mng.cap_param[p->mode].format != VIDEO_FORMAT_JPEG)
+  if (priv->cap_param[p->mode].format != VIDEO_FORMAT_JPEG)
     {
       return -EINVAL;
     }
@@ -2431,7 +1789,7 @@ static int video_continuous_capture(video_api_conti_cap_t *p)
   if (p->crop_ctrl == VIDEO_ENABLE)
     {
       DBG_TIME_START();
-      video_set_img_sns_crop(&video_mng.cap_param[p->mode], &p->crop);
+      video_set_img_sns_crop(&priv->cap_param[p->mode], &p->crop);
       DBG_TIME_STOP("video_set_img_sns_crop");
     }
 
@@ -2453,57 +1811,39 @@ static int video_continuous_capture(video_api_conti_cap_t *p)
       return ret;
     }
 
-  video_mng.imgsns_mode = VIDEO_IMGSNS_MODE_CAP;
-  memset(&video_cisif_result, 0, sizeof(video_cisif_result));
-#if 0 //@@@
-  video_CreateCisifParam(p->mode, &cis_param);
-  cis_param.jpg_param.comp_func = video_callback_cisif_conti;
-  cis_area.strg_addr  = (uint8_t *)p->buffer.addr;
-  cis_area.strg_size  = p->buffer.size;
-
-  /* Start CISIF Capture */
-  DBG_TIME_START();
-  ret = cxd56_cisifcontinuouscapture(&cis_param,
-                                     &cis_area,
-                                     p->capnum,
-                                     p->interval);
-  if (ret != OK)
-    {
-      video_printf("ERROR: cxd56_cisifcontinuouscapture() %d\n", ret);
-      goto exit;
-    }
-#else //@@@
+  priv->imgsns_mode = VIDEO_IMGSNS_MODE_CAP;
+  memset(&g_v_cisif, 0, sizeof(g_v_cisif));
   cis.jpg_param.comp_func = video_callback_cisif_conti;
   cis.sarea.strg_addr = (uint8_t *)p->buffer.addr;
   cis.sarea.strg_size = p->buffer.size;
   cis.sarea.capnum    = p->capnum;
   cis.sarea.interval  = p->interval;
   isx012_ioctl(IMGIOC_SETCISIF, (unsigned long)&cis);
-#endif
+
   while (!conti_end)
     {
-      ret = video_twaisem(&video_mng.sem_cisifsync,
+      ret = video_twaisem(&priv->sem_cisifsync,
                           VIDEO_CISIF_TRANSEND_TIMEOUT);
       if (ret != 0)
         {
-          video_cisif_result.errint = ret;
+          g_v_cisif.errint = ret;
         }
 
       DBG_TIME_STOP("cxd56_cisifcontinuouscapture() -> trans end.");
-      if ((video_cisif_result.code != 0) || (video_cisif_result.errint != 0))
+      if ((g_v_cisif.code != 0) || (g_v_cisif.errint != 0))
         {
-          video_printf("ERROR :cisif err = %d\n", video_cisif_result.errint);
+          video_printf("ERROR :cisif err = %d\n", g_v_cisif.errint);
           goto exit;
       }
 
       video_get_picture_info(&p->info.conti_frame[conti_capnum].pict_info);
 
-      video_printf("Out Addr : %08X\n",video_cisif_result.addr);
-      video_printf("Out Size : %08X\n",video_cisif_result.size);
+      video_printf("Out Addr : %08X\n",g_v_cisif.addr);
+      video_printf("Out Size : %08X\n",g_v_cisif.size);
 
-      correct_size = video_correct_jpeg_size(video_cisif_result.addr,
-                                           video_cisif_result.size);
-      p->info.conti_frame[conti_capnum].out_addr = video_cisif_result.addr;
+      correct_size = video_correct_jpeg_size(g_v_cisif.addr,
+                                           g_v_cisif.size);
+      p->info.conti_frame[conti_capnum].out_addr = g_v_cisif.addr;
       p->info.conti_frame[conti_capnum].out_size = correct_size;
 
       conti_capnum++;
@@ -2527,15 +1867,15 @@ static int video_continuous_capture(video_api_conti_cap_t *p)
           conti_end = VIDEO_TRUE;
         }
 
-      if (video_cisif_result.last_frame)
+      if (g_v_cisif.last_frame)
         {
           conti_end = VIDEO_TRUE;
         }
     }
 
 exit:
-  p->info.h_size = video_isx.cap_param.jpeg_hsize;
-  p->info.v_size = video_isx.cap_param.jpeg_vsize;
+  p->info.h_size = g_v_isx.cap_param.jpeg_hsize;
+  p->info.v_size = g_v_isx.cap_param.jpeg_vsize;
   p->info.capnum = conti_capnum;
 
 #ifdef VIDEO_CONTI_BRACKET
@@ -2568,14 +1908,140 @@ exit:
     }
   else
     {
-      video_mng.imgsns_mode = VIDEO_IMGSNS_MODE_MONI;
+      priv->imgsns_mode = VIDEO_IMGSNS_MODE_MONI;
     }
 
-  if (video_cisif_result.errint != 0)
+  if (g_v_cisif.errint != 0)
     {
-      ret = -video_cisif_result.errint;
+      ret = -g_v_cisif.errint;
     }
 
   return ret;
 }
 
+int video_open(FAR struct file *filep)
+{
+  FAR struct inode *inode = filep->f_inode;
+  video_mng_t      *priv  = inode->i_private;
+  int ret = ERROR;
+
+  if (0 != sem_init(&priv->sem_cisifsync, 0, 0))
+    {
+      video_printf("ERROR: Failed to sem_init(sem_cisifsync).\n");
+      return ret;
+    }
+
+  video_init_internal_param(priv);
+  ret = video_init_image_sensor(priv);
+  if (ret == 0)
+    {
+      ret = OK;
+    }
+
+  return ret;
+}
+
+int video_close(FAR struct file *filep)
+{
+  FAR struct inode *inode = filep->f_inode;
+  video_mng_t      *priv  = inode->i_private;
+  video_api_chg_img_sns_state_t p;
+  int ret = ERROR;
+
+  p.state = VIDEO_STATE_POWOFF;
+  ret = video_chg_img_sns_state(priv, &p);
+  if (ret != 0)
+    {
+      return ret;
+    }
+
+  if (0 != sem_destroy(&priv->sem_cisifsync))
+    {
+      video_printf("ERROR: Failed to sem_destroy(sem_cisifsync).\n");
+      ret = ERROR;
+    }
+
+  return ret;
+}
+
+int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
+{
+  FAR struct inode *inode = filep->f_inode;
+  video_mng_t      *priv  = inode->i_private;
+  int ret = OK;
+
+  switch (cmd)
+    {
+      case VIDEOIOC_CHG_IMGSNS_STATE:
+        ret = video_chg_img_sns_state(priv, (video_api_chg_img_sns_state_t *)arg);
+        break;
+      case VIDEOIOC_SET_CAP_PARAM:
+        ret = video_set_capture_param(priv, (video_api_set_cap_param_t *)arg);
+        break;
+      case VIDEOIOC_CAP_FRAME:
+        ret = video_capture_frame(priv, (video_api_cap_frame_t *)arg);
+        break;
+      case VIDEOIOC_CONTI_CAP:
+        ret = video_continuous_capture(priv, (video_api_conti_cap_t *)arg);
+        break;
+      case VIDEOIOC_SET_IMGSNS_PARAM:
+        ret = video_set_img_sns_param(priv, (video_api_set_img_sns_param_t *)arg);
+        break;
+      case VIDEOIOC_SET_IMGSNS_PARAM_ALL:
+        ret = video_set_img_sns_param_all(priv, (video_api_set_img_sns_param_all_t *)arg);
+        break;
+      case VIDEOIOC_WR_IMGSNS_REG:
+        ret = video_write_img_sns_reg(priv, (video_api_img_sns_reg_t *)arg);
+        break;
+      case VIDEOIOC_RD_IMGSNS_REG:
+        ret = video_read_img_sns_reg(priv, (video_api_img_sns_reg_t *)arg);
+        break;
+      case VIDEOIOC_DO_HALF_REL:
+        ret = video_do_half_rel(priv, (video_api_do_half_rel_t *)arg);
+        break;
+      case VIDEOIOC_GET_AUTO_PARAM:
+        ret = video_get_auto_param(priv, (video_api_get_auto_param_t *)arg);
+        break;
+      default:
+        videoerr("Unrecognized cmd: %d\n", cmd);
+        ret = - ENOTTY;
+        break;
+    }
+
+  return ret;
+}
+
+int video_register(FAR const char *devpath)
+{
+  video_mng_t *priv;
+  char path[16];
+  int ret;
+
+  /* Initialize video device structure */
+
+  priv = (FAR struct video_mng_s *)kmm_malloc(sizeof(struct video_mng_s));
+  if (!priv)
+    {
+      videoerr("Failed to allocate instance\n");
+      return -ENOMEM;
+    }
+
+  g_v_mng = priv;
+  sem_init(&priv->sem_cisifsync, 0, 0);
+
+  /* Register the character driver */
+
+  (void) snprintf(path, sizeof(path), "%s%d", devpath, 0);
+  ret = register_driver(path, &g_videofops, 0666, priv);
+  if (ret < 0)
+    {
+      videoerr("Failed to register driver: %d\n", ret);
+      kmm_free(priv);
+    }
+  else
+    {
+      videoerr("ISX012 driver loaded successfully!\n");
+    }
+
+  return ret;
+}

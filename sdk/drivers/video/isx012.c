@@ -44,7 +44,6 @@
 #include <debug.h>
 
 #include <nuttx/arch.h>
-#include <nuttx/kmalloc.h>
 #include <nuttx/fs/fs.h>
 #include <nuttx/i2c/i2c_master.h>
 #include <nuttx/video/isx012.h>
@@ -243,7 +242,7 @@ static isx012_maxsize_t g_rate_to_maxsize[RATE_ISX012_MAX] = {
   OUT_JPG_15FPS_HSIZE_MAX, REGVAL_FPSTYPE_5FPS, REGVAL_SENSMODE_ALLPIX}, /* 5*/
 };
 
-static isx012_maxsize_t g_rate_to_maxsize_interleave[RATE_ISX012_MAX] = {
+static isx012_maxsize_t g_rate_to_max_interleave[RATE_ISX012_MAX] = {
  {                         0,                          0,
                            0,                          0,
                            0,                   0},    /* Rate120Fps*/
@@ -559,13 +558,13 @@ static int isx012_chk_param(isx012_param_t *param,
         break;
       case FORMAT_ISX012_JPEG_MODE1_INT:
         if (param->jpeg_hsize < OUT_JPG_HSIZE_MIN ||
-            param->jpeg_hsize > g_rate_to_maxsize_interleave[param->rate].jpg_hsize_max ||
+            param->jpeg_hsize > g_rate_to_max_interleave[param->rate].jpg_hsize_max ||
             param->jpeg_vsize < OUT_JPG_VSIZE_MIN ||
-            param->jpeg_vsize > g_rate_to_maxsize_interleave[param->rate].jpg_vsize_max ||
+            param->jpeg_vsize > g_rate_to_max_interleave[param->rate].jpg_vsize_max ||
             param->yuv_hsize < OUT_YUV_HSIZE_MIN ||
-            param->yuv_hsize > g_rate_to_maxsize_interleave[param->rate].yuv_hsize_max ||
+            param->yuv_hsize > g_rate_to_max_interleave[param->rate].yuv_hsize_max ||
             param->yuv_vsize < OUT_YUV_VSIZE_MIN ||
-            param->yuv_vsize > g_rate_to_maxsize_interleave[param->rate].yuv_vsize_max)
+            param->yuv_vsize > g_rate_to_max_interleave[param->rate].yuv_vsize_max)
           {
             return -EPERM;
           }
@@ -581,8 +580,8 @@ static int isx012_chk_param(isx012_param_t *param,
         set_param->vsize = param->jpeg_vsize;
         set_param->int_hsize = param->yuv_hsize;
         set_param->int_vsize = param->yuv_vsize;
-        set_param->fps = g_rate_to_maxsize_interleave[param->rate].fps_type;
-        set_param->sensor_mode = g_rate_to_maxsize_interleave[param->rate].sensor_mode;
+        set_param->fps = g_rate_to_max_interleave[param->rate].fps_type;
+        set_param->sensor_mode = g_rate_to_max_interleave[param->rate].sensor_mode;
         break;
       default:
         return -EPERM;
@@ -970,10 +969,10 @@ static int isx012_change_device_state(isx012_dev_t *priv, isx012_state_t state)
             }
 
           ret = isx012_chk_reg_bit(priv, AF_EXT,
-                                        AF_EXT_AFRAMDRVFIN,
-                                        AF_EXT_DELAY_TIME,
-                                        AF_EXT_WAIT_TIME,
-                                        AF_EXT_TIMEOUT);
+                                         AF_EXT_AFRAMDRVFIN,
+                                         AF_EXT_DELAY_TIME,
+                                         AF_EXT_WAIT_TIME,
+                                         AF_EXT_TIMEOUT);
           if (ret < 0 || ret > 0)
             {
               board_isx012_set_reset();

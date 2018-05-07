@@ -43,6 +43,25 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+#define _VIDEOIOCBASE   (0x1000)
+
+#define _VIDEOIOC(nr)       _IOC(_VIDEOIOCBASE,nr)
+
+/**
+ * @defgroup img_ioctl IOCTL commands
+ * @{
+ */
+
+#define VIDEOIOC_CHG_IMGSNS_STATE     _VIDEOIOC(0x0001)
+#define VIDEOIOC_SET_CAP_PARAM        _VIDEOIOC(0x0002)
+#define VIDEOIOC_CAP_FRAME            _VIDEOIOC(0x0003)
+#define VIDEOIOC_CONTI_CAP            _VIDEOIOC(0x0004)
+#define VIDEOIOC_SET_IMGSNS_PARAM     _VIDEOIOC(0x0005)
+#define VIDEOIOC_SET_IMGSNS_PARAM_ALL _VIDEOIOC(0x0006)
+#define VIDEOIOC_WR_IMGSNS_REG        _VIDEOIOC(0x0007)
+#define VIDEOIOC_RD_IMGSNS_REG        _VIDEOIOC(0x0008)
+#define VIDEOIOC_DO_HALF_REL          _VIDEOIOC(0x0009)
+#define VIDEOIOC_GET_AUTO_PARAM       _VIDEOIOC(0x000A)
 
 /* Configuration ************************************************************/
 #define CONFIG_VIDEO_TASK_PRIORITY    100
@@ -221,32 +240,48 @@ typedef enum
   VIDEO_CTRL_MAX
 } video_ctrl_e;
 
-typedef struct
+struct video_buffer_s
+{
+  uint32_t addr;
+  uint32_t size;
+};
+
+typedef struct video_buffer_s video_buffer_t;
+
+struct video_crop_s
+{
+  int16_t x_offset;
+  int16_t y_offset;
+};
+
+typedef struct video_crop_s video_crop_t;
+
+struct video_cap_param_s
 {
   video_img_format_e     format;
   video_img_resolution_e resolution;
   video_frame_rate_e     framerate;
-} video_cap_param_t;
+};
 
-typedef struct
+typedef struct video_cap_param_s video_cap_param_t;
+
+struct video_api_set_cap_param_s
 {
-  uint32_t addr;
-  uint32_t size;
-} video_buffer_t;
+  video_mode_e mode;
+  video_cap_param_t param;
+};
 
-typedef struct
-{
-  int16_t x_offset;
-  int16_t y_offset;
-} video_crop_t;
+typedef struct video_api_set_cap_param_s video_api_set_cap_param_t;
 
-typedef struct
+struct video_picture_info_s
 {
   uint32_t    shutter_speed; /* units : micro second  */
   video_iso_e iso_sens;
-} video_picture_info_t;
+};
 
-typedef struct
+typedef struct video_picture_info_s video_picture_info_t;
+
+struct video_cap_frame_info_s
 {
   video_mode_e         mode;
   video_cap_param_t    cap_param;
@@ -255,23 +290,29 @@ typedef struct
   uint32_t             out_size;
   uint16_t             h_size;
   uint16_t             v_size;
-} video_cap_frame_info_t;
+};
 
-typedef struct
+typedef struct video_cap_frame_info_s video_cap_frame_info_t;
+
+struct video_conti_param_s
 {
   video_mode_e mode;
   uint32_t     num;
   uint32_t     interval;
-} video_conti_param_t;
+};
 
-typedef struct
+typedef struct video_conti_param_s video_conti_param_t;
+
+struct video_conti_frame_s
 {
   video_picture_info_t pict_info;
   uint32_t             out_addr;
   uint32_t             out_size;
-} video_conti_frame_t;
+};
 
-typedef struct
+typedef struct video_conti_frame_s video_conti_frame_t;
+
+struct video_conti_cap_info_s
 {
   video_mode_e        mode;
   video_cap_param_t   cap_param;
@@ -280,9 +321,11 @@ typedef struct
   uint32_t            buffer_full;
   uint32_t            capnum;
   video_conti_frame_t conti_frame[VIDEO_CONTI_CAPNUM_MAX];
-} video_conti_cap_info_t;
+};
 
-typedef struct
+typedef struct video_conti_cap_info_s video_conti_cap_info_t;
+
+struct video_img_sns_param_s
 {
   video_img_sns_param_id_e id;
   union
@@ -298,9 +341,11 @@ typedef struct
     video_awb_e            awb;
     video_photometry_e     photometry;
   } val;
-} video_img_sns_param_t;
+};
 
-typedef struct
+typedef struct video_img_sns_param_s video_img_sns_param_t;
+
+struct video_img_sns_param_all_s
 {
   video_color_mode_e color_mode;
   video_iso_e        iso;
@@ -312,31 +357,108 @@ typedef struct
   video_ygamma_e     ygamma;
   video_awb_e        awb;
   video_photometry_e photometry;
-} video_img_sns_param_all_t;
+};
 
-typedef struct
+typedef struct video_img_sns_param_all_s video_img_sns_param_all_t;
+
+struct video_auto_ae_info_s
 {
   int16_t  errscl;
   int16_t  user_aescl;
   uint32_t sht_time;
   int8_t   user_gain_level;
   int8_t   err_level;
-} video_auto_ae_info_t;
+};
 
-typedef struct
+typedef struct video_auto_ae_info_s video_auto_ae_info_t;
+
+struct video_auto_awb_info_s
 {
   uint16_t ratio_r;
   uint16_t ratio_b;
   uint8_t  awb_sts;
-} video_auto_awb_info_t;
+};
 
-typedef struct
+typedef struct video_auto_awb_info_s video_auto_awb_info_t;
+
+struct video_auto_info_s
 {
   video_auto_ae_info_t  ae;
   video_auto_awb_info_t awb;
   uint16_t              intmean[VIDEO_AE_WINDOW_MAX];
   uint16_t              intmean_free;
-} video_auto_info_t;
+};
+
+typedef struct video_auto_info_s video_auto_info_t;
+
+struct video_api_chg_img_sns_state_s
+{
+  video_img_sns_state_e state;
+};
+
+typedef struct video_api_chg_img_sns_state_s video_api_chg_img_sns_state_t;
+
+struct video_api_set_img_sns_param_s
+{
+  video_img_sns_param_t param;
+};
+
+typedef struct video_api_set_img_sns_param_s video_api_set_img_sns_param_t;
+
+struct video_api_set_img_sns_param_all_s
+{
+  video_img_sns_param_all_t param;
+};
+
+typedef struct video_api_set_img_sns_param_all_s video_api_set_img_sns_param_all_t;
+
+struct video_api_img_sns_reg_s
+{
+  uint16_t addr;
+  uint16_t regsize;
+  uint16_t val;
+};
+
+typedef struct video_api_img_sns_reg_s video_api_img_sns_reg_t;
+
+struct video_api_do_half_rel_s
+{
+  video_ctrl_e cancel;
+  video_auto_info_t info;
+};
+
+typedef struct video_api_do_half_rel_s video_api_do_half_rel_t;
+
+struct video_api_get_auto_param_s
+{
+  video_auto_info_t info;
+};
+
+typedef struct video_api_get_auto_param_s video_api_get_auto_param_t;
+
+struct video_api_cap_frame_s
+{
+  video_mode_e mode;
+  video_buffer_t buffer;
+  video_cap_frame_info_t info;
+  video_crop_t crop;
+  video_ctrl_e crop_ctrl;
+};
+
+typedef struct video_api_cap_frame_s video_api_cap_frame_t;
+
+struct video_api_conti_cap_s
+{
+  video_mode_e mode;
+  uint32_t capnum;
+  uint32_t interval;
+  video_buffer_t buffer;
+  video_conti_cap_info_t info;
+  video_crop_t crop;
+  video_ctrl_e crop_ctrl;
+};
+
+typedef struct video_api_conti_cap_s video_api_conti_cap_t;
 
 /****************************************************************************
  * Public Data
@@ -353,23 +475,9 @@ extern "C"
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
-int video_init(void);
-int video_change_imgsns_state(video_img_sns_state_e state);
-int video_id_set_capture_param(video_mode_e mode, video_cap_param_t *param);
-int video_id_capture_frame(video_mode_e mode,
-                        video_buffer_t *buffer,
-                        video_crop_t *crop,
-                        video_cap_frame_info_t *info);
-int video_id_continuous_capture(video_conti_param_t *param,
-                        video_buffer_t *buffer,
-                        video_crop_t *crop,
-                        video_conti_cap_info_t *info);
-int video_set_imgsns_param(video_img_sns_param_t *param);
-int video_set_imgsns_param_all(video_img_sns_param_all_t *param);
-int video_write_imgsns_register(uint16_t addr, uint16_t size, uint16_t val);
-int video_read_imgsns_register(uint16_t addr, uint16_t size, uint16_t *val);
-int video_do_halfrelease(video_auto_info_t *info, video_ctrl_e cancel);
-int video_id_get_auto_param(video_auto_info_t *info);
+int video_open(FAR struct file *filep);
+int video_close(FAR struct file *filep);
+int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg);
 
 #undef EXTERN
 #ifdef __cplusplus
