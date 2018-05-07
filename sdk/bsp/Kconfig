@@ -1089,6 +1089,21 @@ config CXD56_SCU_DEBUG
 	bool "SCU Debug"
 	default n
 
+config CXD56_SCU_DEBUG_ERR
+	bool "Error Messages"
+	default n
+	depends on CXD56_SCU_DEBUG
+
+config CXD56_SCU_DEBUG_WARN
+	bool "Warning Messages"
+	default n
+	depends on CXD56_SCU_DEBUG_ERR
+
+config CXD56_SCU_DEBUG_INFO
+	bool "Info Messages"
+	default n
+	depends on CXD56_SCU_DEBUG_WARN
+
 config CXD56_UDMAC
 	bool "DMAC support"
 	default y

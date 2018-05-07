@@ -72,16 +72,20 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifdef CONFIG_CXD56_SCU_DEBUG
-#  define scudbg dbg
-#  ifdef CONFIG_DEBUG_VERBOSE
-#    define scuvdbg vdbg
-#  else
-#    define scuvdbg(x...)
-#  endif
+#ifdef CONFIG_CXD56_SCU_DEBUG_ERR
+#  define scuerr(fmt, ...) syslog(LOG_ERR, fmt, ## __VA_ARGS__)
 #else
-#  define scudbg(x...)
-#  define scuvdbg(x...)
+#  define scuerr(x, ...)
+#endif
+#ifdef CONFIG_CXD56_SCU_DEBUG_WARN
+#  define scuwarn(fmt, ...) syslog(LOG_WARN, fmt, ## __VA_ARGS__)
+#else
+#  define scuwarn(x, ...)
+#endif
+#ifdef CONFIG_CXD56_SCU_DEBUG_INFO
+#  define scuinfo(fmt, ...) syslog(LOG_INFO, fmt, ## __VA_ARGS__)
+#else
+#  define scuinfo(x, ...)
 #endif
 
 /* Sequencer has 128 instruction area (16bits/inst)
@@ -1056,7 +1060,7 @@ static int seq_oneshot(int bustype, int slave, FAR uint16_t *inst,
 
   putreg32(1 << (tid + 24), SCU_INT_ENABLE_MAIN);
 
-  scuvdbg("Sequencer start.\n");
+  scuinfo("Sequencer start.\n");
 
   /* Start sequencer as one shot mode */
 
@@ -1071,7 +1075,7 @@ static int seq_oneshot(int bustype, int slave, FAR uint16_t *inst,
 
   putreg32(1 << (tid + 24), SCU_INT_DISABLE_MAIN);
 
-  scuvdbg("Sequencer done.\n");
+  scuinfo("Sequencer done.\n");
 
   if (buffer)
     {
@@ -1240,7 +1244,7 @@ static int seq_stop(FAR struct seq_s *seq, int fifoid)
 
   if (fifo == NULL)
     {
-      scudbg("missing FIFO\n");
+      scuerr("missing FIFO\n");
       return -EPERM;
     }
 
@@ -1682,7 +1686,7 @@ static int seq_scuirqhandler(int irq, FAR void *context, FAR void *arg)
 
   if (ierr0 != 0)
     {
-      scuvdbg("err0: %08x\n", ierr0);
+      scuerr("err0: %08x\n", ierr0);
       ierr0 = (ierr0 >> 9) & 0x3fff;
       for (i = 0; i < 14; i++)
         {
@@ -1704,7 +1708,7 @@ static int seq_scuirqhandler(int irq, FAR void *context, FAR void *arg)
 
   if (ierr1 != 0)
     {
-      scuvdbg("err1: %08x\n", ierr1);
+      scuerr("err1: %08x\n", ierr1);
       ierr1 = (ierr1 >> 9) & 0x3fff;
       for (i = 0; i < 14; i++)
         {
@@ -1722,7 +1726,7 @@ static int seq_scuirqhandler(int irq, FAR void *context, FAR void *arg)
 
   if (ierr2 != 0)
     {
-      scuvdbg("err2: %08x\n", ierr2);
+      scuerr("err2: %08x\n", ierr2);
       ierr2 &= 0x03ff;
       for (i = 0; i < 10; i++)
         {
@@ -2329,7 +2333,7 @@ static int seq_setwatermark(FAR struct seq_s *seq, int fifoid,
 
   leave_critical_section(flags);
 
-  scuvdbg("watermark = %04x, PID = %d, signo = %d\n", wm->watermark,
+  scuinfo("watermark = %04x, PID = %d, signo = %d\n", wm->watermark,
           notify->pid, notify->signo);
 
   return OK;
@@ -2481,7 +2485,7 @@ static void seq_setfifomode(FAR struct seq_s *seq, int fifoid, int enable)
 
   DEBUGASSERT(fifo);
 
-  scudbg("FIFO mode %d wid %d\n", enable, fifo->wid);
+  scuinfo("FIFO mode %d wid %d\n", enable, fifo->wid);
 
 #ifndef CONFIG_DISABLE_SIGNAL
   if (notify->ts)
@@ -2936,10 +2940,10 @@ int seq_read(FAR struct seq_s *seq, int fifoid, FAR char *buffer, int length)
   outlet = SCUFIFO_FIFO_DATA(fifo->rid);
 
   avail = getreg32(SCUFIFO_R_STATUS0(fifo->rid));
-  scudbg("Available %d samples\n", avail);
+  scuinfo("Available %d samples\n", avail);
 #ifdef CONFIG_CXD56_SCU_DEBUG
   status = getreg32(SCUFIFO_R_STATUS1(fifo->rid));
-  scudbg("Status: %08x\n", status);
+  scuinfo("Status: %08x\n", status);
 #endif
   avail *= seq->sample;
   length = MIN(avail, length);
@@ -3087,7 +3091,7 @@ int seq_ioctl(FAR struct seq_s *seq, int fifoid, int cmd, unsigned long arg)
       return -1;
     }
 
-  scuvdbg("cmd = %04x, arg = %08x\n", cmd, arg);
+  scuinfo("cmd = %04x, arg = %08x\n", cmd, arg);
 
   switch (cmd)
     {
@@ -3306,7 +3310,7 @@ int seq_ioctl(FAR struct seq_s *seq, int fifoid, int cmd, unsigned long arg)
         break;
 
       default:
-        scudbg("Unrecognized cmd: %d\n", cmd);
+        scuerr("Unrecognized cmd: %d\n", cmd);
         ret = -EIO;
         break;
     }
