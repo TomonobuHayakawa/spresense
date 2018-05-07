@@ -110,9 +110,9 @@ static xcpt_t g_isr[MAX_SLOT];
  * Private Functions
  ****************************************************************************/
 
-/* allocate/get slot number (SYS: 0~5, APP: 6~11) */
+/* allocate/deallocate/get slot number (SYS: 0~5, APP: 6~11) */
 
-static int alloc_slot(int pin)
+static int alloc_slot(int pin, bool isalloc)
 {
   irqstate_t flags;
   int alloc = -1;
@@ -129,6 +129,10 @@ static int alloc_slot(int pin)
       val = getreg8(base + slot);
       if ((pin - offset) == val)
         {
+          if (isalloc == false)
+            {
+              putreg8(INTSEL_DEFAULT_VAL, base + slot);
+            }
           break; /* already used */
         }
       if ((-1 == alloc) && (INTSEL_DEFAULT_VAL == val))
@@ -139,7 +143,7 @@ static int alloc_slot(int pin)
 
   if (slot == MAX_SYS_SLOT)
     {
-      if (-1 != alloc)
+      if (isalloc && (-1 != alloc))
         {
           slot = alloc;
           putreg8(pin - offset, base + slot);
@@ -382,7 +386,7 @@ static int gpioint_handler(int irq, FAR void *context, FAR void *arg)
  * Input Parameters:
  *   pin - Pin number defined in cxd56_pinconfig.h
  *   gpiocfg - GPIO Interrupt Polarity and Noise Filter Configuration Value
- *   isr - Interrupt handler
+ *   isr - Interrupt handler. If isr is NULL, then free an allocated handler.
  *
  * Returned Value:
  *   IRQ number on success; a negated errno value on failure.
@@ -397,10 +401,25 @@ int cxd56_gpioint_config(uint32_t pin, uint32_t gpiocfg, xcpt_t isr)
   int slot;
   int irq;
 
-  slot = alloc_slot(pin);
+  slot = alloc_slot(pin, (isr != NULL));
   if (slot < 0)
     {
       return -ENXIO;
+    }
+
+  irq = GET_SLOT2IRQ(slot);
+
+  if (isr == NULL)
+    {
+      /* disable GPIO input */
+
+      cxd56_gpio_config(pin, false);
+
+      /* disable interrupt */
+
+      irq_attach(irq, NULL, NULL);
+      g_isr[slot] = NULL;
+      return irq;
     }
 
   /* enable GPIO input */
@@ -410,8 +429,6 @@ int cxd56_gpioint_config(uint32_t pin, uint32_t gpiocfg, xcpt_t isr)
   /* set GPIO interrupt configuration */
 
   set_gpioint_config(slot, gpiocfg);
-
-  irq = GET_SLOT2IRQ(slot);
 
   if (gpiocfg & GPIOINT_TOGGLE_MODE_MASK)
     {
