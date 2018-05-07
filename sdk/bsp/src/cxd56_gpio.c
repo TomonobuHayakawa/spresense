@@ -112,19 +112,28 @@ int cxd56_gpio_config(uint32_t pin, bool input_enable)
   int ret = 0;
   uint32_t pinconf;
   uint32_t regaddr;
+  uint32_t ioreg;
+  uint32_t ioval;
 
   DEBUGASSERT((PIN_I2C4_BCK <= pin) && (pin <= PIN_USB_VBUSINT));
   DEBUGASSERT((pin <= PIN_GNSS_1PPS_OUT) || (PIN_SPI0_CS_X <= pin));
   DEBUGASSERT((pin <= PIN_HIF_GPIO0) || (PIN_SEN_IRQ_IN <= pin));
   DEBUGASSERT((pin <= PIN_PWM3) || (PIN_IS_CLK <= pin));
 
+  ioreg = CXD56_TOPREG_IO_RTC_CLK_IN + (pin * 4);
+  ioval = getreg32(ioreg);
+
   if (input_enable)
     {
-      pinconf = PINCONF_SET_GPIO(pin, PINCONF_INPUT_ENABLE);
+      pinconf = PINCONF_SET(pin, PINCONF_MODE0, PINCONF_INPUT_ENABLE,
+                            ioval & PINCONF_DRIVE_MASK,
+                            ioval & PINCONF_PULL_MASK);
     }
   else
     {
-      pinconf = PINCONF_SET_GPIO(pin, PINCONF_INPUT_DISABLE);
+      pinconf = PINCONF_SET(pin, PINCONF_MODE0, PINCONF_INPUT_DISABLE,
+                            ioval & PINCONF_DRIVE_MASK,
+                            ioval & PINCONF_PULL_MASK);
     }
 
   ret = cxd56_pin_config(pinconf);
