@@ -41,7 +41,7 @@
  * Included Files
  ************************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/spi/spi.h>
 #include "chip/cxd56_spi.h"
 

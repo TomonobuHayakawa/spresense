@@ -44,7 +44,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #ifdef CONFIG_SCHED_WAITPID
 #  include <sys/wait.h>

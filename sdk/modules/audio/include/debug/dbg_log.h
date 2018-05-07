@@ -40,7 +40,7 @@
  ****************************************************************************/
 
 #include <stdio.h>
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <debug.h>
 #include "audio/audio_high_level_api.h"
 #include "memutils/common_utils/common_attention.h"

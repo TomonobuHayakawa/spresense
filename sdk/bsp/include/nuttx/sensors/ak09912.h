@@ -35,7 +35,7 @@
 #ifndef __DRIVERS_SENSORS_AK09912_H
 #define __DRIVERS_SENSORS_AK09912_H
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #if defined(CONFIG_I2C) && defined(CONFIG_AK09912)
 

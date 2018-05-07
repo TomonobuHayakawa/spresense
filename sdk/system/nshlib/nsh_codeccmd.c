@@ -39,7 +39,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #ifdef CONFIG_NETUTILS_CODECS
 
 #include <sys/stat.h>

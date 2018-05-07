@@ -36,7 +36,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/sched.h>
 #include <nuttx/arch.h>
 #include <nuttx/irq.h>

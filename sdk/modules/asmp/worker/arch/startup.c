@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <arch/irq.h>
 #include <asmp/mpmq.h>
 #include <asmp/mpsignal.h>

@@ -36,7 +36,7 @@
  * Included Files
  ****************************************************************************/
 
-#  include <nuttx/config.h>
+#  include <sdk/config.h>
 
 #if CONFIG_NFILE_DESCRIPTORS > 0
 # include <sys/stat.h>

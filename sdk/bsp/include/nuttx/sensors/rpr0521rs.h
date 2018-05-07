@@ -35,7 +35,7 @@
 #ifndef __INCLUDE_NUTTX_SENSORS_RPR0521RS_H
 #define __INCLUDE_NUTTX_SENSORS_RPR0521RS_H
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #if defined(CONFIG_I2C) && defined(CONFIG_RPR0521RS)
 

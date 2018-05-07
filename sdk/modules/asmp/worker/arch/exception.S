@@ -38,7 +38,7 @@
  * Included Files
  ************************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <arch/irq.h>
 #include "exc_return.h"

@@ -32,7 +32,7 @@
  *
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/irq.h>
 #include <nuttx/arch.h>
 #include <queue.h>

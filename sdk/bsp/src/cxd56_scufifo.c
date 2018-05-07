@@ -36,7 +36,7 @@
  * include files
  *---------------------------------------------------------------------------*/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <stdio.h>
 #include <stdlib.h>

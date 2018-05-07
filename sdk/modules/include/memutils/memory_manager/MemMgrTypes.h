@@ -49,7 +49,6 @@
  */
 
 #include <stdio.h>
-//#include <nuttx/config.h>
 #include <sdk/config.h>
 #include "memutils/common_utils/common_types.h"  /* uintN_t */
 #include "memutils/os_utils/cpp_util.h"          /* CopyGuard class */

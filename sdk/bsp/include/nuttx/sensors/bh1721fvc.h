@@ -35,7 +35,7 @@
 #ifndef __INCLUDE_NUTTX_SENSORS_BH1721FVC_H
 #define __INCLUDE_NUTTX_SENSORS_BH1721FVC_H
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #if defined(CONFIG_I2C) && defined(CONFIG_BH1721FVC)
 

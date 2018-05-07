@@ -40,7 +40,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 /* Is network initialization debug forced on? */
 

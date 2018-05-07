@@ -44,7 +44,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <spawn.h>
 #include <fcntl.h>

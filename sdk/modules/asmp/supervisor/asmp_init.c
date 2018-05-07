@@ -36,7 +36,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include "mptask.h"
 #include "mpmutex.h"

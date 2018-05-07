@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/kmalloc.h>
 
 #include <debug.h>

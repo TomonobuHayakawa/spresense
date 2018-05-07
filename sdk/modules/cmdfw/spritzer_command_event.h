@@ -36,7 +36,7 @@
 #ifndef SPRITZER_COMMAND_EVENT_H
 #define SPRITZER_COMMAND_EVENT_H
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <stdio.h>
 #include "spritzer_command.h"
 #include "spritzer_command_common.h"

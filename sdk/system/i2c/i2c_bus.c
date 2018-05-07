@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <nuttx/i2c/i2c_master.h>
 

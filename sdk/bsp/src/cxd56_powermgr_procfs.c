@@ -32,7 +32,7 @@
  *
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <nuttx/fs/procfs.h>
 #include <nuttx/fs/dirent.h>
 #include <nuttx/kmalloc.h>

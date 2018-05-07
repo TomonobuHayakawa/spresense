@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 #include <sys/mount.h>
 #include <debug.h>

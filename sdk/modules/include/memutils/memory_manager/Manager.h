@@ -42,7 +42,7 @@
 #ifndef MANAGER_H_INCLUDED
 #define MANAGER_H_INCLUDED
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 
 /**
  * @defgroup memutils_memory_manager Memory Manager Lite
