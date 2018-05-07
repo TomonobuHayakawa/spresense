@@ -48,7 +48,7 @@
 /* Set the standard pinconf macro Definitions
  *  - If it's used as input pin, then set 1. Otherwise set 0 (default).
  *  - If it's drived in 4mA, then set 1. Otherwise set 0 (default 2mA).
- *  - If it's used as weak pull-up/down, then set PINCONF_PULLUP/PINCONF_IS_PULLDOWN.
+ *  - If it's used as weak pull-up/down, then set PINCONF_PULLUP/PINCONF_PULLDOWN.
  *    Otherwise set 0 (default).
  *
  */
@@ -187,7 +187,11 @@
  * ---------------- --------------- --- --- ------- --------------- --------------- ---------------
  */
 
-/* Reference set of single pinconfig
+/* Default pin configurations
+ *  Mode: shared pin function mode
+ *  ENZI: 1=Input Enable, 0=Input Disable
+ *  4mA : Drive Current 1=4mA, 0=2mA
+ *  Pull: 0=HiZ floating, PINCONF_PULLUP, PINCONF_PULLDOWN
  *                                                                      M  E     P
  *                                                  P                   o  N  4  u
  *                                                  i                   d  Z  m  l
@@ -641,16 +645,11 @@
 #define PINCONFS_USB_VBUSINT_GPIO           { PINCONF_USB_VBUSINT_GPIO }
 #define PINCONFS_USB_VBUSINT                { PINCONF_USB_VBUSINT }
 
-/********************************************************************************************
- * Public Types
- ********************************************************************************************/
+#ifdef CONFIG_BOARD_CUSTOM_PINCONFIG
+/* Change the pin configuration depending on each board */
 
-/********************************************************************************************
- * Public Data
- ********************************************************************************************/
+#  include <arch/board/board_pinconfig.h>
 
-/********************************************************************************************
- * Public Functions
- ********************************************************************************************/
+#endif /* CONFIG_BOARD_CUSTOM_PINCONFIG */
 
 #endif /* __ARCH_ARM_SRC_CXD56XX_CHIP_CXD5602_PINCONFIG_H */

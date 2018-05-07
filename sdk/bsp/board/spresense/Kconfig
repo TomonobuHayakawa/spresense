@@ -19,6 +19,10 @@ choice
 endchoice
 endmenu
 
+config BOARD_CUSTOM_PINCONFIG
+	bool
+	default y
+
 config CXD56_SPIFLASHSIZE
 	hex
 	default 0x400000
