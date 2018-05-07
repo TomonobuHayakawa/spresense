@@ -30,4 +30,3 @@ Make.dep
 /*.log
 .*.tmp
 .context
-.kernel.built

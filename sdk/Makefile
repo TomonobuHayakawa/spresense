@@ -96,22 +96,12 @@ all: $(BIN)
 # If nsh disabled at NuttX configuration, then our builtin_list will be removed
 # automatically.
 
-.kernel.built:
-	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
-	$(Q) touch $@
-
+buildkernel:
 ifneq ($(KERNCONF),)
-rebuildkernel:
-	$(Q) if [ -f $(TOPDIR)/.config ]; then $(MAKE) -C $(TOPDIR) distclean; fi
 	$(Q) $(SDKDIR)/tools/config.py --kernel $(KERNCONF)
-	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
-	$(Q) touch .kernel.built
-PHONY += rebuildkernel
-
-buildkernel: rebuildkernel
-else
-buildkernel: .kernel.built
 endif
+	$(Q) $(MAKE) $(MAKEOPTS) -C $(TOPDIR) pass2deps
+PHONY += buildkernel
 
 # installkernel
 #
@@ -120,7 +110,7 @@ endif
 # Additionally, remove links to board directory for avoid conflict the same name header
 # inclusion.
 
-installkernel: .kernel.built
+installkernel:
 	$(Q) install $(sort $(patsubst %,$(TOPDIR)/%,$(EXPORTLIBS))) lib
 	$(Q) if [ -f lib/libarch.a ]; then \
 		$(ARCROSSDEV)ar d lib/libarch.a cxd56_allocateheap.o; \
@@ -182,7 +172,7 @@ bsp/include/arch/board/common: bsp/include/arch/board .config
 dirlinks: bsp/include/arch/board bsp/include/arch/board/common
 PHONY += dirlinks
 
-context: check_context $(TOPDIR)/include/nuttx/config.h dirlinks
+context: check_context bsp/include/sdk/config.h dirlinks
 	$(Q) $(DIRUNLINK) $(TOPDIR)/include/arch/board
 	$(Q) $(DIRUNLINK) $(TOPDIR)/$(ARCH_SRC)/board
 	$(Q) for dir in $(CONTEXTDIRS) ; do \
@@ -215,6 +205,7 @@ check_context:
 	fi
 
 clean_context:
+	$(call DELFILE, bsp/include/sdk/config.h)
 	$(Q) $(DIRUNLINK) bsp/include/arch/board/common
 	$(Q) $(DIRUNLINK) bsp/include/arch/board
 
@@ -232,12 +223,10 @@ PHONY += depend
 
 cleankernel:
 	$(Q) $(MAKE) -C $(TOPDIR) clean
-	$(Q) $(call DELFILE, .kernel.built)
 PHONY += cleankernel
 
 distcleankernel:
 	$(Q) $(MAKE) -C $(TOPDIR) distclean
-	$(Q) $(call DELFILE, .kernel.built)
 PHONY += distcleankernel
 
 subdir_clean:
@@ -255,7 +244,7 @@ PHONY += depend_clean
 
 clean: subdir_clean depend_clean
 	$(call DELFILE, .kconfig.tmp)
-	$(call DELDIR,  .config.tmp)
+	$(call DELFILE, bsp/include/sdk/config.h)
 	$(call DELFILE, bsp/include/sdk/version.h)
 	$(call DELFILE, $(SDKLIBS))
 	$(call DELFILE, $(BIN))
@@ -273,9 +262,8 @@ distclean: clean subdir_distclean clean_context
 	$(call DELFILE, .config)
 	$(call DELFILE, .config.old)
 
-$(TOPDIR)/include/nuttx/config.h: .kernel.built $(SDKDIR)/.config tools/mergeconfig.py
-	$(Q) tools/mergeconfig.py $(TOPDIR)/.config $(SDKDIR)/.config $(SDKDIR)/.config.tmp
-	$(Q) $(TOPDIR)/tools/mkconfig $(SDKDIR)/.config.tmp > $@
+bsp/include/sdk/config.h: $(SDKDIR)/.config tools/mkconfig.py
+	$(Q) tools/mkconfig.py > $@
 
 bsp/include/sdk/version.h: $(SDKDIR)/.version
 # TBD
@@ -284,7 +272,6 @@ bsp/include/sdk/version.h: $(SDKDIR)/.version
 
 configkernel oldconfigkernel olddefconfigkernel menuconfigkernel qconfigkernel gconfigkernel:
 	$(Q) $(MAKE) -C $(TOPDIR) $(patsubst %kernel,%,$@)
-	$(Q) $(call DELFILE, .kernel.built)
 PHONY += configkernel oldconfigkernel olddefconfigkernel menuconfigkernel qconfigkernel gconfigkernel
 
 # config targets
