@@ -176,6 +176,7 @@ if __name__ == "__main__":
     if opts.list:
         print('Available configurations:')
 
+        configs.sort()
         for c in configs:
             print('\t%s' % c.replace('-defconfig', ''))
 
