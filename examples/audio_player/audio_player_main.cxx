@@ -460,7 +460,7 @@ static bool app_act_audio_sub_system(void)
   result = AS_CreateOutputMixer(&output_mix_act_param);
   if (!result)
     {
-      printf("Error: AS_ActivateOutputMix() failed. system memory insufficient!\n");
+      printf("Error: AS_CreateOutputMixer() failed. system memory insufficient!\n");
       return false;
     }
 
@@ -472,10 +472,10 @@ static bool app_act_audio_sub_system(void)
   renderer_act_param.msgq_id.dev1_req  = 0xFF;
   renderer_act_param.msgq_id.dev1_sync = 0xFF;
 
-  result = AS_ActivateRenderer(&renderer_act_param);
+  result = AS_CreateRenderer(&renderer_act_param);
   if (!result)
     {
-      printf("Error: AS_ActivateRenderer() failure. system memory insufficient!\n");
+      printf("Error: AS_CreateRenderer() failure. system memory insufficient!\n");
       return false;
     }
 
@@ -487,7 +487,7 @@ static void app_deact_audio_sub_system(void)
   AS_DeactivateAudioSubSystem();
   AS_DeletePlayer(AS_PLAYER_ID_0);
   AS_DeleteOutputMix();
-  AS_DeactivateRenderer();
+  AS_DeleteRenderer();
 }
 
 static bool app_power_on(void)

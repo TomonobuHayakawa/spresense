@@ -448,10 +448,10 @@ static bool app_act_audio_sub_system(void)
   recorder_act_param.pool_id.output        = OUTPUT_BUF_POOL;
   recorder_act_param.pool_id.dsp           = ENC_APU_CMD_POOL;
 
-  result = AS_ActivateVoiceRecorder(&recorder_act_param);
+  result = AS_CreateVoiceRecorder(&recorder_act_param);
   if (!result)
     {
-      printf("Error: AS_ActivateVoiceRecorder() failure. system memory insufficient!\n");
+      printf("Error: AS_CreateVoiceRecorder() failure. system memory insufficient!\n");
       return false;
     }
 
@@ -463,10 +463,10 @@ static bool app_act_audio_sub_system(void)
   capture_act_param.msgq_id.dev1_req  = 0xFF;
   capture_act_param.msgq_id.dev1_sync = 0xFF;
 
-  result = AS_ActivateCapture(&capture_act_param);
+  result = AS_CreateCapture(&capture_act_param);
   if (!result)
     {
-      printf("Error: AS_ActivateCapture() failure. system memory insufficient!\n");
+      printf("Error: As_CreateCapture() failure. system memory insufficient!\n");
       return false;
     }
 
@@ -476,8 +476,8 @@ static bool app_act_audio_sub_system(void)
 static void app_deact_audio_sub_system(void)
 {
   AS_DeactivateAudioSubSystem();
-  AS_DeactivateVoiceRecorder();
-  AS_DeactivateCapture();
+  AS_DeleteVoiceRecorder();
+  AS_DeleteCapture();
 }
 
 static bool app_power_on(void)

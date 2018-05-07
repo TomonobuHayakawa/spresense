@@ -188,10 +188,10 @@ static bool app_act_audio_sub_system(void)
   effector_act_param.pool_id.i2s_out    = I2S_OUT_BUF_POOL;
   effector_act_param.pool_id.mfe_out    = MFE_OUT_BUF_POOL;
 
-  result = AS_ActivateEffector(&effector_act_param);
+  result = AS_CreateEffector(&effector_act_param);
   if (!result)
     {
-      printf("Error: AS_ActivateEffector failure. system memory insufficient!\n");
+      printf("Error: AS_CreateEffector failure. system memory insufficient!\n");
       return false;
     }
 
@@ -201,7 +201,7 @@ static bool app_act_audio_sub_system(void)
   recognizer_act_param.msgq_id.dsp        = MSGQ_AUD_DSP;
   recognizer_act_param.pool_id.wuwsr_in   = WUWSR_IN_BUF_POOL;
 
-  result = AS_ActivateRecognizer(&recognizer_act_param);
+  result = AS_CreateRecognizer(&recognizer_act_param);
   if (!result)
     {
       printf("Error: AS_activateRecognizer failed. system memory insufficient!\n");
@@ -216,10 +216,10 @@ static bool app_act_audio_sub_system(void)
   renderer_act_param.msgq_id.dev1_req  = MSGQ_AUD_RND_I2S;
   renderer_act_param.msgq_id.dev1_sync = MSGQ_AUD_RND_I2S_SYNC;
 
-  result = AS_ActivateRenderer(&renderer_act_param);
+  result = AS_CreateRenderer(&renderer_act_param);
   if (!result)
     {
-      printf("Error: AS_ActivateRenderer failure. system memory insufficient!\n");
+      printf("Error: AS_CreateRenderer failure. system memory insufficient!\n");
       return false;
     }
 
@@ -231,10 +231,10 @@ static bool app_act_audio_sub_system(void)
   capture_act_param.msgq_id.dev1_req  = MSGQ_AUD_CAP_I2S;
   capture_act_param.msgq_id.dev1_sync = MSGQ_AUD_CAP_I2S_SYNC;
 
-  result = AS_ActivateCapture(&capture_act_param);
+  result = AS_CreateCapture(&capture_act_param);
   if (!result)
     {
-      printf("Error: AS_ActivateCapture failure. system memory insufficient!\n");
+      printf("Error: AS_CreateCapture failure. system memory insufficient!\n");
       return false;
     }
 
@@ -244,10 +244,10 @@ static bool app_act_audio_sub_system(void)
 static void app_deact_audio_sub_system(void)
 {
   AS_DeactivateAudioSubSystem();
-  AS_DeactivateEffector();
-  AS_DeactivateRecognizer();
-  AS_DeactivateRenderer();
-  AS_DeactivateCapture();
+  AS_DeleteEffector();
+  AS_DeleteRecognizer();
+  AS_DeleteRenderer();
+  AS_DeleteCapture();
 }
 
 static bool printAudCmdResult(uint8_t command_code, AudioResult& result)
