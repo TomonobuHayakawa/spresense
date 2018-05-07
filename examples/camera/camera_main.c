@@ -109,6 +109,7 @@
 #define RAMDISK_MOUNTP          "/mnt/vfat"
 #endif /* CONFIG_SYSTEM_USBMSC */
 
+#define ALING32_CHECK(x)  (x % 32)
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -131,14 +132,12 @@ struct capture_info_s
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
+#ifdef CONFIG_SYSTEM_USBMSC
 static int  camera_main_init(void);
 static int  camera_main_write_ramdisk(uint8_t *data, size_t len,
                                       video_cap_frame_info_t *info,
                                       video_crop_t *crop);
-static int camera_main_thread_stop(void);
-static int camera_main_thread_start(video_mode_e mode);
-static void *camera_main_moni_thread(void *arg);
-static void *camera_main_cap_thread(void *arg);
+#endif /* CONFIG_SYSTEM_USBMSC */
 
 #ifdef CAMERA_MAIN_JPEG_INFO
 static int camera_main_create_info(video_cap_frame_info_t *info,
@@ -165,11 +164,11 @@ static uint8_t  camera_img_buf[IMG_BUF_MAXSIZE] __attribute__((aligned(32)));
 static uint8_t  camera_ramdisk[RAMDISK_NSECTORS * RAMDISK_SECTORSIZE];
 #endif /* CONFIG_SYSTEM_USBMSC */
 
+static int v_fd;
+
 static int camera_main_initialized = 0;
 static volatile int camera_main_thread_active = 0;
 static volatile int camera_main_thread_exit = 0;
-static pthread_t camera_main_thread_id;
-
 static uint64_t camera_main_time_start;
 
 #define DBG_TIME_START()    \
@@ -350,6 +349,269 @@ static void camera_main_lcd_write(void *capturebuffer, uint32_t capturesize)
 }
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
 
+static int camera_change_imgsns_state(video_img_sns_state_e state)
+{
+  video_api_chg_img_sns_state_t p;
+
+  if (state >= VIDEO_STATE_MAX)
+    {
+      return -EINVAL;
+    }
+
+  p.state = state;
+
+  return ioctl(v_fd, VIDEOIOC_CHG_IMGSNS_STATE, (unsigned long)&p);
+}
+
+static int camera_set_capture_param(video_mode_e mode, video_cap_param_t *cap_param)
+{
+  video_api_set_cap_param_t p;
+
+  if ((mode != VIDEO_MODE_CAPTURE) && (mode != VIDEO_MODE_MONITORING))
+    {
+      return -EINVAL;
+    }
+
+  if (cap_param == NULL) 
+    {
+      return -EINVAL;
+    }
+
+  if ((cap_param->resolution < VIDEO_QVGA) ||
+      (cap_param->resolution >= VIDEO_RESOLUTION_MAX) ||
+      (cap_param->format < VIDEO_FORMAT_YUV) ||
+      (cap_param->format >= VIDEO_FORMAT_MAX) ||
+      (cap_param->framerate < VIDEO_120FPS) ||
+      (cap_param->framerate >= VIDEO_FRAME_RATE_MAX))
+    {
+      return -EINVAL;
+    }
+
+  p.mode = mode;
+  memcpy(&p.param, cap_param, sizeof(video_cap_param_t));
+
+  return ioctl(v_fd, VIDEOIOC_SET_CAP_PARAM, (unsigned long)&p);
+}
+
+static int camera_capture_frame(
+  video_mode_e mode,
+  video_buffer_t *buffer,
+  video_crop_t *crop,
+  video_cap_frame_info_t *info)
+{
+  video_api_cap_frame_t p;
+  int ret;
+
+  if ((mode != VIDEO_MODE_CAPTURE) && (mode != VIDEO_MODE_MONITORING))
+    {
+      return -EINVAL;
+    }
+
+  if ((buffer == NULL) || (info == NULL))
+    {
+      return -EINVAL;
+    }
+
+  if ((ALING32_CHECK(buffer->addr) != 0) ||
+      (ALING32_CHECK(buffer->size) != 0))
+    {
+      return -EINVAL;
+    }
+
+  p.mode = mode;
+  p.buffer.addr = buffer->addr;
+  p.buffer.size = buffer->size;
+  memset(&p.info, 0, sizeof(video_cap_frame_info_t));
+
+  if (crop == NULL)
+    {
+      p.crop_ctrl = VIDEO_DISABLE;
+    }
+  else
+    {
+      p.crop_ctrl = VIDEO_ENABLE;
+      p.crop.x_offset = crop->x_offset;
+      p.crop.y_offset = crop->y_offset;
+    }
+
+  ret = ioctl(v_fd, VIDEOIOC_CAP_FRAME, (unsigned long)&p);
+  if (ret == 0)
+    {
+      memcpy(info, &p.info, sizeof(video_cap_frame_info_t));
+    }
+  return ret;
+}
+
+static int camera_set_imgsns_param(video_img_sns_param_t *param)
+{
+  video_api_set_img_sns_param_t p;
+
+  if (param == NULL)
+    {
+      return -EINVAL;
+    }
+
+  if ((param->id < VIDEO_PARAM_ID_COLOR) ||
+      (param->id >= VIDEO_PARAM_ID_MAX))
+    {
+      return -EINVAL;
+    }
+
+  memcpy(&p.param, param, sizeof(video_img_sns_param_t));
+
+  return ioctl(v_fd, VIDEOIOC_SET_IMGSNS_PARAM, (unsigned long)&p);
+}
+
+static int camera_set_imgsns_param_all(video_img_sns_param_all_t *param)
+{
+  video_api_set_img_sns_param_all_t p;
+
+  if (param == NULL)
+    {
+      return -EINVAL;
+    }
+
+  memcpy(&p.param, param, sizeof(video_api_set_img_sns_param_all_t));
+
+  return ioctl(v_fd, VIDEOIOC_SET_IMGSNS_PARAM_ALL, (unsigned long)&p);
+}
+
+static int camera_write_imgsns_register(
+  uint16_t addr, uint16_t regsize, uint16_t value)
+{
+  video_api_img_sns_reg_t p;
+
+  if ((regsize != 1) && (regsize != 2))
+    {
+      return -EINVAL;
+    }
+
+  p.addr = addr;
+  p.regsize = regsize;
+  p.val = value;
+
+  return ioctl(v_fd, VIDEOIOC_WR_IMGSNS_REG, (unsigned long)&p);
+}
+
+static int camera_read_imgsns_register(
+  uint16_t addr, uint16_t regsize, uint16_t *value)
+{
+  video_api_img_sns_reg_t p;
+  int ret;
+
+  if (value == NULL)
+    {
+      return -EINVAL;
+    }
+
+  if ((regsize != 1) && (regsize != 2))
+    {
+      return -EINVAL;
+    }
+
+  p.addr = addr;
+  p.regsize = regsize;
+
+  ret = ioctl(v_fd, VIDEOIOC_RD_IMGSNS_REG, (unsigned long)&p);
+  if (ret == 0)
+    {
+      *value = p.val;
+    }
+
+  return ret;
+}
+
+static int camera_do_halfrelease(video_auto_info_t *info, video_ctrl_e cancel)
+{
+  video_api_do_half_rel_t p;
+  int ret;
+
+  if (info == NULL)
+    {
+      return -EINVAL;
+    }
+
+  p.cancel = cancel;
+  ret = ioctl(v_fd, VIDEOIOC_DO_HALF_REL, (unsigned long)&p);
+  if ((ret == 0) && (cancel != VIDEO_ENABLE))
+    {
+      memcpy(info, &p.info, sizeof(video_auto_info_t));
+    }
+
+  return ret;
+}
+
+static int camera_id_get_auto_param(video_auto_info_t *info)
+{
+  video_api_get_auto_param_t p;
+  int ret;
+
+  if (info == NULL)
+    {
+      return -EINVAL;
+    }
+
+  memset(&p, 0, sizeof(video_api_get_auto_param_t));
+  ret = ioctl(v_fd, VIDEOIOC_GET_AUTO_PARAM, (unsigned long)&p);
+  if (ret == 0)
+    {
+      memcpy(info, &p.info, sizeof(video_auto_info_t));
+    }
+
+  return ret;
+}
+
+static int camera_id_continuous_capture(video_conti_param_t *param,
+                        video_buffer_t *buffer,
+                        video_crop_t *crop,
+                        video_conti_cap_info_t *info)
+{
+  video_api_conti_cap_t p;
+  int ret;
+
+  if ((param == NULL) || (buffer == NULL) || (info == NULL))
+    {
+      return -EINVAL;
+    }
+
+  if ((param->mode != VIDEO_MODE_CAPTURE) ||
+      (param->num > VIDEO_CONTI_CAPNUM_MAX))
+    {
+      return -EINVAL;
+    }
+
+  if ((ALING32_CHECK(buffer->addr) != 0) ||
+      (ALING32_CHECK(buffer->size) != 0))
+
+  {
+      return -EINVAL;
+    }
+
+  p.mode = param->mode;
+  p.capnum = param->num;
+  p.interval = param->interval;
+  p.buffer.addr = buffer->addr;
+  p.buffer.size = buffer->size;
+  memset(&p.info, 0, sizeof(video_conti_cap_info_t));
+
+  if (crop == NULL)
+    {
+      p.crop_ctrl = VIDEO_DISABLE;
+    }
+  else
+    {
+      p.crop_ctrl = VIDEO_ENABLE;
+      p.crop.x_offset = crop->x_offset;
+      p.crop.y_offset = crop->y_offset;
+    }
+
+  ret = ioctl(v_fd, VIDEOIOC_CONTI_CAP, (unsigned long)&p);
+
+  memcpy(info, &p.info, sizeof(video_conti_cap_info_t));
+
+  return ret;
+}
+
 extern uint32_t cxd56_get_cpu_baseclk(void);
 static uint64_t camera_main_get_mstime(void)
 {
@@ -360,19 +622,11 @@ static uint64_t camera_main_get_mstime(void)
     return (((uint64_t)tp.tv_sec) * 1000 + tp.tv_nsec / 1000000);
 }
 
+#ifdef CONFIG_SYSTEM_USBMSC
 static int camera_main_init(void)
 {
-#ifdef CONFIG_SYSTEM_USBMSC
   struct fat_format_s fat_fmt = FAT_FORMAT_INITIALIZER;
-#endif /* CONFIG_SYSTEM_USBMSC */
 
-  printf("CPU BaseClock:%dHz\n", cxd56_get_cpu_baseclk());
-
-#ifdef CONFIG_VIDEO_ISX012
-  board_isx012_initialize("/dev/imager", IMAGER_I2C);
-#endif
-
-#ifdef CONFIG_SYSTEM_USBMSC
   /* Create a RAMDISK */
   if (0 < ramdisk_register(RAMDISK_MINOR,
                            camera_ramdisk,
@@ -390,30 +644,8 @@ static int camera_main_init(void)
       printf("ERROR: Failed to mkfatfs. %d\n", errno);
       return -1;
     }
-#endif /* CONFIG_SYSTEM_USBMSC */
 
   return 0;
-}
-
-static void camera_main_disable_unused_board_power(void)
-{
-  /* ImageSensor Power forced OFF (for reboot) */
-  board_power_control(POWER_IMAGE_SENSOR, 0);
-#if 0
-  board_xtal_power_control(0);  /* IS_MCLK = INCK */
-  board_lna_power_control(0);
-#endif
-#ifdef CONFIG_BOARD_SPRESENSE
-  board_flash_power_control(0);
-
-  board_power_control(POWER_LDO_PERI, 0);
-  board_power_control(POWER_LDO_EMMC, 0);
-  board_power_control(POWER_AUDIO_DVDD, 0);
-
-  /* Defaut Off */
-  board_power_control(POWER_AUDIO_AVDD, 0);
-  board_power_control(POWER_AUDIO_MUTE, 0);
-#endif
 }
 
 static int camera_main_write_ramdisk(
@@ -487,247 +719,24 @@ static int camera_main_write_ramdisk(
 
   return 0;
 }
+#endif /* CONFIG_SYSTEM_USBMSC */
 
-static void *camera_main_cap_thread(void *arg)
+static void camera_main_disable_unused_board_power(void)
 {
-  video_buffer_t buffer;
-  video_cap_frame_info_t info;
-  video_cap_param_t param;
-  video_img_sns_param_t imgsns_param;
-  video_auto_info_t auto_info;
-  int ret;
+  /* ImageSensor Power forced OFF (for reboot) */
+  board_power_control(POWER_IMAGE_SENSOR, 0);
 
-  pthread_detach(pthread_self());
+#ifdef CONFIG_BOARD_SPRESENSE
+  board_flash_power_control(0);
 
-  printf("camera_main_cap_thread() start. \n");
+  board_power_control(POWER_LDO_PERI, 0);
+  board_power_control(POWER_LDO_EMMC, 0);
+  board_power_control(POWER_AUDIO_DVDD, 0);
 
-  printf("video_change_imgsns_state(POWOFF) call.\n");
-  ret = video_change_imgsns_state(VIDEO_STATE_POWOFF);
-  if (ret != 0)
-    {
-      printf("video_change_imgsns_state(POWOFF) error %d\n", ret);
-      goto exit;
-    }
-  usleep(MAX_SLEEP_TIME);
-
-  param.format = VIDEO_FORMAT_JPEG;
-  param.resolution = VIDEO_QUADVGA;
-  param.framerate = VIDEO_15FPS;
-
-  imgsns_param.id = VIDEO_PARAM_ID_JPEG_QUALITIY;
-  imgsns_param.val.jpeg_qualitiy = 75;
-
-  buffer.addr = (uint32_t)camera_img_buf;
-  buffer.size = IMG_BUF_MAXSIZE;
-
-  while(camera_main_thread_active)
-    {
-      up_pm_acquire_freqlock(&img_lock_hv);
-      printf("CPU BaseClock:%dHz\n", cxd56_get_cpu_baseclk());
-
-      printf("video_change_imgsns_state(POWON) call.\n");
-      ret = video_change_imgsns_state(VIDEO_STATE_POWON);
-      if (ret != 0)
-        {
-          printf("video_change_imgsns_state(POWON) error %d\n", ret);
-          goto exit;
-        }
-
-      usleep(MAX_SLEEP_TIME);
-
-      printf("video_id_set_capture_param() call.\n");
-      ret = video_id_set_capture_param(VIDEO_MODE_CAPTURE, &param);
-      if (ret != 0)
-        {
-          printf("video_id_set_capture_param() error %d\n", ret);
-          goto exit;
-        }
-
-      printf("video_set_imgsns_param() call.\n");
-      ret = video_set_imgsns_param(&imgsns_param);
-      if (ret != 0)
-        {
-          printf("video_set_imgsns_param() error %d\n", ret);
-          goto exit;
-        }
-
-      printf("video_change_imgsns_state(ACTIVE) call.\n");
-      ret = video_change_imgsns_state(VIDEO_STATE_ACTIVE);
-      if (ret != 0)
-        {
-          printf("video_change_imgsns_state(ACTIVE) error %d\n", ret);
-          goto exit;
-        }
-
-      printf("video_do_halfrelease() call.\n");
-      ret = video_do_halfrelease(&auto_info, VIDEO_DISABLE);
-      if (ret != 0)
-        {
-          printf("video_do_halfrelease() error %d\n", ret);
-          goto exit;
-        }
-
-      printf("video_id_capture_frame() call.\n");
-      ret = video_id_capture_frame(VIDEO_MODE_CAPTURE, &buffer, NULL, &info);
-      if (ret != 0)
-        {
-          printf("video_id_capture_frame() error %d\n", ret);
-          goto exit;
-        }
-
-      printf("video_change_imgsns_state(SLEEP) call.\n");
-      ret = video_change_imgsns_state(VIDEO_STATE_SLEEP);
-      if (ret != 0)
-        {
-          printf("video_change_imgsns_state(SLEEP) error %d\n", ret);
-          goto exit;
-        }
-      usleep(MAX_SLEEP_TIME);
-
-      printf("video_change_imgsns_state(POWOFF) call.\n");
-      ret = video_change_imgsns_state(VIDEO_STATE_POWOFF);
-      if (ret != 0)
-        {
-          printf("video_change_imgsns_state(POWOFF) error %d\n", ret);
-          goto exit;
-        }
-
-      up_pm_release_freqlock(&img_lock_hv);
-      printf("CPU BaseClock:%dHz\n", cxd56_get_cpu_baseclk());
-
-      printf("up_pm_count_acquire_wakelock()=%d\n",
-              up_pm_count_acquire_wakelock());
-
-      board_power_control(POWER_TCXO, 0);
-      while(board_power_monitor(POWER_TCXO));
-
-#ifdef CONFIG_CXD56_HOT_SLEEP
-      printf("cxd56_pm_hotsleep : 10sec.\n");
-      up_irq_disable();
-      cxd56_pm_hotsleep(5*1000);
-      up_irq_enable();
-#endif /* CONFIG_CXD56_HOT_SLEEP */
-
-      board_power_control(POWER_TCXO, 1);
-      while(!board_power_monitor(POWER_TCXO));
-
-      printf("cxd56_pm_colodsleep....\n");
-      up_pm_sleep(PM_SLEEP_COLD);
-      printf("bootcause=0x%08X\n", up_pm_get_bootcause());
-
-    } /* while(camera_main_cap_active) */
-
-exit:
-  printf("camera_main_cap_thread() exit. \n");
-  camera_main_thread_exit = 1;
-
-  return NULL;
-}
-
-static void *camera_main_moni_thread(void *arg)
-{
-  video_buffer_t buffer;
-  video_cap_frame_info_t info;
-  video_cap_param_t param;
-  int ret;
-
-  pthread_detach(pthread_self());
-
-  printf("camera_main_moni_thread() start. \n");
-#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
-  ret = camera_main_lcd_open();
-  if (ret != 0)
-    {
-      printf("camera_main_lcd_open() error %d\n", ret);
-      goto exit;
-    }
+  /* Defaut Off */
+  board_power_control(POWER_AUDIO_AVDD, 0);
+  board_power_control(POWER_AUDIO_MUTE, 0);
 #endif
-
-  param.format = VIDEO_FORMAT_YUV;
-  param.resolution = VIDEO_QVGA;
-  param.framerate = VIDEO_120FPS;
-
-  ret = video_id_set_capture_param(VIDEO_MODE_MONITORING, &param);
-  if (ret != 0)
-    {
-      printf("video_id_set_capture_param() error %d\n", ret);
-      goto exit;
-    }
-
-  buffer.addr = (uint32_t)camera_img_buf;
-  buffer.size = IMG_BUF_MAXSIZE;
-
-  while(camera_main_thread_active)
-    {
-      ret = video_id_capture_frame(VIDEO_MODE_MONITORING, &buffer, NULL, &info);
-      if (ret != 0)
-        {
-          printf("video_id_capture_frame() error %d\n", ret);
-          goto exit;
-        }
-
-#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
-      camera_main_lcd_write((void *)camera_img_buf, SEND_DATA_TO_LCD);
-#else
-      usleep(MID_SLEEP_TIME);
-#endif
-    } /* while(camera_main_moni_active) */
-
-exit:
-  printf("camera_main_moni_thread() exit. \n");
-#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
-  camera_main_lcd_close();
-#endif
-  camera_main_thread_exit = 1;
-
-  return NULL;
-}
-
-static int camera_main_thread_start(video_mode_e mode)
-{
-  int ret;
-
-  if(!camera_main_thread_active)
-    {
-      camera_main_thread_active = 1;
-      if (mode == VIDEO_MODE_MONITORING)
-        {
-          ret = pthread_create(&camera_main_thread_id,
-                               NULL,
-                               &camera_main_moni_thread,
-                               NULL);
-        }
-      else
-        {
-          ret = pthread_create(&camera_main_thread_id,
-                               NULL,
-                               &camera_main_cap_thread,
-                               NULL);
-        }
-      if (ret != 0)
-        {
-          printf("pthread_create() error:%d\n", errno);
-          return ret;
-        }
-    }
-
-  return 0;
-}
-
-static int camera_main_thread_stop(void)
-{
-  if(camera_main_thread_active)
-    {
-      camera_main_thread_active = 0;
-      while(!camera_main_thread_exit)
-        {
-          usleep(MIN_SLEEP_TIME);
-        }
-      camera_main_thread_exit = 0;
-      printf("camera_main_stop_thread() exit completed.\n");
-    }
-
-  return 0;
 }
 
 #ifdef CAMERA_MAIN_JPEG_INFO
@@ -770,125 +779,6 @@ static int camera_main_create_info(
 }
 #endif /* CAMERA_MAIN_JPEG_INFO */
 
-static int camera_main_show_centerweitedwindow(int idx)
-{
-#define CENTER_WEITED_MAX_INDEX   4
-#define CENTER_WEITED_REG_NUM     63
-#define CENTER_WEITED_REG_H_NUM   9
-#define CENTER_WEITED_REG_V_NUM   7
-  int no;
-  uint16_t addr;
-  uint16_t val;
-  uint16_t size = 1;
-
-  uint16_t reg_addr[CENTER_WEITED_MAX_INDEX] =
-    {
-      0x6000,   /* CENTER_FIXWEIGHT_00_TYPE1 */
-      0x603F,   /* CENTER_FIXWEIGHT_00_TYPE2 */
-      0x607E,   /* CENTER_FIXWEIGHT_00_TYPE3 */
-      0x60BD,   /* CENTER_FIXWEIGHT_00_TYPE4 */
-    };
-
-  uint8_t ae_window_right[] =
-    {
-       0,  0,  0,  0,  0,  0, 0, 0, 0,
-      46, 50, 50, 50, 46,  0, 0, 0, 0,
-      66, 70, 70, 70, 66,  0, 0, 0, 0,
-      70, 76, 76, 76, 70,  0, 0, 0, 0,
-      66, 70, 70, 70, 66,  0, 0, 0, 0,
-      46, 50, 50, 50, 46,  0, 0, 0, 0,
-       0,  0,  0,  0,  0,  0, 0, 0, 0,
-    };
-
-  if ((idx < 0) || (idx > CENTER_WEITED_MAX_INDEX))
-    {
-      return -1;
-    }
-
-  if (idx == CENTER_WEITED_MAX_INDEX)
-    {
-      for(no = 0; no < CENTER_WEITED_REG_NUM; no++)
-        {
-          addr = reg_addr[0] + no;
-          val  = ae_window_right[no];
-
-/*         printf("%3d(0x%02X)", (uint8_t)val, (uint8_t)val);*/
-          printf("%3d", (uint8_t)val);
-          if ((no % CENTER_WEITED_REG_H_NUM) == (CENTER_WEITED_REG_H_NUM-1))
-            {
-              printf("\n");
-            }
-          else
-            {
-              printf(" ");
-            }
-
-          video_write_imgsns_register(addr, size, val);
-        }
-
-      return 0;
-    }
-
-  /* AE Window H=9 x V=7 */
-  printf("###### CENTER FIXWEIGHT TYPE[%d] #######\n", idx);
-  for(no = 0; no < CENTER_WEITED_REG_NUM; no++)
-    {
-      addr = reg_addr[idx] + no;
-      val  = 0;
-      video_read_imgsns_register(addr, size, &val);
-      printf("%3d", (uint8_t)val);
-      if ((no % CENTER_WEITED_REG_H_NUM) == (CENTER_WEITED_REG_H_NUM-1))
-        {
-          printf("\n");
-        }
-      else
-        {
-          printf(" ");
-        }
-    }
-
-  /* AE Window H=9 x V=7 */
-  printf("###### INTMEAN_00-62 #######\n");
-  addr = 0x8A00 + 0x0088; /* SOUT, INTMEAN_00 */
-  size = 2;
-  for(no = 0; no < CENTER_WEITED_REG_NUM; no++)
-    {
-      addr += (no << 1);
-      val   = 0;
-      video_read_imgsns_register(addr, size, &val);
-      printf("%5d", (uint16_t)val);
-      if ((no % CENTER_WEITED_REG_H_NUM) == (CENTER_WEITED_REG_H_NUM-1))
-        {
-          printf("\n");
-        }
-      else
-        {
-          printf(" ");
-        }
-    }
-
-  printf("###### AUTO_WEIGHT_00-62 #######\n");
-  addr = 0x8A00 + 0x0108; /* SOUT, AUTO_WEIGHT_00 */
-  size = 1;
-  for(no = 0; no < CENTER_WEITED_REG_NUM; no++)
-    {
-      addr += no;
-      val   = 0;
-      video_read_imgsns_register(addr, size, &val);
-      printf("%3d", (uint8_t)val);
-      if ((no % CENTER_WEITED_REG_H_NUM) == (CENTER_WEITED_REG_H_NUM-1))
-        {
-          printf("\n");
-        }
-      else
-        {
-          printf(" ");
-        }
-    }
-
-  return 0;
-}
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -899,8 +789,162 @@ int camera_main(int argc, char *argv[])
 #endif
 {
   int ret;
+  int i;
+  int cnt;
   uint32_t time;
 
+  if ( strncmp(argv[1], "cap", 3)==0 || strncmp(argv[1], "moni", 4)==0)
+    {
+      video_mode_e mode;
+      video_buffer_t buffer;
+      video_cap_frame_info_t info;
+
+      /*============================ init ====================*/
+      if (!camera_main_initialized)
+        {
+          printf("bootcause=0x%08X\n", up_pm_get_bootcause());
+          camera_main_disable_unused_board_power();
+#ifdef CONFIG_SYSTEM_USBMSC
+          camera_main_init();
+#endif /* CONFIG_SYSTEM_USBMSC */
+
+          DBG_TIME_START();
+
+#ifdef CONFIG_VIDEO_ISX012
+          ret = board_isx012_initialize("/dev/video", IMAGER_I2C);
+          if (ret != 0)
+            {
+              printf("ERROR: Failed to init video. %d\n", errno);
+              return -EPERM;
+            }
+#endif
+          camera_main_initialized = 1;
+        }
+
+      v_fd = open("/dev/video0", O_CREAT);
+      time = DBG_TIME_STOP();
+      printf("open video : ret=%d, time=%d[ms]\n", ret, time);
+      if (v_fd < 0)
+        {
+          printf("ERROR: Failed to open video. %d\n", errno);
+          return -ENODEV;
+        }
+
+      video_cap_param_t     cap_param;
+      video_img_sns_param_t imgsns_param;
+
+      cap_param.format     = VIDEO_FORMAT_YUV;
+      cap_param.resolution = VIDEO_QVGA;
+      cap_param.framerate  = VIDEO_30FPS;
+      ret = camera_set_capture_param(VIDEO_MODE_MONITORING, &cap_param);
+      if (ret == 0)
+        {
+          printf("change Monitoring param : YUV QVGA@30fps\n");
+        }
+
+      cap_param.format     = VIDEO_FORMAT_JPEG;
+      cap_param.resolution = VIDEO_QUADVGA;
+      cap_param.framerate  = VIDEO_15FPS;
+      ret = camera_set_capture_param(VIDEO_MODE_CAPTURE, &cap_param);
+      if (ret == 0)
+        {
+          printf("change Capture param    : JPEG VGA@15fps\n");
+        }
+
+      imgsns_param.id = VIDEO_PARAM_ID_JPEG_QUALITIY;
+      imgsns_param.val.jpeg_qualitiy = 75;
+      ret = camera_set_imgsns_param(&imgsns_param);
+      if (ret == 0)
+        {
+          printf("change JPEG Quality     : 75\n");
+        }
+
+      /*============================ cap / moni ====================*/
+      up_pm_acquire_freqlock(&img_lock_hv);
+      printf("CPU BaseClock:%dHz\n", cxd56_get_cpu_baseclk());
+      if ( strncmp(argv[1], "cap", 3)==0 )
+        {
+          mode = VIDEO_MODE_CAPTURE;
+          cnt = 1;
+        }
+      if ( strncmp(argv[1], "moni", 4)==0)
+        {
+          mode = VIDEO_MODE_MONITORING;
+          cnt = 50;
+        }
+
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+      camera_main_lcd_open();
+#endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
+
+      memset(camera_img_buf, 0, sizeof(camera_img_buf));
+#ifndef CAMERA_MAIN_JPEG_INFO
+      buffer.addr = (uint32_t)camera_img_buf;
+      buffer.size = IMG_BUF_MAXSIZE;
+#else
+      buffer.addr = (uint32_t)camera_img_buf + IMG_BUF_INFO_SIZE;
+      buffer.size = IMG_BUF_MAXSIZE - IMG_BUF_INFO_SIZE;
+#endif
+
+      memset(&info, 0, sizeof(video_cap_frame_info_t));
+      CISIF_INTR_TRACE_START(20);
+
+      for (i=0; i < cnt; i++)
+        {
+          DBG_TIME_START();
+          ret = camera_capture_frame(mode, &buffer, NULL, &info);
+          time = DBG_TIME_STOP();
+          if (ret == 0)
+            {
+              if (info.out_addr != buffer.addr)
+                {
+                  printf("The Buffer address is not match.\n");
+                  printf("Dump All Buffer Data at JPEG File.\n");
+#ifdef CONFIG_SYSTEM_USBMSC
+                  camera_main_write_ramdisk((uint8_t *)buffer.addr,
+                                            (size_t)buffer.size,
+                                            &info,
+                                            NULL);
+#endif /* CONFIG_SYSTEM_USBMSC */
+                  return -EINVAL;
+                }
+
+              if (info.cap_param.format == VIDEO_FORMAT_JPEG)
+                {
+#ifdef CONFIG_SYSTEM_USBMSC
+                  camera_main_write_ramdisk((uint8_t *)info.out_addr,
+                                            (size_t)info.out_size,
+                                            &info,
+                                            NULL);
+#endif /* CONFIG_SYSTEM_USBMSC */
+                }
+
+              if ((info.cap_param.format == VIDEO_FORMAT_YUV) &&
+                  (info.cap_param.resolution == VIDEO_QVGA))
+                {
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+                  camera_main_lcd_write((void *)buffer.addr, buffer.size);
+#endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
+                }
+            }
+
+          printf("camera_capture_frame() : ret=%d, time=%d[ms]\n", ret, time);
+        }
+
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+        camera_main_lcd_close();
+#endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
+        up_pm_release_freqlock(&img_lock_hv);
+        printf("Out data addr     : 0x%08X\n", info.out_addr);
+        printf("Out data size     : %d\n", info.out_size);
+        printf("Image Size        : %dx%d\n", info.h_size, info.v_size);
+        printf("ISO Sens          : %s\n", iso_str[info.pict_info.iso_sens]);
+        printf("Shutter Speed     : %d[us]\n", info.pict_info.shutter_speed);
+
+        close(v_fd);
+    }
+
+#if 0 /******************************* org *******************************/
   if (argc < 2)
     {
       printf("Invalid command format.\n");
@@ -919,7 +963,17 @@ int camera_main(int argc, char *argv[])
         }
 
       DBG_TIME_START();
-      ret = video_init();
+
+#ifdef CONFIG_VIDEO_ISX012
+      ret = board_isx012_initialize("/dev/video", IMAGER_I2C);
+#endif
+      v_fd = open("/dev/video0", O_CREAT);
+      if (v_fd < 0)
+        {
+          printf("ERROR: Failed to open video. %d\n", errno);
+          return -ENODEV;
+        }
+
       time = DBG_TIME_STOP();
       printf("video_init() : ret=%d, time=%d[ms]\n", ret, time);
       if (ret == 0)
@@ -930,7 +984,7 @@ int camera_main(int argc, char *argv[])
           cap_param.format     = VIDEO_FORMAT_YUV;
           cap_param.resolution = VIDEO_QVGA;
           cap_param.framerate  = VIDEO_30FPS;
-          ret = video_id_set_capture_param(VIDEO_MODE_MONITORING, &cap_param);
+          ret = camera_set_capture_param(VIDEO_MODE_MONITORING, &cap_param);
           if (ret == 0)
             {
               printf("change Monitoring param : YUV QVGA@30fps\n");
@@ -939,7 +993,7 @@ int camera_main(int argc, char *argv[])
           cap_param.format     = VIDEO_FORMAT_JPEG;
           cap_param.resolution = VIDEO_QUADVGA;
           cap_param.framerate  = VIDEO_15FPS;
-          ret = video_id_set_capture_param(VIDEO_MODE_CAPTURE, &cap_param);
+          ret = camera_set_capture_param(VIDEO_MODE_CAPTURE, &cap_param);
           if (ret == 0)
             {
               printf("change Capture param    : JPEG VGA@15fps\n");
@@ -947,7 +1001,7 @@ int camera_main(int argc, char *argv[])
 
           imgsns_param.id = VIDEO_PARAM_ID_JPEG_QUALITIY;
           imgsns_param.val.jpeg_qualitiy = 75;
-          ret = video_set_imgsns_param(&imgsns_param);
+          ret = camera_set_imgsns_param(&imgsns_param);
           if (ret == 0)
             {
               printf("change JPEG Quality     : 75\n");
@@ -990,9 +1044,9 @@ int camera_main(int argc, char *argv[])
       CISIF_INTR_TRACE_START(20);
 
       DBG_TIME_START();
-      ret = video_change_imgsns_state(sts);
+      ret = camera_change_imgsns_state(sts);
       time = DBG_TIME_STOP();
-      printf("video_change_imgsns_state() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("camera_change_imgsns_state() : ret=%d, time=%d[ms]\n", ret, time);
     }
   else if ( strncmp(argv[1], "setcap", 6)==0 )
     {
@@ -1024,9 +1078,9 @@ int camera_main(int argc, char *argv[])
       cap_param.framerate  = (video_frame_rate_e)atoi(argv[5]);
 
       DBG_TIME_START();
-      ret = video_id_set_capture_param(mode, &cap_param);
+      ret = camera_set_capture_param(mode, &cap_param);
       time = DBG_TIME_STOP();
-      printf("video_id_set_capture_param() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("camera_set_capture_param() : ret=%d, time=%d[ms]\n", ret, time);
     }
   else if ( strncmp(argv[1], "cap", 3)==0 )
     {
@@ -1075,16 +1129,16 @@ int camera_main(int argc, char *argv[])
           crop.x_offset = (uint16_t)atoi(argv[3]);
           crop.y_offset = (uint16_t)atoi(argv[4]);
           DBG_TIME_START();
-          ret = video_id_capture_frame(mode, &buffer, &crop, &info);
+          ret = camera_capture_frame(mode, &buffer, &crop, &info);
           time = DBG_TIME_STOP();
         }
       else
         {
           DBG_TIME_START();
-          ret = video_id_capture_frame(mode, &buffer, NULL, &info);
+          ret = camera_capture_frame(mode, &buffer, NULL, &info);
           time = DBG_TIME_STOP();
         }
-      printf("video_id_capture_frame() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("camera_capture_frame() : ret=%d, time=%d[ms]\n", ret, time);
 
       printf("Out data addr     : 0x%08X\n", info.out_addr);
       printf("Out data size     : %d\n", info.out_size);
@@ -1203,9 +1257,9 @@ int camera_main(int argc, char *argv[])
         }
 
       DBG_TIME_START();
-      ret = video_set_imgsns_param(&imgsns_param);
+      ret = camera_set_imgsns_param(&imgsns_param);
       time = DBG_TIME_STOP();
-      printf("video_set_imgsns_param() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("camera_set_imgsns_param() : ret=%d, time=%d[ms]\n", ret, time);
     }
   else if ( strncmp(argv[1], "setimgsnsall", 12)==0 )
     {
@@ -1229,9 +1283,9 @@ int camera_main(int argc, char *argv[])
       imgsns_param_all.photometry    = (video_photometry_e)atoi(argv[11]);
 
       DBG_TIME_START();
-      ret = video_set_imgsns_param_all(&imgsns_param_all);
+      ret = camera_set_imgsns_param_all(&imgsns_param_all);
       time = DBG_TIME_STOP();
-      printf("video_set_imgsns_param_all() : ret=%d, time=%d[ms]\n",
+      printf("camera_set_imgsns_param_all() : ret=%d, time=%d[ms]\n",
               ret, time);
     }
   else if ( strncmp(argv[1], "wr", 2)==0 )
@@ -1255,9 +1309,9 @@ int camera_main(int argc, char *argv[])
       printf("val   :%d\n", val);
 
       DBG_TIME_START();
-      ret = video_write_imgsns_register(addr, size, val);
+      ret = camera_write_imgsns_register(addr, size, val);
       time = DBG_TIME_STOP();
-      printf("video_write_imgsns_register() : ret=%d, time=%d[ms]\n",
+      printf("camera_write_imgsns_register() : ret=%d, time=%d[ms]\n",
               ret, time);
     }
   else if ( strncmp(argv[1], "rr", 2)==0 )
@@ -1276,9 +1330,9 @@ int camera_main(int argc, char *argv[])
       size = (uint16_t)atoi(argv[3]);
 
       DBG_TIME_START();
-      ret = video_read_imgsns_register(addr, size, &val);
+      ret = camera_read_imgsns_register(addr, size, &val);
       time = DBG_TIME_STOP();
-      printf("video_read_imgsns_register() : ret=%d, time=%d[ms]\n",
+      printf("camera_read_imgsns_register() : ret=%d, time=%d[ms]\n",
               ret, time);
       printf("addr  :0x%04X\n", addr);
       printf("size  :%d\n", size);
@@ -1337,9 +1391,9 @@ int camera_main(int argc, char *argv[])
       CISIF_INTR_TRACE_START(20);
 
       DBG_TIME_START();
-      ret = video_do_halfrelease(&info, cancel);
+      ret = camera_do_halfrelease(&info, cancel);
       time = DBG_TIME_STOP();
-      printf("video_do_halfrelease() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("camera_do_halfrelease() : ret=%d, time=%d[ms]\n", ret, time);
 
       if (ret != 0)
         {
@@ -1385,9 +1439,9 @@ int camera_main(int argc, char *argv[])
       int idx;
 
       DBG_TIME_START();
-      ret = video_id_get_auto_param(&info);
+      ret = camera_id_get_auto_param(&info);
       time = DBG_TIME_STOP();
-      printf("video_id_get_auto_param() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("camera_id_get_auto_param() : ret=%d, time=%d[ms]\n", ret, time);
 
       if (ret != 0)
         {
@@ -1432,7 +1486,7 @@ int camera_main(int argc, char *argv[])
       int wait_ctrl = 0;
       int pow_onoff = 0;
 
-      video_change_imgsns_state(VIDEO_STATE_SLEEP);
+      camera_change_imgsns_state(VIDEO_STATE_SLEEP);
 
       if ( argc >= 3 )
         {
@@ -1460,7 +1514,7 @@ int camera_main(int argc, char *argv[])
           if ( strncmp(argv[5], "pow", 3)==0 )
             {
               pow_onoff = 1;
-              video_change_imgsns_state(VIDEO_STATE_POWOFF);
+              camera_change_imgsns_state(VIDEO_STATE_POWOFF);
             }
         }
 
@@ -1470,26 +1524,26 @@ int camera_main(int argc, char *argv[])
 
       if (pow_onoff)
         {
-          printf("video_change_imgsns_state(POWON) call.\n");
+          printf("camera_change_imgsns_state(POWON) call.\n");
           DBG_TIME_START();
-          video_change_imgsns_state(VIDEO_STATE_POWON);
+          camera_change_imgsns_state(VIDEO_STATE_POWON);
           time = DBG_TIME_STOP();
-          printf("video_change_imgsns_state(POWON) time=%d[ms]\n", time);
+          printf("camera_change_imgsns_state(POWON) time=%d[ms]\n", time);
         }
 
-      printf("video_change_imgsns_state(ACTIVE) call.\n");
+      printf("camera_change_imgsns_state(ACTIVE) call.\n");
       DBG_TIME_START();
-      video_change_imgsns_state(VIDEO_STATE_ACTIVE);
+      camera_change_imgsns_state(VIDEO_STATE_ACTIVE);
       time = DBG_TIME_STOP();
-      printf("video_change_imgsns_state(ACTIVE) time=%d[ms]\n", time);
+      printf("camera_change_imgsns_state(ACTIVE) time=%d[ms]\n", time);
 
       if (half_ctrl)
         {
-          printf("video_do_halfrelease() call.\n");
+          printf("camera_do_halfrelease() call.\n");
           DBG_TIME_START();
-          video_do_halfrelease(&auto_info, VIDEO_DISABLE);
+          camera_do_halfrelease(&auto_info, VIDEO_DISABLE);
           time = DBG_TIME_STOP();
-          printf("video_do_halfrelease() time=%d[ms]\n", time);
+          printf("camera_do_halfrelease() time=%d[ms]\n", time);
 
           printf("### AE  ###\n");
           printf("errscl          : %d\n", auto_info.ae.errscl);
@@ -1517,36 +1571,36 @@ int camera_main(int argc, char *argv[])
       buffer.size = IMG_BUF_MAXSIZE - IMG_BUF_INFO_SIZE;
 #endif /* CAMERA_MAIN_JPEG_INFO */
 
-      printf("video_id_capture_frame() call.\n");
+      printf("camera_capture_frame() call.\n");
       DBG_TIME_START();
-      video_id_capture_frame(mode, &buffer, NULL, &info);
+      camera_capture_frame(mode, &buffer, NULL, &info);
       time = DBG_TIME_STOP();
       if (mode == VIDEO_MODE_CAPTURE)
         {
-          printf("video_id_capture_frame(CAP) time=%d[ms]\n", time);
+          printf("camera_capture_frame(CAP) time=%d[ms]\n", time);
         }
       else
         {
-          printf("video_id_capture_frame(MONI) time=%d[ms]\n", time);
+          printf("camera_capture_frame(MONI) time=%d[ms]\n", time);
           if (half_ctrl)
             {
-              video_do_halfrelease(&auto_info, VIDEO_ENABLE);
+              camera_do_halfrelease(&auto_info, VIDEO_ENABLE);
             }
         }
 
-      printf("video_change_imgsns_state(SLEEP) call.\n");
+      printf("camera_change_imgsns_state(SLEEP) call.\n");
       DBG_TIME_START();
-      video_change_imgsns_state(VIDEO_STATE_SLEEP);
+      camera_change_imgsns_state(VIDEO_STATE_SLEEP);
       time = DBG_TIME_STOP();
-      printf("video_change_imgsns_state(SLEEP) time=%d[ms]\n", time);
+      printf("camera_change_imgsns_state(SLEEP) time=%d[ms]\n", time);
 
       if (pow_onoff)
         {
-          printf("video_change_imgsns_state(POWOFF) call.\n");
+          printf("camera_change_imgsns_state(POWOFF) call.\n");
           DBG_TIME_START();
-          video_change_imgsns_state(VIDEO_STATE_POWOFF);
+          camera_change_imgsns_state(VIDEO_STATE_POWOFF);
           time = DBG_TIME_STOP();
-          printf("video_change_imgsns_state(POWOFF) time=%d[ms]\n", time);
+          printf("camera_change_imgsns_state(POWOFF) time=%d[ms]\n", time);
         }
 
       if (info.out_addr != buffer.addr)
@@ -1582,31 +1636,6 @@ int camera_main(int argc, char *argv[])
         }
 
     }
-#if 0 //@@@
-  else if( strncmp(argv[1], "cisif", 5)==0 )
-    {
-      if ( argc != 3 )
-        {
-          printf("The number of arguments does not match.\n");
-          return -EINVAL;
-        }
-
-      if ( strncmp(argv[2], "init", 4)==0 )
-        {
-          DBG_TIME_START();
-          ret = cxd56_cisifinit();
-          time = DBG_TIME_STOP();
-          printf("cxd56_cisifinit() : ret=%d, time=%d[ms]\n", ret, time);
-        }
-      else if ( strncmp(argv[2], "fin", 3)==0 )
-        {
-          DBG_TIME_START();
-          ret = cxd56_cisiffinalize();
-          time = DBG_TIME_STOP();
-          printf("cxd56_cisiffinalize() : ret=%d, time=%d[ms]\n", ret, time);
-        }
-    }
-#endif
   else if( strncmp(argv[1], "win", 3)==0 )
     {
       if ( argc != 3 )
@@ -1641,9 +1670,9 @@ int camera_main(int argc, char *argv[])
       CISIF_INTR_TRACE_START(30);
 
       DBG_TIME_START();
-      ret = video_id_continuous_capture(&param, &buffer, NULL, &info);
+      ret = camera_id_continuous_capture(&param, &buffer, NULL, &info);
       time = DBG_TIME_STOP();
-      printf("video_id_continuous_capture() : ret=%d, time=%d[ms]\n", ret, time);
+      printf("camera_id_continuous_capture() : ret=%d, time=%d[ms]\n", ret, time);
 
       if (ret != 0)
         {
@@ -1673,6 +1702,6 @@ int camera_main(int argc, char *argv[])
       printf("No such a command.\n");
       return -EINVAL;
     }
-
+#endif /******************************* org *******************************/
   return 0;
 }
