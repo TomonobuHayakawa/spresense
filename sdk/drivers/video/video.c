@@ -60,6 +60,8 @@
 
 #include <time.h>
 
+#include "isx012_reg.h"
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -338,28 +340,28 @@ static const video_sensor_reg_t video_exif_regs[] =
 
 static const isx012_reg_t video_ezoom_regs[VIDEO_EZOOM_REGNUM] =
 {
-  { 0x00A2, 0x0100, 2 },  /* EZOOM_MAG  */
-  { 0x00A8, 0x0000, 2 },  /* OFFSET_X   */
-  { 0x00AA, 0x0000, 2 }   /* OFFSET_Y   */
+  { EZOOM_MAG, 0x0100, 2 },
+  { OFFSET_X,  0x0000, 2 },
+  { OFFSET_Y,  0x0000, 2 },
 };
 
 static const isx012_reg_t video_init_regs[] =
 {
 #ifdef VIDEO_ISX012_FAST_MODECHG_EN
-  { 0x500A, 1,  1 },  /* FAST_MODECHG_EN   */
+  { FAST_MODECHG_EN,   1, 1 },
 #endif /* VIDEO_ISX012_FAST_MODECHG_EN */
 #ifdef VIDEO_ISX012_FAST_SHT_MODE_EN
-  { 0x500B, 1,  1 },  /* FAST_SHT_MODE_SEL  */
+  { FAST_SHT_MODE_SEL, 1, 1 },
 #endif /* VIDEO_ISX012_FAST_SHT_MODE_EN */
 #ifndef VIDEO_CONTI_BRACKET
-  { 0x0181, 1,  1 },  /* CAP_HALF_AE_CTRL : HAFREL=HIGHSPEED, CAP=OFF   */
+  { CAP_HALF_AE_CTRL,  1, 1 }, /* HAFREL=HIGHSPEED, CAP=OFF   */
 #else
-  { 0x0181, 7,  1 },  /* CAP_HALF_AE_CTRL : HAFREL=HIGHSPEED, CAP=Auto  */
+  { CAP_HALF_AE_CTRL,  7, 1 }, /* HAFREL=HIGHSPEED, CAP=Auto  */
 #endif /* VIDEO_CONTI_BRACKET */
-  { 0x01AE, 1,  1 },  /* HALF_AWB_CTRL  */
-  { 0x5E32, 15, 1 },  /* AESPEED_FAST   */
-  { 0x5E3D, 45, 1 },  /* FASTMOVE_TIMEOUT   */
-  { 0x6C93, 1,  1 }   /* YGAMMA_MODE    */
+  { HALF_AWB_CTRL,     1, 1 },
+  { AESPEED_FAST,     15, 1 },
+  { FASTMOVE_TIMEOUT, 45, 1 },
+  { YGAMMA_MODE,       1, 1 }
 };
 
 static const uint8_t video_convawb[VIDEO_AWB_MAX] =
@@ -559,26 +561,26 @@ static  uint16_t gamma_reg_val[GAMMA_TABLE_NUM][GAMMA_TABLE_REG_NUM] =
 #define VIDEO_GAMMA_REGNUM  8
 static const isx012_reg_t video_gamma_regs[VIDEO_GAMMA_REGNUM] =
 {
-  { 0x703A, 0x0330, 2 },  /* G0_LOWGM_ON_R  */
-  { 0x703C, 0x0E00, 2 },  /* G0_0CLIP_R     */
-  { 0x703E, 0x0330, 2 },  /* G0_LOWGM_ON_G  */
-  { 0x7040, 0x0E00, 2 },  /* G0_0CLIP_G     */
-  { 0x7042, 0x0330, 2 },  /* G0_LOWGM_ON_B  */
-  { 0x7044, 0x0E00, 2 },  /* G0_0CLIP_B     */
-  { 0x7046, 103,    1 },  /* G0_KNOT_GAINCTRL_TH_L */
-  { 0x7047, 108,    1 },  /* G0_KNOT_GAINCTRL_TH_H */
+  { G0_LOWGM_ON_R,         0x0330, 2 },
+  { G0_0CLIP_R,            0x0E00, 2 },
+  { G0_LOWGM_ON_G,         0x0330, 2 },
+  { G0_0CLIP_G,            0x0E00, 2 },
+  { G0_LOWGM_ON_B,         0x0330, 2 },
+  { G0_0CLIP_B,            0x0E00, 2 },
+  { G0_KNOT_GAINCTRL_TH_L,    103, 1 },
+  { G0_KNOT_GAINCTRL_TH_H,    108, 1 },
 };
 
 static const isx012_reg_t video_gamma_regs_def[VIDEO_GAMMA_REGNUM] =
 {
-  { 0x703A, 0x0661, 2 },  /* G0_LOWGM_ON_R  */
-  { 0x703C, 0x1E0A, 2 },  /* G0_0CLIP_R     */
-  { 0x703E, 0x0661, 2 },  /* G0_LOWGM_ON_G  */
-  { 0x7040, 0x1E0A, 2 },  /* G0_0CLIP_G     */
-  { 0x7042, 0x0661, 2 },  /* G0_LOWGM_ON_B  */
-  { 0x7044, 0x1E0A, 2 },  /* G0_0CLIP_B     */
-  { 0x7046, 103,    1 },  /* G0_KNOT_GAINCTRL_TH_L */
-  { 0x7047, 108,    1 },  /* G0_KNOT_GAINCTRL_TH_H */
+  { G0_LOWGM_ON_R,         0x0661, 2 },
+  { G0_0CLIP_R,            0x1E0A, 2 },
+  { G0_LOWGM_ON_G,         0x0661, 2 },
+  { G0_0CLIP_G,            0x1E0A, 2 },
+  { G0_LOWGM_ON_B,         0x0661, 2 },
+  { G0_0CLIP_B,            0x1E0A, 2 },
+  { G0_KNOT_GAINCTRL_TH_L,    103, 1 },
+  { G0_KNOT_GAINCTRL_TH_H,    108, 1 },
 };
 
 static int video_set_gamma_table(int idx)
@@ -1019,8 +1021,8 @@ static void  video_SetImgSnsCaptureRegister(void)
   int ret;
   const isx012_reg_t cap_regs[] =
     {
-      { 0x00B5, 0x03, 1 },  /* CAP_CARRY_OVER_F */
-      { 0x00B6, 0x01, 1 },  /* CAPNUM */
+      { CAP_CARRY_OVER_F, 0x03, 1 },
+      { CAPNUM,           0x01, 1 },
     };
 
   for (idx = 0; idx < sizeof(cap_regs)/sizeof(isx012_reg_t); idx++)
@@ -1564,19 +1566,19 @@ static int  video_do_half_rel(video_mng_t *priv, video_api_do_half_rel_t *p)
 
   const video_sensor_reg_t video_ae_now_regs[] =
   {
-    { 0x01CC, 2 },  /* ERRSCL_NOW     */
-    { 0x01D0, 2 },  /* USER_AESCL_NOW */
-    { 0x01A5, 1 },  /* USER_GAIN_LEVEL_NOW */
-    { 0x01A9, 1 },  /* ERRLEVEL_NOW   */
-    { 0x019C, 2 },  /* SHT_TIME_OUT_L */
-    { 0x019E, 2 },  /* SHT_TIME_OUT_H */
+    { ERRSCL_NOW,          2 },
+    { USER_AESCL_NOW,      2 },
+    { USER_GAIN_LEVEL_NOW, 1 },
+    { ERRLEVEL_NOW,        1 },
+    { SHT_TIME_OUT_L,      2 },
+    { SHT_TIME_OUT_H,      2 },
   };
 
   const video_sensor_reg_t video_awb_now_regs[] =
   {
-    { 0x01B6, 2 },  /* RATIO_R_NOW */
-    { 0x01B8, 2 },  /* RATIO_B_NOW */
-    { 0x01BB, 1 }   /* AWB_STS_NOW */
+    { RATIO_R_NOW, 2 },
+    { RATIO_B_NOW, 2 },
+    { AWB_STS_NOW, 1 },
   };
 
   if (priv->imgsns_state == VIDEO_STATE_SLEEP)
@@ -1698,19 +1700,19 @@ static int  video_get_auto_param(video_mng_t *priv,
 
   const video_sensor_reg_t video_ae_auto_regs[] =
   {
-    { 0x01CA, 2 },  /* ERRSCL_AUTO     */
-    { 0x01CE, 2 },  /* USER_AESCL_AUTO */
-    { 0x01A4, 1 },  /* USER_GAIN_LEVEL_AUTO */
-    { 0x01A8, 1 },  /* ERRLEVEL_AUTO   */
-    { 0x01A0, 2 },  /* SHT_TIME_AUTO_L */
-    { 0x01A2, 2 },  /* SHT_TIME_AUTO_H */
+    { ERRSCL_AUTO,          2 },
+    { USER_AESCL_AUTO,      2 },
+    { USER_GAIN_LEVEL_AUTO, 1 },
+    { ERRLEVEL_AUTO,        1 },
+    { SHT_TIME_AUTO_L,      2 },
+    { SHT_TIME_AUTO_H,      2 },
   };
 
   const video_sensor_reg_t video_awb_auto_regs[] =
   {
-    { 0x01B2, 2 },  /* RATIO_R_AUTO */
-    { 0x01B4, 2 },  /* RATIO_B_AUTO */
-    { 0x01BA, 1 }   /* AWB_STS_AUTO */
+    { RATIO_R_AUTO, 2 },
+    { RATIO_B_AUTO, 2 },
+    { AWB_STS_AUTO, 1 },
   };
 
   if ((priv->imgsns_state == VIDEO_STATE_SLEEP) ||

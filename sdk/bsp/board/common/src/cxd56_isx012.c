@@ -173,11 +173,11 @@ void board_isx012_release_sleep(void)
 }
 
 int isx012_register(FAR struct i2c_master_s *i2c);
+int video_register(FAR const char *devpath);
 
 int board_isx012_initialize(FAR const char *devpath, int bus)
 {
   int ret;
-  uint32_t pinconf;
   FAR struct i2c_master_s *i2c;
 
   _info("Initializing ISX012...\n");
@@ -190,39 +190,7 @@ int board_isx012_initialize(FAR const char *devpath, int bus)
   board_isx012_set_reset();
   cxd56_gpio_write(IMAGER_SLEEP, false);
 
-  pinconf = PINCONF_SET(PIN_IS_CLK,   PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_VSYNC, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_HSYNC, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_DATA0, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_DATA1, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_DATA2, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_DATA3, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_DATA4, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_DATA5, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_DATA6, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
-  pinconf = PINCONF_SET(PIN_IS_DATA7, PINCONF_MODE1, PINCONF_INPUT_ENABLE,
-                        PINCONF_DRIVE_NORMAL, PINCONF_FLOAT);
-  cxd56_pin_config(pinconf);
+  CXD56_PIN_CONFIGS(PINCONFS_IS);
 
   /* Initialize i2c deivce */
 

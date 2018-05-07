@@ -57,7 +57,8 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-/* The following macro is enabled because it is to make stable startup. (other case) */
+/* The following macro is enabled because */
+/* it is to make stable startup. (other case) */
 /* #define ISX012_NOT_USE_NSTBY */
 
 /* The following macro is disabled because it is to see detailed control. */
@@ -213,8 +214,8 @@ static int isx012_set_moni_refresh(isx012_dev_t *priv, unsigned long arg);
 static isx012_dev_t   g_private;
 static isx012_state_t g_state;
 static isx012_mode_t  g_mode;
-static uint32_t g_i2c_freq = I2CFREQ_STANDARD;
-static int g_af_loadsts = 0;
+static uint32_t       g_i2c_freq = I2CFREQ_STANDARD;
+static int            g_af_loadsts = 0;
 
 static isx012_maxsize_t g_rate_to_maxsize[RATE_ISX012_MAX] = {
  {OUT_YUV_120FPS_VSIZE_MAX, OUT_YUV_120FPS_HSIZE_MAX, OUT_JPG_120FPS_VSIZE_MAX,
@@ -271,45 +272,45 @@ static isx012_maxsize_t g_rate_to_max_interleave[RATE_ISX012_MAX] = {
 
 #ifndef ISX012_NOT_USE_NSTBY
 static const isx012_reg_t g_isx012_presleep[] = {
-  {0x0007, 0x00, 0x01}, /* PLL_CKSEL */
-  {0x0008, 0x00, 0x01}, /* SRCCK_DIV */
-  {0x0006, 0x17, 0x01}, /* INCK_SET */
+  {PLL_CKSEL, 0x00, 0x01}, /* PLL_CKSEL */
+  {SRCCK_DIV, 0x00, 0x01}, /* SRCCK_DIV */
+  {INCK_SET,  0x17, 0x01}, /* INCK_SET */
 };
 #define ISX012_PRESLEEP_NENTRIES ARRAY_NENTRIES(g_isx012_presleep)
 #endif
 
 static const isx012_reg_t g_isx012_def_init[] = {
 #ifdef ISX012_NOT_USE_NSTBY
-  {0x0007, 0x00,   0x01}, /* PLL_CKSEL */
-  {0x0008, 0x00,   0x01}, /* SRCCK_DIV */
+  {PLL_CKSEL,       0x00,   0x01}, /* PLL_CKSEL */
+  {SRCCK_DIV,       0x00,   0x01}, /* SRCCK_DIV */
 #endif
-  {0x000C, 0xAA,   0x01}, /* DRIVABILITY */
-  {0x00C2, 0x0200,    2}, /* VIFCONFIG */
-  {0x00E0, 0xFF0A,    2}, /* YUVCONFIG_TN */
-  {0x013A, 0x00,   0x01}, /* ILCODELEN */
-  {0x00B2, 0x01,   0x01}, /* AFMODE_MONI */
-  {0x00DE, 0xFF6A,    2}, /* YUVCONFIG */
-  {0x6A8C, 0x10FE,    2}, /* VIF_REC601_Y */
-  {0x6A8E, 0x10F0,    2}, /* VIF_REC601_C */
-  {0x00AF, 0x11,   0x01}, /* HSENS_MODE_SEL */
-  {0x00C4, 0x30,   0x01}, /* VIF_CLKCONFIG1 */
-  {0x00C5, 0x30,   0x01}, /* VIF_CLKCONFIG2 */
-  {0x00C6, 0x30,   0x01}, /* VIF_CLKCONFIG3 */
-  {0x00C7, 0x30,   0x01}, /* VIF_CLKCONFIG4 */
-  {0x00C8, 0x30,   0x01}, /* VIF_CLKCONFIG5 */
-  {0x00C9, 0x30,   0x01}, /* VIF_CLKCONFIG6 */
-  {0x00CA, 0x30,   0x01}, /* VIF_CLKCONFIG7 */
-  {0x00CB, 0x30,   0x01}, /* VIF_CLKCONFIG8 */
-  {0x00CC, 0x30,   0x01}, /* VIF_CLKCONFIG9 */
-  {0x00CD, 0x30,   0x01}, /* VIF_CLKCONFIG10 */
-  {0x00CE, 0x30,   0x01}, /* VIF_CLKCONFIG11 */
-  {0x00CF, 0x30,   0x01}, /* VIF_CLKCONFIG12 */
-  {0x6A12, 0x11,   0x01}, /* VIF_CLKCONFIG13 */
-  {0x6A13, 0x11,   0x01}, /* VIF_CLKCONFIG14 */
-  {0x6A14, 0x11,   0x01}, /* VIF_CLKCONFIG15 */
-  {0x6A15, 0x11,   0x01}, /* VIF_CLKCONFIG16 */
+  {DRIVABILITY,     0xAA,   0x01}, /* DRIVABILITY */
+  {VIFCONFIG,     0x0200,   0x02}, /* VIFCONFIG */
+  {YUVCONFIG_TN,  0xFF0A,   0x02}, /* YUVCONFIG_TN */
+  {ILCODELEN,       0x00,   0x01}, /* ILCODELEN */
+  {AFMODE_MONI,     0x01,   0x01}, /* AFMODE_MONI */
+  {YUVCONFIG,     0xFF6A,   0x02}, /* YUVCONFIG */
+  {VIF_REC601_Y,  0x10FE,   0x02}, /* VIF_REC601_Y */
+  {VIF_REC601_C,  0x10F0,   0x02}, /* VIF_REC601_C */
+  {HSENS_MODE_SEL,  0x11,   0x01}, /* HSENS_MODE_SEL */
+  {VIF_CLKCONFIG1,  0x30,   0x01}, /* VIF_CLKCONFIG1 */
+  {VIF_CLKCONFIG2,  0x30,   0x01}, /* VIF_CLKCONFIG2 */
+  {VIF_CLKCONFIG3,  0x30,   0x01}, /* VIF_CLKCONFIG3 */
+  {VIF_CLKCONFIG4,  0x30,   0x01}, /* VIF_CLKCONFIG4 */
+  {VIF_CLKCONFIG5,  0x30,   0x01}, /* VIF_CLKCONFIG5 */
+  {VIF_CLKCONFIG6,  0x30,   0x01}, /* VIF_CLKCONFIG6 */
+  {VIF_CLKCONFIG7,  0x30,   0x01}, /* VIF_CLKCONFIG7 */
+  {VIF_CLKCONFIG8,  0x30,   0x01}, /* VIF_CLKCONFIG8 */
+  {VIF_CLKCONFIG9,  0x30,   0x01}, /* VIF_CLKCONFIG9 */
+  {VIF_CLKCONFIG10, 0x30,   0x01}, /* VIF_CLKCONFIG10 */
+  {VIF_CLKCONFIG11, 0x30,   0x01}, /* VIF_CLKCONFIG11 */
+  {VIF_CLKCONFIG12, 0x30,   0x01}, /* VIF_CLKCONFIG12 */
+  {VIF_CLKCONFIG13, 0x11,   0x01}, /* VIF_CLKCONFIG13 */
+  {VIF_CLKCONFIG14, 0x11,   0x01}, /* VIF_CLKCONFIG14 */
+  {VIF_CLKCONFIG15, 0x11,   0x01}, /* VIF_CLKCONFIG15 */
+  {VIF_CLKCONFIG16, 0x11,   0x01}, /* VIF_CLKCONFIG16 */
 #ifdef ISX012_NOT_USE_NSTBY
-  {0x0006, 0x17,   0x01}, /* INCK_SET */
+  {INCK_SET,        0x17,   0x01}, /* INCK_SET */
 #endif
 };
 #define ISX012_RESET_NENTRIES ARRAY_NENTRIES(g_isx012_def_init)
