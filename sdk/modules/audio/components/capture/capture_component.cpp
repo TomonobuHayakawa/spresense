@@ -242,7 +242,7 @@ int AS_CaptureCmpEntryDev1(int argc, char *argv[])
 #endif
 
 /*--------------------------------------------------------------------*/
-bool AS_ActivateCapture(FAR AsActCaptureParam_t *param)
+bool AS_CreateCapture(FAR AsActCaptureParam_t *param)
 {
   MsgQueId dev0_self_dtq      = param->msgq_id.dev0_req;
   MsgQueId dev0_self_sync_dtq = param->msgq_id.dev0_sync;
@@ -334,7 +334,7 @@ bool AS_ActivateCapture(FAR AsActCaptureParam_t *param)
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_DeactivateCapture(void)
+bool AS_DeleteCapture(void)
 {
   if (s_pFactory != NULL)
     {

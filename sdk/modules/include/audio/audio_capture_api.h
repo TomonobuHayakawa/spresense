@@ -116,7 +116,7 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_ActivateCapture(FAR AsActCaptureParam_t *param);
+bool AS_CreateCapture(FAR AsActCaptureParam_t *param);
 
 /**
  * @brief Deactivate audio capture feature
@@ -125,7 +125,7 @@ bool AS_ActivateCapture(FAR AsActCaptureParam_t *param);
  * @retval     false : failure
  */
 
-bool AS_DeactivateCapture(void);
+bool AS_DeleteCapture(void);
 
 #ifdef __cplusplus
 }

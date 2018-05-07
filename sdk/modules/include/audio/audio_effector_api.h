@@ -748,7 +748,7 @@ extern "C"
  * @retval     true  : success
  * @retval     false : failure
  */
-bool AS_ActivateEffector(FAR AsActEffectorParam_t *param);
+bool AS_CreateEffector(FAR AsActEffectorParam_t *param);
 
 /**
  * @brief Deactivate sound effector feature
@@ -756,7 +756,7 @@ bool AS_ActivateEffector(FAR AsActEffectorParam_t *param);
  * @retval     true  : success
  * @retval     false : failure
  */
-bool AS_DeactivateEffector(void);
+bool AS_DeleteEffector(void);
 
 #ifdef __cplusplus
 }

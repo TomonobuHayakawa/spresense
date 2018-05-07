@@ -97,7 +97,7 @@ int AS_SoundEffectObjEntry(int argc, char *argv[])
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_ActivateEffector(FAR AsActEffectorParam_t *param)
+bool AS_CreateEffector(FAR AsActEffectorParam_t *param)
 {
   s_self_dtq        = param->msgq_id.effector;
   s_manager_dtq     = param->msgq_id.mng;
@@ -125,7 +125,7 @@ bool AS_ActivateEffector(FAR AsActEffectorParam_t *param)
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_DeactivateEffector(void)
+bool AS_DeleteEffector(void)
 {
   if (s_effector_pid < 0)
     {

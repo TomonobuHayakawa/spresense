@@ -116,7 +116,7 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_ActivateRenderer(FAR AsActRendererParam_t *param);
+bool AS_CreateRenderer(FAR AsActRendererParam_t *param);
 
 /**
  * @brief Deactivate renderer
@@ -125,7 +125,7 @@ bool AS_ActivateRenderer(FAR AsActRendererParam_t *param);
  * @retval     false : failure
  */
 
-bool AS_DeactivateRenderer(void);
+bool AS_DeleteRenderer(void);
 
 #ifdef __cplusplus
 }

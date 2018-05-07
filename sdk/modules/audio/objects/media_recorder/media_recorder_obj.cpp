@@ -1646,7 +1646,7 @@ bool VoiceRecorderObjectTask::checkAndSetMemPool(void)
 extern "C"
 {
 /*--------------------------------------------------------------------------*/
-bool AS_ActivateVoiceRecorder(FAR AsActRecorderParam_t *param)
+bool AS_CreateVoiceRecorder(FAR AsActRecorderParam_t *param)
 {
   s_self_dtq      = param->msgq_id.recorder;
   s_manager_dtq   = param->msgq_id.mng;
@@ -1669,7 +1669,7 @@ bool AS_ActivateVoiceRecorder(FAR AsActRecorderParam_t *param)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_DeactivateVoiceRecorder(void)
+bool AS_DeleteVoiceRecorder(void)
 {
   if (s_rcd_obj == NULL)
     {

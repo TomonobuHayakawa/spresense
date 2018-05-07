@@ -352,7 +352,7 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_ActivateVoiceRecorder(FAR AsActRecorderParam_t *param);
+bool AS_CreateVoiceRecorder(FAR AsActRecorderParam_t *param);
 
 /**
  * @brief Deactivate audio recorder
@@ -361,7 +361,7 @@ bool AS_ActivateVoiceRecorder(FAR AsActRecorderParam_t *param);
  * @retval     false : failure
  */
 
-bool AS_DeactivateVoiceRecorder(void);
+bool AS_DeleteVoiceRecorder(void);
 
 #ifdef __cplusplus
 }

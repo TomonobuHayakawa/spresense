@@ -221,7 +221,7 @@ int AS_RendererCmpEntryDev1(int argc, char *argv[])
 #endif
 
 /*--------------------------------------------------------------------*/
-bool AS_ActivateRenderer(FAR AsActRendererParam_t *param)
+bool AS_CreateRenderer(FAR AsActRendererParam_t *param)
 {
   MsgQueId dev0_self_dtq      = param->msgq_id.dev0_req;
   MsgQueId dev0_self_sync_dtq = param->msgq_id.dev0_sync;
@@ -313,7 +313,7 @@ bool AS_ActivateRenderer(FAR AsActRendererParam_t *param)
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_DeactivateRenderer(void)
+bool AS_DeleteRenderer(void)
 {
   if (s_pFactory != NULL)
     {

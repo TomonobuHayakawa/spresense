@@ -397,7 +397,7 @@ int AS_VoiceCmdObjEntry(int argc, char *argv[])
   return 0;
 }
 
-bool AS_ActivateRecognizer(FAR AsActRecognizerParam_t *param)
+bool AS_CreateRecognizer(FAR AsActRecognizerParam_t *param)
 {
   s_self_dtq    = param->msgq_id.recognizer;
   s_manager_dtq = param->msgq_id.mng;
@@ -418,7 +418,7 @@ bool AS_ActivateRecognizer(FAR AsActRecognizerParam_t *param)
   return true;
 }
 
-bool AS_DeactivateRecognizer(void)
+bool AS_DeleteRecognizer(void)
 {
   task_delete(s_recognizer_pid);
   delete s_rcg_obj;

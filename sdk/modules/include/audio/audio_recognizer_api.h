@@ -224,7 +224,7 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_ActivateRecognizer(FAR AsActRecognizerParam_t *param);
+bool AS_CreateRecognizer(FAR AsActRecognizerParam_t *param);
 
 /**
  * @brief Deactivate voice recognizer
@@ -233,7 +233,7 @@ bool AS_ActivateRecognizer(FAR AsActRecognizerParam_t *param);
  * @retval     false : failure
  */
 
-bool AS_DeactivateRecognizer(void);
+bool AS_DeleteRecognizer(void);
 
 #ifdef __cplusplus
 }
