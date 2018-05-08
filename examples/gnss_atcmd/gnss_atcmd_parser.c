@@ -32,7 +32,7 @@
  *
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
