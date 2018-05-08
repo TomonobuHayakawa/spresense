@@ -94,6 +94,10 @@ using namespace MemMgrLite;
 #define SIMPLE_FIFO_FRAME_NUM 10
 #define SIMPLE_FIFO_BUF_SIZE  (READ_SIMPLE_FIFO_SIZE * SIMPLE_FIFO_FRAME_NUM)
 
+/* For line buffer mode. */
+
+#define STDIO_BUFFER_SIZE 4096
+
 /* For wave header. */
 
 #define CHUNKID_RIFF      "RIFF"
@@ -291,6 +295,7 @@ static bool app_open_output_file(void)
       printf("open err(%s)\n", fname);
       return false;
     }
+  setvbuf(s_recorder_info.file.fd, NULL, _IOLBF, STDIO_BUFFER_SIZE);
   printf("Record data to %s.\n", &fname[0]);
 
   if (s_recorder_info.file.codec_type == AS_CODECTYPE_LPCM)
