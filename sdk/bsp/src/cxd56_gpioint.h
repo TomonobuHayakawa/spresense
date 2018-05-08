@@ -91,6 +91,15 @@
  * Public Data
  ****************************************************************************/
 
+#ifndef __ASSEMBLY__
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -155,5 +164,12 @@ void cxd56_gpioint_disable(uint32_t pin);
 
 void cxd56_gpioint_invert(uint32_t pin);
 
+#undef EXTERN
+#if defined(__cplusplus)
+}
+#endif
+#endif /* __ASSEMBLY__ */
+
 #endif /* CONFIG_CXD56_GPIO_IRQ */
+
 #endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_GPIOINT_H */

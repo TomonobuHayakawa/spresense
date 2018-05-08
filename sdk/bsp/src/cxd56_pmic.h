@@ -92,6 +92,15 @@
  * Public Data
  ****************************************************************************/
 
+#ifndef __ASSEMBLY__
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -349,6 +358,12 @@ int cxd56_pmic_read(uint8_t addr, void *buf, uint32_t size);
  ****************************************************************************/
 
 int cxd56_pmic_write(uint8_t addr, void *buf, uint32_t size);
+
+#undef EXTERN
+#if defined(__cplusplus)
+}
+#endif
+#endif /* __ASSEMBLY__ */
 
 #endif /* CONFIG_CXD56_PMIC */
 #endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_PMIC_H */

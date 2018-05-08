@@ -43,6 +43,15 @@
 #include <nuttx/i2c/i2c_master.h>
 #include "chip/cxd56_i2c.h"
 
+#ifndef __ASSEMBLY__
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
@@ -82,5 +91,11 @@ FAR struct i2c_master_s *cxd56_i2cbus_initialize(int port);
  ****************************************************************************/
 
 int cxd56_i2cbus_uninitialize(FAR struct i2c_master_s *dev);
+
+#undef EXTERN
+#if defined(__cplusplus)
+}
+#endif
+#endif /* __ASSEMBLY__ */
 
 #endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_I2C_H */

@@ -46,6 +46,19 @@
 
 #include <stdint.h>
 
+#ifndef __ASSEMBLY__
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
 /****************************************************************************
  * Name: cxd56_adc_getinterval
  *
@@ -59,4 +72,10 @@ void cxd56_adc_getinterval(int adctype, uint32_t *interval, uint16_t *adjust);
 #  define cxd56_adc_getinterval(adctype, interval, adjust)
 #endif
 
+#undef EXTERN
+#if defined(__cplusplus)
+}
 #endif
+#endif /* __ASSEMBLY__ */
+
+#endif /* __ARCH_ARM_SRC_CXD56XX_CXD56_ADC_H */
