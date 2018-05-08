@@ -23,11 +23,4 @@ config EXAMPLES_AUDIO_RECORDER_PRIORITY
 config EXAMPLES_AUDIO_RECORDER_STACKSIZE
 	int "Audio recorder stack size"
 	default 2048
-
-config EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT
-	string "recording file mount path"
-	default "/mnt/sd0/REC"
-	---help---
-		The path to the recording file mount point. Default: /mnt/sd0/REC
-
 endif

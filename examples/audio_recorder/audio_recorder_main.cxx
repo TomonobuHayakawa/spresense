@@ -68,9 +68,7 @@ using namespace MemMgrLite;
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifndef CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT
-#  define CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT "/mnt/vfat/REC"
-#endif
+#define RECFILE_ROOTPATH "/mnt/spif/REC"
 
 /* Use microphone type.
  *   Set MICROPHONE_ANALOG or MICROPHONE_DIGITAL as type
@@ -261,7 +259,7 @@ static bool app_open_output_file(void)
       (s_recorder_info.file.format_type == FORMAT_TYPE_RAW))
     {
       snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.mp3",
-        CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
+        RECFILE_ROOTPATH,
         cur_time->tm_year,
         cur_time->tm_mon,
         cur_time->tm_mday,
@@ -274,7 +272,7 @@ static bool app_open_output_file(void)
       if (s_recorder_info.file.format_type == FORMAT_TYPE_WAV)
         {
           snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.wav",
-            CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
+            RECFILE_ROOTPATH,
             cur_time->tm_year,
             cur_time->tm_mon,
             cur_time->tm_mday,
@@ -285,7 +283,7 @@ static bool app_open_output_file(void)
       else
         {
           snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.pcm",
-            CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
+            RECFILE_ROOTPATH,
             cur_time->tm_year,
             cur_time->tm_mon,
             cur_time->tm_mday,
@@ -298,7 +296,7 @@ static bool app_open_output_file(void)
            (s_recorder_info.file.format_type == FORMAT_TYPE_RAW))
     {
       snprintf(fname, MAX_PATH_LENGTH, "%s/%04d%02d%02d_%02d%02d%02d.raw",
-        CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT,
+        RECFILE_ROOTPATH,
         cur_time->tm_year,
         cur_time->tm_mon,
         cur_time->tm_mday,
@@ -805,7 +803,7 @@ static bool app_open_file_dir(void)
 {
   DIR *dirp;
   int ret;
-  const char *name = CONFIG_EXAMPLES_AUDIO_RECORDER_FILE_MOUNTPT;
+  const char *name = RECFILE_ROOTPATH;
 
   dirp = opendir("/mnt");
   if (!dirp)

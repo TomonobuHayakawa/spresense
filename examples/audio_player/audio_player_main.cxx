@@ -67,8 +67,8 @@ using namespace MemMgrLite;
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define AUDIOFILE_ROOTPATH "/mnt/sd0/AUDIO"
-#define PLAYLISTFILE_PATH "/mnt/sd0/PLAYLIST"
+#define AUDIOFILE_ROOTPATH "/mnt/spif/AUDIO"
+#define PLAYLISTFILE_PATH "/mnt/spif/PLAYLIST"
 
 /* PlayList file name */
 
