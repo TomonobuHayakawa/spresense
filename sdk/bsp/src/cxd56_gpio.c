@@ -182,6 +182,34 @@ void cxd56_gpio_write(uint32_t pin, bool value)
 }
 
 /****************************************************************************
+ * Name: cxd56_gpio_write_hiz
+ *
+ * Description:
+ *   Write HiZ to the selected opendrain GPIO pin
+ *
+ * Returned Value:
+ *   None
+ *
+ ****************************************************************************/
+
+void cxd56_gpio_write_hiz(uint32_t pin)
+{
+  uint32_t regaddr;
+  uint32_t regval;
+
+  DEBUGASSERT((PIN_I2C4_BCK <= pin) && (pin <= PIN_USB_VBUSINT));
+  DEBUGASSERT((pin <= PIN_GNSS_1PPS_OUT) || (PIN_SPI0_CS_X <= pin));
+  DEBUGASSERT((pin <= PIN_HIF_GPIO0) || (PIN_SEN_IRQ_IN <= pin));
+  DEBUGASSERT((pin <= PIN_PWM3) || (PIN_IS_CLK <= pin));
+
+  regaddr = get_gpio_regaddr(pin);
+
+  regval = GPIO_OUTPUT_DISABLE;
+
+  putreg32(regval, regaddr);
+}
+
+/****************************************************************************
  * Name: cxd56_gpio_read
  *
  * Description:

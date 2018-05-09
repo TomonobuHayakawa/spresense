@@ -107,6 +107,19 @@ int cxd56_gpio_config(uint32_t pin, bool input_enable);
 void cxd56_gpio_write(uint32_t pin, bool value);
 
 /********************************************************************************************
+ * Name: cxd56_gpio_write_hiz
+ *
+ * Description:
+ *   Output HiZ to the selected opendrain GPIO pin
+ *
+ * Returned Value:
+ *   None
+ *
+ ********************************************************************************************/
+
+void cxd56_gpio_write_hiz(uint32_t pin);
+
+/********************************************************************************************
  * Name: cxd56_gpio_read
  *
  * Description:
