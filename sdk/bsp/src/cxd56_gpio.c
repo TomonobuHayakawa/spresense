@@ -197,6 +197,8 @@ bool cxd56_gpio_read(uint32_t pin)
   uint32_t regaddr;
   uint32_t regval;
   uint32_t shift;
+  uint32_t ioreg;
+  uint32_t ioval;
 
   DEBUGASSERT((PIN_I2C4_BCK <= pin) && (pin <= PIN_USB_VBUSINT));
   DEBUGASSERT((pin <= PIN_GNSS_1PPS_OUT) || (PIN_SPI0_CS_X <= pin));
@@ -206,7 +208,14 @@ bool cxd56_gpio_read(uint32_t pin)
   regaddr = get_gpio_regaddr(pin);
   regval = getreg32(regaddr);
 
-  if (GPIO_OUTPUT_ENABLED(regval))
+  ioreg = CXD56_TOPREG_IO_RTC_CLK_IN + (pin * 4);
+  ioval = getreg32(ioreg);
+
+  if (PINCONF_INPUT_ENABLED(ioval))
+    {
+      shift = GPIO_INPUT_SHIFT;
+    }
+  else if (GPIO_OUTPUT_ENABLED(regval))
     {
       shift = GPIO_OUTPUT_SHIFT;
     }
