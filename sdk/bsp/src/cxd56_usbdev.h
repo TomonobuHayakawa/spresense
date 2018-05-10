@@ -130,6 +130,9 @@
 #define USB_CONFIG_SP                  (1<<3)
 #define USB_CONFIG_RWKP                (1<<2)
 #define USB_CONFIG_SPD(x)              (((x)&3))
+#define USB_CONFIG_HS                  0
+#define USB_CONFIG_FS                  1
+#define USB_CONFIG_SPD_MASK            3
 
 /* USB device control */
 

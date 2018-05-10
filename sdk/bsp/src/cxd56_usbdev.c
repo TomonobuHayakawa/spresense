@@ -1200,22 +1200,6 @@ static inline void cxd56_ep0setup(FAR struct cxd56_usbdev_s *priv)
   uint16_t len;
   uint32_t reg;
 
-  /* Starting a control request? */
-
-  if (priv->usbdev.speed == USB_SPEED_UNKNOWN)
-    {
-      uint32_t speed;
-      speed = USB_STATUS_SPD(getreg32(CXD56_USB_DEV_STATUS));
-      if (speed == 0)
-        {
-          priv->usbdev.speed = USB_SPEED_HIGH;
-        }
-      else if (speed == 1)
-        {
-          priv->usbdev.speed = USB_SPEED_FULL;
-        }
-    }
-
   /* Terminate any pending requests */
 
   while (!cxd56_rqempty(ep0))
@@ -1780,7 +1764,31 @@ static int cxd56_usbinterrupt(int irq, FAR void *context, FAR void *arg)
 
   if (intr & USB_INT_ENUM)
     {
-      usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_ENUM), 0);
+      FAR struct cxd56_usbdev_s *priv = &g_usbdev;
+      uint32_t speed;
+      uint32_t config;
+
+      /* Read established speed type (high or full) */
+
+      speed = USB_STATUS_SPD(getreg32(CXD56_USB_DEV_STATUS));
+      usbtrace(TRACE_INTDECODE(CXD56_TRACEINTID_ENUM), speed);
+
+      /* Set established speed type to device configuration and device
+       * instance.
+       */
+
+      config = getreg32(CXD56_USB_DEV_CONFIG) & ~USB_CONFIG_SPD_MASK;
+      if (speed == USB_CONFIG_HS)
+        {
+          priv->usbdev.speed = USB_SPEED_HIGH;
+          config |= USB_CONFIG_HS;
+        }
+      else if (speed == USB_CONFIG_FS)
+        {
+          priv->usbdev.speed = USB_SPEED_FULL;
+          config |= USB_CONFIG_FS;
+        }
+      putreg32(config, CXD56_USB_DEV_CONFIG);
     }
 
   /* An SOF token is detected */
@@ -2088,7 +2096,8 @@ static void cxd56_usbreset(FAR struct cxd56_usbdev_s *priv)
   /* Enable device interrupts */
 
   mask = getreg32(CXD56_USB_DEV_INTR_MASK);
-  mask &= ~(USB_INT_RMTWKP_STATE | USB_INT_UR | USB_INT_SI | USB_INT_SC);
+  mask &= ~(USB_INT_RMTWKP_STATE | USB_INT_ENUM | USB_INT_UR | USB_INT_SI |
+            USB_INT_SC);
   putreg32(mask, CXD56_USB_DEV_INTR_MASK);
 
   /* Enable EP0 IN/OUT */
@@ -2501,8 +2510,6 @@ static int cxd56_epstall(FAR struct usbdev_ep_s *ep, bool resume)
   FAR struct cxd56_ep_s *privep = (FAR struct cxd56_ep_s *)ep;
   uint32_t ctrl;
   uint32_t addr;
-
-  UNUSED(privep);
 
   addr = USB_ISEPIN(ep->eplog) ? CXD56_USB_IN_EP_CONTROL(privep->epphy)
                                : CXD56_USB_OUT_EP_CONTROL(privep->epphy);
