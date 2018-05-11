@@ -554,6 +554,14 @@ int cmd_cp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
         }
     }
 
+  /* Check if the destination does not match the source */
+
+  if (strcmp(destpath, srcpath) == 0)
+    {
+      nsh_output(vtbl, g_fmtsyntax, argv[0]);
+      goto errout_with_allocpath;
+    }
+
   /* Now open the destination */
 
   wrfd = open(destpath, oflags, 0666);
@@ -561,14 +569,6 @@ int cmd_cp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       nsh_output(vtbl, g_fmtcmdfailed, argv[0], "open", NSH_ERRNO);
       goto errout_with_allocpath;
-    }
-
-  /* Check if the destination does not match the source */
-
-  if (strcmp(destpath, srcpath) == 0)
-    {
-      nsh_output(vtbl, g_fmtsyntax, argv[0]);
-      goto errout_with_wrfd;
     }
 
   /* Now copy the file */
