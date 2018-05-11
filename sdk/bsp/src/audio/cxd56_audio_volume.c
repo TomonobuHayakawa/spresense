@@ -69,7 +69,7 @@
 #define VOL_WAIT_TIME 20
 #define VOL_TO_REG(vol) (((vol) / 5) & 0xff)
 #define VOL_MUTE_TIME(vol, n_cycle) \
-  (((VOL_TO_REG(vol) - MUTE_VOL_REG) & 0xff) * (n_cycle + 1) * 4 / 48)
+  (((VOL_TO_REG(vol) - MUTE_VOL_REG) & 0xff) * (n_cycle + 1) * 4 / 48 * 1000)
 
 /****************************************************************************
  * Public Function Prototypes
@@ -132,7 +132,7 @@ static CXD56_AUDIO_ECODE set_mute(cxd56_audio_volid_t id,
 
   if (wait)
     {
-      up_mdelay(waittime);
+      usleep(waittime);
     }
 
   g_volparam[id].mute_bit |= type;
@@ -199,7 +199,7 @@ static CXD56_AUDIO_ECODE set_unmute(cxd56_audio_volid_t id,
 
       if (wait)
         {
-          up_mdelay(waittime);
+          usleep(waittime);
         }
     }
 

@@ -91,7 +91,7 @@ static void wait_mic_boot_finish(void)
 
       if (time < CXD56_AUDIO_MIC_BOOT_WAIT)
         {
-          up_mdelay(CXD56_AUDIO_MIC_BOOT_WAIT - time);
+          usleep((CXD56_AUDIO_MIC_BOOT_WAIT - time) * 1000);
         }
     }
 }
