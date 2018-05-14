@@ -2135,6 +2135,7 @@ static int cxd56_epconfigure(FAR struct usbdev_ep_s *ep,
   n         = privep->epphy;
   eptype    = desc->attr & USB_EP_ATTR_XFERTYPE_MASK;
   maxpacket = GETUINT16(desc->mxpacketsize);
+  ep->maxpacket = maxpacket;
 
   status = getreg32(CXD56_USB_DEV_STATUS);
 
