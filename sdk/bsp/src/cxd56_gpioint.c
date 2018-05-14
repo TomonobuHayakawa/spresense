@@ -98,6 +98,7 @@
 #define INT_ROUTE_PMU           (2)
 #define INT_ROUTE_PMU_LATCH     (3)
 
+#define CXD56_INTC_ENABLE       (CXD56_INTC_BASE + 0x10)
 #define CXD56_INTC_INVERT       (CXD56_INTC_BASE + 0x20)
 
 /****************************************************************************
@@ -322,16 +323,28 @@ static void invert_irq(int irq)
   leave_critical_section(flags);
 }
 
+static bool inverted_irq(int irq)
+{
+  uint32_t val;
+
+  val = getreg32(CXD56_INTC_INVERT);
+  return ((val & (1 << (irq - CXD56_IRQ_EXTINT))) != 0);
+}
+
+static bool enabled_irq(int irq)
+{
+  uint32_t val;
+
+  val = getreg32(CXD56_INTC_ENABLE);
+  return ((val & (1 << (irq - CXD56_IRQ_EXTINT))) != 0);
+}
+
 static int gpioint_handler(int irq, FAR void *context, FAR void *arg)
 {
-  bool signal;
   uint32_t val;
   uint32_t shift;
   uint32_t polreg = CXD56_TOPREG_PMU_WAKE_TRIG_INTDET0;
   int slot = GET_IRQ2SLOT(irq);
-  int pin = get_slot2pin(slot);
-
-  static uint32_t both_toggle_flag = 0;
 
   /* Invert mask of interrupt to be disable temporarily */
 
@@ -349,11 +362,7 @@ static int gpioint_handler(int irq, FAR void *context, FAR void *arg)
   val = getreg32(polreg);
   val = (val >> shift) & 0x7;
 
-  /* Poll the current signal state */
-
-  signal = cxd56_gpio_read(pin);
-
-  if ((signal && GPIOINT_IS_HIGH(val)) || (!signal && GPIOINT_IS_LOW(val)))
+  if (inverted_irq(irq))
     {
       /* Clear edge interrupt */
 
@@ -364,17 +373,9 @@ static int gpioint_handler(int irq, FAR void *context, FAR void *arg)
           putreg32(1 << (slot + 16), CXD56_TOPREG_PMU_WAKE_TRIG0_CLR);
         }
 
-      g_isr[slot](irq, context, NULL);
+      g_isr[slot](irq, context, arg);
     }
 
-  if (GPIOINT_EDGE_BOTH == val)
-    {
-      if (0 == (both_toggle_flag & (1 << slot)))
-        {
-          both_toggle_flag ^= (1 << slot);
-          g_isr[slot](irq, context, NULL); /* call user handler */
-        }
-    }
   return 0;
 }
 
@@ -435,14 +436,15 @@ int cxd56_gpioint_config(uint32_t pin, uint32_t gpiocfg, xcpt_t isr)
 
   set_gpioint_config(slot, gpiocfg);
 
-  if (gpiocfg & GPIOINT_TOGGLE_MODE_MASK)
+  if ((gpiocfg & GPIOINT_TOGGLE_MODE_MASK) || GPIOINT_IS_EDGE(gpiocfg))
     {
-      irq_attach(irq, gpioint_handler, NULL); /* call intermediate handler */
+      irq_attach(irq, gpioint_handler, (void *)pin); /* call intermediate handler */
       g_isr[slot] = isr;
     }
   else
     {
-      irq_attach(irq, isr, NULL); /* call user handler directly */
+      irq_attach(irq, isr, (void *)pin); /* call user handler directly */
+      g_isr[slot] = NULL;
     }
 
   return irq;
