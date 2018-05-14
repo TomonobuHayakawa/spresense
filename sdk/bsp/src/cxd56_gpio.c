@@ -313,11 +313,11 @@ int cxd56_gpio_dump(uint32_t pin, const char *msg)
 
   if (!ret)
     {
-      dbg("[GPIO] PIN: %3d %c%c %s --- %s\n",
-          pin,
-          stat.input_en ? 'I' : ' ',
-          stat.output_en ? 'O' : ' ',
-          cxd56_gpio_read(pin) ? "Hi " : "Lo", msg);
+      _info("[GPIO] PIN: %3d %c%c %s --- %s\n",
+            pin,
+            stat.input_en ? 'I' : ' ',
+            stat.output_en ? 'O' : ' ',
+            cxd56_gpio_read(pin) ? "Hi " : "Lo", msg);
     }
 
   return ret;
