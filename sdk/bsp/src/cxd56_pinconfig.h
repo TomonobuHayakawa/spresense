@@ -89,10 +89,12 @@
 #define PINCONF_FLOAT           ((1u << 16) | (1u << 8))
 #define PINCONF_PULLUP          ((1u << 16) | (0u << 8))
 #define PINCONF_PULLDOWN        ((0u << 16) | (1u << 8))
+#define PINCONF_BUSKEEPER       ((0u << 16) | (0u << 8))
 
 #define PINCONF_IS_FLOAT(p)     (((p) & PINCONF_PULL_MASK) == PINCONF_FLOAT)
 #define PINCONF_IS_PULLUP(p)    (((p) & PINCONF_PULL_MASK) == PINCONF_PULLUP)
 #define PINCONF_IS_PULLDOWN(p)  (((p) & PINCONF_PULL_MASK) == PINCONF_PULLDOWN)
+#define PINCONF_IS_BUSKEEPER(p) (((p) & PINCONF_PULL_MASK) == PINCONF_BUSKEEPER)
 
 /* Input enable Definitions */
 
@@ -143,7 +145,7 @@ struct cxd56_pin_status_s
   uint32_t mode;     /* alternate pin function mode */
   uint32_t input_en; /* input enable or disable */
   uint32_t drive;    /* strength of drive current */
-  uint32_t pull;     /* internal pull-up, pull-down or floating */
+  uint32_t pull;     /* internal pull-up, pull-down, floating or buskeeper */
 };
 
 typedef struct cxd56_pin_status_s cxd56_pin_status_t;
