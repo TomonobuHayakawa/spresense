@@ -185,4 +185,8 @@ ifeq ($(CONFIG_ARCH_BUTTONS),y)
 CSRCS += cxd56_buttons.c
 endif
 
+ifeq ($(CONFIG_CXD56_GPIO_IRQ),y)
+CSRCS += cxd56_gpioif.c
+endif
+
 include $(SDKDIR)/bsp/scripts/Board.mk

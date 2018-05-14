@@ -47,6 +47,7 @@
 #  include <arch/chip/usbdev.h>
 #endif
 
+#include <arch/board/common/cxd56_gpioif.h>
 #include <arch/board/common/cxd56_power.h>
 #include <arch/board/common/cxd56_audio.h>
 #include <arch/board/common/cxd56_flash.h>
