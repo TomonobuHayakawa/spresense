@@ -717,6 +717,7 @@ static bool app_init_recorder(codec_type_e codec_type,
   command.init_recorder_param.sampling_rate  = s_recorder_info.file.sampling_rate;
   command.init_recorder_param.channel_number = s_recorder_info.file.channel_number;
   command.init_recorder_param.bit_length     = AS_BITLENGTH_16;
+  snprintf(command.init_recorder_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", "/mnt/sd0/BIN");
 
   switch (s_recorder_info.file.codec_type)
     {

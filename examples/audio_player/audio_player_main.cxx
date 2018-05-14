@@ -594,6 +594,7 @@ static int app_init_player(uint8_t codec_type,
     command.player.init_param.bit_length     = AS_BITLENGTH_16;
     command.player.init_param.channel_number = channel_number;
     command.player.init_param.sampling_rate  = sampling_rate;
+    snprintf(command.player.init_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", "/mnt/sd0/BIN");
     AS_SendAudioCommand(&command);
 
     AudioResult result;
