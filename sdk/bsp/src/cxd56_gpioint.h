@@ -87,6 +87,16 @@
  * Public Types
  ****************************************************************************/
 
+struct cxd56_gpioint_status_s
+{
+  int       irq;
+  uint32_t  polarity;
+  bool      filter;
+  bool      enable;
+};
+
+typedef struct cxd56_gpioint_status_s cxd56_gpioint_status_t;
+
 /****************************************************************************
  * Public Data
  ****************************************************************************/
@@ -126,6 +136,32 @@ extern "C"
 int cxd56_gpioint_config(uint32_t pin, uint32_t gpiocfg, xcpt_t isr);
 
 /****************************************************************************
+ * Name: cxd56_gpioint_irq
+ *
+ * Description:
+ *   Get a GPIO interrupt number for specified pin number
+ *
+ * Returned Value:
+ *   IRQ number on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+int cxd56_gpioint_irq(uint32_t pin);
+
+/****************************************************************************
+ * Name: cxd56_gpioint_pin
+ *
+ * Description:
+ *   Get a pin number for specified IRQ number
+ *
+ * Returned Value:
+ *   Pin number on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+int cxd56_gpioint_pin(int irq);
+
+/****************************************************************************
  * Name: cxd56_gpioint_enable
  *
  * Description:
@@ -163,6 +199,19 @@ void cxd56_gpioint_disable(uint32_t pin);
  ****************************************************************************/
 
 void cxd56_gpioint_invert(uint32_t pin);
+
+/********************************************************************************************
+ * Name: cxd56_gpioint_status
+ *
+ * Description:
+ *   Get a gpio interrupt status
+ *
+ * Returned Value:
+ *   OK on success; A negated errno value on failure.
+ *
+ ********************************************************************************************/
+
+int cxd56_gpioint_status(uint32_t pin, cxd56_gpioint_status_t *stat);
 
 #undef EXTERN
 #if defined(__cplusplus)

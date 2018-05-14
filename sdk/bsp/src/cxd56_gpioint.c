@@ -218,9 +218,14 @@ static int get_pin2irq(int pin)
 {
   int slot = get_pin2slot(pin);
 
-  ASSERT((0 <= slot) && (slot < MAX_SLOT));
-
-  return GET_SLOT2IRQ(slot);
+  if ((0 <= slot) && (slot < MAX_SLOT))
+    {
+      return GET_SLOT2IRQ(slot);
+    }
+  else
+    {
+      return -1;
+    }
 }
 
 /* set GPIO interrupt configuration registers */
@@ -444,6 +449,45 @@ int cxd56_gpioint_config(uint32_t pin, uint32_t gpiocfg, xcpt_t isr)
 }
 
 /****************************************************************************
+ * Name: cxd56_gpioint_irq
+ *
+ * Description:
+ *   Get a GPIO interrupt number for specified pin number
+ *
+ * Returned Value:
+ *   IRQ number on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+int cxd56_gpioint_irq(uint32_t pin)
+{
+  return get_pin2irq(pin);
+}
+
+/****************************************************************************
+ * Name: cxd56_gpioint_pin
+ *
+ * Description:
+ *   Get a pin number for specified IRQ number
+ *
+ * Returned Value:
+ *   Pin number on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+int cxd56_gpioint_pin(int irq)
+{
+  int slot;
+
+  if ((irq < CXD56_IRQ_EXDEVICE_0) || (CXD56_IRQ_EXDEVICE_11 < irq))
+    {
+      return -1;
+    }
+  slot = GET_IRQ2SLOT(irq);
+  return get_slot2pin(slot);
+}
+
+/****************************************************************************
  * Name: cxd56_gpioint_enable
  *
  * Description:
@@ -457,7 +501,11 @@ int cxd56_gpioint_config(uint32_t pin, uint32_t gpiocfg, xcpt_t isr)
 void cxd56_gpioint_enable(uint32_t pin)
 {
   int irq = get_pin2irq(pin);
-  up_enable_irq(irq);
+
+  if (irq > 0)
+    {
+      up_enable_irq(irq);
+    }
 }
 
 /****************************************************************************
@@ -474,7 +522,11 @@ void cxd56_gpioint_enable(uint32_t pin)
 void cxd56_gpioint_disable(uint32_t pin)
 {
   int irq = get_pin2irq(pin);
-  up_disable_irq(irq);
+
+  if (irq > 0)
+    {
+      up_disable_irq(irq);
+    }
 }
 
 /****************************************************************************
@@ -491,7 +543,76 @@ void cxd56_gpioint_disable(uint32_t pin)
 void cxd56_gpioint_invert(uint32_t pin)
 {
   int irq = get_pin2irq(pin);
-  invert_irq(irq);
+
+  if (irq > 0)
+    {
+      invert_irq(irq);
+    }
+}
+
+/****************************************************************************
+ * Name: cxd56_gpioint_status
+ *
+ * Description:
+ *   Get a gpio interrupt status
+ *
+ * Returned Value:
+ *   OK on success; A negated errno value on failure.
+ *
+ ****************************************************************************/
+
+int cxd56_gpioint_status(uint32_t pin, cxd56_gpioint_status_t *stat)
+{
+  uint32_t val;
+  uint32_t shift;
+  uint32_t polreg = CXD56_TOPREG_PMU_WAKE_TRIG_INTDET0;
+  int slot;
+
+  DEBUGASSERT(stat);
+
+  /* Get IRQ number */
+
+  stat->irq = cxd56_gpioint_irq(pin);
+
+  if (stat->irq < 0)
+    {
+      return -EINVAL;
+    }
+
+  /* Get polarity */
+
+  slot = GET_IRQ2SLOT(stat->irq);
+  shift = 16 + (slot * 4);
+  if (32 <= shift)
+    {
+      polreg = CXD56_TOPREG_PMU_WAKE_TRIG_INTDET1;
+      shift -= 32;
+    }
+
+  val = getreg32(polreg);
+  stat->polarity = GPIOINT_GET_POLARITY(val >> shift);
+
+  /* Replace for pseudo edge */
+
+  if ((g_isr[slot]) && (stat->polarity == GPIOINT_LEVEL_HIGH))
+    {
+      stat->polarity = GPIOINT_EDGE_RISE;
+    }
+  if ((g_isr[slot]) && (stat->polarity == GPIOINT_LEVEL_LOW))
+    {
+      stat->polarity = GPIOINT_EDGE_FALL;
+    }
+
+  /* Get noise filter enabled or not */
+
+  val = getreg32(CXD56_TOPREG_PMU_WAKE_TRIG_NOISECUTEN0);
+  stat->filter = ((val >> (slot + 16)) & 1) ? true : false;
+
+  /* Get interrupt enabled or not */
+
+  stat->enable = enabled_irq(stat->irq);
+
+  return OK;
 }
 
 #endif /* CONFIG_CXD56_GPIO_IRQ */
