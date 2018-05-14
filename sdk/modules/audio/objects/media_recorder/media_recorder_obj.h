@@ -168,7 +168,7 @@ private:
   void* getMicInBufAddr();
   void* getOutputBufAddr();
 
-  uint32_t loadCodec(AudioCodec, int32_t, uint32_t *);
+  uint32_t loadCodec(AudioCodec, char *, int32_t, uint32_t *);
   bool unloadCodec(void);
 
   bool freeCnvInBuf()

@@ -90,6 +90,7 @@ bool AS_decode_recv_done(void *p_instance)
 
 /*--------------------------------------------------------------------*/
 uint32_t AS_decode_activate(AudioCodec param,
+                            const char *path,
                             void **p_instance,
                             MemMgrLite::PoolId apu_pool_id,
                             MsgQueId apu_mid,
@@ -111,7 +112,7 @@ uint32_t AS_decode_activate(AudioCodec param,
       return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
     }
 
-  return ((DecoderComponent*)*p_instance)->activate(param, dsp_inf);
+  return ((DecoderComponent*)*p_instance)->activate(param, path, dsp_inf);
 }
 
 /*--------------------------------------------------------------------*/
@@ -424,9 +425,11 @@ bool DecoderComponent::recv_apu(void *p_response)
 }
 
 /*--------------------------------------------------------------------*/
-uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
+uint32_t DecoderComponent::activate(AudioCodec param,
+                                    const char *path,
+                                    uint32_t *dsp_inf)
 {
-  char filename[10];
+  char filepath[64];
   uint32_t decoder_dsp_version;
 
   DECODER_DBG("ACT: codec %d\n", param);
@@ -434,22 +437,22 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
   switch (param)
     {
       case AudCodecMP3:
-        strncpy(filename, "MP3DEC", 10);
+        snprintf(filepath, sizeof(filepath), "%s/MP3DEC", path);
         decoder_dsp_version = DSP_MP3DEC_VERSION;
         break;
 
       case AudCodecLPCM:
-        strncpy(filename, "WAVDEC", 10);
+        snprintf(filepath, sizeof(filepath), "%s/WAVDEC", path);
         decoder_dsp_version = DSP_WAVDEC_VERSION;
         break;
 
       case AudCodecAAC:
-        strncpy(filename, "AACDEC", 10);
+        snprintf(filepath, sizeof(filepath), "%s/AACDEC", path);
         decoder_dsp_version = DSP_AACDEC_VERSION;
         break;
 
       case AudCodecOPUS:
-        strncpy(filename, "OPUSDEC", 10);
+        snprintf(filepath, sizeof(filepath), "%s/OPUSDEC", path);
         decoder_dsp_version = DSP_OPUSDEC_VERSION;
         break;
 
@@ -470,7 +473,7 @@ uint32_t DecoderComponent::activate(AudioCodec param, uint32_t *dsp_inf)
 
   /* Load DSP */
 
-  int ret = DD_Load(filename, cbRcvDspRes, (void*)this, &m_dsp_handler);
+  int ret = DD_Load(filepath, cbRcvDspRes, (void*)this, &m_dsp_handler);
 
 #ifdef CONFIG_CPUFREQ_RELEASE_LOCK
   up_pm_release_freqlock(&g_decode_hvlock);

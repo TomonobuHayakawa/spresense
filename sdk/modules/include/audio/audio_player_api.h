@@ -72,7 +72,7 @@
 
 /*! \brief InitPlayer command (#AUDCMD_INITPLAYER) packet length */
 
-#define LENGTH_INIT_PLAYER     (3)
+#define LENGTH_INIT_PLAYER     (9)
 
 /*! \brief InitSubPlayer command (#AUDCMD_INITSUBPLAYER) packet length */
 
@@ -418,6 +418,10 @@ typedef struct
    */
 
   uint32_t sampling_rate;
+
+  /*! \brief [in] Audio DSP path */
+
+  char dsp_path[AS_AUDIO_DSP_PATH_LEN];
 
 } AsInitPlayerParam;
 

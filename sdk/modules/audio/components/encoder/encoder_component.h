@@ -67,7 +67,11 @@ struct EncCmpltParam
 
 extern "C" {
 
-uint32_t AS_encode_activate(AudioCodec param,MsgQueId apu_dtq, PoolId apu_pool_id, uint32_t *dsp_inf);
+uint32_t AS_encode_activate(AudioCodec param,
+                            const char *path,
+                            MsgQueId apu_dtq,
+                            PoolId apu_pool_id,
+                            uint32_t *dsp_inf);
 bool AS_encode_deactivate(void);
 uint32_t AS_encode_init(const InitEncParam&, uint32_t *dsp_inf);
 bool AS_encode_exec(const ExecEncParam&);
@@ -87,7 +91,7 @@ public:
   }
   ~EncoderComponent() {}
 
-  uint32_t activate_apu(AudioCodec param, uint32_t *dsp_inf);
+  uint32_t activate_apu(AudioCodec param, const char *path, uint32_t *dsp_inf);
   bool deactivate_apu();
   uint32_t init_apu(const InitEncParam& param, uint32_t *dsp_inf);
   bool exec_apu(const ExecEncParam& param);

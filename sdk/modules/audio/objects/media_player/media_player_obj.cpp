@@ -561,7 +561,7 @@ void PlayerObj::deactivate(MsgPacket *msg)
 
   MEDIA_PLAYER_DBG("DEACT:\n");
 
-  if (!unloadCodec())
+  if (AS_ECODE_OK != unloadCodec())
     {
       m_callback(AsPlayerEventDeact,
                  AS_ECODE_DSP_UNLOAD_ERROR, 0);
@@ -585,22 +585,39 @@ void PlayerObj::init(MsgPacket *msg)
 {
   AsInitPlayerParam param = msg->moveParam<PlayerCommand>().init_param;
   uint8_t result;
+  uint32_t dsp_inf;
 
-  MEDIA_PLAYER_DBG("INIT: ch num %d, bit len %d, codec %d, fs %d\n",
+  MEDIA_PLAYER_DBG("INIT: ch num %d, bit len %d, codec %d(%s), fs %d\n",
                    param.channel_number,
                    param.bit_length,
                    param.codec_type,
+                   param.dsp_path,
                    param.sampling_rate);
 
   result = m_input_device_handler->setParam(param);
+
   if (result == AS_ECODE_OK)
     {
-      m_callback(AsPlayerEventInit, AS_ECODE_OK, 0);
+      /* Update codec accordingt to audio data type. */
+
+      /* NOTE : Codec loading process was Moved to here from play()
+       *        for reducing memory usage. Exclude Gapless once.
+       */
+
+      AudioCodec next_codec = m_input_device_handler->getCodecType();
+
+      if (m_codec_type != next_codec)
+        {
+          result = unloadCodec();
+
+          if(result == AS_ECODE_OK)
+            {
+              result = loadCodec(next_codec, param.dsp_path, &dsp_inf);
+            }
+        }
     }
-  else
-    {
-      m_callback(AsPlayerEventInit, result, 0);
-    }
+
+  m_callback(AsPlayerEventInit, result, dsp_inf);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1221,7 +1238,7 @@ void PlayerObj::parseSubState(MsgPacket *msg)
 }
 
 /*--------------------------------------------------------------------------*/
-uint32_t PlayerObj::loadCodec(AudioCodec codec, uint32_t* dsp_inf)
+uint32_t PlayerObj::loadCodec(AudioCodec codec, char *path, uint32_t* dsp_inf)
 {
   uint32_t rst;
 
@@ -1242,6 +1259,7 @@ uint32_t PlayerObj::loadCodec(AudioCodec codec, uint32_t* dsp_inf)
     }
 
   rst = AS_decode_activate(codec,
+                           (path) ? path : CONFIG_AUDIOUTILS_DSP_MOUNTPT,
                            &m_p_dec_instance,
                            m_apu_pool_id,
                            m_apu_dtq,
@@ -1257,7 +1275,7 @@ uint32_t PlayerObj::loadCodec(AudioCodec codec, uint32_t* dsp_inf)
 }
 
 /*--------------------------------------------------------------------------*/
-bool PlayerObj::unloadCodec(void)
+uint32_t PlayerObj::unloadCodec(void)
 {
   /* Only unload when codec is loaded. */
 
@@ -1265,19 +1283,18 @@ bool PlayerObj::unloadCodec(void)
     {
       if (!AS_decode_deactivate(m_p_dec_instance))
         {
-          return false;
+          return AS_ECODE_DSP_UNLOAD_ERROR;
         }
       m_codec_type = InvalidCodecType;
     }
 
-  return true;
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
 uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
 {
   uint32_t   rst = AS_ECODE_OK;
-  AudioCodec codec_type_of_next_track;
   InitDecCompParam init_dec_comp_param;
   cxd56_audio_clkmode_t clock_mode;
 
@@ -1285,23 +1302,6 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
   if (rst != AS_ECODE_OK)
     {
       return rst;
-    }
-
-  /* Update codec type per track. */
-
-  codec_type_of_next_track = m_input_device_handler->getCodecType();
-  if (m_codec_type != codec_type_of_next_track)
-    {
-      if(!unloadCodec())
-        {
-          return AS_ECODE_DSP_UNLOAD_ERROR;
-        }
-
-      rst = loadCodec(codec_type_of_next_track, dsp_inf);
-      if(rst != AS_ECODE_OK)
-        {
-          return rst;
-        }
     }
 
   init_dec_comp_param.codec_type          = m_codec_type;

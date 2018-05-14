@@ -220,13 +220,18 @@ static bool encoder_done_callback(void* p_response)
 
 /*--------------------------------------------------------------------------*/
 uint32_t VoiceRecorderObjectTask::loadCodec(AudioCodec codec,
+                                            char *path,
                                             int32_t sampling_rate,
                                             uint32_t* dsp_inf)
 {
   uint32_t rst = AS_ECODE_OK;
   if ((codec == AudCodecMP3) || (codec == AudCodecOPUS))
     {
-      rst = AS_encode_activate(codec,s_apu_dtq,s_apu_pool_id,dsp_inf);
+      rst = AS_encode_activate(codec,
+                               (path) ? path : CONFIG_AUDIOUTILS_DSP_MOUNTPT,
+                               s_apu_dtq,
+                               s_apu_pool_id,
+                               dsp_inf);
       if(rst != AS_ECODE_OK)
         {
           return rst;
@@ -236,7 +241,11 @@ uint32_t VoiceRecorderObjectTask::loadCodec(AudioCodec codec,
     {
       if (sampling_rate != AS_SAMPLINGRATE_48000)
         {
-          rst = AS_filter_activate(SRCOnly,s_apu_dtq,s_apu_pool_id,dsp_inf);
+          rst = AS_filter_activate(SRCOnly,
+                                   (path) ? path : CONFIG_AUDIOUTILS_DSP_MOUNTPT,
+                                   s_apu_dtq,
+                                   s_apu_pool_id,
+                                   dsp_inf);
           if (rst != AS_ECODE_OK)
             {
               return rst;
@@ -516,12 +525,13 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
   uint32_t rst;
   AudioCommand cmd = msg->moveParam<AudioCommand>();
 
-  MEDIA_RECORDER_DBG("INIT: fs %d, ch num %d, bit len %d, codec %d,"
+  MEDIA_RECORDER_DBG("INIT: fs %d, ch num %d, bit len %d, codec %d(%s),"
                      "complexity %d, bitrate %d\n",
                      cmd.init_recorder_param.sampling_rate,
                      cmd.init_recorder_param.channel_number,
                      cmd.init_recorder_param.bit_length,
                      cmd.init_recorder_param.codec_type,
+                     cmd.init_recorder_param.dsp_path,
                      cmd.init_recorder_param.computational_complexity,
                      cmd.init_recorder_param.bitrate);
 
@@ -579,6 +589,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
 
       uint32_t dsp_inf = 0;
       rst = loadCodec(cmd_codec_type,
+                      cmd.init_recorder_param.dsp_path,
                       cmd.init_recorder_param.sampling_rate,
                       &dsp_inf);
       if (rst != AS_ECODE_OK)
@@ -620,6 +631,7 @@ void VoiceRecorderObjectTask::init(MsgPacket *msg)
         {
           uint32_t dsp_inf = 0;
           rst = loadCodec(cmd_codec_type,
+                          cmd.init_recorder_param.dsp_path,
                           cmd.init_recorder_param.sampling_rate,
                           &dsp_inf);
           if (rst != AS_ECODE_OK)

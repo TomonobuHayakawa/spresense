@@ -53,10 +53,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifndef CONFIG_AUDIOUTILS_DSP_MOUNTPT
-#  define CONFIG_AUDIOUTILS_DSP_MOUNTPT "/mnt/vfat/BIN"
-#endif
-
 #define FULLPATH  64
 
 /* MP object keys. Must be synchronized with worker. */
@@ -134,7 +130,6 @@ int DspDrv::init(FAR const char  *pfilename,
 {
   int   ret;
   int   errout_ret;
-  char  filepath[FULLPATH];
   pthread_attr_t attr;
   struct sched_param sch_param;
 
@@ -143,11 +138,9 @@ int DspDrv::init(FAR const char  *pfilename,
 
   if (is_secure)
     {
-      snprintf(filepath, FULLPATH, "%s", pfilename);
-
       /* Initialize MP task. */
 
-      ret = mptask_init_secure(&m_mptask, filepath);
+      ret = mptask_init_secure(&m_mptask, pfilename);
       if (ret < 0)
         {
           err("mptask_init_secure() failure. %d\n", ret);
@@ -156,15 +149,9 @@ int DspDrv::init(FAR const char  *pfilename,
     }
   else
     {
-      snprintf(filepath,
-               FULLPATH,
-               "%s/%s",
-               CONFIG_AUDIOUTILS_DSP_MOUNTPT,
-               pfilename);
-
       /* Initialize MP task. */
 
-      ret = mptask_init(&m_mptask, filepath);
+      ret = mptask_init(&m_mptask, pfilename);
       if (ret < 0)
         {
           err("mptask_init() failure. %d\n", ret);

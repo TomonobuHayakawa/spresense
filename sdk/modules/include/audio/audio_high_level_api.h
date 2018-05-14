@@ -121,7 +121,7 @@
 
 /*! \brief SetBaseBandStatus command (#AUDCMD_SETBASEBANDSTATUS) packet length */
 
-#define LENGTH_SET_BASEBAND_STATUS  3
+#define LENGTH_SET_BASEBAND_STATUS  9
 
 /*! \brief SetThroughStatus command (#AUDCMD_SETTHROUGHSTATUS) packet length */
 

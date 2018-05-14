@@ -89,13 +89,17 @@ void src_filter_dsp_done_callback(void *p_response, void *p_instance)
 /* Methods of SRCComponent class */
 /*--------------------------------------------------------------------*/
 uint32_t SRCComponent::activate_apu(SRCComponent *p_component,
+                                    const char *path,
                                     uint32_t *dsp_inf)
 {
+  char filepath[64];
   FILTER_DBG("ACT SRC:\n");
 
   sp_src_component = p_component;
 
-  int ret = DD_Load("SRC",
+  snprintf(filepath, sizeof(filepath), "%s/SRC", path);
+
+  int ret = DD_Load(filepath,
                     src_filter_dsp_done_callback,
                     (void *)this,
                     &m_dsp_handler);

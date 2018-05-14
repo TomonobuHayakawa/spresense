@@ -98,6 +98,7 @@ bool AS_decode_recv_apu(void *p_param, void *p_instance);
 bool AS_decode_recv_done(void *p_instance);
 
 uint32_t AS_decode_activate(AudioCodec param,
+                            const char *path,
                             void **p_instance,
                             MemMgrLite::PoolId apu_pool_id,
                             MsgQueId apu_mid,
@@ -124,7 +125,7 @@ public:
   bool setparam_apu(const SetDecCompParam& param);
   bool recv_apu(void *p_param);
   bool recv_done(void) { return freeApuCmdBuf(); };
-  uint32_t activate(AudioCodec, uint32_t *dsp_inf);
+  uint32_t activate(AudioCodec param, const char *path, uint32_t *dsp_inf);
   bool deactivate();
   MsgQueId get_apu_mid(void) { return m_apu_mid; };
 

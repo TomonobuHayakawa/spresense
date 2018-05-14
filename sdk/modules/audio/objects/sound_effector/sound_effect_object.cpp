@@ -636,6 +636,7 @@ void SoundEffectObject::act(MsgPacket *msg)
       uint32_t dsp_inf = 0;
 
       if ((rst = AS_filter_activate(filter_mode,
+                                    cmd.set_baseband_status_param.dsp_path,
                                     s_dsp_dtq,
                                     0,
                                     &dsp_inf))

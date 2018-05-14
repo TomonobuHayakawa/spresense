@@ -663,6 +663,11 @@ typedef struct
    */
 
   uint8_t  output_device;
+
+  /*! \brief [in] Audio DSP path */
+
+  char dsp_path[AS_AUDIO_DSP_PATH_LEN];
+
 } SetBaseBandStatusParam;
 
 /** Message queue ID parameter of Activate API */

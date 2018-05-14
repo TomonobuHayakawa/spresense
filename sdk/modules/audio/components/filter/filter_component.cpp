@@ -36,7 +36,9 @@ extern "C" {
 /* ブランチするなら、タスク化してよいのでは？*/
 
 uint32_t AS_filter_activate(FilterComponentType type,
-                            MsgQueId apu_dtq,PoolId apu_pool_id,
+                            const char *path,
+                            MsgQueId apu_dtq,
+                            PoolId apu_pool_id,
                             uint32_t *dsp_inf)
 {
   switch (type)
@@ -53,7 +55,7 @@ uint32_t AS_filter_activate(FilterComponentType type,
               }
           }
 
-        return sp_src_instance->activate_apu(sp_src_instance, dsp_inf);
+        return sp_src_instance->activate_apu(sp_src_instance, path, dsp_inf);
 #endif
 #ifdef CONFIG_AUDIOUTILS_MFE
       case MfeOnly:
@@ -107,6 +109,7 @@ uint32_t AS_filter_activate(FilterComponentType type,
                                                       dsp_inf);
 
           result &= sp_mpp_instance->activate_apu(sp_mpp_instance,
+                                                  path,
                                                   dsp_inf);
           return result;
         }

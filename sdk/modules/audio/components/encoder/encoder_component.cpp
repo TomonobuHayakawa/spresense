@@ -33,14 +33,18 @@ extern "C" {
 /*--------------------------------------------------------------------
   C Interface
   --------------------------------------------------------------------*/
-uint32_t AS_encode_activate(AudioCodec param,MsgQueId apu_dtq, PoolId apu_pool_id, uint32_t *dsp_inf)
+uint32_t AS_encode_activate(AudioCodec param,
+                            const char *path,
+                            MsgQueId apu_dtq,
+                            PoolId apu_pool_id,
+                            uint32_t *dsp_inf)
 {
   if (s_instance == NULL)
     {
       s_instance = new EncoderComponent(apu_dtq,apu_pool_id);
     }
 
-  return s_instance->activate_apu(param, dsp_inf);
+  return s_instance->activate_apu(param, path, dsp_inf);
 }
 
 /*--------------------------------------------------------------------*/
@@ -141,9 +145,11 @@ void enc_dsp_unload_cmplt_callback(DspDrvUnloadCmpltPrm_t *p_param)
 /*--------------------------------------------------------------------
     Class Methods
   --------------------------------------------------------------------*/
-uint32_t EncoderComponent::activate_apu(AudioCodec param, uint32_t *dsp_inf)
+uint32_t EncoderComponent::activate_apu(AudioCodec param,
+                                        const char *path,
+                                        uint32_t *dsp_inf)
 {
-  char filename[10];
+  char filepath[64];
   uint32_t encoder_dsp_version;
 
   ENCODER_DBG("ACT: codec %d\n", param);
@@ -151,12 +157,12 @@ uint32_t EncoderComponent::activate_apu(AudioCodec param, uint32_t *dsp_inf)
   switch (param)
     {
       case AudCodecMP3:
-          strncpy(filename, "MP3ENC", 10);
+          snprintf(filepath, sizeof(filepath), "%s/MP3ENC", path);
           encoder_dsp_version = DSP_MP3ENC_VERSION;
           break;
 
       case AudCodecOPUS:
-          strncpy(filename, "OPUSENC", 10);
+          snprintf(filepath, sizeof(filepath), "%s/OPUSENC", path);
           encoder_dsp_version = DSP_OPUSENC_VERSION;
           break;
 
@@ -167,7 +173,7 @@ uint32_t EncoderComponent::activate_apu(AudioCodec param, uint32_t *dsp_inf)
 
   /* load DSP */
 
-  int ret = DD_Load(filename, 
+  int ret = DD_Load(filepath, 
                     enc_dsp_done_callback, 
                     (void *)this, 
                     &m_dsp_handler);

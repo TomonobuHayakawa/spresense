@@ -193,8 +193,8 @@ private:
 
   void setGain(MsgPacket *);
 
-  uint32_t loadCodec(AudioCodec codec, uint32_t* dsp_inf);
-  bool unloadCodec();
+  uint32_t loadCodec(AudioCodec codec, char *path, uint32_t* dsp_inf);
+  uint32_t unloadCodec();
 
   uint32_t startPlay(uint32_t* dsp_inf);
   void stopPlay(void);

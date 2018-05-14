@@ -98,7 +98,11 @@ struct SrcFilterCompCmpltParam
 /*--------------------------------------------------------------------*/
 extern "C" {
 
-uint32_t AS_filter_activate(FilterComponentType,MsgQueId,PoolId, uint32_t*);
+uint32_t AS_filter_activate(FilterComponentType,
+                            const char *,
+                            MsgQueId,
+                            PoolId,
+                            uint32_t*);
 bool AS_filter_deactivate(FilterComponentType);
 uint32_t AS_filter_init(FilterComponentParam, uint32_t*);
 bool AS_filter_exec(FilterComponentParam);

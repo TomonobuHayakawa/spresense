@@ -96,15 +96,19 @@ void mpp_filter_dsp_done_callback(void *p_response, void *p_instance)
 /* Methods of MPPComponent class */
 /*--------------------------------------------------------------------*/
 uint32_t MPPComponent::activate_apu(MPPComponent *p_component,
+                                    const char *path,
                                     uint32_t *dsp_inf)
 {
+  char filepath[64];
   FILTER_DBG("ACT MPP:\n");
 
   sp_mpp_component = p_component;
 
   /* TODO: To be able to configure DSP imange file name by Config menu */
 
-  int ret = DD_Load("MPPEAX",
+  snprintf(filepath, sizeof(filepath), "%s/MPPEAX", path);
+
+  int ret = DD_Load(filepath,
                     mpp_filter_dsp_done_callback,
                     (void *)this,
                     &m_dsp_handler);

@@ -75,7 +75,7 @@
 
 /*! \brief InitRecorder command (#AUDCMD_INITREC) packet length */
 
-#define LENGTH_INIT_RECORDER     4
+#define LENGTH_INIT_RECORDER    10 
 
 /** @} */
 
@@ -278,6 +278,12 @@ typedef struct
    */
 
   uint32_t bitrate;
+
+  /*! \brief [in] DSP path 
+   */
+
+  char dsp_path[AS_AUDIO_DSP_PATH_LEN];
+
 } AsInitRecorderParam;
 
 /** Message queue ID parameter of activate function */

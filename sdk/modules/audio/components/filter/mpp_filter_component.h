@@ -76,7 +76,7 @@ public:
   }
   ~MPPComponent() {}
 
-  uint32_t activate_apu(MPPComponent *p_component, uint32_t* dsp_inf);
+  uint32_t activate_apu(MPPComponent *p_component, const char *path, uint32_t* dsp_inf);
   bool deactivate_apu();
   uint32_t init_apu(InitXLOUDParam param, uint32_t* dsp_inf);
   bool exec_apu(ExecXLOUDParam param);
