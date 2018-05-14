@@ -52,16 +52,46 @@
  * @{
  */
 
-#define VIDEOIOC_CHG_IMGSNS_STATE     _VIDEOIOC(0x0001)
-#define VIDEOIOC_SET_CAP_PARAM        _VIDEOIOC(0x0002)
-#define VIDEOIOC_CAP_FRAME            _VIDEOIOC(0x0003)
-#define VIDEOIOC_CONTI_CAP            _VIDEOIOC(0x0004)
-#define VIDEOIOC_SET_IMGSNS_PARAM     _VIDEOIOC(0x0005)
-#define VIDEOIOC_SET_IMGSNS_PARAM_ALL _VIDEOIOC(0x0006)
-#define VIDEOIOC_WR_IMGSNS_REG        _VIDEOIOC(0x0007)
-#define VIDEOIOC_RD_IMGSNS_REG        _VIDEOIOC(0x0008)
-#define VIDEOIOC_DO_HALF_REL          _VIDEOIOC(0x0009)
-#define VIDEOIOC_GET_AUTO_PARAM       _VIDEOIOC(0x000A)
+#define VIDIOC_S_FMT                  _VIDEOIOC(0x0001)
+#define VIDIOC_REQBUFS                _VIDEOIOC(0x0002)
+#define VIDIOC_QBUF                   _VIDEOIOC(0x0003)
+#define VIDIOC_DQBUF                  _VIDEOIOC(0x0004)
+#define VIDIOC_STREAMON               _VIDEOIOC(0x0005)
+
+#define VIDEOIOC_CHG_IMGSNS_STATE     _VIDEOIOC(0x0081)
+#define VIDEOIOC_SET_CAP_PARAM        _VIDEOIOC(0x0082)
+#define VIDEOIOC_CAP_FRAME            _VIDEOIOC(0x0083)
+#define VIDEOIOC_CONTI_CAP            _VIDEOIOC(0x0084)
+#define VIDEOIOC_SET_IMGSNS_PARAM     _VIDEOIOC(0x0085)
+#define VIDEOIOC_SET_IMGSNS_PARAM_ALL _VIDEOIOC(0x0086)
+#define VIDEOIOC_WR_IMGSNS_REG        _VIDEOIOC(0x0087)
+#define VIDEOIOC_RD_IMGSNS_REG        _VIDEOIOC(0x0088)
+#define VIDEOIOC_DO_HALF_REL          _VIDEOIOC(0x0089)
+#define VIDEOIOC_GET_AUTO_PARAM       _VIDEOIOC(0x008A)
+
+/*  Four-character-code (FOURCC) */
+#define v4l2_fourcc(a, b, c, d)\
+  ((uint32_t)(a)        | ((uint32_t)(b) << 8) | \
+  ((uint32_t)(c) << 16) | ((uint32_t)(d) << 24))
+#define v4l2_fourcc_be(a, b, c, d)    (v4l2_fourcc(a, b, c, d) | (1 << 31))
+
+#define V4L2_PIX_FMT_UYVY  v4l2_fourcc('U', 'Y', 'V', 'Y') /* 16  YUV 4:2:2 */
+#define V4L2_PIX_FMT_JPEG  v4l2_fourcc('J', 'P', 'E', 'G') /* JFIF JPEG     */
+
+#define VIDEO_HSIZE_QVGA        (320)
+#define VIDEO_VSIZE_QVGA        (240)
+#define VIDEO_HSIZE_VGA         (640)
+#define VIDEO_VSIZE_VGA         (480)
+#define VIDEO_HSIZE_QUADVGA     (1280)
+#define VIDEO_VSIZE_QUADVGA     (960)
+#define VIDEO_HSIZE_HD          (1280)
+#define VIDEO_VSIZE_HD          (720)
+#define VIDEO_HSIZE_FULLHD      (1920)
+#define VIDEO_VSIZE_FULLHD      (1080)
+#define VIDEO_HSIZE_5M          (2560)
+#define VIDEO_VSIZE_5M          (1920)
+#define VIDEO_HSIZE_3M          (2048)
+#define VIDEO_VSIZE_3M          (1536)
 
 /* Configuration ************************************************************/
 #define CONFIG_VIDEO_TASK_PRIORITY    100
@@ -94,9 +124,137 @@
 
 #define VIDEO_CONTI_CAPNUM_MAX        (5)
 #define VIDEO_AE_WINDOW_MAX           (63)
+
 /****************************************************************************
  * Public Types
  ****************************************************************************/
+enum v4l2_buf_type {
+  V4L2_BUF_TYPE_VIDEO_CAPTURE        = 1,
+  V4L2_BUF_TYPE_VIDEO_OUTPUT         = 2,
+  V4L2_BUF_TYPE_VIDEO_OVERLAY        = 3,
+  V4L2_BUF_TYPE_VBI_CAPTURE          = 4,
+  V4L2_BUF_TYPE_VBI_OUTPUT           = 5,
+  V4L2_BUF_TYPE_SLICED_VBI_CAPTURE   = 6,
+  V4L2_BUF_TYPE_SLICED_VBI_OUTPUT    = 7,
+  V4L2_BUF_TYPE_VIDEO_OUTPUT_OVERLAY = 8,
+  V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE = 9,
+  V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE  = 10,
+  V4L2_BUF_TYPE_SDR_CAPTURE          = 11,
+  V4L2_BUF_TYPE_SDR_OUTPUT           = 12,
+  V4L2_BUF_TYPE_META_CAPTURE         = 13,
+  /* Deprecated, do not use */
+  V4L2_BUF_TYPE_PRIVATE              = 0x80,
+};
+
+enum v4l2_memory {
+  V4L2_MEMORY_MMAP         = 1,
+  V4L2_MEMORY_USERPTR      = 2,
+  V4L2_MEMORY_OVERLAY      = 3,
+  V4L2_MEMORY_DMABUF       = 4,
+};
+
+enum v4l2_field {
+  V4L2_FIELD_ANY           = 0, /* driver can choose from none, */
+  V4L2_FIELD_NONE          = 1, /* this device has no fields ... */
+  V4L2_FIELD_TOP           = 2, /* top field only */
+  V4L2_FIELD_BOTTOM        = 3, /* bottom field only */
+  V4L2_FIELD_INTERLACED    = 4, /* both fields interlaced */
+  V4L2_FIELD_SEQ_TB        = 5, /* both fields sequential into one
+  V4L2_FIELD_SEQ_BT        = 6, /* same as above + bottom-top order */
+  V4L2_FIELD_ALTERNATE     = 7, /* both fields alternating into */
+  V4L2_FIELD_INTERLACED_TB = 8, /* both fields interlaced, top field */
+  V4L2_FIELD_INTERLACED_BT = 9, /* both fields interlaced, top field */
+};
+
+struct v4l2_requestbuffers {
+  uint32_t count;
+  uint32_t type;        /* enum v4l2_buf_type */
+  uint32_t memory;      /* enum v4l2_memory */
+  uint32_t reserved[2];
+};
+typedef struct v4l2_requestbuffers v4l2_requestbuffers_t;
+
+struct v4l2_timecode {
+  uint32_t type;
+  uint32_t flags;
+  uint8_t  frames;
+  uint8_t  seconds;
+  uint8_t  minutes;
+  uint8_t  hours;
+  uint8_t  userbits[4];
+};
+typedef struct v4l2_timecode v4l2_timecode_t;
+
+struct v4l2_plane {
+  uint32_t        bytesused;
+  uint32_t        length;
+  union {
+    uint32_t      mem_offset;
+    unsigned long userptr;
+    int           fd;
+  } m;
+  uint32_t        data_offset;
+  uint32_t        reserved[11];
+};
+typedef struct v4l2_plane v4l2_plane_t;
+
+struct v4l2_buffer {
+  uint32_t             index;
+  uint32_t             type;
+  uint32_t             bytesused;
+  uint32_t             flags;
+  uint32_t             field;
+//  struct timeval       timestamp;
+  struct v4l2_timecode timecode;
+  uint32_t             sequence;
+
+  /* memory location */
+  uint32_t             memory;
+  union {
+    uint32_t           offset;
+    unsigned long      userptr;
+    struct v4l2_plane  *planes;
+    int                fd;
+  } m;
+  uint32_t             length;
+  uint32_t             reserved2;
+  uint32_t             reserved;
+};
+typedef struct v4l2_buffer v4l2_buffer_t;
+
+struct v_buffer {
+  uint32_t             *start;
+  uint32_t             length;
+};
+typedef struct v_buffer v_buffer_t;
+
+struct v4l2_pix_format {
+  uint32_t  width;
+  uint32_t  height;
+  uint32_t  pixelformat;
+  uint32_t  field;        /* enum v4l2_field */
+  uint32_t  bytesperline; /* for padding, zero if unused */
+  uint32_t  sizeimage;
+  uint32_t  colorspace;   /* enum v4l2_colorspace */
+  uint32_t  priv;         /* private data, depends on pixelformat */
+  uint32_t  flags;        /* format flags (V4L2_PIX_FMT_FLAG_*) */
+  union {
+    uint32_t ycbcr_enc;   /* enum v4l2_ycbcr_encoding */
+    uint32_t hsv_enc;     /* enum v4l2_hsv_encoding */
+  };
+  uint32_t  quantization; /* enum v4l2_quantization */
+  uint32_t  xfer_func;    /* enum v4l2_xfer_func */
+};
+typedef struct v4l2_pix_format v4l2_pix_format_t;
+
+struct v4l2_format {
+  uint32_t  type;
+  union {
+    struct v4l2_pix_format pix; /* V4L2_BUF_TYPE_VIDEO_CAPTURE */
+  } fmt;
+};
+typedef struct v4l2_format v4l2_format_t;
+
 typedef enum
 {
   VIDEO_STATE_ACTIVE = 0,
@@ -126,6 +284,7 @@ typedef enum
   VIDEO_VGA,
   VIDEO_QUADVGA,
   VIDEO_HD,
+  VIDEO_FULLHD,
   VIDEO_3M,
   VIDEO_5M,
   VIDEO_RESOLUTION_MAX
