@@ -124,8 +124,8 @@ typedef void (*intc_func_table)(uint8_t code);
  ****************************************************************************/
 
 static state_t g_state = STATE_STANDBY;
-static uint8_t *g_ycc_strage_addr[2] = { NULL, NULL };
-static uint8_t *g_jpg_strage_addr[2] = { NULL, NULL };
+static uint8_t *g_ycc_storage_addr[2] = { NULL, NULL };
+static uint8_t *g_jpg_storage_addr[2] = { NULL, NULL };
 static uint8_t g_bank = 0;
 
 notify_callback_t g_notify_callback_func[TYPE_CISIF_MAX];
@@ -291,13 +291,13 @@ static void cisif_vs_int(uint8_t code)
 
       case STATE_MONITORING:
         g_bank ^= 1;
-        if (g_ycc_strage_addr[g_bank] != NULL)
+        if (g_ycc_storage_addr[g_bank] != NULL)
           {
-            cisif_reg_write(CISIF_YCC_START_ADDR, (uint32_t)g_ycc_strage_addr[g_bank]);
+            cisif_reg_write(CISIF_YCC_START_ADDR, (uint32_t)g_ycc_storage_addr[g_bank]);
           }
-        if (g_jpg_strage_addr[g_bank] != NULL)
+        if (g_jpg_storage_addr[g_bank] != NULL)
           {
-            cisif_reg_write(CISIF_JPG_START_ADDR, (uint32_t)g_jpg_strage_addr[g_bank]);
+            cisif_reg_write(CISIF_JPG_START_ADDR, (uint32_t)g_jpg_storage_addr[g_bank]);
           }
         cisif_reg_write(CISIF_EXE_CMD, 1);
         break;
@@ -330,11 +330,11 @@ static void cisif_ycc_axi_trdn_int(uint8_t code)
   size = cisif_reg_read(CISIF_YCC_DSTRG_CONT);
   if (g_state == STATE_READY)
     {
-      g_comp_callback_func[TYPE_CISIF_YUV](0, 1, size, (uint32_t)g_ycc_strage_addr[g_bank ^ 1]);
+      g_comp_callback_func[TYPE_CISIF_YUV](0, 1, size, (uint32_t)g_ycc_storage_addr[g_bank ^ 1]);
     }
   else
     {
-      g_comp_callback_func[TYPE_CISIF_YUV](0, 0, size, (uint32_t)g_ycc_strage_addr[g_bank ^ 1]);
+      g_comp_callback_func[TYPE_CISIF_YUV](0, 0, size, (uint32_t)g_ycc_storage_addr[g_bank ^ 1]);
     }
 
   cisif_reg_write(CISIF_YCC_DREAD_CONT, 0);
@@ -348,7 +348,7 @@ static void cisif_ycc_nstorage_int(uint8_t code)
   uint32_t size;
 
   size = cisif_reg_read(CISIF_YCC_DSTRG_CONT);
-  g_notify_callback_func[TYPE_CISIF_YUV](0, size, (uint32_t)g_ycc_strage_addr[g_bank ^ 1]);
+  g_notify_callback_func[TYPE_CISIF_YUV](0, size, (uint32_t)g_ycc_storage_addr[g_bank ^ 1]);
   cisif_reg_write(CISIF_YCC_DREAD_CONT, size);
 }
 
@@ -371,7 +371,7 @@ static void cisif_jpg_axi_trdn_int(uint8_t code)
   if (g_state == STATE_READY)
     {
       g_comp_callback_func[TYPE_CISIF_JPEG](
-        0, 1, size, (uint32_t)g_jpg_strage_addr[g_bank ^ 1]);
+        0, 1, size, (uint32_t)g_jpg_storage_addr[g_bank ^ 1]);
     }
   else if (g_state == STATE_CONTI_CAPTURE)
     {
@@ -408,7 +408,7 @@ static void cisif_jpg_axi_trdn_int(uint8_t code)
   else
     {
       g_comp_callback_func[TYPE_CISIF_JPEG](
-        0, 0, size, (uint32_t)g_jpg_strage_addr[g_bank ^ 1]);
+        0, 0, size, (uint32_t)g_jpg_storage_addr[g_bank ^ 1]);
     }
 
   cisif_reg_write(CISIF_JPG_DREAD_CONT, 0);
@@ -426,7 +426,7 @@ static void cisif_jpg_nstorage_int(uint8_t code)
   size = cisif_reg_read(CISIF_JPG_DSTRG_CONT);
   if (g_state != STATE_CONTI_CAPTURE)
     {
-      addr = (uint32_t)g_jpg_strage_addr[g_bank ^ 1];
+      addr = (uint32_t)g_jpg_storage_addr[g_bank ^ 1];
     }
   else
     {
@@ -448,7 +448,7 @@ static void cisif_ycc_err_int(uint8_t code)
 #endif /* CISIF_INTR_TRACE */
 
   size = cisif_reg_read(CISIF_YCC_DSTRG_CONT);
-  g_comp_callback_func[TYPE_CISIF_YUV](code, 1, size, (uint32_t)g_ycc_strage_addr[g_bank ^ 1]);
+  g_comp_callback_func[TYPE_CISIF_YUV](code, 1, size, (uint32_t)g_ycc_storage_addr[g_bank ^ 1]);
   cisif_reg_write(CISIF_YCC_DREAD_CONT, 0);
 }
 
@@ -466,7 +466,7 @@ static void cisif_jpg_err_int(uint8_t code)
 
   if (g_state != STATE_CONTI_CAPTURE)
     {
-      addr = (uint32_t)g_jpg_strage_addr[g_bank ^ 1];
+      addr = (uint32_t)g_jpg_storage_addr[g_bank ^ 1];
     }
   else
     {
@@ -670,8 +670,8 @@ static int cisif_set_yuv_sarea(int type, void *s)
       cisif_reg_write(CISIF_YCC_DAREA_SIZE, ss->strg_size);
       cisif_reg_write(CISIF_YCC_START_ADDR, (uint32_t)ss->strg_addr);
 
-      g_ycc_strage_addr[0] = (uint8_t *)ss->strg_addr;
-      g_ycc_strage_addr[1] = NULL;
+      g_ycc_storage_addr[0] = (uint8_t *)ss->strg_addr;
+      g_ycc_storage_addr[1] = NULL;
     }
   else
     {
@@ -680,8 +680,8 @@ static int cisif_set_yuv_sarea(int type, void *s)
       cisif_reg_write(CISIF_YCC_DAREA_SIZE, sb->strg_size);
       cisif_reg_write(CISIF_YCC_START_ADDR, (uint32_t)sb->strg_addr_0);
 
-      g_ycc_strage_addr[0] = (uint8_t *)sb->strg_addr_0;
-      g_ycc_strage_addr[1] = (uint8_t *)sb->strg_addr_1;
+      g_ycc_storage_addr[0] = (uint8_t *)sb->strg_addr_0;
+      g_ycc_storage_addr[1] = (uint8_t *)sb->strg_addr_1;
     }
 
   return OK;
@@ -712,8 +712,8 @@ static int cisif_set_jpg_sarea(int type, void *s)
       cisif_reg_write(CISIF_JPG_DAREA_SIZE, sb->strg_size);
       cisif_reg_write(CISIF_JPG_START_ADDR, (uint32_t)sb->strg_addr_0);
 
-      g_jpg_strage_addr[0] = (uint8_t *)sb->strg_addr_0;
-      g_jpg_strage_addr[1] = (uint8_t *)sb->strg_addr_1;
+      g_jpg_storage_addr[0] = (uint8_t *)sb->strg_addr_0;
+      g_jpg_storage_addr[1] = (uint8_t *)sb->strg_addr_1;
     }
   else
     {
@@ -724,8 +724,8 @@ static int cisif_set_jpg_sarea(int type, void *s)
 
       if (type == SAREA_SINGLE)
         {
-          g_jpg_strage_addr[0] = (uint8_t *)ss->strg_addr;
-          g_jpg_strage_addr[1] = NULL;
+          g_jpg_storage_addr[0] = (uint8_t *)ss->strg_addr;
+          g_jpg_storage_addr[1] = NULL;
         }
       else
         {
