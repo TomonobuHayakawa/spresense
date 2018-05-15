@@ -48,9 +48,65 @@ __WIEN2_BEGIN_NAMESPACE
  * Pre-processor Definitions
  ****************************************************************************/
 
+/* Required chunk. */
+
+#define CHUNKID_RIFF     0x46464952  /* RIFF */
+#define SUBCHUNKID_FMT   0x20746D66  /* fmt  */
+#define SUBCHUNKID_DATA  0x61746164  /* data */
+
+/* Option chunk. */
+
+#define SUBCHUNKID_JUNK  0x4B4E554A  /* JUNK */
+#define SUBCHUNKID_LIST  0x5453494C  /* LIST */
+#define SUBCHUNKID_ID3   0x20336469  /* id3  */
+#define SUBCHUNKID_FACT  0x74636166  /* fact */
+#define SUBCHUNKID_PLST  0x74736C70  /* plst */
+#define SUBCHUNKID_CUE   0x20657563  /* cue  */
+#define SUBCHUNKID_LABL  0x6C62616C  /* labl */
+#define SUBCHUNKID_NOTE  0x65746F6E  /* note */
+#define SUBCHUNKID_LTXT  0x7478746C  /* ltxt */
+#define SUBCHUNKID_SMPL  0x6C706D73  /* smpl */
+#define SUBCHUNKID_INST  0x74736E69  /* inst */
+#define SUBCHUNKID_BEXT  0x74786562  /* bext */
+#define SUBCHUNKID_IXML  0x4C4D5869  /* iXML */
+#define SUBCHUNKID_QLTY  0x79746C71  /* qlty */
+#define SUBCHUNKID_MEXT  0x7478656D  /* mext */
+#define SUBCHUNKID_LEVL  0x6C76656C  /* levl */
+#define SUBCHUNKID_LINK  0x6B6E696C  /* link */
+#define SUBCHUNKID_AXML  0x6C6D7861  /* axml */
+#define SUBCHUNKID_CONT  0x746E6F63  /* cont */
+
+#define CHUNK_BUF_SIZE  1024
+
 /****************************************************************************
  * Public Types
  ****************************************************************************/
+
+struct chunk_s
+{
+  uint32_t chunk_id;
+  int32_t  size;
+};
+typedef struct chunk_s chunk_t;
+
+struct riff_chunk_s
+{
+  struct chunk_s  chunk;
+  uint32_t        type;
+};
+typedef struct riff_chunk_s riff_chunk_t;
+
+struct fmt_chunk_s
+{
+  uint16_t  format;
+  uint16_t  channel;
+  uint32_t  rate;
+  uint32_t  avgbyte;
+  uint16_t  block;
+  uint16_t  bit;
+  uint16_t  extended_size;
+};
+typedef struct fmt_chunk_s fmt_chunk_t;
 
 class RawLpcmDataSource : public InputDataManagerObject
 {
@@ -65,6 +121,9 @@ public:
   virtual bool getSamplingRate(FAR uint32_t *p_sampling_rate);
   virtual bool getChNum(FAR uint32_t *p_ch_num);
   virtual bool getBitPerSample(FAR uint32_t *p_bit_per_sample);
+
+private:
+  bool ParseChunk(void);
 };
 
 /****************************************************************************

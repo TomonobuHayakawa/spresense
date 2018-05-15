@@ -1296,7 +1296,6 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
 {
   uint32_t   rst = AS_ECODE_OK;
   InitDecCompParam init_dec_comp_param;
-  cxd56_audio_clkmode_t clock_mode;
 
   rst = m_input_device_handler->start();
   if (rst != AS_ECODE_OK)
@@ -1314,18 +1313,9 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
       m_input_device_handler->getSampleNumPerFrame();
   init_dec_comp_param.callback            = &decoder_comp_done_callback;
   init_dec_comp_param.p_requester         = static_cast<void*>(this);
-
-  /* TODO: delete fixed value. */
-
-  clock_mode = cxd56_audio_get_clkmode();
-  if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
-    {
-      init_dec_comp_param.bit_width = AudPcm24Bit;
-    }
-  else
-    {
-      init_dec_comp_param.bit_width = AudPcm16Bit;
-    }
+  init_dec_comp_param.bit_width =
+    ((m_input_device_handler->getBitLen() == AS_BITLENGTH_16) ?
+     AudPcm16Bit : AudPcm24Bit);
 
   rst = AS_decode_init(init_dec_comp_param, m_p_dec_instance, dsp_inf);
   if (rst != AS_ECODE_OK)
@@ -1377,6 +1367,7 @@ void PlayerObj::stopPlay(void)
 /*--------------------------------------------------------------------------*/
 void PlayerObj::sendPcmToOwner(AsPcmDataParam& data)
 {
+  data.bit_length = m_input_device_handler->getBitLen();
   if (m_pcm_path == AsPcmDataReply)
     {
       /* Call callback function for PCM data notify */

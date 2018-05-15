@@ -468,23 +468,14 @@ bool AS_release_render_comp_handler(RenderComponentHandler handle)
 /*--------------------------------------------------------------------*/
 bool AS_init_renderer(RenderComponentHandler handle,
                       RenderDoneCB callback,
-                      void *p_requester)
+                      void *p_requester,
+                      uint8_t bit_length)
 {
   RendererComponent::RendererComponentParam param;
 
-  cxd56_audio_clkmode_t clock_mode = cxd56_audio_get_clkmode();
-
-  /* Hi-Reso (24bit/sample) or not */
-
-  if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
-    {
-      param.init_render_param.format = CXD56_AUDIO_SAMP_FMT_24;
-    }
-  else
-    {
-      param.init_render_param.format = CXD56_AUDIO_SAMP_FMT_16;
-    }
-
+  param.init_render_param.format = ((bit_length == AS_BITLENGTH_16) ?
+                                    CXD56_AUDIO_SAMP_FMT_16 :
+                                    CXD56_AUDIO_SAMP_FMT_24);
   param.init_render_param.callback    = callback;
   param.init_render_param.p_requester = p_requester;
 

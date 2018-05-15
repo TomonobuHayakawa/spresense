@@ -68,7 +68,8 @@ static void send_renderer(RenderComponentHandler handle,
                           void *p_addr,
                           uint32_t byte_size,
                           int8_t adjust,
-                          bool is_valid);
+                          bool is_valid,
+                          uint8_t bit_length);
 static bool check_sample(AsPcmDataParam* input);
 
 /****************************************************************************
@@ -265,7 +266,8 @@ void OutputMixToHPI2S::input_data_on_ready(MsgPacket* msg)
 
   if (!AS_init_renderer(m_render_comp_handler,
                         &render_done_callback,
-                        static_cast<void*>(this)))
+                        static_cast<void*>(this),
+                        input.bit_length))
     {
       return;
     }
@@ -274,7 +276,8 @@ void OutputMixToHPI2S::input_data_on_ready(MsgPacket* msg)
                 input.mh.getPa(),
                 input.size,
                 get_period_adjustment(),
-                input.is_valid);
+                input.is_valid,
+                input.bit_length);
 
   m_state = Active;
 }
@@ -299,7 +302,8 @@ void OutputMixToHPI2S::input_data_on_active(MsgPacket* msg)
                     input.mh.getPa(),
                     input.size,
                     get_period_adjustment(),
-                    input.is_valid);
+                    input.is_valid,
+                    input.bit_length);
     }
 
   /* If end-data, publish render stop */
@@ -466,18 +470,12 @@ static void send_renderer(RenderComponentHandler handle,
                           void *p_addr,
                           uint32_t byte_size,
                           int8_t adjust,
-                          bool is_valid)
+                          bool is_valid,
+                          uint8_t bit_length)
 {
-  uint32_t byte_size_per_sample = 0;
-  cxd56_audio_clkmode_t clock_mode = cxd56_audio_get_clkmode();
-  if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
-    {
-      byte_size_per_sample = BYTE_SIZE_PER_SAMPLE_HIGHRES;
-    }
-  else
-    {
-      byte_size_per_sample = BYTE_SIZE_PER_SAMPLE;
-    }
+  uint32_t byte_size_per_sample = ((bit_length == AS_BITLENGTH_16) ?
+                                   BYTE_SIZE_PER_SAMPLE :
+                                   BYTE_SIZE_PER_SAMPLE_HIGHRES);
 
   /* Insert dummy data. */
 

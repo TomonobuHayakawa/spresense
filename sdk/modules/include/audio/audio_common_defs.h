@@ -374,6 +374,10 @@ typedef struct
 
   bool is_valid;
 
+  /*! \brief [in] Data bit length */
+
+  uint8_t bit_length;
+
 } AsPcmDataParam;
 
 #endif /* __MODULES_INCLUDE_AUDIO_AUDIO_COMMON_DEFS_H */

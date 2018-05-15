@@ -68,7 +68,8 @@ bool AS_release_render_comp_handler(RenderComponentHandler handle);
 
 bool AS_init_renderer(RenderComponentHandler handle,
                       RenderDoneCB callback,
-                      void *p_requester);
+                      void *p_requester,
+                      uint8_t bit_length);
 
 bool AS_exec_renderer(RenderComponentHandler handle,
                       void *addr,

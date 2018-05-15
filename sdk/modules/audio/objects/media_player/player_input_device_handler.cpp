@@ -47,6 +47,14 @@ __WIEN2_BEGIN_NAMESPACE
  * Pre-processor Definitions
  ****************************************************************************/
 
+#define LPCM_SAMPLE_HIRES  1024
+#define LPCM_SAMPLE_NORMAL 640
+
+#define BIT_TO_BYTE(bit_length) ( \
+                                 ((bit_length) % 8 == 0) ? \
+                                 (bit_length) / 8 : ((bit_length) / 8) + 1 \
+                                )
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -93,15 +101,11 @@ bool InputHandlerOfRAM::initialize(PlayerInHandle* p_handle)
     {
       if (m_clock_mode == CXD56_AUDIO_CLKMODE_HIRES)
         {
-          /* TODO: Delete magic number(2ch,24bit). */
-
-          m_wav_au_size = m_cur_wav_au_sample_num * 2 * 3;
+          m_cur_wav_au_sample_num = LPCM_SAMPLE_HIRES;
         }
       else
         {
-          /* TODO: Delete magic number(2ch,16bit). */
-
-          m_wav_au_size = m_cur_wav_au_sample_num * 2 * 2;
+          m_cur_wav_au_sample_num = LPCM_SAMPLE_NORMAL;
         }
     }
   return true;
@@ -185,6 +189,11 @@ uint32_t InputHandlerOfRAM::setParam(const AsInitPlayerParam& param)
     {
       case AS_BITLENGTH_16:
       case AS_BITLENGTH_24:
+        if (m_codec_type == AudCodecLPCM)
+          {
+            m_wav_au_size = m_cur_wav_au_sample_num * m_ch_num *
+                            BIT_TO_BYTE(param.bit_length);
+          }
         break;
       default:
         MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);

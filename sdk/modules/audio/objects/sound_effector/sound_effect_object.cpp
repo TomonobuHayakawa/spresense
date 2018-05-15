@@ -569,10 +569,12 @@ void SoundEffectObject::act(MsgPacket *msg)
 
   if (!AS_init_renderer(m_hp_render_comp_handler,
                         &render_done_callback,
-                        static_cast<void*>(this))
+                        static_cast<void*>(this),
+                        AS_BITLENGTH_16)
    || !AS_init_renderer(m_i2s_render_comp_handler,
                         &render_done_callback,
-                        static_cast<void*>(this)))
+                        static_cast<void*>(this),
+                        AS_BITLENGTH_16))
     {
       sendAudioCmdCmplt(cmd, AS_ECODE_DMAC_INITIALIZE_ERROR);
       return;

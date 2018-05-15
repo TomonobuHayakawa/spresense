@@ -108,6 +108,11 @@ bool RawLpcmDataSource::finish()
 
 bool RawLpcmDataSource::getSamplingRate(FAR uint32_t* p_sampling_rate)
 {
+  if (!ParseChunk())
+    {
+      return false;
+    }
+
   *p_sampling_rate = m_in_sampling_rate;
   return true;
 }
@@ -123,6 +128,95 @@ bool RawLpcmDataSource::getBitPerSample(FAR uint32_t *p_bit_per_sample)
   /* Currently not implemented. */
 
   return false;
+}
+
+bool RawLpcmDataSource::ParseChunk(void)
+{
+  riff_chunk_t riff_chunk;
+  if (!simpleFifoPeek(&riff_chunk, sizeof(riff_chunk_t)))
+    {
+      return false;
+    }
+
+  if (riff_chunk.chunk.chunk_id == CHUNKID_RIFF)
+    {
+      CMN_SimpleFifoPoll(p_simple_fifo_handler, NULL, sizeof(riff_chunk_t));
+
+      size_t poll_size = 0;
+      chunk_t chunk;
+      uint8_t chunk_data[CHUNK_BUF_SIZE];
+      bool rst = false;
+      while (1)
+        {
+          rst = simpleFifoPoll(&chunk, sizeof(chunk_t), &poll_size);
+          if (!rst || sizeof(chunk_t) != poll_size)
+             {
+               return false;
+             }
+          switch (chunk.chunk_id)
+            {
+              case SUBCHUNKID_FMT:
+                {
+                  fmt_chunk_t  fmt_chunk;
+                  rst = simpleFifoPoll(&fmt_chunk, chunk.size, &poll_size);
+                  if (!rst || chunk.size != (int32_t)poll_size)
+                    {
+                      return false;
+                    }
+                  m_in_sampling_rate = fmt_chunk.rate;
+                  m_ch_num = fmt_chunk.channel;
+                }
+                break;
+
+              case SUBCHUNKID_DATA:
+               return true;
+
+              case SUBCHUNKID_JUNK:
+              case SUBCHUNKID_LIST:
+              case SUBCHUNKID_ID3:
+              case SUBCHUNKID_FACT:
+              case SUBCHUNKID_PLST:
+              case SUBCHUNKID_CUE:
+              case SUBCHUNKID_LABL:
+              case SUBCHUNKID_NOTE:
+              case SUBCHUNKID_LTXT:
+              case SUBCHUNKID_SMPL:
+              case SUBCHUNKID_INST:
+              case SUBCHUNKID_BEXT:
+              case SUBCHUNKID_IXML:
+              case SUBCHUNKID_QLTY:
+              case SUBCHUNKID_MEXT:
+              case SUBCHUNKID_LEVL:
+              case SUBCHUNKID_LINK:
+              case SUBCHUNKID_AXML:
+              case SUBCHUNKID_CONT:
+              default:
+                if (chunk.size > CHUNK_BUF_SIZE)
+                  {
+                    rst = simpleFifoPoll(chunk_data, CHUNK_BUF_SIZE, &poll_size);
+                    if (!rst || CHUNK_BUF_SIZE != poll_size)
+                      {
+                        return false;
+                      }
+                    rst = simpleFifoPoll(NULL, chunk.size - CHUNK_BUF_SIZE, &poll_size);
+                    if (!rst || chunk.size - CHUNK_BUF_SIZE != (int32_t)poll_size)
+                      {
+                        return false;
+                      }
+                  }
+                else
+                  {
+                    rst = simpleFifoPoll(chunk_data, chunk.size, &poll_size);
+                    if (!rst || chunk.size != (int32_t)poll_size)
+                      {
+                        return false;
+                      }
+                  }
+                break;
+            }
+        }
+    }
+  return true;
 }
 
 /****************************************************************************

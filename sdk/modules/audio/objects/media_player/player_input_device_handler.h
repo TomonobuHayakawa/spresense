@@ -74,17 +74,7 @@ public:
   PlayerInputDeviceHandler():
     m_es_sampling_rate(0),
     m_codec_type(InvalidCodecType)
-    {
-      m_clock_mode = cxd56_audio_get_clkmode();
-      if (CXD56_AUDIO_CLKMODE_HIRES == m_clock_mode)
-        {
-          m_cur_wav_au_sample_num = 1024;
-        }
-      else
-        {
-          m_cur_wav_au_sample_num = 640;
-        }
-    }
+    {}
 
   ~PlayerInputDeviceHandler() {}
 
@@ -146,6 +136,10 @@ public:
     {
       return m_ch_num;
     }
+  uint8_t getBitLen()
+    {
+      return m_bit_len;
+    }
 
 protected:
   uint32_t    m_es_sampling_rate;
@@ -154,6 +148,7 @@ protected:
   uint16_t    m_cur_wav_au_sample_num;
   uint8_t     m_ch_num;
   uint8_t     m_init_player_api_codec_type;
+  uint8_t     m_bit_len;
 };
 
 /*--------------------------------------------------------------------*/
@@ -162,7 +157,6 @@ class InputHandlerOfRAM : public PlayerInputDeviceHandler
 public:
   InputHandlerOfRAM():
     PlayerInputDeviceHandler(),
-    m_bit_len(16),
     m_wav_au_size(0),
     m_p_es_source_hdl(NULL),
     m_notification_read_es_size(0)
@@ -179,7 +173,6 @@ public:
   virtual bool stop();
 
 private:
-  uint8_t                 m_bit_len;
   uint32_t                m_wav_au_size;
   InputDataManagerObject *m_p_es_source_hdl;
   uint32_t                m_notification_read_es_size;
