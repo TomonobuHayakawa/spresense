@@ -76,7 +76,7 @@
 /* #define VIDEO_CONTI_BRACKET */
 
 /* At initialization, it automatically transits to ACTIVE_MODE */
-#define VIDEO_INIT_ACTIVE
+/* #define VIDEO_INIT_ACTIVE */
 
 /* Select gamma table */
 #define VIDEO_GAMMA_DEFAULT
@@ -113,6 +113,8 @@
 #define VIDEO_ISX012_MOVE_AWB_F           (0x01)
 #define VIDEO_ISX012_MOVE_AE_F            (0x02)
 #define VIDEO_CISIF_TRANSEND_TIMEOUT      (1*1000)        /* msec */
+
+#define VIDEO_V4_BUF_MAX_CNT  (256)
 
 /* Debug option */
 #ifdef CONFIG_DEBUG_VIDEO_ERROR
@@ -283,6 +285,11 @@ static uint64_t video_get_msec_tim(void)
 static isx012_t             g_v_isx;
 static video_cisif_result_t g_v_cisif;
 static video_mng_t         *g_v_mng;
+
+static v4l2_buffer_t *g_v4_buf;
+static uint32_t       g_v4_buf_rcnt = 1;
+static uint32_t       g_v4_buf_cnt  = 0;
+static uint32_t       g_v4_buf_mode = VIDEO_MODE_MONITORING;
 
 static const isx012_rate_t video_convfps[VIDEO_FRAME_RATE_MAX] =
 {
@@ -1938,10 +1945,6 @@ int video_close(FAR struct file *filep)
   return ret;
 }
 
-static v4l2_buffer_t buf_p[10];
-static uint32_t      buf_req_cnt=1;
-static uint32_t      buf_cnt=0;
-static uint32_t      buf_mode = VIDEO_MODE_MONITORING;
 int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 {
   FAR struct inode *inode = filep->f_inode;
@@ -1957,31 +1960,66 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
   switch (cmd)
     {
       case VIDIOC_S_FMT:
-        buf_mode = (fmt_lp->fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY) ?
+        g_v4_buf_mode = (fmt_lp->fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY) ?
           VIDEO_MODE_MONITORING : VIDEO_MODE_CAPTURE;
         break;
       case VIDIOC_REQBUFS:
-        buf_req_cnt = req_lp->count;
-        buf_cnt = 0;
+        g_v4_buf_rcnt = req_lp->count;
+        if (g_v4_buf_rcnt > VIDEO_V4_BUF_MAX_CNT)
+          {
+            ret = -ENOMEM;
+          }
+        else
+          {
+            g_v4_buf = calloc(g_v4_buf_rcnt, sizeof(v4l2_buffer_t));
+            g_v4_buf_cnt = 0;
+            if (g_v4_buf == NULL)
+              {
+                ret = -ENOMEM;
+              }
+
+          }
+
         break;
       case VIDIOC_QBUF:
-        buf_p[buf_lp->index].m.userptr = buf_lp->m.userptr;
-        buf_p[buf_lp->index].length    = buf_lp->length;
+        if (buf_lp == NULL)
+          {
+            ret = -EPERM;
+          }
+        else
+          {
+            if (buf_lp->index >= VIDEO_V4_BUF_MAX_CNT)
+              {
+                ret = -ENOMEM;
+              }
+            else
+              {
+                g_v4_buf[buf_lp->index].m.userptr = buf_lp->m.userptr;
+                g_v4_buf[buf_lp->index].length    = buf_lp->length;
+              }
+
+          }
+
         break;
       case VIDIOC_DQBUF:
-        cap.mode = buf_mode;
-        cap.buffer.addr = buf_p[buf_cnt].m.userptr;
-        cap.buffer.size = buf_p[buf_cnt].length;
+        cap.mode = g_v4_buf_mode;
+        cap.buffer.addr = g_v4_buf[g_v4_buf_cnt].m.userptr;
+        cap.buffer.size = g_v4_buf[g_v4_buf_cnt].length;
         ret = video_capture_frame(priv, &cap);
-        buf_lp->m.userptr = buf_p[buf_cnt].m.userptr;
-        buf_lp->length    = g_v_cisif.size;
-        buf_lp->bytesused = g_v_cisif.size;
-        buf_cnt = (buf_cnt < (buf_req_cnt-1)) ? buf_cnt+1 : 0;
+        if (!ret)
+          {
+            buf_lp->m.userptr = g_v4_buf[g_v4_buf_cnt].m.userptr;
+            buf_lp->length    = g_v_cisif.size;
+            buf_lp->bytesused = g_v_cisif.size;
+            buf_lp->index     = g_v4_buf_cnt;
+            g_v4_buf_cnt = (g_v4_buf_cnt < (g_v4_buf_rcnt-1)) ? g_v4_buf_cnt+1 : 0;
+          }
+
         break;
       case VIDIOC_STREAMON:
         stat_l.state = VIDEO_STATE_ACTIVE;
         ret = video_chg_img_sns_state(priv, &stat_l);
-        usleep(30000);
+        usleep(100000);
         break;
       case VIDEOIOC_CHG_IMGSNS_STATE:
         ret = video_chg_img_sns_state(priv, (video_api_chg_img_sns_state_t *)arg);
