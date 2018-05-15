@@ -77,7 +77,23 @@ using namespace MemMgrLite;
 
 /* For FIFO */
 
-#define WRITE_SIMPLE_FIFO_SIZE  2560
+/* WRITE_SIMPLE_FIFO_SIZE.
+ *  This SIMPLE_FIFO_SIZE will be decided from your application system. 
+ *  Correctly, on the SDK side, read the following memory.
+ *    MP3: maximum 1440 bytes
+ *    AAC: maximum 1024 bytes
+ *    WAV: 16bit-2560 bytes, 24bit-3840 bytes
+ *  It can be selected with the codec to be played.
+ *  When playing multiple codecs, please select the largest memory size.
+ *  There is no problem increasing the memory size. If it is made smaller,
+ *  FIFO under is possibly generated, so it is necessary to be careful.
+ *  Please adjust yourself.
+ *
+ *  This application sets the size based on playing WAV.
+ *  Moreover, it is making it the minimum size to reduce the memory amount.
+ */
+
+#define WRITE_SIMPLE_FIFO_SIZE  3840
 #define SIMPLE_FIFO_FRAME_NUM   9
 #define SIMPLE_FIFO_BUF_SIZE    WRITE_SIMPLE_FIFO_SIZE * SIMPLE_FIFO_FRAME_NUM
 
@@ -589,7 +605,8 @@ static bool app_set_player_status(void)
 
 static int app_init_player(uint8_t codec_type,
                            uint32_t sampling_rate,
-                           uint8_t channel_number)
+                           uint8_t channel_number,
+                           uint8_t bit_length)
 {
     AudioCommand command;
     command.header.packet_length = LENGTH_INIT_PLAYER;
@@ -598,7 +615,7 @@ static int app_init_player(uint8_t codec_type,
     command.player.player_id                 = AS_PLAYER_ID_0;
     command.player.init_param.codec_type     = codec_type;
     command.player.init_param.codec_type     = codec_type;
-    command.player.init_param.bit_length     = AS_BITLENGTH_16;
+    command.player.init_param.bit_length     = bit_length;
     command.player.init_param.channel_number = channel_number;
     command.player.init_param.sampling_rate  = sampling_rate;
     snprintf(command.player.init_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", DSPBIN_PATH);
@@ -802,7 +819,10 @@ static bool app_start(void)
 
   /* Init Player */
 
-  if (!app_init_player(track.codec_type, track.sampling_rate, track.channel_number))
+  if (!app_init_player(track.codec_type,
+                       track.sampling_rate,
+                       track.channel_number,
+                       track.bit_length))
     {
       printf("Error: app_init_player() failure.\n");
       CMN_SimpleFifoClear(&s_player_info.fifo.handle);
