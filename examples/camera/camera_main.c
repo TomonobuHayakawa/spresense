@@ -411,7 +411,8 @@ static void camera_main_disable_unused_board_power(void)
 
 struct v_buffer          *buffers;
 static unsigned int     n_buffers;
-#define IMAGE_BUF_SIZE 320*240*2
+#define IMAGE_JPG_SIZE 100000
+#define IMAGE_YUV_SIZE 320*240*2
 
 /****************************************************************************
  * Public Functions
@@ -511,18 +512,18 @@ int camera_main(int argc, char *argv[])
   memset(&fmt, 0, sizeof(v4l2_format_t));
   fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-  if ( strncmp(argv[1], "cap", 3)==0 )
+  if (mode == V4L2_PIX_FMT_JPEG)
     {
       count = 1;
-      fsize = IMAGE_BUF_SIZE;
+      fsize = IMAGE_JPG_SIZE;
       fmt.fmt.pix.width       = VIDEO_HSIZE_FULLHD;
       fmt.fmt.pix.height      = VIDEO_VSIZE_FULLHD;
     }
 
-  if ( strncmp(argv[1], "moni", 4)==0)
+  if (mode == V4L2_PIX_FMT_UYVY)
     {
       count = 2;
-      fsize = IMAGE_BUF_SIZE;
+      fsize = IMAGE_YUV_SIZE;
       fmt.fmt.pix.width       = VIDEO_HSIZE_QVGA;
       fmt.fmt.pix.height      = VIDEO_VSIZE_QVGA;
     }
