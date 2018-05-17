@@ -76,11 +76,13 @@
 /* Display of vsync timing */
 /* #define CAMERA_MAIN_CISIF_INTRTRACE */
 
-#define IMG_BUF_INFO_SIZE       (512)
+#define IMAGE_JPG_SIZE     (100000)
+#define IMAGE_YUV_SIZE     (320*240*2)
+#define IMG_BUF_INFO_SIZE  (512)
 
-#define MAX_SLEEP_TIME          (500*1000)
-#define MID_SLEEP_TIME          (30)
-#define MIN_SLEEP_TIME          (1)
+#define MAX_SLEEP_TIME     (500*1000)
+#define MID_SLEEP_TIME     (30)
+#define MIN_SLEEP_TIME     (1)
 
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
 #ifndef CONFIG_EXAMPLES_CAMERA_LCD_DEVNO
@@ -88,22 +90,19 @@
 #endif
 
 #define itou8(v) ((v) < 0 ? 0 : ((v) > 255 ? 255 : (v)))
-#define SEND_DATA_TO_LCD        (320*240*2)
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
 
-#ifdef CONFIG_SYSTEM_USBMSC
-#define RAMDISK_MINOR           1
-#define RAMDISK_SECTORSIZE      512
-#define RAMDISK_NSECTORS        512
+#define RAMDISK_MINOR      1
+#define RAMDISK_SECTORSIZE 512
+#define RAMDISK_NSECTORS   512
 
 /* writable & free memory when unlinked. */
-#define RAMDISK_RDFLAGS         (RDFLAG_WRENABLED | RDFLAG_FUNLINK)
+#define RAMDISK_RDFLAGS    (RDFLAG_WRENABLED | RDFLAG_FUNLINK)
 
-/* /dev/ram1 */
-#define RAMDISK_DEVPATH         CONFIG_SYSTEM_USBMSC_DEVPATH1
-
-#define RAMDISK_MOUNTP          "/mnt/vfat"
-#endif /* CONFIG_SYSTEM_USBMSC */
+#ifdef CONFIG_SYSTEM_USBMSC
+#define RAMDISK_DEVPATH    CONFIG_SYSTEM_USBMSC_DEVPATH1
+#endif
+#define RAMDISK_MOUNTP     "/mnt/vfat"
 
 #define ALING32_CHECK(x)  (x % 32)
 /****************************************************************************
@@ -129,39 +128,24 @@ struct capture_info_s
  * Private Function Prototypes
  ****************************************************************************/
 #ifdef CONFIG_SYSTEM_USBMSC
-static int  camera_main_init_ramdisk(void);
-static int  camera_main_write_ramdisk(uint8_t *data, size_t len,
-                                      video_cap_frame_info_t *info,
-                                      video_crop_t *crop);
-#endif /* CONFIG_SYSTEM_USBMSC */
-
-static uint64_t camera_main_get_mstime(void);
-
-#ifdef CAMERA_MAIN_CISIF_INTRTRACE
-extern void cisif_intrtrace_start(int max);
-#define CISIF_INTR_TRACE_START(x)   cisif_intrtrace_start(x)
-#else
-#define CISIF_INTR_TRACE_START(x)
-#endif /* CAMERA_MAIN_CISIF_INTRTRACE */
-
+static int  init_ramdisk(void);
+static int  write_ramdisk(uint8_t                *data,
+                          size_t                  len,
+                          video_cap_frame_info_t *info,
+                          video_crop_t           *crop);
+#endif
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-static struct pm_cpu_freqlock_s img_lock_hv =
-  PM_CPUFREQLOCK_INIT(PM_CPUFREQLOCK_TAG('C','M',0), PM_CPUFREQLOCK_FLAG_HV);
+struct v_buffer        *buffers;
+static unsigned int     n_buffers;
 
+static int     camera_main_initialized = 0;
 #ifdef CONFIG_SYSTEM_USBMSC
-static uint8_t  camera_ramdisk[RAMDISK_NSECTORS * RAMDISK_SECTORSIZE];
-#endif /* CONFIG_SYSTEM_USBMSC */
-
-static int camera_main_initialized = 0;
-static uint64_t camera_main_time_start;
-
-#define DBG_TIME_START() (camera_main_time_start = camera_main_get_mstime())
-#define DBG_TIME_STOP()  (camera_main_get_mstime() - camera_main_time_start)
-
 static uint8_t camera_main_file_count = 0;
-static char camera_main_filename[32];
+static char    camera_main_filename[32];
+static uint8_t camera_ramdisk[RAMDISK_NSECTORS * RAMDISK_SECTORSIZE];
+#endif
 
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
 struct nximage_data_s g_nximage =
@@ -240,12 +224,14 @@ static inline int nximage_initialize(void)
     {
       (void) sem_wait(&g_nximage.sem);
     }
-  printf("nximage_initialize: Screen resolution (%d,%d)\n", g_nximage.xres, g_nximage.yres);
+  printf("nximage_initialize: Screen resolution (%d,%d)\n",
+         g_nximage.xres, g_nximage.yres);
 
   return 0;
 }
 
-static inline void ycbcr2rgb(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b)
+static inline void ycbcr2rgb(uint8_t y,  uint8_t cb, uint8_t cr,
+                             uint8_t *r, uint8_t *g, uint8_t *b)
 {
   int _r;
   int _g;
@@ -298,18 +284,8 @@ static void yuv2rgb(void *buf, uint32_t size)
 }
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
 
-extern uint32_t cxd56_get_cpu_baseclk(void);
-static uint64_t camera_main_get_mstime(void)
-{
-    struct timespec tp;
-    if (clock_gettime(CLOCK_REALTIME, &tp)) {
-        return 0;
-    }
-    return (((uint64_t)tp.tv_sec) * 1000 + tp.tv_nsec / 1000000);
-}
-
 #ifdef CONFIG_SYSTEM_USBMSC
-static int camera_main_init_ramdisk(void)
+static int init_ramdisk(void)
 {
   struct fat_format_s fat_fmt = FAT_FORMAT_INITIALIZER;
 
@@ -334,7 +310,7 @@ static int camera_main_init_ramdisk(void)
   return 0;
 }
 
-static int camera_main_write_ramdisk(
+static int write_ramdisk(
   uint8_t *data,
   size_t len,
   video_cap_frame_info_t *info,
@@ -389,30 +365,7 @@ static int camera_main_write_ramdisk(
   umount(RAMDISK_MOUNTP);
   return 0;
 }
-#endif /* CONFIG_SYSTEM_USBMSC */
-
-static void camera_main_disable_unused_board_power(void)
-{
-  /* ImageSensor Power forced OFF (for reboot) */
-  board_power_control(POWER_IMAGE_SENSOR, 0);
-
-#ifdef CONFIG_BOARD_SPRESENSE
-  board_flash_power_control(0);
-
-  board_power_control(POWER_LDO_PERI, 0);
-  board_power_control(POWER_LDO_EMMC, 0);
-  board_power_control(POWER_AUDIO_DVDD, 0);
-
-  /* Defaut Off */
-  board_power_control(POWER_AUDIO_AVDD, 0);
-  board_power_control(POWER_AUDIO_MUTE, 0);
 #endif
-}
-
-struct v_buffer          *buffers;
-static unsigned int     n_buffers;
-#define IMAGE_JPG_SIZE 100000
-#define IMAGE_YUV_SIZE 320*240*2
 
 /****************************************************************************
  * Public Functions
@@ -426,7 +379,6 @@ int camera_main(int argc, char *argv[])
   int ret;
   int i;
   int v_fd;
-  uint32_t time;
   uint32_t mode;
   uint32_t loop;
   uint32_t count;
@@ -436,17 +388,13 @@ int camera_main(int argc, char *argv[])
   struct v4l2_requestbuffers req;
   struct v4l2_buffer         buf;
 
-  if (argc==2 && strncmp(argv[1], "cap", 3)==0)
-    {
-      mode = V4L2_PIX_FMT_JPEG;
-    }
-  else if (argc>=2 && strncmp(argv[1], "moni", 4)==0)
+  if (argc>=2 && strncmp(argv[1], "moni", 4)==0)
     {
       mode = V4L2_PIX_FMT_UYVY;
     }
   else
     {
-      mode = V4L2_PIX_FMT_UYVY;
+      mode = V4L2_PIX_FMT_JPEG;
     }
 
   if (argc==3 && mode==V4L2_PIX_FMT_UYVY)
@@ -465,13 +413,9 @@ int camera_main(int argc, char *argv[])
   /*============================ init ===========================*/
   if (!camera_main_initialized)
     {
-      printf("bootcause=0x%08X\n", up_pm_get_bootcause());
-      camera_main_disable_unused_board_power();
 #ifdef CONFIG_SYSTEM_USBMSC
-      camera_main_init_ramdisk();
-#endif /* CONFIG_SYSTEM_USBMSC */
-
-      DBG_TIME_START();
+      init_ramdisk();
+#endif
 
 #ifdef CONFIG_VIDEO_ISX012
       ret = board_isx012_initialize("/dev/video", IMAGER_I2C);
@@ -495,8 +439,6 @@ int camera_main(int argc, char *argv[])
     }
 
   v_fd = open("/dev/video0", O_CREAT);
-  time = DBG_TIME_STOP();
-  printf("open video : ret=%d, time=%d[ms]\n", ret, time);
   if (v_fd < 0)
     {
       printf("ERROR: Failed to open video. %d\n", errno);
@@ -504,8 +446,6 @@ int camera_main(int argc, char *argv[])
     }
 
   /*============================ cap / moni ====================*/
-  up_pm_acquire_freqlock(&img_lock_hv);
-  printf("CPU BaseClock:%dHz\n", cxd56_get_cpu_baseclk());
 
   /*-init_device------------------------------------------------*/
   /* Note VIDIOC_S_FMT may change width and height. */
@@ -615,11 +555,11 @@ int camera_main(int argc, char *argv[])
       if (mode == V4L2_PIX_FMT_JPEG)
         {
 #ifdef CONFIG_SYSTEM_USBMSC
-          camera_main_write_ramdisk((uint8_t *)buf.m.userptr,
-                                    (size_t)buf.bytesused,
-                                    NULL,
-                                    NULL);
-#endif /* CONFIG_SYSTEM_USBMSC */
+          write_ramdisk((uint8_t *)buf.m.userptr,
+                        (size_t)buf.bytesused,
+                        NULL,
+                        NULL);
+#endif
         }
       else if (mode == V4L2_PIX_FMT_UYVY)
         {
@@ -640,7 +580,6 @@ int camera_main(int argc, char *argv[])
         }
     }
 
-  up_pm_release_freqlock(&img_lock_hv);
   close(v_fd);
   for (i = 0; i < count; i++)
     {
