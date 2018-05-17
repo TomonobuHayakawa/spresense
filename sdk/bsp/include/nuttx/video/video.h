@@ -159,7 +159,7 @@ enum v4l2_field {
   V4L2_FIELD_TOP           = 2, /* top field only */
   V4L2_FIELD_BOTTOM        = 3, /* bottom field only */
   V4L2_FIELD_INTERLACED    = 4, /* both fields interlaced */
-  V4L2_FIELD_SEQ_TB        = 5, /* both fields sequential into one
+  V4L2_FIELD_SEQ_TB        = 5, /* both fields sequential into one */
   V4L2_FIELD_SEQ_BT        = 6, /* same as above + bottom-top order */
   V4L2_FIELD_ALTERNATE     = 7, /* both fields alternating into */
   V4L2_FIELD_INTERLACED_TB = 8, /* both fields interlaced, top field */
@@ -204,7 +204,6 @@ struct v4l2_buffer {
   uint32_t             bytesused;
   uint32_t             flags;
   uint32_t             field;
-//  struct timeval       timestamp;
   struct v4l2_timecode timecode;
   uint32_t             sequence;
 
