@@ -272,7 +272,7 @@ static isx012_t             g_v_isx;
 static video_cisif_result_t g_v_cisif;
 static video_mng_t         *g_v_mng;
 
-static v4l2_buffer_t *g_v4_buf;
+static v4l2_buffer_t *g_v4_buf = NULL;
 static uint32_t       g_v4_buf_rcnt = 1;
 static uint32_t       g_v4_buf_cnt  = 0;
 static uint32_t       g_v4_buf_mode = VIDEO_MODE_MONITORING;
@@ -1246,6 +1246,11 @@ int video_close(FAR struct file *filep)
       ret = ERROR;
     }
 
+  if (g_v4_buf)
+    {
+      free(g_v4_buf);
+    }
+
   return ret;
 }
 
@@ -1292,7 +1297,11 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
           }
         else
           {
-            if (buf_lp->index >= VIDEO_V4_BUF_MAX_CNT)
+            if (buf_lp->index >= g_v4_buf_rcnt)
+              {
+                ret = -EPERM;
+              }
+            else if (buf_lp->index >= VIDEO_V4_BUF_MAX_CNT)
               {
                 ret = -ENOMEM;
               }
