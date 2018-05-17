@@ -1,7 +1,7 @@
 /****************************************************************************
  * config/spresense/src/cxd56_appinit.c
  *
- *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
