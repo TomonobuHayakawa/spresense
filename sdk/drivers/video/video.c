@@ -630,7 +630,7 @@ static void video_callback_cisif(
     {
       if (g_v_cisif.errint == 0)
         {
-          g_v_cisif.errint = code;
+          g_v_cisif.errint = ENOMEM;
         }
     }
 }
