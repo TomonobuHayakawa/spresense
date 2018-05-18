@@ -528,7 +528,9 @@ int camera_main(int argc, char *argv[])
 
   free(buffers);
 
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
   nx_close(g_nximage.hnx);
+#endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
   board_isx012_uninitialize();
   return 0;
 }
