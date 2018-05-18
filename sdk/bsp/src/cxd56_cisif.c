@@ -573,8 +573,7 @@ static int cisif_check_param(cisif_param_t *p)
 
       if (p->yuv_param.notify_func != NULL)
         {
-          if ((p->yuv_param.notify_size == 0) ||
-              (p->yuv_param.notify_size % 32 != 0))
+          if (p->yuv_param.notify_size == 0)
             {
               return -EINVAL;
             }
@@ -586,8 +585,7 @@ static int cisif_check_param(cisif_param_t *p)
     {
       if (p->jpg_param.notify_func != NULL)
         {
-          if ((p->jpg_param.notify_size == 0) ||
-              (p->jpg_param.notify_size % 32 != 0))
+          if (p->jpg_param.notify_size == 0)
             {
               return -EINVAL;
             }
@@ -613,7 +611,6 @@ static int cisif_check_sarea(int type, void *s)
 
       if (ss->strg_addr == NULL ||
           ss->strg_size == 0 ||
-          ss->strg_size % 32 != 0 ||
           (uint32_t)ss->strg_addr % 32 != 0)
         {
           return -EINVAL;
@@ -626,7 +623,6 @@ static int cisif_check_sarea(int type, void *s)
       if (sb->strg_addr_0 == NULL ||
           sb->strg_addr_1 == NULL ||
           sb->strg_size   == 0    ||
-          sb->strg_size % 32 != 0 ||
           (uint32_t)sb->strg_addr_0 % 32 != 0 ||
           (uint32_t)sb->strg_addr_1 % 32 != 0)
         {
@@ -650,7 +646,8 @@ static int cisif_set_yuv_param(cisif_param_t *p)
 
   cisif_reg_write(CISIF_ACT_SIZE, act_size);
   cisif_reg_write(CISIF_CIS_SIZE, act_size);
-  cisif_reg_write(CISIF_YCC_NSTRG_SIZE, p->yuv_param.notify_size);
+  /* must align 32 bytes */
+  cisif_reg_write(CISIF_YCC_NSTRG_SIZE, (p->yuv_param.notify_size&0xffffffe0));
 
   g_notify_callback_func[TYPE_CISIF_YUV] = p->yuv_param.notify_func;
   g_comp_callback_func[TYPE_CISIF_YUV]   = p->yuv_param.comp_func;
@@ -666,8 +663,8 @@ static int cisif_set_yuv_sarea(int type, void *s)
   if (type == SAREA_SINGLE)
     {
       cisif_sarea_t *ss = (cisif_sarea_t *)s;
-
-      cisif_reg_write(CISIF_YCC_DAREA_SIZE, ss->strg_size);
+      /* must align 32 bytes */
+      cisif_reg_write(CISIF_YCC_DAREA_SIZE, (ss->strg_size&0xffffffe0));
       cisif_reg_write(CISIF_YCC_START_ADDR, (uint32_t)ss->strg_addr);
 
       g_ycc_storage_addr[0] = (uint8_t *)ss->strg_addr;
@@ -676,8 +673,8 @@ static int cisif_set_yuv_sarea(int type, void *s)
   else
     {
       cisif_bank_sarea_t *sb = (cisif_bank_sarea_t *)s;
-
-      cisif_reg_write(CISIF_YCC_DAREA_SIZE, sb->strg_size);
+      /* must align 32 bytes */
+      cisif_reg_write(CISIF_YCC_DAREA_SIZE, (sb->strg_size&0xffffffe0));
       cisif_reg_write(CISIF_YCC_START_ADDR, (uint32_t)sb->strg_addr_0);
 
       g_ycc_storage_addr[0] = (uint8_t *)sb->strg_addr_0;
@@ -692,7 +689,8 @@ static int cisif_set_yuv_sarea(int type, void *s)
  ****************************************************************************/
 static int cisif_set_jpg_param(cisif_param_t *p)
 {
-  cisif_reg_write(CISIF_JPG_NSTRG_SIZE, p->jpg_param.notify_size);
+  /* must align 32 bytes */
+  cisif_reg_write(CISIF_JPG_NSTRG_SIZE, (p->jpg_param.notify_size&0xffffffe0));
 
   g_notify_callback_func[TYPE_CISIF_JPEG] = p->jpg_param.notify_func;
   g_comp_callback_func[TYPE_CISIF_JPEG]   = p->jpg_param.comp_func;
@@ -708,8 +706,8 @@ static int cisif_set_jpg_sarea(int type, void *s)
   if (type == SAREA_BANK)
     {
       cisif_bank_sarea_t *sb = (cisif_bank_sarea_t *)s;
-
-      cisif_reg_write(CISIF_JPG_DAREA_SIZE, sb->strg_size);
+      /* must align 32 bytes */
+      cisif_reg_write(CISIF_JPG_DAREA_SIZE, (sb->strg_size&0xffffffe0));
       cisif_reg_write(CISIF_JPG_START_ADDR, (uint32_t)sb->strg_addr_0);
 
       g_jpg_storage_addr[0] = (uint8_t *)sb->strg_addr_0;
@@ -718,8 +716,8 @@ static int cisif_set_jpg_sarea(int type, void *s)
   else
     {
       cisif_sarea_t *ss = (cisif_sarea_t *)s;
-
-      cisif_reg_write(CISIF_JPG_DAREA_SIZE, ss->strg_size);
+      /* must align 32 bytes */
+      cisif_reg_write(CISIF_JPG_DAREA_SIZE, (ss->strg_size&0xffffffe0));
       cisif_reg_write(CISIF_JPG_START_ADDR, (uint32_t)ss->strg_addr);
 
       if (type == SAREA_SINGLE)
