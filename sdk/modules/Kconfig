@@ -7,5 +7,4 @@ source modules/sensing/Kconfig
 source modules/audio/Kconfig
 source modules/memutils/Kconfig
 source modules/asmp/Kconfig
-source modules/cmdfw/Kconfig
 source modules/fwuputils/Kconfig
