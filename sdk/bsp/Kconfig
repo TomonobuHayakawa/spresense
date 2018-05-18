@@ -1616,3 +1616,55 @@ config CXD56_RESET_ON_CRASH
 		saveing the state of the machine
 
 endmenu
+
+menu "Debug Log Level"
+
+config SDK_DEBUG_EMERGE
+	bool "Enable EMERG level"
+	default n
+	---help---
+		Enables output from logemerg() statements.
+
+config SDK_DEBUG_ALERT
+	bool "Enable ALERT level"
+	default n
+	---help---
+		Enables output from logalert() statements.
+
+config SDK_DEBUG_CRIT
+	bool "Enable CRIT level"
+	default n
+	---help---
+		Enables output from logcrit() statements.
+
+config SDK_DEBUG_ERR
+	bool "Enable ERR level"
+	default n
+	---help---
+		Enables output from logerr() statements.
+
+config SDK_DEBUG_WARN
+	bool "Enable WARNING level"
+	default n
+	---help---
+		Enables output from logwarn() statements.
+
+config SDK_DEBUG_NOTICE
+	bool "Enable NOTICE level"
+	default n
+	---help---
+		Enables output from lognotice() statements.
+
+config SDK_DEBUG_INFO
+	bool "Enable INFO level"
+	default n
+	---help---
+		Enables output from loginfo() statements.
+
+config SDK_DEBUG_DEBUG
+	bool "Enable DEBUG level"
+	default n
+	---help---
+		Enables output from logdebug() statements.
+
+endmenu
