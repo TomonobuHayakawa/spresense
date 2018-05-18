@@ -36,6 +36,18 @@ endmenu
 
 menu "CXD56xx Configuration"
 
+choice
+	prompt "CXD56xx package selection"
+	default CXD56_FCBGA
+
+config CXD56_WLCSP
+	bool "WLCSP 100 pin package"
+
+config CXD56_FCBGA
+	bool "FCBGA 185 pin package"
+
+endchoice
+
 comment "Basic Options"
 
 config CXD56_XOSC_CLOCK
