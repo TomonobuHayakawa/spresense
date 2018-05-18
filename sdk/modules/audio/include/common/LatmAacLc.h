@@ -54,10 +54,10 @@
 /* 後述する構造体メンバ内の定義 */
 
 #define LATM_VAL_OF_4BIT    0xF
-#define LATM_MAX_STREAM_ID  16       /* ストリームIDの最大値 */
+#define LATM_MAX_STREAM_ID  15       /* ストリームIDの最大値 */
 #define LATM_MIN_STREAM_ID  0        /* ストリームIDの最小値 */
 
-/* 情報テーブルの配列では、ストリームID(1～16)を添字に使用するので
+/* 情報テーブルの配列では、ストリームID(0～15)を添字に使用するので
  * 最大数は+1する
  */
 
@@ -75,7 +75,7 @@
  * 1つ前のAudioSpecificConfig保持情報をcopyする
  */
 
-struct info_audio_specific_config_s /* 添え字はstreamID([0]は未使用) */
+struct info_audio_specific_config_s /* 添え字はstreamID */
 {
   /* 上記useSameConfig=1の時は、その前のAudioSpecificConfig内容をcopy */
 
@@ -163,15 +163,11 @@ struct info_audio_specific_config_s /* 添え字はstreamID([0]は未使用) */
 };
 typedef struct info_audio_specific_config_s InfoAudioSpecificConfig;
 
-struct info_stream_id_s /* 添え字はstreamID([0]は未使用) */
+struct info_stream_id_s /* 添え字はstreamID */
 {
-  /* streamIDは、1～16の値(infoStreamID[]の添え字)。
-   * 元はカウンタなので、未使用(=0)になったら以降のIDは全て未使用
-   */
+  /* streamIDは、0～15の値(infoStreamID[]の添え字) */
 
   int8_t stream_id;     /* streamID */
-
-  /*----- 以降はstreamID≠0の時に使用 -----*/
 
   /* 逆引きstreamID */
 
@@ -211,7 +207,7 @@ struct info_stream_id_s /* 添え字はstreamID([0]は未使用) */
 };
 typedef struct info_stream_id_s InfomationStreamID;
 
-struct info_stream_frame_s /* 添え字はstreamID([0]は未使用) */
+struct info_stream_frame_s /* 添え字はstreamID */
 {
     /* 以下はstreamIDに対応する項目 */
 
@@ -248,7 +244,7 @@ typedef struct info_stream_frame_s InfomationStreamFrame;
 
 struct info_stream_mux_config_s
 {
-  /* 使用するstreamIDの最大値(有効値1～16)－ 0は未使用のため、他項目の参照不可 */
+  /* 使用するstreamIDの最大値(有効値0～15) */
 
   uint8_t max_stream_id;
 
@@ -285,8 +281,6 @@ struct info_stream_mux_config_s
 
   uint32_t other_data_len_bits;
 
-  /* 以下の2つは、streamID値-1でセットされるため、別に扱う */
-
   /* progSIndx(allStreamsSameTimeFraming=0の時に使用) */
 
   uint8_t   prog_stream_indx[LATM_MAX_STREAM_ID];
@@ -299,7 +293,7 @@ struct info_stream_mux_config_s
    * 実質の最大は16のはず
    */
 
-  /* 添え字はstreamID([0]は未使用) */
+  /* 添え字はstreamID */
 
   InfomationStreamID info_stream_id[LATM_MAX_STREAM_ARRAY];
   InfomationStreamFrame info_stream_frame[64];

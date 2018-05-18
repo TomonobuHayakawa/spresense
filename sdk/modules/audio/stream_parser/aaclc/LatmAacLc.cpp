@@ -402,7 +402,7 @@ static int copyAudioSpecificConfig(InfoStreamMuxConfig *ptr_stream_mux_config,
 {
   int prev_cnt = (stream_cnt - 1);
 
-  if (prev_cnt > 0)
+  if (prev_cnt > LATM_MIN_STREAM_ID)
     {
       ptr_stream_mux_config->
         info_stream_id[stream_cnt].asc.audio_object_type =
@@ -1226,7 +1226,8 @@ static int32_t isoPayloadLengthInfo(LatmLocalInfo *ptr_info,
        * array with prog and lay.
        */
 
-      for (i = 0; i < (int32_t)ptr_stream_mux_config->max_stream_id; i++)
+      for (i = LATM_MIN_STREAM_ID;
+           i < (int32_t)ptr_stream_mux_config->max_stream_id; i++)
         {
           switch (ptr_stream_mux_config->info_stream_id[i].frame_length_type)
             {
@@ -1525,7 +1526,7 @@ static int32_t isoStreamMuxConfig(LatmLocalInfo *ptr_info,
 
       /* Clear streamCnt at the same position as the ISO standard. */
 
-      ptr_info->stream_cnt = 0;
+      ptr_info->stream_cnt = LATM_MIN_STREAM_ID;
 
       /* [ISO standard] allStreamsSameTimeFraming processing. */
 
