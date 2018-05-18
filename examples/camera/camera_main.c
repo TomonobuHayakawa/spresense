@@ -92,18 +92,6 @@
 #define itou8(v) ((v) < 0 ? 0 : ((v) > 255 ? 255 : (v)))
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
 
-#define RAMDISK_MINOR      1
-#define RAMDISK_SECTORSIZE 512
-#define RAMDISK_NSECTORS   512
-
-/* writable & free memory when unlinked. */
-#define RAMDISK_RDFLAGS    (RDFLAG_WRENABLED | RDFLAG_FUNLINK)
-
-#ifdef CONFIG_SYSTEM_USBMSC
-#define RAMDISK_DEVPATH    CONFIG_SYSTEM_USBMSC_DEVPATH1
-#endif
-#define RAMDISK_MOUNTP     "/mnt/vfat"
-
 #define ALING32_CHECK(x)  (x % 32)
 /****************************************************************************
  * Private Types
@@ -127,24 +115,24 @@ struct capture_info_s
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
-#ifdef CONFIG_SYSTEM_USBMSC
-static int  init_ramdisk(void);
-static int  write_ramdisk(uint8_t                *data,
-                          size_t                  len,
-                          video_cap_frame_info_t *info,
-                          video_crop_t           *crop);
+
+#ifndef CONFIG_EXAMPLES_CAMERA_INFINITE
+static int  write_file(uint8_t                *data,
+                       size_t                  len,
+                       video_cap_frame_info_t *info,
+                       video_crop_t           *crop);
 #endif
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-struct v_buffer        *buffers;
+
+static struct v_buffer  *buffers;
 static unsigned int     n_buffers;
 
-static int     camera_main_initialized = 0;
-#ifdef CONFIG_SYSTEM_USBMSC
+#ifndef CONFIG_EXAMPLES_CAMERA_INFINITE
 static uint8_t camera_main_file_count = 0;
 static char    camera_main_filename[32];
-static uint8_t camera_ramdisk[RAMDISK_NSECTORS * RAMDISK_SECTORSIZE];
 #endif
 
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
@@ -167,6 +155,7 @@ struct nximage_data_s g_nximage =
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
 static inline int nximage_initialize(void)
 {
@@ -284,33 +273,8 @@ static void yuv2rgb(void *buf, uint32_t size)
 }
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
 
-#ifdef CONFIG_SYSTEM_USBMSC
-static int init_ramdisk(void)
-{
-  struct fat_format_s fat_fmt = FAT_FORMAT_INITIALIZER;
-
-  /* Create a RAMDISK */
-  if (0 < ramdisk_register(RAMDISK_MINOR,
-                           camera_ramdisk,
-                           RAMDISK_NSECTORS,
-                           RAMDISK_SECTORSIZE,
-                           RAMDISK_RDFLAGS))
-    {
-      printf("ERROR: Failed to ramdisk_register. %d\n", errno);
-      return -1;
-    }
-
-  /* Create a FAT filesystem on the RAMDISK */
-  if (0 < mkfatfs(RAMDISK_DEVPATH, &fat_fmt))
-    {
-      printf("ERROR: Failed to mkfatfs. %d\n", errno);
-      return -1;
-    }
-
-  return 0;
-}
-
-static int write_ramdisk(
+#ifndef CONFIG_EXAMPLES_CAMERA_INFINITE
+static int write_file(
   uint8_t *data,
   size_t len,
   video_cap_frame_info_t *info,
@@ -319,13 +283,6 @@ static int write_ramdisk(
 {
   FILE *fp;
   int  fd;
-  int  del = 0;
-
-  if(0 != mount(RAMDISK_DEVPATH, RAMDISK_MOUNTP, "vfat", 0, NULL))
-    {
-      printf("mount error : %d\n", errno);
-      return  -1;
-    }
 
   camera_main_file_count++;
   if(camera_main_file_count >= 1000)
@@ -335,7 +292,7 @@ static int write_ramdisk(
 
   memset(camera_main_filename, 0, sizeof(camera_main_filename));
   sprintf(camera_main_filename,
-         "/mnt/vfat/VIDEO%03d.JPG",
+         "/mnt/spif/VIDEO%03d.JPG",
           camera_main_file_count);
   printf("FILENAME:%s\n", camera_main_filename);
 
@@ -349,20 +306,12 @@ static int write_ramdisk(
   if (len != fwrite(data, 1, len, fp))
     {
       printf("fwrite error : %d\n", errno);
-      del = 1;
     }
 
   fflush(fp);
   fd = fileno(fp);
   fsync(fd);
   fclose(fp);
-
-  if (del)
-    {
-      unlink((const char *)camera_main_filename);
-    }
-
-  umount(RAMDISK_MOUNTP);
   return 0;
 }
 #endif
@@ -388,16 +337,26 @@ int camera_main(int argc, char *argv[])
   struct v4l2_requestbuffers req;
   struct v4l2_buffer         buf;
 
+  /* select capture mode */
+
   if (argc>=2 && strncmp(argv[1], "moni", 4)==0)
     {
       mode = V4L2_PIX_FMT_UYVY;
+#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+      ret = nximage_initialize();
+      if (ret < 0)
+        {
+          printf("camera_main: Failed to get NX handle: %d\n", errno);
+          return -EPERM;
+        }
+#endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
     }
   else
     {
       mode = V4L2_PIX_FMT_JPEG;
     }
 
-  if (argc==3 && mode==V4L2_PIX_FMT_UYVY)
+  if (argc==3)
     {
       loop = atoi(argv[2]);
     }
@@ -410,33 +369,14 @@ int camera_main(int argc, char *argv[])
 #endif
     }
 
-  /*============================ init ===========================*/
-  if (!camera_main_initialized)
-    {
-#ifdef CONFIG_SYSTEM_USBMSC
-      init_ramdisk();
-#endif
-
 #ifdef CONFIG_VIDEO_ISX012
-      ret = board_isx012_initialize("/dev/video", IMAGER_I2C);
-      if (ret != 0)
-        {
-          printf("ERROR: Failed to init video. %d\n", errno);
-          return -EPERM;
-        }
-#endif
-
-#ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
-      ret = nximage_initialize();
-      if (ret < 0)
-        {
-          printf("camera_main: Failed to get NX handle: %d\n", errno);
-          return -EPERM;
-        }
-#endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
-
-      camera_main_initialized = 1;
+  ret = board_isx012_initialize("/dev/video", IMAGER_I2C);
+  if (ret != 0)
+    {
+      printf("ERROR: Failed to init video. %d\n", errno);
+      return -EPERM;
     }
+#endif
 
   v_fd = open("/dev/video0", O_CREAT);
   if (v_fd < 0)
@@ -445,10 +385,8 @@ int camera_main(int argc, char *argv[])
       return -ENODEV;
     }
 
-  /*============================ cap / moni ====================*/
+  /* Note: VIDIOC_S_FMT may change width and height. */
 
-  /*-init_device------------------------------------------------*/
-  /* Note VIDIOC_S_FMT may change width and height. */
   memset(&fmt, 0, sizeof(v4l2_format_t));
   fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
@@ -477,7 +415,8 @@ int camera_main(int argc, char *argv[])
       return ERROR;
     }
 
-  /*-init_device/init_userp-------------------------------------*/
+  /* Note: VIDIOC_REQBUFS set buffer stages. */
+
   memset(&req, 0, sizeof(v4l2_requestbuffers_t));
 
   req.count  = count;
@@ -490,6 +429,9 @@ int camera_main(int argc, char *argv[])
       printf("Does not support user pointer i/o %d\n", errno);
       return ERROR;
     }
+
+  /* Note: VIDIOC_QBUF set buffer pointer. */
+  /*       Buffer pointer must be 32bytes aligned. */
 
   buffers = memalign(32, sizeof(v_buffer_t) * count);
 
@@ -511,7 +453,6 @@ int camera_main(int argc, char *argv[])
 
     }
 
-  /*-start_capturing--------------------------------------------*/
   for (i = 0; i < n_buffers; i++)
     {
       memset(&buf, 0, sizeof(v4l2_buffer_t));
@@ -530,6 +471,8 @@ int camera_main(int argc, char *argv[])
 
     }
 
+  /* Note: VIDIOC_STREAMON start video. */
+
   type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   ret = ioctl(v_fd, VIDIOC_STREAMON, (unsigned long)&type);
   if (ret)
@@ -538,9 +481,10 @@ int camera_main(int argc, char *argv[])
       return ERROR;
     }
 
-  /*-mainloop/read_frame----------------------------------------*/
   while (loop-- > 0)
     {
+      /* Note: VIDIOC_DQBUF acquire capture data. */
+
       memset(&buf, 0, sizeof(v4l2_buffer_t));
       buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       buf.memory = V4L2_MEMORY_USERPTR;
@@ -552,25 +496,22 @@ int camera_main(int argc, char *argv[])
           return ERROR;
         }
 
-      if (mode == V4L2_PIX_FMT_JPEG)
-        {
-#ifdef CONFIG_SYSTEM_USBMSC
-          write_ramdisk((uint8_t *)buf.m.userptr,
-                        (size_t)buf.bytesused,
-                        NULL,
-                        NULL);
+#ifndef CONFIG_EXAMPLES_CAMERA_INFINITE
+      write_file((uint8_t *)buf.m.userptr, (size_t)buf.bytesused, NULL, NULL);
 #endif
-        }
-      else if (mode == V4L2_PIX_FMT_UYVY)
-        {
+
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+      if (mode == V4L2_PIX_FMT_UYVY)
+        {
           /* Convert YUV color format to RGB565 */
 
           yuv2rgb((void *)buf.m.userptr, buf.bytesused);
 
           nximage_image(g_nximage.hbkgd, (void *)buf.m.userptr);
-#endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
         }
+#endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
+
+      /* Note: VIDIOC_QBUF reset released buffer pointer. */
 
       ret = ioctl(v_fd, VIDIOC_QBUF, (unsigned long)&buf);
       if (ret)
@@ -587,5 +528,8 @@ int camera_main(int argc, char *argv[])
     }
 
   free(buffers);
+
+  nx_close(g_nximage.hnx);
+  board_isx012_uninitialize();
   return 0;
 }

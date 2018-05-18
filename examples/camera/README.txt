@@ -20,26 +20,10 @@ examples/camera
   CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD -- Show captured image on the LCD
   CONFIG_EXAMPLES_CAMERA_INFINITE   -- Capture infinitely
 
-  It is also possible to output to ramdisk and retrieve files via usb drive.
-  If you want to work with ramdisk, type like this:
-
-  CONFIG_SYSTEM_USBMSC
-  CONFIG_SYSTEM_USBMSC_DEVPATH1 "/dev/ram1"
-
   Execute under nsh:
 
   nsh> camera
-
-  * Capture to ramdisk and retrieve files via usb drive
-
-  nsh> camera
-  FILENAME:/mnt/vfat/VIDEO001.JPG
-  nsh> msconn
-  mcsonn_main: Creating block drivers
-  mcsonn_main: Configuring with NLUNS=1
-  mcsonn_main: handle=d077a40
-  mcsonn_main: Bind LUN=0 to /dev/ram1
-  mcsonn_main: Connected
+  FILENAME:/mnt/spif/VIDEO001.JPG
 
   * Display to LCD
 
@@ -47,3 +31,4 @@ examples/camera
   nximage_initialize: Initializing LCD
   nximage_initialize: Open NX
   nximage_initialize: Screen resolution (320,240)
+  FILENAME:/mnt/spif/VIDEO001.JPG
