@@ -1369,3 +1369,12 @@ int isx012_register(FAR struct i2c_master_s *i2c)
 
   return OK;
 }
+
+int isx012_unregister(void)
+{
+  FAR struct isx012_dev_s *priv = &g_private;
+
+  sem_destroy(&priv->wait);
+
+  return OK;
+}

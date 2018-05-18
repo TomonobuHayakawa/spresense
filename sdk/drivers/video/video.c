@@ -116,6 +116,8 @@
 
 #define VIDEO_V4_BUF_MAX_CNT  (256)
 
+#define VIDEO_DEV_PATH_LEN     (32)
+
 /* Debug option */
 #ifdef CONFIG_DEBUG_VIDEO_ERROR
 #  define videoerr(format, ...)     _err(format, ##__VA_ARGS__)
@@ -200,6 +202,7 @@ struct video_mng_s
   video_img_sns_state_e imgsns_state;
   video_img_sns_mode_e imgsns_mode;
   uint8_t init;
+  uint8_t devpath[VIDEO_DEV_PATH_LEN];
 };
 
 typedef struct video_mng_s video_mng_t;
@@ -1346,7 +1349,7 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 int video_register(FAR const char *devpath)
 {
   video_mng_t *priv;
-  char path[16];
+  char path[VIDEO_DEV_PATH_LEN];
   int ret;
 
   /* Initialize video device structure */
@@ -1372,8 +1375,25 @@ int video_register(FAR const char *devpath)
     }
   else
     {
+      strncpy((char *)g_v_mng->devpath, path, VIDEO_DEV_PATH_LEN - 1);
       videoerr("ISX012 driver loaded successfully!\n");
     }
 
   return ret;
+}
+
+int video_unregister(void)
+{
+  int ret = 0;
+
+  if (g_v_mng)
+    {
+      unregister_driver((const char *)g_v_mng->devpath);
+      sem_destroy(&g_v_mng->sem_cisifsync);
+      kmm_free(g_v_mng);
+      g_v_mng = NULL;
+      return ret;
+    }
+
+  return -ENODEV;
 }

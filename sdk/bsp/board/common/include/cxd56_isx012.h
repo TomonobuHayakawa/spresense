@@ -134,6 +134,16 @@ void board_isx012_release_sleep(void);
 
 int board_isx012_initialize(FAR const char *devpath, int bus);
 
+/****************************************************************************
+ * Name: board_isx012_uninitialize
+ *
+ * Description:
+ *   Uninitialize ISX012 i2c driver and register the ISX012 device.
+ *
+ ****************************************************************************/
+
+int board_isx012_uninitialize(void);
+
 #undef EXTERN
 #if defined(__cplusplus)
 }

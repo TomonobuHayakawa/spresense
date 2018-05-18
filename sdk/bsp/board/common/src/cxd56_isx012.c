@@ -72,6 +72,16 @@
 #define ALL_POWEROFF                (0)
 #define POWER_CHECK_RETRY           (10)
 
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+FAR struct i2c_master_s *i2c;
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
 int board_isx012_power_on(void)
 {
   int ret;
@@ -173,12 +183,13 @@ void board_isx012_release_sleep(void)
 }
 
 int isx012_register(FAR struct i2c_master_s *i2c);
+int isx012_unregister(void);
 int video_register(FAR const char *devpath);
+int video_unregister(void);
 
 int board_isx012_initialize(FAR const char *devpath, int bus)
 {
   int ret;
-  FAR struct i2c_master_s *i2c;
 
   _info("Initializing ISX012...\n");
 
@@ -210,6 +221,45 @@ int board_isx012_initialize(FAR const char *devpath, int bus)
   if (ret < 0)
     {
       _err("Error registering video.\n");
+    }
+
+  return ret;
+}
+
+int board_isx012_uninitialize(void)
+{
+  int ret;
+
+  _info("Uninitializing ISX012...\n");
+
+  /* Initialize i2c deivce */
+
+  ret = video_unregister();
+  if (ret < 0)
+    {
+      _err("Error unregistering video.\n");
+    }
+
+  ret = isx012_unregister();
+  if (ret < 0)
+    {
+      _err("Error unregistering ISX012.\n");
+    }
+
+  if (!i2c)
+    {
+      _err("Error uninitialize ISX012.\n");
+      return -ENODEV;
+    }
+  else
+    {
+      ret = cxd56_i2cbus_uninitialize(i2c);
+      if (ret < 0)
+        {
+          _err("Error uninitialize I2C BUS.\n");
+          return -EPERM;
+        }
+
     }
 
   return ret;
