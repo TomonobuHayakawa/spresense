@@ -67,13 +67,13 @@ __WIEN2_BEGIN_NAMESPACE
  * Public Types
  ****************************************************************************/
 
-class VoiceRecorderObjectTask {
+class MediaRecorderObjectTask {
 public:
   static void create(MsgQueId self_dtq,
                      MsgQueId manager_dtq);
 
 private:
-  VoiceRecorderObjectTask(MsgQueId self_dtq,
+  MediaRecorderObjectTask(MsgQueId self_dtq,
                           MsgQueId manager_dtq):
     m_self_dtq(self_dtq),
     m_manager_dtq(manager_dtq),
@@ -121,7 +121,7 @@ private:
 
   CaptureComponentHandler m_capture_from_mic_hdlr;
 
-  typedef void (VoiceRecorderObjectTask::*MsgProc)(MsgPacket *);
+  typedef void (MediaRecorderObjectTask::*MsgProc)(MsgPacket *);
   static MsgProc MsgProcTbl[AUD_VRC_MSG_NUM][RecorderStateNum];
   static MsgProc RstProcTbl[AUD_VRC_RST_MSG_NUM][RecorderStateNum];
 
@@ -129,7 +129,9 @@ private:
     OutputBufMhQueue;
   OutputBufMhQueue m_output_buf_mh_que;
 
-  s_std::Queue<AudioCommand, 1> m_external_cmd_que;
+  s_std::Queue<AsRecorderEvent, 1> m_external_cmd_que;
+
+  MediaRecorderCallback m_callback;
 
   typedef s_std::Queue<MemMgrLite::MemHandle, CAPTURE_PCM_BUF_QUE_SIZE> CnvInMhQueue;
   CnvInMhQueue m_cnv_in_buf_mh_que;
@@ -217,30 +219,11 @@ private:
         return SampleNumPerFrame[m_codec_type];
     }
 
-  void sendAudioCmdCmplt(const AudioCommand &cmd,
-                         uint32_t result,
-                         uint32_t sub_result = 0)
-    {
-      AudioMngCmdCmpltResult cmplt(cmd.header.command_code,
-                                   cmd.header.sub_code,
-                                   result, AS_MODULE_ID_MEDIA_RECORDER_OBJ,
-                                   sub_result);
-      err_t er = MsgLib::send<AudioMngCmdCmpltResult>(m_manager_dtq,
-                                                      MsgPriNormal,
-                                                      MSG_TYPE_AUD_RES,
-                                                      m_self_dtq,
-                                                      cmplt);
-      if (ERR_OK != er)
-        {
-          F_ASSERT(0);
-        }
-    }
-
-  uint32_t isValidActivateParam(const AudioCommand& cmd);
-  uint32_t isValidInitParam(const AudioCommand& cmd);
-  uint32_t isValidInitParamMP3(const AudioCommand& cmd);
-  uint32_t isValidInitParamLPCM(const AudioCommand& cmd);
-  uint32_t isValidInitParamOPUS(const AudioCommand& cmd);
+  uint32_t isValidActivateParam(const AsActivateRecorderParam& cmd);
+  uint32_t isValidInitParam(const RecorderCommand& cmd);
+  uint32_t isValidInitParamMP3(const RecorderCommand& cmd);
+  uint32_t isValidInitParamLPCM(const RecorderCommand& cmd);
+  uint32_t isValidInitParamOPUS(const RecorderCommand& cmd);
   void writeToDataSinker(const MemMgrLite::MemHandle& mh, uint32_t byte_size);
 
   bool getInputDeviceHdlr(void);
@@ -260,12 +243,6 @@ private:
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
-
-extern "C" {
-
-bool AS_deactivateVoiceRecorder(void);
-
-}
 
 __WIEN2_END_NAMESPACE
 

@@ -1151,13 +1151,13 @@ typedef struct
      * (header.command_code==#AUDCMD_SETRECORDERSTATUS)
      */
 
-    AsSetRecorderStatusParam set_recorder_status_param;
+    AsActivateRecorderParam set_recorder_status_param;
 
-    /*! \brief [in] for InitRecorder
-     * (header.command_code==#AUDCMD_INITREC)
+    /*! \brief [in] Recorder command
      */
 
-    AsInitRecorderParam init_recorder_param;
+    RecorderCommand recorder;
+
 #endif
 #ifdef AS_FEATURE_RECOGNIZER_ENABLE
     /*! \brief [in] for StratVoiceCommand

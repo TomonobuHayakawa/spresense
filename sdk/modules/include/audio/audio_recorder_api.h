@@ -83,6 +83,32 @@
  * Public Types
  ****************************************************************************/
 
+/** Event type of Recorder */
+
+typedef enum
+{
+  /*! \brief Activate */
+
+  AsRecorderEventAct = 0,
+
+  /*! \brief Init */
+
+  AsRecorderEventInit,
+
+  /*! \brief Start */
+
+  AsRecorderEventStart,
+
+  /*! \brief Stop */
+
+  AsRecorderEventStop,
+
+  /*! \brief Deactivate */
+
+  AsRecorderEventDeact,
+
+} AsRecorderEvent;
+
 /* SetRecorderStatus */
 
 /** Select Recorder input device */
@@ -231,7 +257,18 @@ typedef struct
   /*! \brief [in] Set Recorder output device handler, refer following. */
 
   AsRecorderOutputDeviceHdlr*  output_device_handler;
-} AsSetRecorderStatusParam;
+
+} AsActivateRecorderParam;
+
+typedef bool (*MediaRecorderCallback)(AsRecorderEvent evtype, uint32_t result, uint32_t sub_result);
+
+typedef struct
+{
+  AsActivateRecorderParam param;
+   
+  MediaRecorderCallback cb;
+
+} AsActivateRecorder;
 
 /** InitRecorder Command (#AUDCMD_INITREC) parameter */
 
@@ -285,6 +322,24 @@ typedef struct
   char dsp_path[AS_AUDIO_DSP_PATH_LEN];
 
 } AsInitRecorderParam;
+
+/** RecorderCommand definition */
+typedef union
+{
+  /*! \brief [in] for ActivateRecorder
+   * (Object Interface==AS_ActivateMediaRecorder)
+   */
+ 
+  AsActivateRecorder act_param;
+
+
+  /*! \brief [in] for InitRecorder
+   * (Object Interface==AS_InitMediaRecorder)
+   */
+
+  AsInitRecorderParam init_param;
+
+} RecorderCommand;
 
 /** Message queue ID parameter of activate function */
 
@@ -358,7 +413,18 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_CreateVoiceRecorder(FAR AsActRecorderParam_t *param);
+bool AS_CreateMediaRecorder(FAR AsActRecorderParam_t *param);
+
+
+bool AS_ActivateMediaRecorder(FAR AsActivateRecorder *actparam);
+
+bool AS_InitMediaRecorder(FAR AsInitRecorderParam *initparam);
+
+bool AS_StartMediaRecorder(void);
+
+bool AS_StopMediaRecorder(void);
+
+bool AS_DeactivateMediaRecorder(void);
 
 /**
  * @brief Deactivate audio recorder
@@ -367,7 +433,7 @@ bool AS_CreateVoiceRecorder(FAR AsActRecorderParam_t *param);
  * @retval     false : failure
  */
 
-bool AS_DeleteVoiceRecorder(void);
+bool AS_DeleteMediaRecorder(void);
 
 #ifdef __cplusplus
 }

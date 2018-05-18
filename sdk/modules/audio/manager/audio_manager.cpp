@@ -169,6 +169,40 @@ static bool player1_done_callback(AsPlayerEvent event, uint32_t result, uint32_t
 }
 #endif /* AS_FEATURE_PLAYER_ENABLE */
 
+#ifdef AS_FEATURE_RECORDER_ENABLE
+/*
+ * Callback functions from MediaRecorder
+ */
+
+/*--------------------------------------------------------------------------*/
+static bool recorder_done_callback(AsRecorderEvent event, uint32_t result, uint32_t sub_result)
+{
+  uint8_t cmd_code[] =
+  {
+    AUDCMD_SETRECORDERSTATUS,
+    AUDCMD_INITREC,
+    AUDCMD_STARTREC,
+    AUDCMD_STOPREC,
+    AUDCMD_SETREADYSTATUS,
+  };
+
+  AudioMngCmdCmpltResult cmplt(cmd_code[event],
+                               0,
+                               result,
+                               AS_MODULE_ID_MEDIA_RECORDER_OBJ,
+                               sub_result);
+
+  err_t er = MsgLib::send<AudioMngCmdCmpltResult>(s_selfMid,
+                                                  MsgPriNormal,
+                                                  MSG_TYPE_AUD_RES,
+                                                  s_selfMid,
+                                                  cmplt);
+  F_ASSERT(ERR_OK == er);
+
+  return true;
+}
+#endif /* AS_FEATURE_RECORDER_ENABLE */
+
 /*
  * External Interface.
  */
@@ -1395,7 +1429,7 @@ void AudioManager::recorder(AudioCommand &cmd)
           {
             return;
           }
-        msg_type = MSG_AUD_VRC_CMD_PLAY;
+        msg_type = MSG_AUD_VRC_CMD_START;
         break;
 
       case AUDCMD_STOPREC:
@@ -1414,11 +1448,11 @@ void AudioManager::recorder(AudioCommand &cmd)
         return;
     }
 
-  err_t er = MsgLib::send<AudioCommand>(s_rcdSubMid,
-                                        MsgPriNormal,
-                                        msg_type,
-                                        m_selfDtq,
-                                        cmd);
+  err_t er = MsgLib::send<RecorderCommand>(s_rcdSubMid,
+                                           MsgPriNormal,
+                                           msg_type,
+                                           m_selfDtq,
+                                           cmd.recorder);
   F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
@@ -1575,13 +1609,14 @@ void AudioManager::setRdyOnRecorder(AudioCommand &cmd)
       return;
     }
 
+  RecorderCommand recorder_command; 
   err_t er = ERR_OK;
 
-  er = MsgLib::send<AudioCommand>(s_rcdSubMid,
-                                  MsgPriNormal,
-                                  MSG_AUD_VRC_CMD_DEACTIVATE,
-                                  m_selfDtq,
-                                  cmd);
+  er = MsgLib::send<RecorderCommand>(s_rcdSubMid,
+                                     MsgPriNormal,
+                                     MSG_AUD_VRC_CMD_DEACTIVATE,
+                                     m_selfDtq,
+                                     recorder_command);
   F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
@@ -1914,11 +1949,18 @@ void AudioManager::setRecorder(AudioCommand &cmd)
       return;
     }
 
-  err_t er = MsgLib::send<AudioCommand>(s_rcdSubMid,
-                                        MsgPriNormal,
-                                        MSG_AUD_VRC_CMD_ACTIVATE,
-                                        m_selfDtq,
-                                        cmd);
+  /* Activate MediaRecorder */ 
+
+  RecorderCommand recorder_command;
+
+  recorder_command.act_param.param = cmd.set_recorder_status_param;
+  recorder_command.act_param.cb    = recorder_done_callback;
+
+  err_t er = MsgLib::send<RecorderCommand>(s_rcdSubMid,
+                                           MsgPriNormal,
+                                           MSG_AUD_VRC_CMD_ACTIVATE,
+                                           m_selfDtq,
+                                           recorder_command);
   F_ASSERT(er == ERR_OK);
 #else
   sendErrRespResult(cmd.header.sub_code,
@@ -2970,7 +3012,7 @@ S_ASSERT((LENGTH_STOP_VOICE_COMMAND << 2) ==
 /* SetRecoderStatus command (AUDCMD_SETRECORDERSTATUS) packet length. */
 
 S_ASSERT((LENGTH_SET_RECORDER_STATUS << 2) ==
-  (sizeof(AudioCommandHeader) + sizeof(AsSetRecorderStatusParam)));
+  (sizeof(AudioCommandHeader) + sizeof(AsActivateRecorderParam)));
 
 /* InitRecorder command (AUDCMD_INITREC) packet length. */
 S_ASSERT((LENGTH_INIT_RECORDER << 2) ==
