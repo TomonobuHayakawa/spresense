@@ -28,7 +28,6 @@ sdk
 |-- modules
 |   |-- asmp       - ASMP framework
 |   |-- audio      - Audio library
-|   |-- cmdfw      - Command Framework library
 |   |-- fwuputils  - Firmware update utility
 |   |-- include    - Library headers
 |   |-- sensing    - Smart sensing library
