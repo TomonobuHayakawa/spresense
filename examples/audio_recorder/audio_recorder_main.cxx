@@ -476,10 +476,10 @@ static bool app_act_audio_sub_system(void)
   recorder_act_param.pool_id.output        = OUTPUT_BUF_POOL;
   recorder_act_param.pool_id.dsp           = ENC_APU_CMD_POOL;
 
-  result = AS_CreateVoiceRecorder(&recorder_act_param);
+  result = AS_CreateMediaRecorder(&recorder_act_param);
   if (!result)
     {
-      printf("Error: AS_CreateVoiceRecorder() failure. system memory insufficient!\n");
+      printf("Error: AS_CreateMediaRecorder() failure. system memory insufficient!\n");
       return false;
     }
 
@@ -504,7 +504,7 @@ static bool app_act_audio_sub_system(void)
 static void app_deact_audio_sub_system(void)
 {
   AS_DeactivateAudioSubSystem();
-  AS_DeleteVoiceRecorder();
+  AS_DeleteMediaRecorder();
   AS_DeleteCapture();
 }
 
@@ -680,22 +680,22 @@ static bool app_set_recorder_status(void)
 
 static void app_init_recorder_wav(AudioCommand* command)
 {
-  command->init_recorder_param.codec_type = AS_CODECTYPE_LPCM;
+  command->recorder.init_param.codec_type = AS_CODECTYPE_LPCM;
   s_recorder_info.file.format_type = FORMAT_TYPE_WAV;
 }
 
 static void app_init_recorder_mp3(AudioCommand* command)
 {
-  command->init_recorder_param.codec_type = AS_CODECTYPE_MP3;
-  command->init_recorder_param.bitrate    = AS_BITRATE_96000;
+  command->recorder.init_param.codec_type = AS_CODECTYPE_MP3;
+  command->recorder.init_param.bitrate    = AS_BITRATE_96000;
   s_recorder_info.file.format_type = FORMAT_TYPE_RAW;
 }
 
 static void app_init_recorder_opus(AudioCommand* command)
 {
-  command->init_recorder_param.codec_type = AS_CODECTYPE_OPUS;
-  command->init_recorder_param.bitrate    = AS_BITRATE_8000;
-  command->init_recorder_param.computational_complexity = AS_INITREC_COMPLEXITY_0;
+  command->recorder.init_param.codec_type = AS_CODECTYPE_OPUS;
+  command->recorder.init_param.bitrate    = AS_BITRATE_8000;
+  command->recorder.init_param.computational_complexity = AS_INITREC_COMPLEXITY_0;
   s_recorder_info.file.format_type = FORMAT_TYPE_RAW;
 }
 
@@ -715,10 +715,10 @@ static bool app_init_recorder(codec_type_e codec_type,
   command.header.packet_length = LENGTH_INIT_RECORDER;
   command.header.command_code  = AUDCMD_INITREC;
   command.header.sub_code      = 0x00;
-  command.init_recorder_param.sampling_rate  = s_recorder_info.file.sampling_rate;
-  command.init_recorder_param.channel_number = s_recorder_info.file.channel_number;
-  command.init_recorder_param.bit_length     = AS_BITLENGTH_16;
-  snprintf(command.init_recorder_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", DSPBIN_PATH);
+  command.recorder.init_param.sampling_rate  = s_recorder_info.file.sampling_rate;
+  command.recorder.init_param.channel_number = s_recorder_info.file.channel_number;
+  command.recorder.init_param.bit_length     = AS_BITLENGTH_16;
+  snprintf(command.recorder.init_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", DSPBIN_PATH);
 
   switch (s_recorder_info.file.codec_type)
     {
