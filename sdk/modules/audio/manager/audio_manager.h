@@ -42,7 +42,6 @@
 #include "audio_manager_message_types.h"
 #include "memutils/s_stl/queue.h"
 #include "wien2_internal_packet.h"
-#include "baseband_config.h"
 
 #ifndef __ASSEMBLY__
 
@@ -93,7 +92,9 @@ private:
     m_SubState(AS_MNG_SUB_STATUS_NONE),
     m_attentionCBFunc(NULL),
     m_active_player(0),
-    m_player_transition_count(0)
+    m_player_transition_count(0),
+    m_input_en(false),
+    m_output_en(false)
   {
   };
 
@@ -127,10 +128,11 @@ private:
 #ifdef CONFIG_AUDIOUTILS_VOICE_COMMAND
   static AudioFindCommandCallbackFunction m_findCommandCBFunc;
 #endif
-  BasebandConfig bbConfig;
   uint32_t m_active_player;
   uint32_t m_command_code;
   int8_t m_player_transition_count;
+  bool m_input_en;
+  bool m_output_en;
 
   typedef void (AudioManager::*MsgProc)(AudioCommand &cmd);
   typedef void (AudioManager::*RstProc)(const AudioMngCmdCmpltResult &result);
@@ -150,15 +152,12 @@ private:
   void player(AudioCommand &cmd);
   void outputmixer(AudioCommand &cmd);
   void recorder(AudioCommand &cmd);
-  void initMicGain(AudioCommand &cmd);
   void setMicGain(AudioCommand &cmd);
   void initI2SParam(AudioCommand &cmd);
   void setI2SParam(AudioCommand &cmd);
   void initDEQParam(AudioCommand &cmd);
-  void initOutputSelect(AudioCommand &cmd);
   void setOutputSelect(AudioCommand &cmd);
   void initDNCParam(AudioCommand &cmd);
-  void initClearStereo(AudioCommand &cmd);
   void setClearStereo(AudioCommand &cmd);
   void setVolume(AudioCommand &cmd);
   void setVolumeMute(AudioCommand &cmd);
@@ -191,6 +190,9 @@ private:
   void execAttentions(const AttentionInfo&);
   static void execAttentionsCallback(FAR void *);
 
+  uint32_t powerOnBaseBand(uint8_t power_id);
+  uint32_t powerOffBaseBand(uint8_t power_id);
+  
   void sendResult(uint8_t code, uint8_t sub_code = 0);
   void sendErrRespResult(uint8_t  sub_code,
                          uint8_t  module_id,

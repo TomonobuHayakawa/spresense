@@ -98,6 +98,8 @@
 
 /* Error code of power */
 
+#define CXD56_AUDIO_ECODE_POW_STATE     (CXD56_AUDIO_ECODE_POW | 0x01)
+
 /* Error code of filter */
 
 #define CXD56_AUDIO_ECODE_FIL_DNC_BIN     (CXD56_AUDIO_ECODE_FIL | 0x01)
@@ -527,7 +529,7 @@ CXD56_AUDIO_ECODE cxd56_audio_poweroff_dnc(void);
  * @retval CXD56_AUDIO_ECODE return code
  */
 CXD56_AUDIO_ECODE cxd56_audio_en_dnc(cxd56_audio_dnc_id_t id,
-                                         FAR cxd56_audio_dnc_bin_t *bin);
+                                     FAR cxd56_audio_dnc_bin_t *bin);
 
 /**
  * @brief Disable DNC
@@ -545,7 +547,7 @@ CXD56_AUDIO_ECODE cxd56_audio_dis_dnc(cxd56_audio_dnc_id_t id);
  *
  * @retval CXD56_AUDIO_ECODE return code
  */
-CXD56_AUDIO_ECODE cxd56_audio_en_deq(FAR cxd56_audio_deq_coef_t *deq);
+CXD56_AUDIO_ECODE cxd56_audio_en_deq(FAR cxd56_audio_deq_coef_t *coef);
 
 
 /**
@@ -560,20 +562,20 @@ CXD56_AUDIO_ECODE cxd56_audio_dis_deq(void);
 /**
  * @brief Enable BaseBand driver input
  *
-  * @param[in] cxd56_audio_mic_gain_t* MIC gain[Analog:0~210[dB*10], Digital:-7850~0[dB*100]]
+ * @param none
  *
  * @retval CXD56_AUDIO_ECODE return code
  */
-CXD56_AUDIO_ECODE cxd56_audio_en_input(FAR cxd56_audio_mic_gain_t *gain);
+CXD56_AUDIO_ECODE cxd56_audio_en_input(void);
 
 /**
  * @brief Enable BaseBand driver output
  *
- * @param[in] bool Whether speaker output is done or not
+ * @param none
  *
  * @retval CXD56_AUDIO_ECODE return code
  */
-CXD56_AUDIO_ECODE cxd56_audio_en_output(bool sp_out_en);
+CXD56_AUDIO_ECODE cxd56_audio_en_output(void);
 
 /**
  * @brief Disable BaseBand driver input
@@ -592,6 +594,15 @@ CXD56_AUDIO_ECODE cxd56_audio_dis_input(void);
  * @retval CXD56_AUDIO_ECODE return code
  */
 CXD56_AUDIO_ECODE cxd56_audio_dis_output(void);
+
+/**
+ * @brief Set speaker output status
+ *
+ * @param[in] bool Whether speaker output is done or not
+ *
+ * @retval CXD56_AUDIO_ECODE return code
+ */
+CXD56_AUDIO_ECODE cxd56_audio_set_spout(bool sp_out_en);
 
 /**
  * @brief Set volume

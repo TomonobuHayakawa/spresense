@@ -44,6 +44,9 @@
 
 #define DBG_MODULE DBG_MODULE_AS
 
+#define BB_POWER_INPUT  1
+#define BB_POWER_OUTPUT 2
+
 #include <nuttx/arch.h>
 
 __USING_WIEN2
@@ -168,6 +171,107 @@ static bool player1_done_callback(AsPlayerEvent event, uint32_t result, uint32_t
   return true;
 }
 #endif /* AS_FEATURE_PLAYER_ENABLE */
+
+/*--------------------------------------------------------------------------*/
+static cxd56_audio_signal_t conv_path_signal(uint8_t in_path)
+{
+  switch(in_path)
+  {
+    case AS_THROUGH_PATH_IN_MIC:
+      return CXD56_AUDIO_SIG_MIC1;
+    case AS_THROUGH_PATH_IN_I2S1:
+      return CXD56_AUDIO_SIG_I2S0;
+    case AS_THROUGH_PATH_IN_I2S2:
+      return CXD56_AUDIO_SIG_I2S1;
+    case AS_THROUGH_PATH_IN_MIXER:
+      return CXD56_AUDIO_SIG_MIX;
+    default:
+      break;
+  }
+  return CXD56_AUDIO_SIG_MIC1;
+}
+
+/*--------------------------------------------------------------------------*/
+static cxd56_audio_sel_t conv_path_sel(uint8_t in_path, uint8_t out_path)
+{
+  cxd56_audio_sel_t sel_info;
+  sel_info.au_dat_sel1 = false;
+  sel_info.au_dat_sel2 = false;
+  sel_info.cod_insel2  = false;
+  sel_info.cod_insel3  = false;
+  sel_info.src1in_sel  = false;
+  sel_info.src2in_sel  = false;
+
+  switch(in_path)
+  {
+    case AS_THROUGH_PATH_IN_MIC:
+      {
+        sel_info.au_dat_sel1 = true;
+        if (AS_THROUGH_PATH_OUT_MIXER1 == out_path)
+          {
+            sel_info.cod_insel2  = true;
+          }
+        else if (AS_THROUGH_PATH_OUT_MIXER2 == out_path)
+          {
+            sel_info.cod_insel3  = true;
+          }
+        else if (AS_THROUGH_PATH_OUT_I2S1 == out_path)
+          {
+            sel_info.src1in_sel  = true;
+          }
+        else
+          {
+            sel_info.src2in_sel  = true;
+          }
+      }
+      break;
+
+    case AS_THROUGH_PATH_IN_I2S1:
+      {
+        if (AS_THROUGH_PATH_OUT_MIXER1 == out_path)
+          {
+            sel_info.cod_insel2 = true;
+          }
+        else if (AS_THROUGH_PATH_OUT_MIXER2 == out_path)
+          {
+            sel_info.cod_insel3  = true;
+          }
+      }
+      break;
+
+    case AS_THROUGH_PATH_IN_I2S2:
+      {
+        sel_info.au_dat_sel1 = true;
+        if (AS_THROUGH_PATH_OUT_MIXER1 == out_path)
+          {
+            sel_info.cod_insel2  = true;
+          }
+        else if (AS_THROUGH_PATH_OUT_MIXER2 == out_path)
+          {
+            sel_info.cod_insel3  = true;
+          }
+      }
+      break;
+
+    case AS_THROUGH_PATH_IN_MIXER:
+      {
+        if (AS_THROUGH_PATH_OUT_I2S1 == out_path)
+          {
+            sel_info.src1in_sel  = true;
+          }
+        else
+          {
+            sel_info.src2in_sel  = true;
+          }
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  return sel_info;
+}
 
 #ifdef AS_FEATURE_RECORDER_ENABLE
 /*
@@ -697,7 +801,7 @@ AudioManager::MsgProc
     &AudioManager::setMicGain,         /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::initMicGain,        /*   PowerOff state.        */
+    &AudioManager::setMicGain,         /*   PowerOff state.        */
     &AudioManager::setMicGain          /*   Through state.         */
   },
 
@@ -745,7 +849,7 @@ AudioManager::MsgProc
     &AudioManager::setOutputSelect,    /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::initOutputSelect,   /*   PowerOff state.        */
+    &AudioManager::setOutputSelect ,   /*   PowerOff state.        */
     &AudioManager::setOutputSelect     /*   Through state.         */
   },
 
@@ -777,7 +881,7 @@ AudioManager::MsgProc
     &AudioManager::setClearStereo,     /*   BasebandReady state.   */
     &AudioManager::illegal,            /*   BasebandActive state.  */
     &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::initClearStereo,    /*   PowerOff state.        */
+    &AudioManager::setClearStereo,     /*   PowerOff state.        */
     &AudioManager::setClearStereo      /*   Through state.         */
   },
 
@@ -1109,8 +1213,7 @@ void AudioManager::powerOff(AudioCommand &cmd)
       return;
     }
 
-  uint8_t rst = AS_ECODE_OK;
-  rst = bbConfig.deactivate(BB_POWER_BOTH);
+  uint8_t rst = powerOffBaseBand(BB_POWER_INPUT | BB_POWER_OUTPUT);
   if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
@@ -1449,9 +1552,9 @@ void AudioManager::recorder(AudioCommand &cmd)
     }
 
   err_t er = MsgLib::send<RecorderCommand>(s_rcdSubMid,
-                                           MsgPriNormal,
-                                           msg_type,
-                                           m_selfDtq,
+                                        MsgPriNormal,
+                                        msg_type,
+                                        m_selfDtq,
                                            cmd.recorder);
   F_ASSERT(er == ERR_OK);
 #else
@@ -1471,7 +1574,7 @@ void AudioManager::setThroughStatus(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = bbConfig.setActiveBaseband(BB_POWER_BOTH);
+  uint32_t rst = powerOnBaseBand(BB_POWER_INPUT | BB_POWER_OUTPUT);
   if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
@@ -1613,9 +1716,9 @@ void AudioManager::setRdyOnRecorder(AudioCommand &cmd)
   err_t er = ERR_OK;
 
   er = MsgLib::send<RecorderCommand>(s_rcdSubMid,
-                                     MsgPriNormal,
-                                     MSG_AUD_VRC_CMD_DEACTIVATE,
-                                     m_selfDtq,
+                                  MsgPriNormal,
+                                  MSG_AUD_VRC_CMD_DEACTIVATE,
+                                  m_selfDtq,
                                      recorder_command);
   F_ASSERT(er == ERR_OK);
 #else
@@ -1635,7 +1738,7 @@ void AudioManager::setRdyOnThrough(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = bbConfig.deactivate(BB_POWER_BOTH);
+  uint32_t rst = powerOffBaseBand(BB_POWER_INPUT | BB_POWER_OUTPUT);
   if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
@@ -1665,7 +1768,7 @@ void AudioManager::setActive(AudioCommand &cmd)
 
   uint32_t rst = AS_ECODE_OK;
 
-  rst = bbConfig.setActiveBaseband(BB_POWER_BOTH);
+  rst = powerOnBaseBand(BB_POWER_INPUT | BB_POWER_OUTPUT);
   if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
@@ -1681,7 +1784,7 @@ void AudioManager::setActive(AudioCommand &cmd)
            cmd.set_baseband_status_param.with_MFE)
         {
           MemMgrLite::Manager::destroyStaticPools();
-          rst = bbConfig.deactivate(BB_POWER_BOTH);
+          rst = powerOffBaseBand(BB_POWER_INPUT | BB_POWER_OUTPUT);
           if (rst != AS_ECODE_OK)
             {
               sendErrRespResult(cmd.header.sub_code,
@@ -1807,7 +1910,7 @@ void AudioManager::setPlayerStatus(AudioCommand &cmd)
 
   uint32_t rst = AS_ECODE_OK;
 
-  rst = bbConfig.setActiveBaseband(BB_POWER_OUTPUT);
+  rst = powerOnBaseBand(BB_POWER_OUTPUT);
   if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
@@ -1940,7 +2043,7 @@ void AudioManager::setRecorder(AudioCommand &cmd)
 
   uint32_t rst = AS_ECODE_OK;
 
-  rst = bbConfig.setActiveBaseband(BB_POWER_INPUT);
+  rst = powerOnBaseBand(BB_POWER_INPUT);
   if (rst != AS_ECODE_OK)
     {
       sendErrRespResult(cmd.header.sub_code,
@@ -1957,9 +2060,9 @@ void AudioManager::setRecorder(AudioCommand &cmd)
   recorder_command.act_param.cb    = recorder_done_callback;
 
   err_t er = MsgLib::send<RecorderCommand>(s_rcdSubMid,
-                                           MsgPriNormal,
-                                           MSG_AUD_VRC_CMD_ACTIVATE,
-                                           m_selfDtq,
+                                        MsgPriNormal,
+                                        MSG_AUD_VRC_CMD_ACTIVATE,
+                                        m_selfDtq,
                                            recorder_command);
   F_ASSERT(er == ERR_OK);
 #else
@@ -2485,7 +2588,7 @@ bool AudioManager::deactivatePlayer()
 {
   uint32_t rst = AS_ECODE_OK;
 
-  rst = bbConfig.deactivate(BB_POWER_OUTPUT);
+  rst = powerOffBaseBand(BB_POWER_OUTPUT);
   if (rst != AS_ECODE_OK)
     {
       return false;
@@ -2501,7 +2604,7 @@ bool AudioManager::deactivateRecorder()
 {
   uint32_t rst = AS_ECODE_OK;
 
-  rst = bbConfig.deactivate(BB_POWER_INPUT);
+  rst = powerOffBaseBand(BB_POWER_INPUT);
   if (rst != AS_ECODE_OK)
     {
       return false;
@@ -2518,7 +2621,7 @@ bool AudioManager::deactivateSoundFx()
 {
   uint32_t rst = AS_ECODE_OK;
 
-  rst = bbConfig.deactivate(BB_POWER_OUTPUT);
+  rst = powerOffBaseBand(BB_POWER_OUTPUT);
   if (rst != AS_ECODE_OK)
     {
       return false;
@@ -2535,7 +2638,7 @@ bool AudioManager::deactivateOutputMix()
 {
   uint32_t rst = AS_ECODE_OK;
 
-  rst = bbConfig.deactivate(BB_POWER_OUTPUT);
+  rst = powerOffBaseBand(BB_POWER_OUTPUT);
   if (rst != AS_ECODE_OK)
     {
       return false;
@@ -2608,27 +2711,6 @@ int AudioManager::getAllState(void)
 }
 
 /*--------------------------------------------------------------------------*/
-void AudioManager::initMicGain(AudioCommand &cmd)
-{
-  bool check =
-    packetCheck(LENGTH_INITMICGAIN, AUDCMD_INITMICGAIN, cmd);
-  if (!check)
-    {
-      return;
-    }
-
-  uint32_t rst = bbConfig.initMicGain(cmd);
-  if (rst == AS_ECODE_OK)
-    {
-      sendResult(AUDRLT_INITMICGAINCMPLT, cmd.header.sub_code);
-    }
-  else
-    {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
-    }
-}
-
-/*--------------------------------------------------------------------------*/
 void AudioManager::setMicGain(AudioCommand &cmd)
 {
   bool check =
@@ -2638,14 +2720,22 @@ void AudioManager::setMicGain(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = bbConfig.setMicGain(cmd);
-  if (rst == AS_ECODE_OK)
+  cxd56_audio_mic_gain_t mic_gain;
+  for (uint8_t micCh = 0; micCh < AS_MIC_CHANNEL_MAX; micCh++)
+    {
+      mic_gain.gain[micCh] = cmd.init_mic_gain_param.mic_gain[micCh];
+    }
+
+  CXD56_AUDIO_ECODE error_code = cxd56_audio_set_micgain(&mic_gain);
+  if (error_code == CXD56_AUDIO_ECODE_OK)
     {
       sendResult(AUDRLT_INITMICGAINCMPLT, cmd.header.sub_code);
     }
   else
     {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
+      sendErrRespResult(cmd.header.sub_code,
+                        AS_MODULE_ID_AUDIO_DRIVER,
+                        AS_ECODE_SET_MIC_GAIN_ERROR);
     }
 }
 
@@ -2670,42 +2760,12 @@ void AudioManager::initDEQParam(AudioCommand &cmd)
     {
       return;
     }
-
-  uint32_t rst = bbConfig.initDEQParam(cmd);
-  if (rst == AS_ECODE_OK)
-    {
-      sendResult(AUDRLT_INITDEQPARAMCMPLT, cmd.header.sub_code);
-    }
-  else
-    {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
-    }
-}
-
-/*--------------------------------------------------------------------------*/
-void AudioManager::initOutputSelect(AudioCommand &cmd)
-{
-  bool check =
-    packetCheck(LENGTH_INITOUTPUTSELECT, AUDCMD_INITOUTPUTSELECT, cmd);
-  if (!check)
-    {
-      return;
-    }
-
-  uint32_t rst = bbConfig.initOutputSelect(cmd);
-  if (rst == AS_ECODE_OK)
-    {
-      sendResult(AUDRLT_INITOUTPUTSELECTCMPLT, cmd.header.sub_code);
-    }
-  else
-    {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
-    }
 }
 
 /*--------------------------------------------------------------------------*/
 void AudioManager::setOutputSelect(AudioCommand &cmd)
 {
+  CXD56_AUDIO_ECODE error_code;
   bool check =
     packetCheck(LENGTH_INITOUTPUTSELECT, AUDCMD_INITOUTPUTSELECT, cmd);
   if (!check)
@@ -2713,14 +2773,57 @@ void AudioManager::setOutputSelect(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = bbConfig.setOutputSelect(cmd);
-  if (rst == AS_ECODE_OK)
+  switch (cmd.init_output_select_param.output_device_sel)
+    {
+      case AS_OUT_OFF:
+        error_code = cxd56_audio_dis_output();
+        break;
+
+      case AS_OUT_SP:
+        cxd56_audio_set_spout(true);
+        error_code = cxd56_audio_en_output();
+        break;
+
+      case AS_OUT_I2S:
+        {
+          cxd56_audio_set_spout(false);
+          error_code = cxd56_audio_en_output();
+          if (error_code != CXD56_AUDIO_ECODE_OK)
+            {
+              break;
+            }
+
+          /* Set Path, Mixer to I2S0 */
+
+          cxd56_audio_signal_t sig_id = CXD56_AUDIO_SIG_MIX;
+          cxd56_audio_sel_t    sel_info;
+          sel_info.au_dat_sel1 = false;
+          sel_info.au_dat_sel2 = false;
+          sel_info.cod_insel2  = false;
+          sel_info.cod_insel3  = false;
+          sel_info.src1in_sel  = true;
+          sel_info.src2in_sel  = false;
+
+          error_code = cxd56_audio_set_datapath(sig_id, sel_info);
+        }
+        break;
+
+      default:
+        sendErrRespResult(cmd.header.sub_code,
+                          AS_MODULE_ID_AUDIO_DRIVER,
+                          AS_ECODE_COMMAND_PARAM_OUTPUT_DEVICE);
+        return;;
+    }
+
+  if (error_code == CXD56_AUDIO_ECODE_OK)
     {
       sendResult(AUDRLT_INITOUTPUTSELECTCMPLT, cmd.header.sub_code);
     }
   else
     {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
+      sendErrRespResult(cmd.header.sub_code,
+                        AS_MODULE_ID_AUDIO_DRIVER,
+                        AS_ECODE_SET_OUTPUT_SELECT_ERROR);
     }
 }
 
@@ -2733,42 +2836,13 @@ void AudioManager::initDNCParam(AudioCommand &cmd)
     {
       return;
     }
-
-  uint32_t rst = bbConfig.initDNCParam(cmd);
-  if (rst == AS_ECODE_OK)
-    {
-      sendResult(AUDRLT_INITDNCPARAMCMPLT, cmd.header.sub_code);
-    }
-  else
-    {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
-    }
-}
-
-/*--------------------------------------------------------------------------*/
-void AudioManager::initClearStereo(AudioCommand &cmd)
-{
-  bool check =
-    packetCheck(LENGTH_INITCLEARSTEREO, AUDCMD_INITCLEARSTEREO, cmd);
-  if (!check)
-    {
-      return;
-    }
-
-  uint32_t rst = bbConfig.initClearStereo(cmd);
-  if (rst == AS_ECODE_OK)
-    {
-      sendResult(AUDRLT_INITCLEARSTEREOCMPLT, cmd.header.sub_code);
-    }
-  else
-    {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
-    }
 }
 
 /*--------------------------------------------------------------------------*/
 void AudioManager::setClearStereo(AudioCommand &cmd)
 {
+  CXD56_AUDIO_ECODE error_code = CXD56_AUDIO_ECODE_OK;
+
   bool check =
     packetCheck(LENGTH_INITCLEARSTEREO, AUDCMD_INITCLEARSTEREO, cmd);
   if (!check)
@@ -2776,41 +2850,78 @@ void AudioManager::setClearStereo(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = bbConfig.setClearStereo(cmd);
-  if (rst == AS_ECODE_OK)
+  if (cmd.init_clear_stereo_param.cs_en)
+    {
+      error_code =
+            cxd56_audio_en_cstereo(false,
+                                   cmd.init_clear_stereo_param.cs_vol);
+    }
+  else
+    {
+      error_code = cxd56_audio_dis_cstereo();
+    }
+  
+  if (error_code == CXD56_AUDIO_ECODE_OK)
     {
       sendResult(AUDRLT_INITCLEARSTEREOCMPLT, cmd.header.sub_code);
     }
   else
     {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
+      sendErrRespResult(cmd.header.sub_code,
+                        AS_MODULE_ID_AUDIO_DRIVER,
+                        AS_ECODE_INIT_CLEAR_STEREO_ERROR);
     }
 }
 
 /*--------------------------------------------------------------------------*/
 void AudioManager::setVolume(AudioCommand &cmd)
 {
+  CXD56_AUDIO_ECODE error_code = CXD56_AUDIO_ECODE_OK;
+
   bool check =
     packetCheck(LENGTH_SETVOLUME, AUDCMD_SETVOLUME, cmd);
   if (!check)
     {
+      printf("AudioManager::setVolume ERR\n");
       return;
     }
 
-  uint32_t rst = bbConfig.setVolume(cmd);
-  if (rst == AS_ECODE_OK)
+  if (cmd.set_volume_param.input1_db != AS_VOLUME_HOLD)
+    {
+      error_code = cxd56_audio_set_vol(CXD56_AUDIO_VOLID_MIXER_IN1,
+                                       cmd.set_volume_param.input1_db);
+    }
+
+  if ((error_code == CXD56_AUDIO_ECODE_OK) &&
+      (cmd.set_volume_param.input2_db != AS_VOLUME_HOLD))
+    {
+      error_code = cxd56_audio_set_vol(CXD56_AUDIO_VOLID_MIXER_IN2,
+                                       cmd.set_volume_param.input2_db);
+    }
+
+  if ((error_code == CXD56_AUDIO_ECODE_OK) &&
+      (cmd.set_volume_param.master_db != AS_VOLUME_HOLD))
+    {
+      error_code = cxd56_audio_set_vol(CXD56_AUDIO_VOLID_MIXER_OUT,
+                                       cmd.set_volume_param.master_db);
+    }
+
+  if (error_code == CXD56_AUDIO_ECODE_OK)
     {
       sendResult(AUDRLT_SETVOLUMECMPLT, cmd.header.sub_code);
     }
   else
     {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
+      sendErrRespResult(cmd.header.sub_code,
+                        AS_MODULE_ID_AUDIO_DRIVER,
+                        AS_ECODE_SET_VOLUME_ERROR);
     }
 }
 
 /*--------------------------------------------------------------------------*/
 void AudioManager::setVolumeMute(AudioCommand &cmd)
 {
+  CXD56_AUDIO_ECODE error_code = CXD56_AUDIO_ECODE_OK;
   bool check =
     packetCheck(LENGTH_SETVOLUMEMUTE, AUDCMD_SETVOLUMEMUTE, cmd);
   if (!check)
@@ -2818,20 +2929,117 @@ void AudioManager::setVolumeMute(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = bbConfig.setVolumeMute(cmd);
-  if (rst == AS_ECODE_OK)
+  switch (cmd.set_volume_mute_param.master_mute)
     {
-      sendResult(AUDRLT_SETVOLUMEMUTECMPLT, cmd.header.sub_code);
+      case AS_VOLUMEMUTE_HOLD:
+        break;
+
+      case AS_VOLUMEMUTE_UNMUTE:
+        error_code = cxd56_audio_unmute_vol(CXD56_AUDIO_VOLID_MIXER_OUT);
+        if (error_code != CXD56_AUDIO_ECODE_OK)
+          {
+            sendErrRespResult(cmd.header.sub_code,
+                              AS_MODULE_ID_AUDIO_DRIVER,
+                              AS_ECODE_SET_VOLUME_MUTE_ERROR);
+            return;
+          }
+        break;
+
+      case AS_VOLUMEMUTE_MUTE:
+        error_code = cxd56_audio_mute_vol(CXD56_AUDIO_VOLID_MIXER_OUT);
+        if (error_code != CXD56_AUDIO_ECODE_OK)
+          {
+            sendErrRespResult(cmd.header.sub_code,
+                              AS_MODULE_ID_AUDIO_DRIVER,
+                              AS_ECODE_SET_VOLUME_MUTE_ERROR);
+            return;
+          }
+        break;
+
+      default:
+        sendErrRespResult(cmd.header.sub_code,
+                          AS_MODULE_ID_AUDIO_DRIVER,
+                          AS_ECODE_COMMAND_PARAM_INPUT_DB);
+        return;
+        break;
     }
-  else
+
+  switch (cmd.set_volume_mute_param.input1_mute)
     {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
+      case AS_VOLUMEMUTE_HOLD:
+        break;
+
+      case AS_VOLUMEMUTE_UNMUTE:
+        error_code = cxd56_audio_unmute_vol(CXD56_AUDIO_VOLID_MIXER_IN1);
+        if (error_code != CXD56_AUDIO_ECODE_OK)
+          {
+            sendErrRespResult(cmd.header.sub_code,
+                              AS_MODULE_ID_AUDIO_DRIVER,
+                              AS_ECODE_SET_VOLUME_MUTE_ERROR);
+            return;
+          }
+        break;
+
+      case AS_VOLUMEMUTE_MUTE:
+        error_code = cxd56_audio_mute_vol(CXD56_AUDIO_VOLID_MIXER_IN1);
+        if (error_code != CXD56_AUDIO_ECODE_OK)
+          {
+            sendErrRespResult(cmd.header.sub_code,
+                              AS_MODULE_ID_AUDIO_DRIVER,
+                              AS_ECODE_SET_VOLUME_MUTE_ERROR);
+            return;
+          }
+        break;
+
+      default:
+        sendErrRespResult(cmd.header.sub_code,
+                          AS_MODULE_ID_AUDIO_DRIVER,
+                          AS_ECODE_COMMAND_PARAM_INPUT_DB);
+        return;
+        break;
     }
+
+  switch (cmd.set_volume_mute_param.input2_mute)
+    {
+      case AS_VOLUMEMUTE_HOLD:
+        break;
+
+      case AS_VOLUMEMUTE_UNMUTE:
+        error_code = cxd56_audio_unmute_vol(CXD56_AUDIO_VOLID_MIXER_IN2);
+        if (error_code != CXD56_AUDIO_ECODE_OK)
+          {
+            sendErrRespResult(cmd.header.sub_code,
+                              AS_MODULE_ID_AUDIO_DRIVER,
+                              AS_ECODE_SET_VOLUME_MUTE_ERROR);
+            return;
+          }
+        break;
+
+      case AS_VOLUMEMUTE_MUTE:
+        error_code = cxd56_audio_mute_vol(CXD56_AUDIO_VOLID_MIXER_IN2);
+        if (error_code != CXD56_AUDIO_ECODE_OK)
+          {
+            sendErrRespResult(cmd.header.sub_code,
+                              AS_MODULE_ID_AUDIO_DRIVER,
+                              AS_ECODE_SET_VOLUME_MUTE_ERROR);
+            return;
+          }
+        break;
+ 
+      default:
+        sendErrRespResult(cmd.header.sub_code,
+                          AS_MODULE_ID_AUDIO_DRIVER,
+                          AS_ECODE_COMMAND_PARAM_INPUT_DB);
+        return;
+    }
+
+  sendResult(AUDRLT_SETVOLUMEMUTECMPLT, cmd.header.sub_code);
 }
 
 /*--------------------------------------------------------------------------*/
 void AudioManager::setBeep(AudioCommand &cmd)
 {
+  CXD56_AUDIO_ECODE error_code = CXD56_AUDIO_ECODE_OK;
   bool check =
     packetCheck(LENGTH_SETBEEPPARAM, AUDCMD_SETBEEPPARAM, cmd);
   if (!check)
@@ -2839,20 +3047,70 @@ void AudioManager::setBeep(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = bbConfig.setBeep(cmd);
-  if (rst == AS_ECODE_OK)
+  if (!m_output_en)
     {
-      sendResult(AUDRLT_SETBEEPCMPLT, cmd.header.sub_code);
+      sendErrRespResult(cmd.header.sub_code,
+                        AS_MODULE_ID_AUDIO_DRIVER,
+                        AS_ECODE_NOT_AUDIO_DATA_PATH);
+      return;
     }
-  else
+
+  if (cmd.set_beep_param.beep_en == AS_BEEPEN_DISABLE)
     {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
+      error_code = cxd56_audio_stop_beep();
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          sendErrRespResult(cmd.header.sub_code,
+                            AS_MODULE_ID_AUDIO_DRIVER,
+                            AS_ECODE_SET_BEEP_ERROR);
+          return;
+        }
     }
+
+  if (AS_BEEP_FREQ_HOLD != cmd.set_beep_param.beep_freq)
+    {
+      error_code = cxd56_audio_set_beep_freq(cmd.set_beep_param.beep_freq);
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          sendErrRespResult(cmd.header.sub_code,
+                            AS_MODULE_ID_AUDIO_DRIVER,
+                            AS_ECODE_SET_BEEP_ERROR);
+          return;
+        }
+    }
+
+  if (AS_BEEP_VOL_HOLD != cmd.set_beep_param.beep_vol)
+    {
+      error_code = cxd56_audio_set_beep_vol(cmd.set_beep_param.beep_vol);
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          sendErrRespResult(cmd.header.sub_code,
+                            AS_MODULE_ID_AUDIO_DRIVER,
+                            AS_ECODE_SET_BEEP_ERROR);
+          return;
+        }
+    }
+
+  if (cmd.set_beep_param.beep_en == AS_BEEPEN_ENABLE)
+    {
+      error_code = cxd56_audio_play_beep();
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          sendErrRespResult(cmd.header.sub_code,
+                            AS_MODULE_ID_AUDIO_DRIVER,
+                            AS_ECODE_SET_BEEP_ERROR);
+          return;
+        }
+    }
+
+  sendResult(AUDRLT_SETBEEPCMPLT, cmd.header.sub_code);
 }
 
 /*--------------------------------------------------------------------------*/
 void AudioManager::setRenderingClk(AudioCommand &cmd)
 {
+  CXD56_AUDIO_ECODE error_code = CXD56_AUDIO_ECODE_OK;
+  cxd56_audio_clkmode_t mode;
   bool check =
     packetCheck(LENGTH_SETRENDERINGCLK, AUDCMD_SETRENDERINGCLK, cmd);
   if (!check)
@@ -2860,14 +3118,27 @@ void AudioManager::setRenderingClk(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = bbConfig.setRenderingClk(cmd);
-  if (rst == AS_ECODE_OK)
+  if (cmd.set_renderingclk_param.clk_mode != AS_CLKMODE_NORMAL &&
+      cmd.set_renderingclk_param.clk_mode != AS_CLKMODE_HIRES)
+    {
+      sendErrRespResult(cmd.header.sub_code,
+                        AS_MODULE_ID_AUDIO_DRIVER,
+                        AS_ECODE_COMMAND_PARAM_RENDERINGCLK);
+      return;
+    }
+
+  mode = (cmd.set_renderingclk_param.clk_mode == AS_CLKMODE_NORMAL) ?
+          CXD56_AUDIO_CLKMODE_NORMAL : CXD56_AUDIO_CLKMODE_HIRES;
+  error_code = cxd56_audio_set_clkmode(mode);
+  if (error_code == CXD56_AUDIO_ECODE_OK)
     {
       sendResult(AUDRLT_SETRENDERINGCLKCMPLT, cmd.header.sub_code);
     }
   else
     {
-      sendErrRespResult(cmd.header.sub_code, AS_MODULE_ID_AUDIO_DRIVER, rst);
+      sendErrRespResult(cmd.header.sub_code,
+                        AS_MODULE_ID_AUDIO_DRIVER,
+                        AS_ECODE_SET_RENDERINGCLK_ERROR);
     }
 }
 
@@ -2881,16 +3152,146 @@ void AudioManager::setThroughPath(AudioCommand &cmd)
       return;
     }
 
-  uint32_t rst = bbConfig.setThroughPath(cmd);
-  if (rst != AS_ECODE_OK)
+  CXD56_AUDIO_ECODE error_code = CXD56_AUDIO_ECODE_OK;
+  cxd56_audio_signal_t sig_id;
+  cxd56_audio_sel_t    sel_info;
+
+  if (!m_input_en || !m_output_en)
     {
       sendErrRespResult(cmd.header.sub_code,
                         AS_MODULE_ID_AUDIO_DRIVER,
-                        rst);
+                        AS_ECODE_NOT_AUDIO_DATA_PATH);
       return;
     }
 
+  if (cmd.set_through_path.path1.en && cmd.set_through_path.path2.en)
+    {
+      if ((cmd.set_through_path.path1.in == cmd.set_through_path.path2.in) ||
+          (cmd.set_through_path.path1.out == cmd.set_through_path.path2.out))
+        {
+          sendErrRespResult(cmd.header.sub_code,
+                            AS_MODULE_ID_AUDIO_DRIVER,
+                            AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
+          return;
+        }
+    }
+
+  if (cmd.set_through_path.path1.en)
+    {
+      sig_id   = conv_path_signal(cmd.set_through_path.path1.in);
+      sel_info = conv_path_sel(cmd.set_through_path.path1.in,
+                               cmd.set_through_path.path1.out);
+
+      error_code = cxd56_audio_set_datapath(sig_id, sel_info);
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          sendErrRespResult(cmd.header.sub_code,
+                            AS_MODULE_ID_AUDIO_DRIVER,
+                            AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
+          return;
+        }
+
+    }
+
+  if (cmd.set_through_path.path2.en)
+    {
+      sig_id   = conv_path_signal(cmd.set_through_path.path2.in);
+      sel_info = conv_path_sel(cmd.set_through_path.path2.in,
+                               cmd.set_through_path.path2.out);
+      error_code = cxd56_audio_set_datapath(sig_id, sel_info);
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          sendErrRespResult(cmd.header.sub_code,
+                            AS_MODULE_ID_AUDIO_DRIVER,
+                            AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
+          return;
+        }
+    }
+
   sendResult(AUDRLT_SETTHROUGHPATHCMPLT);
+}
+
+/*--------------------------------------------------------------------------*/
+uint32_t AudioManager::powerOnBaseBand(uint8_t power_id)
+{
+  CXD56_AUDIO_ECODE error_code = CXD56_AUDIO_ECODE_OK;
+
+  if (!m_input_en && !m_output_en)
+    {
+      error_code = cxd56_audio_poweron();
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          return AS_ECODE_AUDIO_POWER_ON_ERROR;
+        }
+    }
+
+  if ((power_id & BB_POWER_INPUT) && !m_input_en)
+    {
+      error_code = cxd56_audio_en_input();
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          return AS_ECODE_AUDIO_POWER_ON_ERROR;
+        }
+      m_input_en = true;
+    }
+
+  if ((power_id & BB_POWER_OUTPUT) && !m_output_en)
+    {
+      error_code= cxd56_audio_en_output();
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          return AS_ECODE_AUDIO_POWER_ON_ERROR;
+        }
+      m_output_en = true;
+    }
+
+  return CXD56_AUDIO_ECODE_OK;
+}
+
+/*--------------------------------------------------------------------------*/
+uint32_t AudioManager::powerOffBaseBand(uint8_t power_id)
+{
+  CXD56_AUDIO_ECODE error_code = CXD56_AUDIO_ECODE_OK;
+
+  if ((power_id & BB_POWER_INPUT) && m_input_en)
+    {
+      error_code = cxd56_audio_dis_input();
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          return AS_ECODE_AUDIO_POWER_OFF_ERROR;
+        }
+      m_input_en = false;
+
+      if (!m_input_en && !m_output_en)
+        {
+          error_code = cxd56_audio_poweroff();
+          if (error_code != CXD56_AUDIO_ECODE_OK)
+            {
+              return AS_ECODE_AUDIO_POWER_OFF_ERROR;
+            }
+        }
+    }
+
+  if ((power_id & BB_POWER_OUTPUT) && m_output_en)
+    {
+      error_code = cxd56_audio_dis_output();
+      if (error_code != CXD56_AUDIO_ECODE_OK)
+        {
+          return AS_ECODE_AUDIO_POWER_OFF_ERROR;
+        }
+      m_output_en = false;
+
+      if (!m_input_en && !m_output_en)
+        {
+          error_code = cxd56_audio_poweroff();
+          if (error_code != CXD56_AUDIO_ECODE_OK)
+            {
+              return AS_ECODE_AUDIO_POWER_OFF_ERROR;
+            }
+        }
+    }
+
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------------*/
