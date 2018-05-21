@@ -5,6 +5,10 @@
 
 if BOARD_COLLET
 
+config CXD56_100PIN
+	bool
+	default y
+
 config EINK_ET014TT1
 	bool "EInk ET014TT1 ePaper"
 	default n

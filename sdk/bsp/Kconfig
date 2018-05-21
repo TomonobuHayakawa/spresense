@@ -38,13 +38,14 @@ menu "CXD56xx Configuration"
 
 choice
 	prompt "CXD56xx package selection"
-	default CXD56_FCBGA
-
-config CXD56_WLCSP
-	bool "WLCSP 100 pin package"
+	default CXD56_FCBGA if !CXD56_100PIN
+	default CXD56_WLCSP if CXD56_100PIN
 
 config CXD56_FCBGA
 	bool "FCBGA 185 pin package"
+
+config CXD56_WLCSP
+	bool "WLCSP 100 pin package"
 
 endchoice
 
