@@ -270,7 +270,12 @@ static struct emmc_dma_desc_s *emmc_setupdma(void *buf, unsigned int nbytes)
       return NULL;
     }
 
-  ndescs = (nbytes + 4095) / 4096;
+  ndescs = nbytes / 4096;
+  if ((nbytes & (4096 - 1)) != 0)
+    {
+      ndescs++;
+    }
+
   descs = (struct emmc_dma_desc_s *)
     kmm_malloc(ndescs * sizeof(struct emmc_dma_desc_s));
   if (!descs)
