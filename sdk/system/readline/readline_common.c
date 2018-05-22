@@ -152,7 +152,7 @@ static int count_builtin_maches(FAR char *buf, FAR int *matches, int namelen)
 
 #ifdef CONFIG_READLINE_TABCOMPLETION
 static void tab_completion(FAR struct rl_common_s *vtbl, char *buf,
-                           int *nch)
+                           int buflen, int *nch)
 {
   FAR const char *name = NULL;
   char tmp_name[CONFIG_TASK_NAME_SIZE + 1];
@@ -271,7 +271,7 @@ static void tab_completion(FAR struct rl_common_s *vtbl, char *buf,
 
               if (tmp_name[0] == '\0')
                 {
-                  strcpy(tmp_name, name);
+                  strncpy(tmp_name, name, sizeof(tmp_name) - 1);
                 }
 
               RL_PUTC(vtbl, ' ');
@@ -306,7 +306,7 @@ static void tab_completion(FAR struct rl_common_s *vtbl, char *buf,
 
               if (tmp_name[0] == '\0')
                 {
-                  strcpy(tmp_name, name);
+                  strncpy(tmp_name, name, sizeof(tmp_name) - 1);
                 }
 
               RL_PUTC(vtbl, ' ');
@@ -329,7 +329,7 @@ static void tab_completion(FAR struct rl_common_s *vtbl, char *buf,
               RL_PUTC(vtbl, '\n');
             }
 #endif
-          strcpy(buf, tmp_name);
+          strncpy(buf, tmp_name, buflen - 1);
 
           name_len = strlen(tmp_name);
 
@@ -729,7 +729,7 @@ ssize_t readline_common(FAR struct rl_common_s *vtbl, FAR char *buf, int buflen)
 #ifdef CONFIG_READLINE_TABCOMPLETION
      else if (ch == '\t') /* Nghia - TAB character */
         {
-          tab_completion(vtbl, buf, &nch);
+          tab_completion(vtbl, buf, buflen, &nch);
         }
 #endif
     }
