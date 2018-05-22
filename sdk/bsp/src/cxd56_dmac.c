@@ -42,6 +42,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <semaphore.h>
 #include <debug.h>
 
 #include <nuttx/arch.h>
@@ -285,6 +286,7 @@ struct dma_channel_s
 /* This is the array of all DMA channels */
 
 static struct dma_channel_s g_dmach[NCHANNELS];
+static sem_t g_dmaexc;
 
 static int dma_init(int ch);
 static int dma_uninit(int ch);
@@ -648,7 +650,6 @@ static int dma_stop(int ch)
  *
  ****************************************************************************/
 
-//void cxd56_dmainitialize(void)
 void weak_function up_dmainitialize(void)
 {
   int i;
@@ -661,6 +662,8 @@ void weak_function up_dmainitialize(void)
     {
       g_dmach[i].chan = i;
     }
+
+  sem_init(&g_dmaexc, 0, 1);
 }
 
 /************************************************************************************
@@ -687,23 +690,32 @@ void weak_function up_dmainitialize(void)
 
 DMA_HANDLE cxd56_dmachannel(int ch, ssize_t maxsize)
 {
-  struct dma_channel_s *dmach = NULL;
-  struct dma_channel_s *candidate = &g_dmach[ch];
+  struct dma_channel_s *dmach;
   int n;
+
+  /* Get exclusive access to allocate channel */
+
+  sem_wait(&g_dmaexc);
+
+  if (ch < 0 || ch >= NCHANNELS)
+    {
+      dmaerr("Invalid channel number %d.\n", ch);
+      goto err;
+    }
+  dmach = &g_dmach[ch];
 
   if (maxsize == 0)
     {
-      dmainfo("Invalid max size: %d\n", maxsize);
-      return NULL;
+      dmaerr("Invalid max size: %d\n", maxsize);
+      goto err;
     }
   
-  if (!candidate->inuse)
+  if (dmach->inuse)
     {
-      dmach         = candidate;
-      dmach->inuse  = true;
+      dmaerr("Channel already in use.\n");
+      goto err;
     }
 
-  DEBUGASSERT(dmach);
   dmainfo("DMA channel %d\n", dmach->chan);
 
   n = maxsize / CXD56_DMAC_MAX_SIZE;
@@ -716,15 +728,23 @@ DMA_HANDLE cxd56_dmachannel(int ch, ssize_t maxsize)
   if (dmach->list == NULL)
     {
       dmainfo("Failed to malloc\n");
-
-      dmach->inuse  = false;
-      return NULL;
+      goto err;
     }
+
+  /* Initialize hardware */
 
   dma_init(dmach->chan);
   dma_open(dmach->chan);
 
+  dmach->inuse  = true;
+
+  sem_post(&g_dmaexc);
+
   return (DMA_HANDLE)dmach;
+
+err:
+  sem_post(&g_dmaexc);
+  return NULL;
 }
 
 /************************************************************************************
@@ -750,13 +770,31 @@ void cxd56_dmafree(DMA_HANDLE handle)
 {
   struct dma_channel_s *dmach = (struct dma_channel_s *)handle;
 
-  DEBUGASSERT(dmach != NULL && dmach->inuse);
+  if (dmach == NULL)
+    {
+      dmaerr("Invalid handle.\n");
+      return;
+    }
+
+  sem_wait(&g_dmaexc);
+
+  if (!dmach->inuse)
+    {
+      dmaerr("Channel %d already freed.\n", dmach->chan);
+      goto err;
+    }
+
   dmainfo("free DMA channel %d\n", dmach->chan);
 
   kmm_free(dmach->list);
 
   dma_close(dmach->chan);
   dma_uninit(dmach->chan);
+
+  dmach->inuse = false;
+
+err:
+  sem_post(&g_dmaexc);
 }
 
 /************************************************************************************
