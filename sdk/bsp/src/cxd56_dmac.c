@@ -685,18 +685,18 @@ void weak_function up_dmainitialize(void)
  *
  ************************************************************************************/
 
-DMA_HANDLE cxd56_dmachannel(int ch, int maxsize)
+DMA_HANDLE cxd56_dmachannel(int ch, ssize_t maxsize)
 {
   struct dma_channel_s *dmach = NULL;
-  int list_num;
+  struct dma_channel_s *candidate = &g_dmach[ch];
+  int n;
 
-  if (maxsize <= 0 || maxsize > INT32_MAX - CXD56_DMAC_MAX_SIZE + 1)
+  if (maxsize == 0)
     {
       dmainfo("Invalid max size: %d\n", maxsize);
       return NULL;
     }
   
-  struct dma_channel_s *candidate = &g_dmach[ch];
   if (!candidate->inuse)
     {
       dmach         = candidate;
@@ -706,8 +706,13 @@ DMA_HANDLE cxd56_dmachannel(int ch, int maxsize)
   DEBUGASSERT(dmach);
   dmainfo("DMA channel %d\n", dmach->chan);
 
-  list_num = (maxsize + CXD56_DMAC_MAX_SIZE - 1) / CXD56_DMAC_MAX_SIZE;
-  dmach->list = (dmac_lli_t *)kmm_malloc(list_num * sizeof(dmac_lli_t));
+  n = maxsize / CXD56_DMAC_MAX_SIZE;
+  if ((maxsize % CXD56_DMAC_MAX_SIZE) != 0)
+    {
+      n++;
+    }
+
+  dmach->list = (dmac_lli_t *)kmm_malloc(n * sizeof(dmac_lli_t));
   if (dmach->list == NULL)
     {
       dmainfo("Failed to malloc\n");

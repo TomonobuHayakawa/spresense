@@ -106,7 +106,7 @@ extern "C"
  *
  ************************************************************************************/
 
-DMA_HANDLE cxd56_dmachannel(int ch, int maxsize);
+DMA_HANDLE cxd56_dmachannel(int ch, ssize_t maxsize);
 
 /************************************************************************************
  * Name: cxd56_dmafree
