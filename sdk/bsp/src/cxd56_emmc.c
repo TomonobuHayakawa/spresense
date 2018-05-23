@@ -115,6 +115,7 @@ static const struct block_operations g_bops =
 };
 
 static sem_t g_waitsem;
+struct cxd56_emmc_state_s g_emmcdev;
 
 #define EMMC_CLKDIV_UNDER_400KHZ  (32u)
 #define EMMC_CLKDIV_NON_DIV       (0u)
@@ -890,12 +891,7 @@ int cxd56_emmcinitialize(void)
   FAR struct emmc_dma_desc_s *descs;
   int ret;
 
-  priv = (FAR struct cxd56_emmc_state_s *)
-    kmm_malloc(sizeof(struct cxd56_emmc_state_s));
-  if (!priv)
-    {
-      return -ENOMEM;
-    }
+  priv = &g_emmcdev;
 
   memset(priv, 0, sizeof(struct cxd56_emmc_state_s));
   sem_init(&priv->excsem, 0, 1);
@@ -904,7 +900,6 @@ int cxd56_emmcinitialize(void)
   ret = emmc_hwinitialize();
   if (ret != OK)
     {
-      kmm_free(priv);
       return -EIO;
     }
 
@@ -918,7 +913,6 @@ int cxd56_emmcinitialize(void)
           emmc_send(EMMC_DATA_READ, SEND_EXT_CSD, 0, EMMC_RESP_R1);
           if (emmc_checkresponse())
             {
-              kmm_free(priv);
               kmm_free(buf);
               return -EIO;
             }
@@ -938,14 +932,19 @@ int cxd56_emmcinitialize(void)
   return OK;
 }
 
-int emmc_uninitialize(FAR struct cxd56_emmc_state_s *priv)
+int emmc_uninitialize(void)
 {
+  /* Send power off command */
+
   emmc_switchcmd(EXTCSD_PON, EXTCSD_PON_POWERED_OFF_LONG);
+
+  up_disable_irq(CXD56_IRQ_EMMC);
 
   /* Configure pin */
 
   emmc_pincontrol(false);
 
   cxd56_emmc_clock_disable();
+
   return 0;
 }
