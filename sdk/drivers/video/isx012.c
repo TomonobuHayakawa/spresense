@@ -70,8 +70,23 @@
 /* The following macro is disabled because the AF is not used. */
 /* #define ISX012_AF_EN */
 
-/* The following macro is disabled because to no wait after mode transfer. */
-/* #define ISX012_FRAME_SKIP_EN */
+/* Skip invalid frame because it occurs first due to the spec of isx012. */
+#define ISX012_FRAME_SKIP_EN
+
+#define OUT_HSIZE_QVGA           (320)
+#define OUT_VSIZE_QVGA           (240)
+#define OUT_HSIZE_VGA            (640)
+#define OUT_VSIZE_VGA            (480)
+#define OUT_HSIZE_QUADVGA       (1280)
+#define OUT_VSIZE_QUADVGA        (960)
+#define OUT_HSIZE_HD            (1280)
+#define OUT_VSIZE_HD             (720)
+#define OUT_HSIZE_FULLHD        (1920)
+#define OUT_VSIZE_FULLHD        (1080)
+#define OUT_HSIZE_5M            (2560)
+#define OUT_VSIZE_5M            (1920)
+#define OUT_HSIZE_3M            (2048)
+#define OUT_VSIZE_3M            (1536)
 
 #define OUT_YUV_VSIZE_MIN         (64)
 #define OUT_YUV_HSIZE_MIN         (96)
@@ -281,37 +296,44 @@ static const isx012_reg_t g_isx012_presleep[] = {
 
 static const isx012_reg_t g_isx012_def_init[] = {
 #ifdef ISX012_NOT_USE_NSTBY
-  {PLL_CKSEL,       0x00,   0x01}, /* PLL_CKSEL */
-  {SRCCK_DIV,       0x00,   0x01}, /* SRCCK_DIV */
+  {PLL_CKSEL,         0x00, 0x01},
+  {SRCCK_DIV,         0x00, 0x01},
 #endif
-  {DRIVABILITY,     0xAA,   0x01}, /* DRIVABILITY */
-  {VIFCONFIG,     0x0200,   0x02}, /* VIFCONFIG */
-  {YUVCONFIG_TN,  0xFF0A,   0x02}, /* YUVCONFIG_TN */
-  {ILCODELEN,       0x00,   0x01}, /* ILCODELEN */
-  {AFMODE_MONI,     0x01,   0x01}, /* AFMODE_MONI */
-  {YUVCONFIG,     0xFF6A,   0x02}, /* YUVCONFIG */
-  {VIF_REC601_Y,  0x10FE,   0x02}, /* VIF_REC601_Y */
-  {VIF_REC601_C,  0x10F0,   0x02}, /* VIF_REC601_C */
-  {HSENS_MODE_SEL,  0x11,   0x01}, /* HSENS_MODE_SEL */
-  {VIF_CLKCONFIG1,  0x30,   0x01}, /* VIF_CLKCONFIG1 */
-  {VIF_CLKCONFIG2,  0x30,   0x01}, /* VIF_CLKCONFIG2 */
-  {VIF_CLKCONFIG3,  0x30,   0x01}, /* VIF_CLKCONFIG3 */
-  {VIF_CLKCONFIG4,  0x30,   0x01}, /* VIF_CLKCONFIG4 */
-  {VIF_CLKCONFIG5,  0x30,   0x01}, /* VIF_CLKCONFIG5 */
-  {VIF_CLKCONFIG6,  0x30,   0x01}, /* VIF_CLKCONFIG6 */
-  {VIF_CLKCONFIG7,  0x30,   0x01}, /* VIF_CLKCONFIG7 */
-  {VIF_CLKCONFIG8,  0x30,   0x01}, /* VIF_CLKCONFIG8 */
-  {VIF_CLKCONFIG9,  0x30,   0x01}, /* VIF_CLKCONFIG9 */
-  {VIF_CLKCONFIG10, 0x30,   0x01}, /* VIF_CLKCONFIG10 */
-  {VIF_CLKCONFIG11, 0x30,   0x01}, /* VIF_CLKCONFIG11 */
-  {VIF_CLKCONFIG12, 0x30,   0x01}, /* VIF_CLKCONFIG12 */
-  {VIF_CLKCONFIG13, 0x11,   0x01}, /* VIF_CLKCONFIG13 */
-  {VIF_CLKCONFIG14, 0x11,   0x01}, /* VIF_CLKCONFIG14 */
-  {VIF_CLKCONFIG15, 0x11,   0x01}, /* VIF_CLKCONFIG15 */
-  {VIF_CLKCONFIG16, 0x11,   0x01}, /* VIF_CLKCONFIG16 */
+  {DRIVABILITY,       0xAA, 0x01},
+  {VIFCONFIG,       0x0200, 0x02},
+  {YUVCONFIG_TN,    0xFF0A, 0x02},
+  {ILCODELEN,         0x00, 0x01},
+  {AFMODE_MONI,       0x01, 0x01},
+  {YUVCONFIG,       0xFF6A, 0x02},
+  {VIF_REC601_Y,    0x10FE, 0x02},
+  {VIF_REC601_C,    0x10F0, 0x02},
+  {HSENS_MODE_SEL,    0x11, 0x01},
+  {VIF_CLKCONFIG1,    0x30, 0x01},
+  {VIF_CLKCONFIG2,    0x30, 0x01},
+  {VIF_CLKCONFIG3,    0x30, 0x01},
+  {VIF_CLKCONFIG4,    0x30, 0x01},
+  {VIF_CLKCONFIG5,    0x30, 0x01},
+  {VIF_CLKCONFIG6,    0x30, 0x01},
+  {VIF_CLKCONFIG7,    0x30, 0x01},
+  {VIF_CLKCONFIG8,    0x30, 0x01},
+  {VIF_CLKCONFIG9,    0x30, 0x01},
+  {VIF_CLKCONFIG10,   0x30, 0x01},
+  {VIF_CLKCONFIG11,   0x30, 0x01},
+  {VIF_CLKCONFIG12,   0x30, 0x01},
+  {VIF_CLKCONFIG13,   0x11, 0x01},
+  {VIF_CLKCONFIG14,   0x11, 0x01},
+  {VIF_CLKCONFIG15,   0x11, 0x01},
+  {VIF_CLKCONFIG16,   0x11, 0x01},
 #ifdef ISX012_NOT_USE_NSTBY
   {INCK_SET,        0x17,   0x01}, /* INCK_SET */
 #endif
+  {FAST_MODECHG_EN,   0x01, 0x01},
+  {FAST_SHT_MODE_SEL, 0x01, 0x01},
+  {CAP_HALF_AE_CTRL,  0x07, 0x01}, /* HAFREL=HIGHSPEED, CAP=Auto  */
+  {HALF_AWB_CTRL,     0x01, 0x01},
+  {AESPEED_FAST,      0x0F, 0x01},
+  {FASTMOVE_TIMEOUT,  0x2D, 0x01},
+  {YGAMMA_MODE,       0x01, 0x01},
 };
 #define ISX012_RESET_NENTRIES ARRAY_NENTRIES(g_isx012_def_init)
 
@@ -1357,14 +1379,14 @@ int isx012_register(FAR struct i2c_master_s *i2c)
   priv->image.cap_param.format      = FORMAT_ISX012_JPEG_MODE1;
   priv->image.cap_param.rate        = RATE_ISX012_15FPS;
   /* moni=QVGA, cap=VGA */
-  priv->image.moni_param.yuv_hsize  = 320;
-  priv->image.moni_param.yuv_vsize  = 240;
-  priv->image.moni_param.jpeg_hsize = 320;
-  priv->image.moni_param.jpeg_vsize = 240;
-  priv->image.cap_param.yuv_hsize   = 640;
-  priv->image.cap_param.yuv_vsize   = 480;
-  priv->image.cap_param.jpeg_hsize  = 640;
-  priv->image.cap_param.jpeg_vsize  = 480;
+  priv->image.moni_param.yuv_hsize  = OUT_HSIZE_QVGA;
+  priv->image.moni_param.yuv_vsize  = OUT_VSIZE_QVGA;
+  priv->image.moni_param.jpeg_hsize = OUT_HSIZE_QVGA;
+  priv->image.moni_param.jpeg_vsize = OUT_VSIZE_QVGA;
+  priv->image.cap_param.yuv_hsize   = OUT_HSIZE_QVGA;
+  priv->image.cap_param.yuv_vsize   = OUT_VSIZE_QVGA;
+  priv->image.cap_param.jpeg_hsize  = OUT_HSIZE_FULLHD;
+  priv->image.cap_param.jpeg_vsize  = OUT_VSIZE_FULLHD;
   sem_init(&priv->wait, 0, 0);
 
   return OK;

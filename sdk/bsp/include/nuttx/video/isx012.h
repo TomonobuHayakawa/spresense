@@ -73,7 +73,7 @@ enum isx012_state_e {
 typedef enum isx012_state_e isx012_state_t;
 
 enum isx012_format_e {
-  FORMAT_ISX012_YUV,
+  FORMAT_ISX012_YUV = 0,
   FORMAT_ISX012_RGB565,
   FORMAT_ISX012_JPEG_MODE1,
   FORMAT_ISX012_JPEG_MODE1_INT,

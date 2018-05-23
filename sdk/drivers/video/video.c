@@ -68,13 +68,6 @@
 /* Display time ON/OFF */
 /* #define VIDEO_TIME_MEASURE */
 
-/* Accelerate mode switching ON/OFF */
-/* #define VIDEO_ISX012_FAST_MODECHG_EN */
-/* #define VIDEO_ISX012_FAST_SHT_MODE_EN */
-
-/* Continuous exposure compensation during capture ON/OFF */
-/* #define VIDEO_CONTI_BRACKET */
-
 /* At initialization, it automatically transits to ACTIVE_MODE */
 /* #define VIDEO_INIT_ACTIVE */
 
@@ -155,14 +148,6 @@ typedef enum
   VIDEO_APIID_MAX,
 } video_api_id_e;
 
-typedef enum
-{
-  VIDEO_IMGSNS_MODE_MONI = 0,
-  VIDEO_IMGSNS_MODE_CAP,
-  VIDEO_IMGSNS_MODE_HALFREL,
-  VIDEO_IMGSNS_MODE_MAX
-} video_img_sns_mode_e;
-
 enum video_ezoom_reg_e
 {
   VIDEO_EZOOM_MAG,
@@ -200,7 +185,6 @@ struct video_mng_s
   video_cap_param_t cap_param[VIDEO_MODE_MAX];
   video_img_sns_param_all_t imgsns_param_all;
   video_img_sns_state_e imgsns_state;
-  video_img_sns_mode_e imgsns_mode;
   uint8_t init;
   uint8_t devpath[VIDEO_DEV_PATH_LEN];
 };
@@ -271,7 +255,6 @@ static uint64_t video_get_msec_tim(void)
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-static isx012_t             g_v_isx;
 static video_cisif_result_t g_v_cisif;
 static video_mng_t         *g_v_mng;
 
@@ -317,25 +300,6 @@ static const isx012_reg_t video_ezoom_regs[VIDEO_EZOOM_REGNUM] =
   { EZOOM_MAG, 0x0100, 2 },
   { OFFSET_X,  0x0000, 2 },
   { OFFSET_Y,  0x0000, 2 },
-};
-
-static const isx012_reg_t video_init_regs[] =
-{
-#ifdef VIDEO_ISX012_FAST_MODECHG_EN
-  { FAST_MODECHG_EN,   1, 1 },
-#endif /* VIDEO_ISX012_FAST_MODECHG_EN */
-#ifdef VIDEO_ISX012_FAST_SHT_MODE_EN
-  { FAST_SHT_MODE_SEL, 1, 1 },
-#endif /* VIDEO_ISX012_FAST_SHT_MODE_EN */
-#ifndef VIDEO_CONTI_BRACKET
-  { CAP_HALF_AE_CTRL,  1, 1 }, /* HAFREL=HIGHSPEED, CAP=OFF   */
-#else
-  { CAP_HALF_AE_CTRL,  7, 1 }, /* HAFREL=HIGHSPEED, CAP=Auto  */
-#endif /* VIDEO_CONTI_BRACKET */
-  { HALF_AWB_CTRL,     1, 1 },
-  { AESPEED_FAST,     15, 1 },
-  { FASTMOVE_TIMEOUT, 45, 1 },
-  { YGAMMA_MODE,       1, 1 }
 };
 
 static const uint8_t video_convawb[VIDEO_AWB_MAX] =
@@ -640,32 +604,9 @@ static void video_callback_cisif(
 
 static int video_init_image_sensor(video_mng_t *priv)
 {
-  int ret;
-  int idx;
-
   DBG_TIME_START();
   isx012_open();
   DBG_TIME_STOP("open isx012 driver");
-
-  /* Set Monitoring / Capture parameter */
-  ret = isx012_ioctl(IMGIOC_SETMODEP, (unsigned long)&g_v_isx);
-  if (ret < 0)
-    {
-      video_printf("ERROR: Failed to ioctl IMGIOC_SETMODEP. %d\n", ret);
-      return -ENODEV;
-    }
-
-  /* Set Initial parameter */
-  for (idx = 0; idx < sizeof(video_init_regs)/sizeof(isx012_reg_t); idx++)
-    {
-      ret = isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&video_init_regs[idx]);
-      if (ret < 0)
-        {
-          video_printf("ERROR: Failed to ioctl IMGIOC_WRITEREG. %d\n", ret);
-          return -ENODEV;
-        }
-    }
-  video_printf("video_init_regs index = %d\n", idx);
 
 #ifdef VIDEO_GAMMA_BASIC
   video_set_gamma_table(GAMMA_TABLE_BASIC);
@@ -676,10 +617,7 @@ static int video_init_image_sensor(video_mng_t *priv)
 
 #ifdef VIDEO_INIT_ACTIVE
   /* Cmera Device status Sleep -> Active */
-  DBG_TIME_START();
-  ret = isx012_ioctl(IMGIOC_SETSTATE, STATE_ISX012_ACTIVE);
-  DBG_TIME_STOP("ioctl IMGIOC_SETSTATE ACTIVE");
-  if (ret < 0)
+  if (isx012_ioctl(IMGIOC_SETSTATE, STATE_ISX012_ACTIVE) < 0)
     {
       video_printf("ERROR: Failed to ioctl IMGIOC_SETSTATE. %d\n", ret);
       return -ENODEV;
@@ -690,34 +628,19 @@ static int video_init_image_sensor(video_mng_t *priv)
 #else
   priv->imgsns_state = VIDEO_STATE_SLEEP;
 #endif /* VIDEO_INIT_NOT_ACTIVE */
-  priv->imgsns_mode  = VIDEO_IMGSNS_MODE_MONI;
 
   return 0;
 }
 
 static void video_init_internal_param(video_mng_t *priv)
 {
-  g_v_isx.cap_param.format = FORMAT_ISX012_JPEG_MODE1;
-  g_v_isx.cap_param.rate = RATE_ISX012_15FPS;
-  g_v_isx.cap_param.yuv_hsize = video_rs2sz[VIDEO_QVGA].h;
-  g_v_isx.cap_param.yuv_vsize = video_rs2sz[VIDEO_QVGA].v;
-  g_v_isx.cap_param.jpeg_hsize = video_rs2sz[VIDEO_FULLHD].h;
-  g_v_isx.cap_param.jpeg_vsize = video_rs2sz[VIDEO_FULLHD].v;
-
-  g_v_isx.moni_param.format = FORMAT_ISX012_YUV;
-  g_v_isx.moni_param.rate = RATE_ISX012_30FPS;
-  g_v_isx.moni_param.yuv_hsize = video_rs2sz[VIDEO_QVGA].h;
-  g_v_isx.moni_param.yuv_vsize = video_rs2sz[VIDEO_QVGA].v;
-  g_v_isx.moni_param.jpeg_hsize = video_rs2sz[VIDEO_FULLHD].h;
-  g_v_isx.moni_param.jpeg_vsize = video_rs2sz[VIDEO_FULLHD].v;
-
-  priv->cap_param[VIDEO_MODE_CAPTURE].format = VIDEO_FORMAT_JPEG;
+  priv->cap_param[VIDEO_MODE_CAPTURE].format     = VIDEO_FORMAT_JPEG;
   priv->cap_param[VIDEO_MODE_CAPTURE].resolution = VIDEO_FULLHD;
-  priv->cap_param[VIDEO_MODE_CAPTURE].framerate = VIDEO_15FPS;
+  priv->cap_param[VIDEO_MODE_CAPTURE].framerate  = VIDEO_15FPS;
 
-  priv->cap_param[VIDEO_MODE_MONITORING].format = VIDEO_FORMAT_YUV;
+  priv->cap_param[VIDEO_MODE_MONITORING].format     = VIDEO_FORMAT_YUV;
   priv->cap_param[VIDEO_MODE_MONITORING].resolution = VIDEO_QVGA;
-  priv->cap_param[VIDEO_MODE_MONITORING].framerate = VIDEO_30FPS;
+  priv->cap_param[VIDEO_MODE_MONITORING].framerate  = VIDEO_30FPS;
 }
 
 static int video_chg_img_sns_state(video_mng_t *priv,
@@ -790,7 +713,6 @@ static int video_chg_img_sns_state(video_mng_t *priv,
   if (ret == 0)
     {
       priv->imgsns_state = next_state;
-      priv->imgsns_mode  = VIDEO_IMGSNS_MODE_MONI;
     }
 
   return ret;
@@ -891,8 +813,7 @@ static int video_capture_frame(video_mng_t *priv, video_api_cap_frame_t *p)
   cisif_param_t    cis;
   video_img_format_e format;
 
-  if ((priv->imgsns_state == VIDEO_STATE_SLEEP) ||
-      (priv->imgsns_mode == VIDEO_IMGSNS_MODE_CAP))
+  if (priv->imgsns_state == VIDEO_STATE_SLEEP)
     {
       return -EBUSY;
     }
@@ -921,7 +842,7 @@ static int video_capture_frame(video_mng_t *priv, video_api_cap_frame_t *p)
           video_printf("ERROR: ioctl IMGIOC_SETMODE(CAPTURE):%d\n", ret);
           return ret;
         }
-      priv->imgsns_mode = VIDEO_IMGSNS_MODE_CAP;
+
     }
 
   memset(&g_v_cisif, 0, sizeof(g_v_cisif));
@@ -975,10 +896,7 @@ exit:
         {
           video_printf("ERROR: ioctl IMGIOC_SETMODE(MONITORING):%d\n", ret);
         }
-      else
-        {
-          priv->imgsns_mode = VIDEO_IMGSNS_MODE_MONI;
-        }
+
     }
 
   if (g_v_cisif.errint != 0)
@@ -1011,6 +929,12 @@ static int video_set_frame_info(video_mng_t *priv,
                                 video_api_cap_frame_t *p,
                                 video_cisif_result_t *res)
 {
+  int      cidx;
+  int      midx;
+
+  cidx = priv->cap_param[VIDEO_MODE_CAPTURE].resolution;
+  midx = priv->cap_param[VIDEO_MODE_MONITORING].resolution;
+
   p->info.mode = p->mode;
   memcpy(&p->info.cap_param,
          &priv->cap_param[p->mode],
@@ -1019,36 +943,21 @@ static int video_set_frame_info(video_mng_t *priv,
   p->info.out_addr = res->addr;
   p->info.out_size = res->size;
 
-  if (priv->cap_param[p->mode].format == VIDEO_FORMAT_YUV)
+  if (p->mode == VIDEO_MODE_CAPTURE)
     {
-      if (p->mode == VIDEO_MODE_CAPTURE)
-        {
-          p->info.h_size = g_v_isx.cap_param.yuv_hsize;
-          p->info.v_size = g_v_isx.cap_param.yuv_vsize;
-        }
-      else
-        {
-          p->info.h_size = g_v_isx.moni_param.yuv_hsize;
-          p->info.v_size = g_v_isx.moni_param.yuv_vsize;
-        }
+      p->info.h_size = video_rs2sz[cidx].h;
+      p->info.v_size = video_rs2sz[cidx].v;
     }
   else
     {
-      if (res->errint == 0)
-        {
-          p->info.out_size = video_correct_jpeg_size(res->addr, res->size);
-        }
+      p->info.h_size = video_rs2sz[midx].h;
+      p->info.v_size = video_rs2sz[midx].v;
+    }
 
-      if (p->mode == VIDEO_MODE_CAPTURE)
-        {
-          p->info.h_size = g_v_isx.cap_param.jpeg_hsize;
-          p->info.v_size = g_v_isx.cap_param.jpeg_vsize;
-        }
-      else
-        {
-          p->info.h_size = g_v_isx.moni_param.jpeg_hsize;
-          p->info.v_size = g_v_isx.moni_param.jpeg_vsize;
-        }
+  if ((priv->cap_param[p->mode].format == VIDEO_FORMAT_JPEG) &&
+      (res->errint == 0))
+    {
+      p->info.out_size = video_correct_jpeg_size(res->addr, res->size);
     }
 
   return 0;
@@ -1102,11 +1011,6 @@ static int video_set_img_sns_param(video_mng_t *priv,
 {
   isx012_reg_t reg;
   int ret;
-
-  if (priv->imgsns_mode != VIDEO_IMGSNS_MODE_MONI)
-    {
-      return -EBUSY;
-    }
 
   if (p->param.id >= VIDEO_PARAM_ID_MAX)
     {
@@ -1318,7 +1222,8 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 
         break;
       case VIDIOC_DQBUF:
-        cap.mode = g_v4_buf_mode;
+        cap.mode        = g_v4_buf_mode;
+        cap.crop_ctrl   = VIDEO_DISABLE;
         cap.buffer.addr = g_v4_buf[g_v4_buf_cnt].m.userptr;
         cap.buffer.size = g_v4_buf[g_v4_buf_cnt].length;
         ret = video_capture_frame(priv, &cap);

@@ -273,6 +273,7 @@ typedef enum
 typedef enum
 {
   VIDEO_FORMAT_YUV = 0,
+  VIDEO_FORMAT_RGB,
   VIDEO_FORMAT_JPEG,
   VIDEO_FORMAT_MAX
 } video_img_format_e;
@@ -295,7 +296,9 @@ typedef enum
   VIDEO_60FPS,
   VIDEO_30FPS,
   VIDEO_15FPS,
+  VIDEO_10FPS,
   VIDEO_7_5FPS,
+  VIDEO_6FPS,
   VIDEO_5FPS,
   VIDEO_FRAME_RATE_MAX
 } video_frame_rate_e;
@@ -419,6 +422,10 @@ struct video_cap_param_s
   video_img_format_e     format;
   video_img_resolution_e resolution;
   video_frame_rate_e     framerate;
+  uint16_t               jpeg_hsize;
+  uint16_t               jpeg_vsize;
+  uint16_t               yuv_hsize;
+  uint16_t               yuv_vsize;
 };
 
 typedef struct video_cap_param_s video_cap_param_t;
