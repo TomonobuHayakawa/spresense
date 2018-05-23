@@ -267,11 +267,11 @@ static int board_sdcard_detect_int(int irq, FAR void *context, FAR void *arg)
           DEBUGASSERT(work_available(&g_sdcard_work));
           if (inserted)
             {
-              work_queue(LPWORK, &g_sdcard_work, board_sdcard_enable, NULL, 0);
+              work_queue(HPWORK, &g_sdcard_work, board_sdcard_enable, NULL, 0);
             }
           else
             {
-              work_queue(LPWORK, &g_sdcard_work, board_sdcard_disable, NULL, 0);
+              work_queue(HPWORK, &g_sdcard_work, board_sdcard_disable, NULL, 0);
             }
         }
       else
