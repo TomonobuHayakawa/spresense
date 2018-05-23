@@ -870,7 +870,11 @@ bool Playlist::parseTrackInfo(FAR Track *track,
   /* Get sampling rate. */
 
   int rate = atoi(strtok(NULL, ","));
-  if (rate == 8000)
+  if (rate == 0)
+    {
+      track->sampling_rate = AS_SAMPLINGRATE_AUTO;
+    }
+  else if (rate == 8000)
     {
       track->sampling_rate = AS_SAMPLINGRATE_8000;
     }

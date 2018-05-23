@@ -168,6 +168,14 @@ uint32_t InputHandlerOfRAM::setParam(const AsInitPlayerParam& param)
 
   switch (param.sampling_rate)
     {
+      case AS_SAMPLINGRATE_AUTO:
+        if (param.codec_type != AS_CODECTYPE_MP3 &&
+            param.codec_type != AS_CODECTYPE_AAC)
+          {
+            MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+            return AS_ECODE_COMMAND_PARAM_SAMPLING_RATE;
+          }
+        break;
       case AS_SAMPLINGRATE_8000:
       case AS_SAMPLINGRATE_16000:
       case AS_SAMPLINGRATE_24000:

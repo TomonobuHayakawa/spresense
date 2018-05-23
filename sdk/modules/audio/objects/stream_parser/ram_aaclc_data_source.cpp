@@ -219,6 +219,15 @@ bool RamAACLCDataSource::getSamplingRate(FAR uint32_t *p_sampling_rate)
                                                 p_sampling_rate,
                                                 &err_detail))
         {
+          if (m_in_sampling_rate == AS_SAMPLINGRATE_AUTO)
+            {
+              m_in_sampling_rate = *p_sampling_rate;
+              return true;
+            }
+          if (*p_sampling_rate != m_in_sampling_rate)
+            {
+              return false;
+            }
           return true;
        }
       return false;

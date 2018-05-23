@@ -182,6 +182,10 @@
 /** @name Sampling rate */
 /** @{ */
 
+/* Auto */
+
+#define AS_SAMPLINGRATE_AUTO    0
+
 /** 8kHz */
 
 #define AS_SAMPLINGRATE_8000    8000
