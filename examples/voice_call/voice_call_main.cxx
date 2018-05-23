@@ -59,6 +59,8 @@ using namespace MemMgrLite;
  * Pre-processor Definitions
  ****************************************************************************/
 
+#define DSPBIN_PATH "/mnt/sd0/BIN"
+
 /* application running time(sec) */
 
 #define VOICE_CALL_RUNNING_TIME 30
@@ -355,7 +357,7 @@ static bool app_set_bbactive_status(void)
   command.set_baseband_status_param.with_MPP           = AS_SET_BBSTS_WITH_MPP_NONE;
   command.set_baseband_status_param.input_device       = AS_INPUT_DEVICE_AMIC1CH_I2S2CH;
   command.set_baseband_status_param.output_device      = AS_OUTPUT_DEVICE_SP2CH_I2S2CH;
-  snprintf(command.set_baseband_status_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", "/mnt/sd0/BIN");
+  snprintf(command.set_baseband_status_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", DSPBIN_PATH);
   AS_SendAudioCommand(&command);
 
   AudioResult result;

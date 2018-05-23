@@ -67,8 +67,9 @@ using namespace MemMgrLite;
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define AUDIOFILE_ROOTPATH "/mnt/spif/AUDIO"
-#define PLAYLISTFILE_PATH "/mnt/spif/PLAYLIST"
+#define AUDIOFILE_ROOTPATH "/mnt/sd0/AUDIO"
+#define PLAYLISTFILE_PATH "/mnt/sd0/PLAYLIST"
+#define DSPBIN_PATH "/mnt/sd0/BIN"
 
 /* PlayList file name */
 
@@ -600,7 +601,7 @@ static int app_init_player(uint8_t codec_type,
     command.player.init_param.bit_length     = AS_BITLENGTH_16;
     command.player.init_param.channel_number = channel_number;
     command.player.init_param.sampling_rate  = sampling_rate;
-    snprintf(command.player.init_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", "/mnt/sd0/BIN");
+    snprintf(command.player.init_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", DSPBIN_PATH);
     AS_SendAudioCommand(&command);
 
     AudioResult result;
