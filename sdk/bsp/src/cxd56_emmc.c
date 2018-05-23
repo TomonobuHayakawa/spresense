@@ -427,15 +427,21 @@ static int emmc_is_powerup(void)
 {
   int retry;
 
- /* 5ms * 4000 times */
+  /* 5ms * 1000 times */
 
-  retry = 4000;
+  retry = 1000;
   do
     {
       uint32_t response;
+      uint32_t intsts;
 
       emmc_send(EMMC_NON_DATA, SEND_OP_COND,
                 OCR_SECTOR_MODE | OCR_DUAL_VOLT, EMMC_RESP_R3);
+      intsts = getreg32(EMMC_RINTSTS);
+      if (intsts & EMMC_INTSTS_RTO)
+        {
+          return -EIO;
+        }
 
       response = getreg32(EMMC_RESP0);
       if (response == (OCR_SECTOR_MODE | OCR_DUAL_VOLT | OCR_POWER_UP))
@@ -579,7 +585,7 @@ static void emmc_pincontrol(bool on)
 
 static int emmc_hwinitialize(void)
 {
-  int ret;
+  int ret = OK;
 
   cxd56_emmc_clock_enable(1, 1, 0);
 
@@ -601,14 +607,14 @@ static int emmc_hwinitialize(void)
 
   if ((ret = emmc_is_powerup()) != 0)
     {
-      return ret;
+      goto errout;
     }
 
   emmc_send(EMMC_NON_DATA, ALL_SEND_CID, 0, EMMC_RESP_R2);
   emmc_send(EMMC_NON_DATA, SET_RELATIVE_ADDR, EMMC_RCA << 16, EMMC_RESP_R1);
   if (emmc_checkresponse())
     {
-      return -EIO;
+      goto errout;
     }
 
 #ifdef EMMC_USE_SEND_CSD
@@ -618,19 +624,19 @@ static int emmc_hwinitialize(void)
   emmc_send(EMMC_NON_DATA, SELECT_DESELECT, (EMMC_RCA << 16), EMMC_RESP_R1);
   if (emmc_checkresponse())
     {
-      return -EIO;
+      goto errout;
     }
 
   ret = emmc_switchcmd(EXTCSD_HS_TIMING, EXTCSD_HS_TIMING_HIGH_SPEED);
   if (ret)
     {
-      return ret;
+      goto errout;
     }
 
   ret = emmc_switchcmd(EXTCSD_BUS_WIDTH, EXTCSD_BUS_WIDTH_4BIT_SDR);
   if (ret)
     {
-      return ret;
+      goto errout;
     }
 
   putreg32(EMMC_CTYPE_4BIT_MODE, EMMC_CTYPE);
@@ -640,10 +646,17 @@ static int emmc_hwinitialize(void)
   ret = emmc_switchcmd(EXTCSD_PON, EXTCSD_PON_POWERED_ON);
   if (ret)
     {
-      return ret;
+      goto errout;
     }
 
   return OK;
+
+errout:
+  up_disable_irq(CXD56_IRQ_EMMC);
+  emmc_pincontrol(true);
+  cxd56_emmc_clock_disable();
+
+  return ret;
 }
 
 static int cxd56_emmc_readsectors(FAR struct cxd56_emmc_state_s *priv, void *buf,
@@ -888,7 +901,12 @@ int cxd56_emmcinitialize(void)
   sem_init(&priv->excsem, 0, 1);
   sem_init(&g_waitsem, 0, 0);
 
-  emmc_hwinitialize();
+  ret = emmc_hwinitialize();
+  if (ret != OK)
+    {
+      kmm_free(priv);
+      return -EIO;
+    }
 
   buf = (FAR uint8_t *)kmm_malloc(SECTOR_SIZE);
   if (buf)
