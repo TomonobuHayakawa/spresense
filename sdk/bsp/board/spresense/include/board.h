@@ -121,17 +121,20 @@
  *
  *     Switch    Device
  *     --------- -------------------------------
- *     LSW2      AcaPulco Audio Digital VDD
- *     LSW3      SPI-Flash & TCXO
- *     LSW4      GNSS LNA
- *     GPO0      AcaPulco Audio Analog VDD
- *     GPO1      
- *     GPO2      
- *     GPO3      
- *     GPO4      
- *     GPO5      
- *     GPO6      
- *     GPO7      
+ *     LDO_EMMC  GNSS A-ANT
+ *     DDC_ANA   N/A
+ *     LDO_PERI  N/A
+ *     LSW2      CXD5247 Audio Digital VDD
+ *     LSW3      SPI-Flash
+ *     LSW4      TCXO & GNSS LNA
+ *     GPO0
+ *     GPO1      CXD5247 Audio Analog VDD
+ *     GPO2
+ *     GPO3
+ *     GPO4      Camera
+ *     GPO5      Camera
+ *     GPO6      Audio External Amp.
+ *     GPO7      Camera
  *
  */
 

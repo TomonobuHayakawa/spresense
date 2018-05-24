@@ -106,10 +106,10 @@
  *
  *     Switch    Device
  *     --------- -------------------------------
- *     LSW2      AcaPulco Audio Digital VDD
+ *     LSW2      CXD5247 Audio Digital VDD
  *     LSW3      SPI-Flash & TCXO
  *     LSW4      GNSS LNA
- *     GPO0      AcaPulco Audio Analog VDD
+ *     GPO0      CXD5247 Audio Analog VDD
  *     GPO1      BMI160 1.8V
  *     GPO2      Sensor 1.8V
  *     GPO3      Sensor 3.3V
