@@ -77,6 +77,42 @@ extern "C"
 #endif
 
 /****************************************************************************
+ * Name: board_pmic_read
+ *
+ * Description:
+ *   Read the value from the specified sub address
+ *
+ * Input Parameter:
+ *   addr - sub address
+ *   buf - pointer to read buffer
+ *   size - byte count of read
+ *
+ * Returned Value:
+ *   Return 0 on success. Otherwise, return a negated errno.
+ *
+ ****************************************************************************/
+
+int board_pmic_read(uint8_t addr, void *buf, uint32_t size);
+
+/****************************************************************************
+ * Name: board_pmic_write
+ *
+ * Description:
+ *   Write the value to the specified sub address
+ *
+ * Input Parameter:
+ *   addr - sub address
+ *   buf - pointer to write buffer
+ *   size - byte count of write
+ *
+ * Returned Value:
+ *   Return 0 on success. Otherwise, return a negated errno.
+ *
+ ****************************************************************************/
+
+int board_pmic_write(uint8_t addr, void *buf, uint32_t size);
+
+/****************************************************************************
  * Name: board_power_setup
  *
  * Description:
