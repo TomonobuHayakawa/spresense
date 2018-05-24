@@ -568,14 +568,6 @@ void PlayerObj::deactivate(MsgPacket *msg)
       return;
     }
 
-  if (!m_external_cmd_que.push(AsPlayerEventDeact))
-    {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      m_callback(AsPlayerEventDeact,
-                 AS_ECODE_QUEUE_OPERATION_ERROR, 0);
-      return;
-    }
-
   m_callback(AsPlayerEventDeact, AS_ECODE_OK, 0);
   m_state = BootedState;
 }
