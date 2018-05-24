@@ -909,7 +909,10 @@ extern "C" int player_main(int argc, char *argv[])
   if (!app_act_audio_sub_system())
     {
       printf("Error: act_audiosubsystem() failure.\n");
-      return 1;
+
+      /* Abnormal termination processing */
+
+      goto errout_act_audio_sub_system;
     }
 
   /* On and after this point, AudioSubSystem must be active.
@@ -921,7 +924,10 @@ extern "C" int player_main(int argc, char *argv[])
   if (!app_open_contents_dir())
     {
       printf("Error: app_open_contents_dir() failure.\n");
-      return 1;
+
+      /* Abnormal termination processing */
+
+      goto errout_open_contents_dir;
     }
 
   /* Change AudioSubsystem to Ready state so that I/O parameters can be changed. */
@@ -929,7 +935,10 @@ extern "C" int player_main(int argc, char *argv[])
   if (!app_power_on())
     {
       printf("Error: app_power_on() failure.\n");
-      return 1;
+
+      /* Abnormal termination processing */
+
+      goto errout_power_on;
     }
 
   /* Open playlist. */
@@ -937,7 +946,10 @@ extern "C" int player_main(int argc, char *argv[])
   if (!app_open_playlist())
     {
       printf("Error: app_open_playlist() failure.\n");
-      return 1;
+
+      /* Abnormal termination processing */
+
+      goto errout_open_playlist;
     }
 
   /* Initialize simple fifo. */
@@ -945,7 +957,10 @@ extern "C" int player_main(int argc, char *argv[])
   if (!app_init_simple_fifo())
     {
       printf("Error: app_init_simple_fifo() failure.\n");
-      return false;
+
+      /* Abnormal termination processing */
+
+      goto errout_init_simple_fifo;
     }
 
   /* Set the device to output the mixed audio. */
@@ -953,7 +968,10 @@ extern "C" int player_main(int argc, char *argv[])
   if (!app_init_output_select())
     {
       printf("Error: app_init_output_select() failure.\n");
-      return 1;
+
+      /* Abnormal termination processing */
+
+      goto errout_init_output_select;
     }
 
   /* Set player operation mode. */
@@ -961,7 +979,10 @@ extern "C" int player_main(int argc, char *argv[])
   if (!app_set_player_status())
     {
       printf("Error: app_set_player_status() failure.\n");
-      return 1;
+
+      /* Abnormal termination processing */
+
+      goto errout_set_player_status;
     }
 
   /* Cancel output mute. */
@@ -971,7 +992,10 @@ extern "C" int player_main(int argc, char *argv[])
   if (board_external_amp_mute_control(false) != OK)
     {
       printf("Error: board_external_amp_mute_control(false) failuer.\n");
-      return 1;
+
+      /* Abnormal termination processing */
+
+      goto errout_amp_mute_control;
     }
 
   /* Initialize frequency lock parameter. */
@@ -987,7 +1011,10 @@ extern "C" int player_main(int argc, char *argv[])
   if (!app_start())
     {
       printf("Error: app_start_player() failure.\n");
-      return 1;
+
+      /* Abnormal termination processing */
+
+      goto errout_start;
     }
 
   /* Running... */
@@ -1010,9 +1037,31 @@ extern "C" int player_main(int argc, char *argv[])
 
   /* Set output mute. */
 
+errout_start:
   if (board_external_amp_mute_control(true) != OK)
     {
       printf("Error: board_external_amp_mute_control(true) failuer.\n");
+      return 1;
+    }
+
+  /* Return the state of AudioSubSystem before voice_call operation. */
+
+errout_amp_mute_control:
+  if (!app_set_ready())
+    {
+      printf("Error: app_set_ready() failure.\n");
+      return 1;
+    }
+
+  /* Change AudioSubsystem to PowerOff state. */
+
+errout_open_playlist:
+errout_init_simple_fifo:
+errout_init_output_select:
+errout_set_player_status:
+  if (!app_power_off())
+    {
+      printf("Error: app_power_off() failure.\n");
       return 1;
     }
 
@@ -1024,34 +1073,23 @@ extern "C" int player_main(int argc, char *argv[])
       return 1;
     }
 
+  /* Close directory of play contents. */
+
+errout_power_on:
   if (!app_close_contents_dir())
     {
       printf("Error: app_close_contents_dir() failure.\n");
       return 1;
     }
 
-  /* Return the state of AudioSubSystem before voice_call operation. */
-
-  if (!app_set_ready())
-    {
-      printf("Error: app_set_ready() failure.\n");
-      return 1;
-    }
-
-  /* Change AudioSubsystem to PowerOff state. */
-
-  if (!app_power_off())
-    {
-      printf("Error: app_power_off() failure.\n");
-      return 1;
-    }
-
   /* Deactivate the features used by AudioSubSystem. */
 
+errout_open_contents_dir:
   app_deact_audio_sub_system();
 
   /* finalize the shared memory and memory utility used by AudioSubSystem. */
 
+errout_act_audio_sub_system:
   if (!app_finalize_libraries())
     {
       printf("Error: finalize_libraries() failure.\n");
