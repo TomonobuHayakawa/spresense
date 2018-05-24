@@ -77,6 +77,16 @@ extern "C"
 #endif
 
 /****************************************************************************
+ * Name: board_power_setup
+ *
+ * Description:
+ *   Initial setup for board-specific power control
+ *
+ ****************************************************************************/
+
+int board_power_setup(int status);
+
+/****************************************************************************
  * Name: board_power_control
  *
  * Description:

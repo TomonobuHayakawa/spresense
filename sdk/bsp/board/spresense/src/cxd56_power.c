@@ -89,6 +89,45 @@ static struct pm_cpu_freqlock_s g_hv_lock =
  ****************************************************************************/
 
 /****************************************************************************
+ * Name: board_power_setup
+ *
+ * Description:
+ *   Initial setup for board-specific power control
+ *
+ ****************************************************************************/
+
+int board_power_setup(int status)
+{
+#ifdef CONFIG_BOARD_USB_DISABLE_IN_DEEP_SLEEPING
+  uint8_t val;
+  uint32_t bootcause;
+
+  /* Enable USB after wakeup from deep sleeping */
+
+  bootcause = up_pm_get_bootcause();
+
+  switch (bootcause)
+    {
+      case PM_BOOT_DEEP_WKUPL:
+      case PM_BOOT_DEEP_WKUPS:
+      case PM_BOOT_DEEP_RTC:
+      case PM_BOOT_DEEP_OTHERS:
+        cxd56_pmic_read(PMIC_REG_CNT_USB2, &val, sizeof(val));
+        if (val & PMIC_SET_CHGOFF)
+          {
+            val &= ~PMIC_SET_CHGOFF;
+            cxd56_pmic_write(PMIC_REG_CNT_USB2, &val, sizeof(val));
+          }
+        break;
+      default:
+        break;
+    }
+#endif
+
+  return 0;
+}
+
+/****************************************************************************
  * Name: board_power_control
  *
  * Description:
@@ -378,6 +417,13 @@ int board_reset(int status)
 int board_power_off(int status)
 {
   uint8_t val;
+
+#ifdef CONFIG_BOARD_USB_DISABLE_IN_DEEP_SLEEPING
+  /* Disable USB detection to enter deep sleep with USB attached */
+
+  val = PMIC_SET_CHGOFF;
+  cxd56_pmic_write(PMIC_REG_CNT_USB2, &val, sizeof(val));
+#endif
 
   /* Set DDC_ANA output to HiZ before deep sleep for power saving */
 

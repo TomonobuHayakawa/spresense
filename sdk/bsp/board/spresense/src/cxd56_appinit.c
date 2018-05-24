@@ -212,6 +212,10 @@ int board_app_initialize(uintptr_t arg)
 
   up_pm_acquire_freqlock(&g_hv_lock);
 
+  /* Setup the power of external device */
+
+  board_power_setup(0);
+
 #ifdef CONFIG_CXD56_SCU
   scu_initialize();
 #endif
