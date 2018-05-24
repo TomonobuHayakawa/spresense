@@ -166,6 +166,20 @@ int board_power_setup(int status)
     }
 #endif
 
+  /* Disable unused DDC/LDO permanently */
+
+  board_power_control(POWER_DDC_ANA | POWER_LDO_PERI, false);
+
+  /* Disable unnecessary load switch in boot-up stage */
+
+  board_power_control(POWER_AUDIO_DVDD, false);
+
+  /* Power off all of GPO switches in boot-up stage */
+
+  board_power_control(PMIC_GPO(0) | PMIC_GPO(1) | PMIC_GPO(2) | PMIC_GPO(3) |
+                      PMIC_GPO(4) | PMIC_GPO(5) | PMIC_GPO(6) | PMIC_GPO(7),
+                      false);
+
   return 0;
 }
 
