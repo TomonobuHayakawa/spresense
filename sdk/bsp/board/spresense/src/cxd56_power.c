@@ -377,6 +377,13 @@ int board_reset(int status)
 #ifdef CONFIG_BOARDCTL_POWEROFF
 int board_power_off(int status)
 {
+  uint8_t val;
+
+  /* Set DDC_ANA output to HiZ before deep sleep for power saving */
+
+  val = PMIC_PM_HIZ | PMIC_IOST_DEF | PMIC_IOMAX_DEF;
+  cxd56_pmic_write(PMIC_REG_DDC_ANA1, &val, sizeof(val));
+
   /* Power off explicitly because GPOs are kept during deep sleeping */
 
   board_power_control(PMIC_GPO(0) | PMIC_GPO(1) | PMIC_GPO(2) | PMIC_GPO(3) |

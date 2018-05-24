@@ -51,6 +51,22 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+/* PMIC Register Definitions */
+
+#define PMIC_REG_DDC_ANA1   (0x26)
+#define PMIC_REG_CNT_USB2   (0x81)
+
+/* PMIC DDC_ANA1 Definitions */
+
+#define PMIC_PM_HIZ     (2u << 4)
+#define PMIC_PM_DEF     (0u << 4)
+#define PMIC_IOST_DEF   (2u << 2)
+#define PMIC_IOMAX_DEF  (2u << 0)
+
+/* PMIC CNT_USB2 Definitions */
+
+#define PMIC_SET_CHGOFF (1u << 2)
+
 /* PMIC Interrupt Status Definitions */
 
 #define PMIC_INT_ALARM  (1u << 0)
