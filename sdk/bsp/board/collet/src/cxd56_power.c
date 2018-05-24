@@ -89,6 +89,64 @@ static struct pm_cpu_freqlock_s g_hv_lock =
  ****************************************************************************/
 
 /****************************************************************************
+ * Name: board_pmic_read
+ *
+ * Description:
+ *   Read the value from the specified sub address
+ *
+ * Input Parameter:
+ *   addr - sub address
+ *   buf - pointer to read buffer
+ *   size - byte count of read
+ *
+ * Returned Value:
+ *   Return 0 on success. Otherwise, return a negated errno.
+ *
+ ****************************************************************************/
+
+int board_pmic_read(uint8_t addr, void *buf, uint32_t size)
+{
+  return cxd56_pmic_read(addr, buf, size);
+}
+
+/****************************************************************************
+ * Name: board_pmic_write
+ *
+ * Description:
+ *   Write the value to the specified sub address
+ *
+ * Input Parameter:
+ *   addr - sub address
+ *   buf - pointer to write buffer
+ *   size - byte count of write
+ *
+ * Returned Value:
+ *   Return 0 on success. Otherwise, return a negated errno.
+ *
+ ****************************************************************************/
+
+int board_pmic_write(uint8_t addr, void *buf, uint32_t size)
+{
+  return cxd56_pmic_write(addr, buf, size);
+}
+
+/****************************************************************************
+ * Name: board_power_setup
+ *
+ * Description:
+ *   Initial setup for board-specific power control
+ *
+ ****************************************************************************/
+
+int board_power_setup(int status)
+{
+  board_power_control(POWER_LDO_PERI, false);
+  board_power_control(POWER_AUDIO_DVDD | POWER_LNA, false);
+
+  return 0;
+}
+
+/****************************************************************************
  * Name: board_power_control
  *
  * Description:
