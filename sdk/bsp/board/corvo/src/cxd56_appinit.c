@@ -228,12 +228,11 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-  /* External device power off */
-
-  board_power_control(POWER_LDO_PERI, false);
-  board_power_control(POWER_AUDIO_DVDD | POWER_LNA, false);
-
   up_pm_acquire_freqlock(&g_hv_lock);
+
+  /* Setup the power of external device */
+
+  board_power_setup(0);
 
 #ifdef CONFIG_CXD56_SCU
   scu_initialize();
