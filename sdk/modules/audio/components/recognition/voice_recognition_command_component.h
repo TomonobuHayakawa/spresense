@@ -46,6 +46,18 @@
 #include "dsp_driver/include/dsp_drv.h"
 #include "components/common/component_common.h"
 
+typedef struct
+{
+  uint8_t vad_only;     /* Is VAD process onlu ? */
+  uint8_t *p_vad_param; /* Cotrol parameter for VAD */
+} InitVoiceCmdCompReqParam_t;
+
+typedef struct
+{
+  uint32_t address;
+  uint32_t sample_num;
+} ExecVoiceCmdCompReqParam_t;
+
 class VoiceCmdComponent : public ComponentCommon
 {
 public:
@@ -62,22 +74,10 @@ public:
   /*-structure----------------------*/
   /* message parameter */
 
-  typedef struct
-  {
-    uint8_t vad_only;     /* Is VAD process only ? */
-    uint8_t *p_vad_param; /* Cotrol parameter for VAD */
-  } InitReqParam_t;
-
-  typedef struct
-  {
-    uint32_t address;
-    uint32_t sample_num;
-  } ExecReqParam_t;
-
   uint32_t act(uint32_t *dsp_inf);
   bool deact();
-  int  init(InitReqParam_t *p_param);
-  int  exec(ExecReqParam_t *p_param);
+  int  init(InitVoiceCmdCompReqParam_t *p_param);
+  int  exec(ExecVoiceCmdCompReqParam_t *p_param);
   int  flush();
   void recv_apu(DspDrvComPrm_t *p_dsp_param);
   MsgQueId get_apu_mid(void) { return m_dsp_dtq; };
@@ -111,8 +111,8 @@ extern uint32_t AS_voiceCmdCmpActivate(MsgQueId recognizer_dtq,
                                        MsgQueId dsp_dtq,
                                        uint32_t *dsp_inf);
 extern bool AS_voiceCmdCmpDeactivate(void);
-extern int  AS_voiceCmdCmpInit(VoiceCmdComponent::InitReqParam_t *pCmdInit);
-extern int  AS_voiceCmdCmpExec(VoiceCmdComponent::ExecReqParam_t *pCmdExec);
+extern int  AS_voiceCmdCmpInit(InitVoiceCmdCompReqParam_t *pCmdInit);
+extern int  AS_voiceCmdCmpExec(ExecVoiceCmdCompReqParam_t *pCmdExec);
 extern int  AS_voiceCmdCmpFlush(void);
 #ifdef __cplusplus
 }

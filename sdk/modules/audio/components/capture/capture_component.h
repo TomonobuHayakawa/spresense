@@ -152,11 +152,11 @@ bool AS_get_capture_comp_handler(CaptureComponentHandler *p_handle,
 
 bool AS_release_capture_comp_handler(CaptureComponentHandler p_handle);
 
-bool AS_init_capture(const CaptureComponentParam& param);
+bool AS_init_capture(const CaptureComponentParam *param);
 
-bool AS_exec_capture(const CaptureComponentParam& param);
+bool AS_exec_capture(const CaptureComponentParam *param);
 
-bool AS_stop_capture(const CaptureComponentParam& param);
+bool AS_stop_capture(const CaptureComponentParam *param);
 
 } /* extern "C" */
 

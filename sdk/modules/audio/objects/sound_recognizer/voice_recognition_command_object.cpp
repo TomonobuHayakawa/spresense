@@ -109,7 +109,7 @@ void VoiceRecognitionCommandObject::start(void)
 
   /* Initialize VAD/WuwSrlibrarys. */
 
-  VoiceCmdComponent::InitReqParam_t init_param;
+  InitVoiceCmdCompReqParam_t init_param;
   init_param.vad_only    = m_vad_only;
   init_param.p_vad_param = m_vad_param;
   AS_voiceCmdCmpInit(&init_param);
@@ -226,7 +226,7 @@ void VoiceRecognitionCommandObject::exec(MsgPacket *msg)
 
           /* Execute when data reaches the size of one processing. */
 
-          VoiceCmdComponent::ExecReqParam_t req_param;
+          ExecVoiceCmdCompReqParam_t req_param;
           req_param.address = reinterpret_cast<uint32_t>(m_vad_buf_pointer);
           req_param.sample_num = VAD_IN_SAMPLE_SIZE;
           AS_voiceCmdCmpExec(&req_param);
@@ -399,6 +399,16 @@ int AS_VoiceCmdObjEntry(int argc, char *argv[])
 
 bool AS_CreateRecognizer(FAR AsActRecognizerParam_t *param)
 {
+  /* Parameter check */
+
+  if (param == NULL)
+    {
+      RECOGNITION_OBJ_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+      return false;
+    }
+
+  /* Create */
+
   s_self_dtq    = param->msgq_id.recognizer;
   s_manager_dtq = param->msgq_id.mng;
   s_dsp_dtq     = param->msgq_id.dsp;

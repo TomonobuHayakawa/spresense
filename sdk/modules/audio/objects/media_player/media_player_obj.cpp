@@ -1212,7 +1212,7 @@ void PlayerObj::setGain(MsgPacket *msg)
   setparam.l_gain = param.l_gain;
   setparam.r_gain = param.r_gain;
 
-  if (AS_decode_setparam(setparam, m_p_dec_instance) == false)
+  if (AS_decode_setparam(&setparam, m_p_dec_instance) == false)
     {
       /* Do nothing. */
     }
@@ -1321,7 +1321,7 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
     ((m_input_device_handler->getBitLen() == AS_BITLENGTH_16) ?
      AudPcm16Bit : AudPcm24Bit);
 
-  rst = AS_decode_init(init_dec_comp_param, m_p_dec_instance, dsp_inf);
+  rst = AS_decode_init(&init_dec_comp_param, m_p_dec_instance, dsp_inf);
   if (rst != AS_ECODE_OK)
     {
       return rst;
@@ -1359,7 +1359,7 @@ void PlayerObj::stopPlay(void)
 
   if (param.output_buffer.p_buffer != NULL)
     {
-      if (AS_decode_stop(param, m_p_dec_instance) == false)
+      if (AS_decode_stop(&param, m_p_dec_instance) == false)
         {
           /* Do nothing. */
         }
@@ -1411,7 +1411,7 @@ void PlayerObj::decode(void* p_es, uint32_t es_size)
   param.output_buffer.size     = m_max_pcm_buff_size;
   param.num_of_au              = NUM_OF_AU;
 
-  if (AS_decode_exec(param, m_p_dec_instance) == false)
+  if (AS_decode_exec(&param, m_p_dec_instance) == false)
     {
       /* Do nothing. */
     }
@@ -1566,6 +1566,16 @@ int AS_SubPlayerObjEntry(int argc, char *argv[])
 /*--------------------------------------------------------------------------*/
 bool AS_CreatePlayer(AsPlayerId id, FAR AsCreatePlayerParam_t *param)
 {
+  /* Parameter check */
+
+  if (param == NULL)
+    {
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+      return false;
+    }
+
+  /* Create */
+
   if (id == AS_PLAYER_ID_0)
     {
       s_self_dtq    = param->msgq_id.player;
@@ -1607,14 +1617,23 @@ bool AS_CreatePlayer(AsPlayerId id, FAR AsCreatePlayerParam_t *param)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_ActivatePlayer(AsPlayerId id, FAR AsActivatePlayer &actparam)
+bool AS_ActivatePlayer(AsPlayerId id, FAR AsActivatePlayer *actparam)
 {
+  /* Parameter check */
+
+  if (actparam == NULL)
+    {
+      return false;
+    }
+
+  /* Activate */
+
   MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
 
   PlayerCommand cmd;
 
   cmd.player_id = id;
-  cmd.act_param = actparam;
+  cmd.act_param = *actparam;
 
   err_t er = MsgLib::send<PlayerCommand>(msgq_id,
                                          MsgPriNormal,
@@ -1627,14 +1646,23 @@ bool AS_ActivatePlayer(AsPlayerId id, FAR AsActivatePlayer &actparam)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_InitPlayer(AsPlayerId id, FAR AsInitPlayerParam &initparam)
+bool AS_InitPlayer(AsPlayerId id, FAR AsInitPlayerParam *initparam)
 {
+  /* Parameter check */
+
+  if (initparam == NULL)
+    {
+      return false;
+    }
+
+  /* Init */
+
   MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
 
   PlayerCommand cmd;
 
   cmd.player_id  = id;
-  cmd.init_param = initparam;
+  cmd.init_param = *initparam;
 
   err_t er = MsgLib::send<PlayerCommand>(msgq_id,
                                          MsgPriNormal,
@@ -1647,14 +1675,23 @@ bool AS_InitPlayer(AsPlayerId id, FAR AsInitPlayerParam &initparam)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_PlayPlayer(AsPlayerId id, FAR AsPlayPlayerParam &playparam)
+bool AS_PlayPlayer(AsPlayerId id, FAR AsPlayPlayerParam *playparam)
 {
+  /* Parameter check */
+
+  if (playparam == NULL)
+    {
+      return false;
+    }
+
+  /* Play */
+
   MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
 
   PlayerCommand cmd;
 
   cmd.player_id  = id;
-  cmd.play_param = playparam;
+  cmd.play_param = *playparam;
 
   err_t er = MsgLib::send<PlayerCommand>(msgq_id,
                                          MsgPriNormal,
@@ -1667,14 +1704,23 @@ bool AS_PlayPlayer(AsPlayerId id, FAR AsPlayPlayerParam &playparam)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_StopPlayer(AsPlayerId id, FAR AsStopPlayerParam &stopparam)
+bool AS_StopPlayer(AsPlayerId id, FAR AsStopPlayerParam *stopparam)
 {
+  /* Parameter check */
+
+  if (stopparam == NULL)
+    {
+      return false;
+    }
+
+  /* Stop */
+
   MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
 
   PlayerCommand cmd;
 
   cmd.player_id  = id;
-  cmd.stop_param = stopparam;
+  cmd.stop_param = *stopparam;
 
   err_t er = MsgLib::send<PlayerCommand>(msgq_id,
                                          MsgPriNormal,
@@ -1687,14 +1733,23 @@ bool AS_StopPlayer(AsPlayerId id, FAR AsStopPlayerParam &stopparam)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_SetPlayerGain(AsPlayerId id, FAR AsSetGainParam &gainparam)
+bool AS_SetPlayerGain(AsPlayerId id, FAR AsSetGainParam *gainparam)
 {
+  /* Parameter check */
+
+  if (gainparam == NULL)
+    {
+      return false;
+    }
+
+  /* Set gain */
+
   MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
 
   PlayerCommand cmd;
 
   cmd.player_id      = id;
-  cmd.set_gain_param = gainparam;
+  cmd.set_gain_param = *gainparam;
 
   err_t er = MsgLib::send<PlayerCommand>(msgq_id,
                                          MsgPriNormal,
@@ -1707,14 +1762,23 @@ bool AS_SetPlayerGain(AsPlayerId id, FAR AsSetGainParam &gainparam)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_RequestNextPlayerProcess(AsPlayerId id, FAR AsRequestNextParam &nextparam)
+bool AS_RequestNextPlayerProcess(AsPlayerId id, FAR AsRequestNextParam *nextparam)
 {
+  /* Parameter check */
+
+  if (nextparam == NULL)
+    {
+      return false;
+    }
+
+  /* Next request */
+
   MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
 
   PlayerCommand cmd;
 
   cmd.player_id      = id;
-  cmd.req_next_param = nextparam;
+  cmd.req_next_param = *nextparam;
 
   err_t er = MsgLib::send<PlayerCommand>(msgq_id,
                                          MsgPriNormal,
@@ -1727,14 +1791,23 @@ bool AS_RequestNextPlayerProcess(AsPlayerId id, FAR AsRequestNextParam &nextpara
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_DeactivatePlayer(AsPlayerId id, FAR AsDeactivatePlayer &deactparam)
+bool AS_DeactivatePlayer(AsPlayerId id, FAR AsDeactivatePlayer *deactparam)
 {
+  /* Parameter check */
+
+  if (deactparam == NULL)
+    {
+      return false;
+    }
+
+  /* Deactivate */
+
   MsgQueId msgq_id = (id == AS_PLAYER_ID_0) ? s_self_dtq : s_sub_self_dtq;
 
   PlayerCommand cmd;
 
   cmd.player_id   = id;
-  cmd.deact_param = deactparam;
+  cmd.deact_param = *deactparam;
 
   err_t er = MsgLib::send<PlayerCommand>(msgq_id,
                                          MsgPriNormal,

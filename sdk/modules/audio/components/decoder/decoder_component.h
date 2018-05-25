@@ -104,15 +104,15 @@ struct DecDebugLogInfo
 
 extern "C" {
 
-uint32_t AS_decode_init(const InitDecCompParam& param,
+uint32_t AS_decode_init(const InitDecCompParam *param,
                         void *p_instance,
                         uint32_t *dsp_inf);
 
-bool AS_decode_exec(const ExecDecCompParam& param, void *p_instance);
+bool AS_decode_exec(const ExecDecCompParam *param, void *p_instance);
 
-bool AS_decode_stop(const StopDecCompParam& param, void *p_instance);
+bool AS_decode_stop(const StopDecCompParam *param, void *p_instance);
 
-bool AS_decode_setparam(const SetDecCompParam& param, void *p_instance);
+bool AS_decode_setparam(const SetDecCompParam *param, void *p_instance);
 
 bool AS_decode_recv_apu(void *p_param, void *p_instance);
 

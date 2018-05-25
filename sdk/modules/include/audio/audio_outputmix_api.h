@@ -331,7 +331,7 @@ bool AS_CreateOutputMixer(FAR AsCreateOutputMixParam_t *param);
  * @retval     false : failure
  */
 
-bool AS_ActivateOutputMixer(uint8_t handle, FAR AsActivateOutputMixer &actparam);
+bool AS_ActivateOutputMixer(uint8_t handle, FAR AsActivateOutputMixer *actparam);
 
 /**
  * @brief Send audio data via outputmixer
@@ -342,7 +342,7 @@ bool AS_ActivateOutputMixer(uint8_t handle, FAR AsActivateOutputMixer &actparam)
  * @retval     false : failure
  */
 
-bool AS_SendDataOutputMixer(FAR AsSendDataOutputMixer &sendparam);
+bool AS_SendDataOutputMixer(FAR AsSendDataOutputMixer *sendparam);
 
 /**
  * @brief Set clock recovery parameters
@@ -353,7 +353,7 @@ bool AS_SendDataOutputMixer(FAR AsSendDataOutputMixer &sendparam);
  * @retval     false : failure
  */
 
-bool AS_FrameTermFineControlOutputMixer(uint8_t handle, FAR AsFrameTermFineControl &ftermparam);
+bool AS_FrameTermFineControlOutputMixer(uint8_t handle, FAR AsFrameTermFineControl *ftermparam);
 
 /**
  * @brief Deactivate audio output mixer
@@ -364,7 +364,7 @@ bool AS_FrameTermFineControlOutputMixer(uint8_t handle, FAR AsFrameTermFineContr
  * @retval     false : failure
  */
 
-bool AS_DeactivateOutputMixer(uint8_t handle, FAR AsDeactivateOutputMixer &deactparam);
+bool AS_DeactivateOutputMixer(uint8_t handle, FAR AsDeactivateOutputMixer *deactparam);
 
 /**
  * @brief Delete output mixer

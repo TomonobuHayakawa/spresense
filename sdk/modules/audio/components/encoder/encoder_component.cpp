@@ -80,21 +80,48 @@ bool AS_encode_deactivate()
 }
 
 /*--------------------------------------------------------------------*/
-uint32_t AS_encode_init(const InitEncParam& param, uint32_t *dsp_inf)
+uint32_t AS_encode_init(const InitEncParam *param, uint32_t *dsp_inf)
 {
-  return s_instance->init_apu(param, dsp_inf);
+  /* Parameter check */
+
+  if (param == NULL || dsp_inf == NULL)
+    {
+      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+    }
+
+  /* Init */
+
+  return s_instance->init_apu(*param, dsp_inf);
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_encode_exec(const ExecEncParam& param)
+bool AS_encode_exec(const ExecEncParam *param)
 {
-  return s_instance->exec_apu(param);
+  /* Parameter check */
+
+  if (param == NULL)
+    {
+      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+    }
+
+  /* Execute */
+
+  return s_instance->exec_apu(*param);
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_encode_stop(const StopEncParam& param)
+bool AS_encode_stop(const StopEncParam *param)
 {
-  return s_instance->flush_apu(param);
+  /* Parameter check */
+
+  if (param == NULL)
+    {
+      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+    }
+
+  /* Stop */
+
+  return s_instance->flush_apu(*param);
 }
 
 /*--------------------------------------------------------------------*/

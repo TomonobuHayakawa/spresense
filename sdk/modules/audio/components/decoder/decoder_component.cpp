@@ -72,29 +72,65 @@ extern "C" {
 /*--------------------------------------------------------------------
     C Interface
   --------------------------------------------------------------------*/
-uint32_t AS_decode_init(const InitDecCompParam& param,
+uint32_t AS_decode_init(const InitDecCompParam *param,
                         void *p_instance,
                         uint32_t *dsp_inf)
 {
-  return ((DecoderComponent *)p_instance)->init_apu(param, dsp_inf);
+  /* Parameter check */
+
+  if (param == NULL || p_instance == NULL || dsp_inf == NULL)
+    {
+      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+    }
+
+  /* Init */
+
+  return ((DecoderComponent *)p_instance)->init_apu(*param, dsp_inf);
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_decode_exec(const ExecDecCompParam& param, void *p_instance)
+bool AS_decode_exec(const ExecDecCompParam *param, void *p_instance)
 {
-  return ((DecoderComponent *)p_instance)->exec_apu(param);
+  /* Parameter check */
+
+  if (param == NULL || p_instance == NULL)
+    {
+      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+    }
+
+  /* Execute */
+
+  return ((DecoderComponent *)p_instance)->exec_apu(*param);
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_decode_stop(const StopDecCompParam& param, void *p_instance)
+bool AS_decode_stop(const StopDecCompParam *param, void *p_instance)
 {
-  return ((DecoderComponent *)p_instance)->flush_apu(param);
+  /* Parameter check */
+
+  if (param == NULL || p_instance == NULL)
+    {
+      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+    }
+
+  /* Stop */
+
+  return ((DecoderComponent *)p_instance)->flush_apu(*param);
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_decode_setparam(const SetDecCompParam& param, void *p_instance)
+bool AS_decode_setparam(const SetDecCompParam *param, void *p_instance)
 {
-  return ((DecoderComponent *)p_instance)->setparam_apu(param);
+  /* Parameter check */
+
+  if (param == NULL || p_instance == NULL)
+    {
+      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+    }
+
+  /* Set param */
+
+  return ((DecoderComponent *)p_instance)->setparam_apu(*param);
 }
 
 /*--------------------------------------------------------------------*/

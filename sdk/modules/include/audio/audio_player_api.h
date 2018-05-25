@@ -662,7 +662,7 @@ bool AS_CreatePlayer(AsPlayerId id, FAR AsCreatePlayerParam_t *param);
  * @retval     false : failure
  */
 
-bool AS_ActivatePlayer(AsPlayerId id, FAR AsActivatePlayer &actparam);
+bool AS_ActivatePlayer(AsPlayerId id, FAR AsActivatePlayer *actparam);
 
 /**
  * @brief Initialize audio (sub)player
@@ -673,7 +673,7 @@ bool AS_ActivatePlayer(AsPlayerId id, FAR AsActivatePlayer &actparam);
  * @retval     false : failure
  */
 
-bool AS_InitPlayer(AsPlayerId id, FAR AsInitPlayerParam &initparam);
+bool AS_InitPlayer(AsPlayerId id, FAR AsInitPlayerParam *initparam);
 
 /**
  * @brief Play audio (sub)player
@@ -684,7 +684,7 @@ bool AS_InitPlayer(AsPlayerId id, FAR AsInitPlayerParam &initparam);
  * @retval     false : failure
  */
 
-bool AS_PlayPlayer(AsPlayerId id, FAR AsPlayPlayerParam &playparam);
+bool AS_PlayPlayer(AsPlayerId id, FAR AsPlayPlayerParam *playparam);
 
 /**
  * @brief Stop audio (sub)player
@@ -695,7 +695,7 @@ bool AS_PlayPlayer(AsPlayerId id, FAR AsPlayPlayerParam &playparam);
  * @retval     false : failure
  */
 
-bool AS_StopPlayer(AsPlayerId id, FAR AsStopPlayerParam &stopparam);
+bool AS_StopPlayer(AsPlayerId id, FAR AsStopPlayerParam *stopparam);
 
 /**
  * @brief Set audio gain level of (sub)player
@@ -706,7 +706,7 @@ bool AS_StopPlayer(AsPlayerId id, FAR AsStopPlayerParam &stopparam);
  * @retval     false : failure
  */
 
-bool AS_SetPlayerGain(AsPlayerId id, FAR AsSetGainParam &gainparam);
+bool AS_SetPlayerGain(AsPlayerId id, FAR AsSetGainParam *gainparam);
 
 /**
  * @brief Request next process(decode) to (sub)player
@@ -717,7 +717,7 @@ bool AS_SetPlayerGain(AsPlayerId id, FAR AsSetGainParam &gainparam);
  * @retval     false : failure
  */
 
-bool AS_RequestNextPlayerProcess(AsPlayerId id, FAR AsRequestNextParam &nextparam);
+bool AS_RequestNextPlayerProcess(AsPlayerId id, FAR AsRequestNextParam *nextparam);
 
 /**
  * @brief Deactivate (sub)player
@@ -728,7 +728,7 @@ bool AS_RequestNextPlayerProcess(AsPlayerId id, FAR AsRequestNextParam &nextpara
  * @retval     false : failure
  */
 
-bool AS_DeactivatePlayer(AsPlayerId id, FAR AsDeactivatePlayer &deactparam);
+bool AS_DeactivatePlayer(AsPlayerId id, FAR AsDeactivatePlayer *deactparam);
 
 /**
  * @brief Deactivate audio main player

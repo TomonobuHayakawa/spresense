@@ -681,7 +681,7 @@ void MediaRecorderObjectTask::startOnReady(MsgPacket *msg)
   cap_comp_param.init_param.capture_bit_width = m_pcm_bit_width;
   cap_comp_param.init_param.callback          = capture_comp_done_callback;
   cap_comp_param.handle                       = m_capture_from_mic_hdlr;
-  if (!AS_init_capture(cap_comp_param))
+  if (!AS_init_capture(&cap_comp_param))
     {
       m_callback(AsRecorderEventStart, AS_ECODE_DMAC_INITIALIZE_ERROR, 0);
       return;
@@ -739,7 +739,7 @@ void MediaRecorderObjectTask::startOnReady(MsgPacket *msg)
         {
           enc_param.complexity = m_complexity;
         }
-      apu_result = AS_encode_init(enc_param, &dsp_inf);
+      apu_result = AS_encode_init(&enc_param, &dsp_inf);
       result = AS_encode_recv_done();
       if (!result)
         {
@@ -789,7 +789,7 @@ void MediaRecorderObjectTask::stopOnRec(MsgPacket *msg)
   cap_comp_param.handle          = m_capture_from_mic_hdlr;
   cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
 
-  AS_stop_capture(cap_comp_param);
+  AS_stop_capture(&cap_comp_param);
 
   m_state = RecorderStateStopping;
 }
@@ -1061,7 +1061,7 @@ void MediaRecorderObjectTask::captureDoneOnRec(MsgPacket *msg)
 
   cap_comp_param.handle                = m_capture_from_mic_hdlr;
   cap_comp_param.exec_param.pcm_sample = getPcmCaptureSample();
-  AS_exec_capture(cap_comp_param);
+  AS_exec_capture(&cap_comp_param);
 
   /* Transfer Mic-in pcm data. */
 
@@ -1105,7 +1105,7 @@ bool MediaRecorderObjectTask::startCapture()
       cap_comp_param.handle                = m_capture_from_mic_hdlr;
       cap_comp_param.exec_param.pcm_sample = getPcmCaptureSample();
 
-      result = AS_exec_capture(cap_comp_param);
+      result = AS_exec_capture(&cap_comp_param);
       if (!result)
         {
           break;
@@ -1171,7 +1171,7 @@ void MediaRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_siz
       param.output_buffer.p_buffer =
         reinterpret_cast<unsigned long *>(getOutputBufAddr());
       param.output_buffer.size     = m_max_output_pcm_size;
-      AS_encode_exec(param);
+      AS_encode_exec(&param);
 
       m_cnv_in_buf_mh_que.push(mh);
     }
@@ -1213,7 +1213,7 @@ void MediaRecorderObjectTask::stopEnc(void)
       param.output_buffer.p_buffer =
         reinterpret_cast<unsigned long *>(getOutputBufAddr());
       param.output_buffer.size = m_max_output_pcm_size;
-      AS_encode_stop(param);
+      AS_encode_stop(&param);
     }
 }
 
@@ -1554,7 +1554,7 @@ void MediaRecorderObjectTask::writeToDataSinker(
           cap_comp_param.handle          = m_capture_from_mic_hdlr;
           cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
 
-          AS_stop_capture(cap_comp_param);
+          AS_stop_capture(&cap_comp_param);
 
           m_state = RecorderStateOverflow;
           m_fifo_overflow = true;

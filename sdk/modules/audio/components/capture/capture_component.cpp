@@ -266,6 +266,16 @@ int AS_CaptureCmpEntryDev1(int argc, char *argv[])
 /*--------------------------------------------------------------------*/
 bool AS_CreateCapture(FAR AsActCaptureParam_t *param)
 {
+  /* Parameter check */
+
+  if (param == NULL)
+    {
+      CAPTURE_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+      return false;
+    }
+
+  /* Create */
+
   MsgQueId dev0_self_dtq      = param->msgq_id.dev0_req;
   MsgQueId dev0_self_sync_dtq = param->msgq_id.dev0_sync;
   MsgQueId dev1_self_dtq      = param->msgq_id.dev1_req;
@@ -468,9 +478,18 @@ bool AS_release_capture_comp_handler(CaptureComponentHandler handle)
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_init_capture(const CaptureComponentParam& param)
+bool AS_init_capture(const CaptureComponentParam *param)
 {
-  if (!s_pFactory->parse(param.handle, MSG_AUD_BB_CMD_INIT, param))
+  /* Parameter check */
+
+  if (param == NULL)
+    {
+      return false;
+    }
+
+  /* Init */
+
+  if (!s_pFactory->parse(param->handle, MSG_AUD_BB_CMD_INIT, *param))
     {
       return false;
     }
@@ -479,9 +498,18 @@ bool AS_init_capture(const CaptureComponentParam& param)
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_exec_capture(const CaptureComponentParam& param)
+bool AS_exec_capture(const CaptureComponentParam *param)
 {
-  if (!s_pFactory->parse(param.handle, MSG_AUD_BB_CMD_RUN, param))
+  /* Parameter check */
+
+  if (param == NULL)
+    {
+      return false;
+    }
+
+  /* Execute */
+
+  if (!s_pFactory->parse(param->handle, MSG_AUD_BB_CMD_RUN, *param))
     {
       return false;
     }
@@ -490,16 +518,25 @@ bool AS_exec_capture(const CaptureComponentParam& param)
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_stop_capture(const CaptureComponentParam& param)
+bool AS_stop_capture(const CaptureComponentParam *param)
 {
-  if (!s_pFactory->parse(param.handle, MSG_AUD_BB_CMD_STOP, param))
+  /* Parameter check */
+
+  if (param == NULL)
+    {
+      return false;
+    }
+
+  /* Stop */
+
+  if (!s_pFactory->parse(param->handle, MSG_AUD_BB_CMD_STOP, *param))
     {
       return false;
     }
 
   /* Wait response of STOP */
 
-  return rcv_result(param.handle);
+  return rcv_result(param->handle);
 }
 
 /*--------------------------------------------------------------------*/

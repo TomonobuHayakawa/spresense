@@ -94,9 +94,9 @@ uint32_t AS_encode_activate(AudioCodec param,
                             PoolId apu_pool_id,
                             uint32_t *dsp_inf);
 bool AS_encode_deactivate(void);
-uint32_t AS_encode_init(const InitEncParam&, uint32_t *dsp_inf);
-bool AS_encode_exec(const ExecEncParam&);
-bool AS_encode_stop(const StopEncParam&);
+uint32_t AS_encode_init(const InitEncParam*, uint32_t *dsp_inf);
+bool AS_encode_exec(const ExecEncParam*);
+bool AS_encode_stop(const StopEncParam*);
 bool AS_encode_recv_apu(void *p_param);
 bool AS_encode_recv_done(void);
 

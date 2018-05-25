@@ -99,6 +99,16 @@ int AS_SoundEffectObjEntry(int argc, char *argv[])
 /*--------------------------------------------------------------------*/
 bool AS_CreateEffector(FAR AsActEffectorParam_t *param)
 {
+  /* Paramter check */
+
+  if (param == NULL)
+    {
+      SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+      return false;
+    }
+
+  /* Create */
+
   s_self_dtq        = param->msgq_id.effector;
   s_manager_dtq     = param->msgq_id.mng;
   s_recognizer_dtq  = param->msgq_id.recognizer;
@@ -837,7 +847,7 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
       cap_comp_param.handle                = m_capture_from_mic_hdlr;
       cap_comp_param.exec_param.pcm_sample = MAX_CAPTURE_SAMPLE_NUM;
 
-      if (!AS_exec_capture(cap_comp_param))
+      if (!AS_exec_capture(&cap_comp_param))
         {
           sendAudioCmdCmplt(cmd, AS_ECODE_DMAC_READ_ERROR);
           return;
@@ -846,7 +856,7 @@ void SoundEffectObject::startOnReady(MsgPacket *msg)
       cap_comp_param.handle                = m_capture_from_i2s_hdlr;
       cap_comp_param.exec_param.pcm_sample = MAX_CAPTURE_SAMPLE_NUM;
 
-      if (!AS_exec_capture(cap_comp_param))
+      if (!AS_exec_capture(&cap_comp_param))
         {
           sendAudioCmdCmplt(cmd, AS_ECODE_DMAC_READ_ERROR);
           return;
@@ -1066,7 +1076,7 @@ void SoundEffectObject::inputOnActive(MsgPacket *msg)
       cap_comp_param.handle                = m_capture_from_mic_hdlr;
       cap_comp_param.exec_param.pcm_sample = MAX_CAPTURE_SAMPLE_NUM;
 
-      AS_exec_capture(cap_comp_param);
+      AS_exec_capture(&cap_comp_param);
     }
   else if (CaptureDeviceI2S == param.output_device)
     {
@@ -1077,7 +1087,7 @@ void SoundEffectObject::inputOnActive(MsgPacket *msg)
       cap_comp_param.handle                = m_capture_from_i2s_hdlr;
       cap_comp_param.exec_param.pcm_sample = MAX_CAPTURE_SAMPLE_NUM;
 
-      AS_exec_capture(cap_comp_param);
+      AS_exec_capture(&cap_comp_param);
     }
   else
     {
@@ -1101,11 +1111,11 @@ void SoundEffectObject::inputOnStopping(MsgPacket *msg)
           cap_comp_param.handle          = m_capture_from_mic_hdlr;
           cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
 
-          AS_stop_capture(cap_comp_param);
+          AS_stop_capture(&cap_comp_param);
 
           cap_comp_param.handle = m_capture_from_i2s_hdlr;
 
-          AS_stop_capture(cap_comp_param);
+          AS_stop_capture(&cap_comp_param);
 
           m_capt_sync_wait_flg = false;
         }
@@ -1400,7 +1410,7 @@ uint32_t SoundEffectObject::initMfe(const AudioCommand& cmd)
   cap_comp_param.init_param.callback          = capture_done_callback;
   cap_comp_param.handle                       = m_capture_from_mic_hdlr;
 
-  if (!AS_init_capture(cap_comp_param))
+  if (!AS_init_capture(&cap_comp_param))
     {
       return AS_ECODE_DMAC_INITIALIZE_ERROR;
     }
@@ -1415,7 +1425,7 @@ uint32_t SoundEffectObject::initMfe(const AudioCommand& cmd)
   cap_comp_param.init_param.callback          = capture_done_callback;
   cap_comp_param.handle                       = m_capture_from_i2s_hdlr;
 
-  if (!AS_init_capture(cap_comp_param))
+  if (!AS_init_capture(&cap_comp_param))
     {
       return AS_ECODE_DMAC_INITIALIZE_ERROR;
     }

@@ -405,7 +405,7 @@ extern "C"
 {
 #endif
 /**
- * @brief Activate audio recorder
+ * @brief Create audio recorder
  *
  * @param[in] param: Parameters of resources used by audio recorder
  *
@@ -415,14 +415,52 @@ extern "C"
 
 bool AS_CreateMediaRecorder(FAR AsActRecorderParam_t *param);
 
+/**
+ * @brief Activate audio recorder
+ *
+ * @param[in] param: Activation parameters
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
 
 bool AS_ActivateMediaRecorder(FAR AsActivateRecorder *actparam);
 
+/**
+ * @brief Init audio recorder
+ *
+ * @param[in] param: Initialization parameters
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
 bool AS_InitMediaRecorder(FAR AsInitRecorderParam *initparam);
+
+/**
+ * @brief Start audio recorder
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
 
 bool AS_StartMediaRecorder(void);
 
+/**
+ * @brief Stop audio recorder
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
 bool AS_StopMediaRecorder(void);
+
+/**
+ * @brief Deactivate audio recorder
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
 
 bool AS_DeactivateMediaRecorder(void);
 

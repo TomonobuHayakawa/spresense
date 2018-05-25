@@ -207,6 +207,16 @@ int AS_OutputMixObjEntry(int argc, char *argv[])
 /*--------------------------------------------------------------------------*/
 bool AS_CreateOutputMixer(FAR AsCreateOutputMixParam_t *param)
 {
+  /* Parameter check */
+
+  if (param == NULL)
+    {
+      OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
+      return false;
+    }
+
+  /* Create */
+
   s_self_dtq    = param->msgq_id.mixer;
   s_render_path0_filter_apu_dtq     = param->msgq_id.render_path0_filter_dsp;
   s_render_path1_filter_apu_dtq     = param->msgq_id.render_path1_filter_dsp;
@@ -229,12 +239,21 @@ bool AS_CreateOutputMixer(FAR AsCreateOutputMixParam_t *param)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_ActivateOutputMixer(uint8_t handle, FAR AsActivateOutputMixer &actparam)
+bool AS_ActivateOutputMixer(uint8_t handle, FAR AsActivateOutputMixer *actparam)
 {
+  /* Parameter check */
+
+  if (actparam == NULL)
+    {
+      return false;
+    }
+
+  /* Activate */
+
   OutputMixerCommand cmd;
 
   cmd.handle    = handle;
-  cmd.act_param = actparam;
+  cmd.act_param = *actparam;
 
   err_t er = MsgLib::send<OutputMixerCommand>(s_self_dtq,
                                               MsgPriNormal,
@@ -247,30 +266,46 @@ bool AS_ActivateOutputMixer(uint8_t handle, FAR AsActivateOutputMixer &actparam)
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_SendDataOutputMixer(FAR AsSendDataOutputMixer &sendparam)
+bool AS_SendDataOutputMixer(FAR AsSendDataOutputMixer *sendparam)
 {
-  /* Reload parameters */
+  /* Parameter check */
 
-  sendparam.pcm.identifier = sendparam.handle;
-  sendparam.pcm.callback   = sendparam.callback;
+  if (sendparam == NULL)
+    {
+      return false;
+    }
+
+  /* Send data, reload parameters */
+
+  sendparam->pcm.identifier = sendparam->handle;
+  sendparam->pcm.callback   = sendparam->callback;
 
   err_t er = MsgLib::send<AsPcmDataParam>(s_self_dtq,
                                           MsgPriNormal,
                                           MSG_AUD_MIX_CMD_DATA,
                                           s_self_dtq,
-                                          sendparam.pcm);
+                                          sendparam->pcm);
   F_ASSERT(er == ERR_OK);
 
   return true;
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_FrameTermFineControlOutputMixer(uint8_t handle, FAR AsFrameTermFineControl &ftermparam)
+bool AS_FrameTermFineControlOutputMixer(uint8_t handle, FAR AsFrameTermFineControl *ftermparam)
 {
+  /* Parameter check */
+
+  if (ftermparam == NULL)
+    {
+      return false;
+    }
+
+  /* Set frame term */
+
   OutputMixerCommand cmd;
 
   cmd.handle      = handle;
-  cmd.fterm_param = ftermparam;
+  cmd.fterm_param = *ftermparam;
 
   err_t er = MsgLib::send<OutputMixerCommand>(s_self_dtq,
                                               MsgPriNormal,
@@ -283,12 +318,21 @@ bool AS_FrameTermFineControlOutputMixer(uint8_t handle, FAR AsFrameTermFineContr
 }
 
 /*--------------------------------------------------------------------------*/
-bool AS_DeactivateOutputMixer(uint8_t handle, FAR AsDeactivateOutputMixer &deactparam)
+bool AS_DeactivateOutputMixer(uint8_t handle, FAR AsDeactivateOutputMixer *deactparam)
 {
+  /* Parameter check */
+
+  if (deactparam == NULL)
+    {
+      return false;
+    }
+
+  /* Deactivate */
+
   OutputMixerCommand cmd;
 
   cmd.handle      = handle;
-  cmd.deact_param = deactparam;
+  cmd.deact_param = *deactparam;
 
   err_t er = MsgLib::send<OutputMixerCommand>(s_self_dtq,
                                               MsgPriNormal,

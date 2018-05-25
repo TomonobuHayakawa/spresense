@@ -140,7 +140,7 @@ bool AS_voiceCmdCmpDeactivate(void)
 }
 
 /*--------------------------------------------------------------------*/
-int AS_voiceCmdCmpInit(VoiceCmdComponent::InitReqParam_t *pCmdInit)
+int AS_voiceCmdCmpInit(InitVoiceCmdCompReqParam_t *pCmdInit)
 {
   if (s_instance == NULL)
     {
@@ -152,7 +152,7 @@ int AS_voiceCmdCmpInit(VoiceCmdComponent::InitReqParam_t *pCmdInit)
 }
 
 /*--------------------------------------------------------------------*/
-int AS_voiceCmdCmpExec(VoiceCmdComponent::ExecReqParam_t *pCmdExec)
+int AS_voiceCmdCmpExec(ExecVoiceCmdCompReqParam_t *pCmdExec)
 {
   if (s_instance == NULL)
     {
@@ -250,7 +250,7 @@ bool VoiceCmdComponent::deact()
   return 0;
 }
 
-int VoiceCmdComponent::init(InitReqParam_t *p_param)
+int VoiceCmdComponent::init(InitVoiceCmdCompReqParam_t *p_param)
 {
   RECOGNITION_CMP_DBG("INIT: vad only %d, vad param %08x\n",
                       p_param->vad_only, p_param->p_vad_param);
@@ -313,7 +313,7 @@ int VoiceCmdComponent::init(InitReqParam_t *p_param)
         return 0;
 }
 
-int VoiceCmdComponent::exec(ExecReqParam_t *p_param)
+int VoiceCmdComponent::exec(ExecVoiceCmdCompReqParam_t *p_param)
 {
   /* Set parameters */
 
