@@ -61,6 +61,8 @@
  * Private Functions
  ****************************************************************************/
 
+#if defined(CONFIG_CXD56_PWM0) || defined(CONFIG_CXD56_PWM1) || \
+    defined(CONFIG_CXD56_PWM2) || defined(CONFIG_CXD56_PWM3)
 static int pwm_initialize(uint32_t channel)
 {
   char devname[16];
@@ -88,6 +90,7 @@ static int pwm_initialize(uint32_t channel)
 
   return 0;
 }
+#endif
 
 /****************************************************************************
  * Public Functions
