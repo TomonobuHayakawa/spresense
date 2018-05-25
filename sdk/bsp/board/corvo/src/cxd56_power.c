@@ -409,6 +409,8 @@ int board_reset(int status)
  *
  * Input Parameters:
  *   status - Status information provided with the power off event.
+ *            This status is used as the power shutdown level.
+ *            0= Deep Sleep, 1= Cold Sleep
  *
  * Returned Value:
  *   If this function returns, then it was not possible to power-off the
@@ -420,15 +422,30 @@ int board_reset(int status)
 #ifdef CONFIG_BOARDCTL_POWEROFF
 int board_power_off(int status)
 {
+  enum pm_sleepmode_e mode;
+
   /* Power off explicitly because GPOs are kept during deep sleeping */
 
   board_power_control(PMIC_GPO(0) | PMIC_GPO(1) | PMIC_GPO(2) | PMIC_GPO(3) |
                       PMIC_GPO(4) | PMIC_GPO(5) | PMIC_GPO(6) | PMIC_GPO(7),
                       false);
 
-  /* Enter deep sleep mode */
+  if (BOARD_POWEROFF_COLD == status)
+    {
+      /* Enter cold sleep mode */
 
-  up_pm_sleep(PM_SLEEP_DEEP); /* this function never returns */
+      mode = PM_SLEEP_COLD;
+    }
+  else
+    {
+      /* Enter deep sleep mode */
+
+      mode = PM_SLEEP_DEEP;
+    }
+
+  /* this function never returns */
+
+  up_pm_sleep(mode);
 
   return 0;
 }

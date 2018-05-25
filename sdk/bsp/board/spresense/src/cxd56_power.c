@@ -461,6 +461,8 @@ int board_reset(int status)
  *
  * Input Parameters:
  *   status - Status information provided with the power off event.
+ *            This status is used as the power shutdown level.
+ *            0= Deep Sleep, 1= Cold Sleep
  *
  * Returned Value:
  *   If this function returns, then it was not possible to power-off the
@@ -472,19 +474,8 @@ int board_reset(int status)
 #ifdef CONFIG_BOARDCTL_POWEROFF
 int board_power_off(int status)
 {
+  enum pm_sleepmode_e mode;
   uint8_t val;
-
-#ifdef CONFIG_BOARD_USB_DISABLE_IN_DEEP_SLEEPING
-  /* Disable USB detection to enter deep sleep with USB attached */
-
-  val = PMIC_SET_CHGOFF;
-  cxd56_pmic_write(PMIC_REG_CNT_USB2, &val, sizeof(val));
-#endif
-
-  /* Set DDC_ANA output to HiZ before deep sleep for power saving */
-
-  val = PMIC_PM_HIZ | PMIC_IOST_DEF | PMIC_IOMAX_DEF;
-  cxd56_pmic_write(PMIC_REG_DDC_ANA1, &val, sizeof(val));
 
   /* Power off explicitly because GPOs are kept during deep sleeping */
 
@@ -492,9 +483,38 @@ int board_power_off(int status)
                       PMIC_GPO(4) | PMIC_GPO(5) | PMIC_GPO(6) | PMIC_GPO(7),
                       false);
 
-  /* Enter deep sleep mode */
+  if (BOARD_POWEROFF_COLD == status)
+    {
+      /* Flash power off */
 
-  up_pm_sleep(PM_SLEEP_DEEP); /* this function never returns */
+      board_flash_power_control(false);
+
+      /* Enter cold sleep mode */
+
+      mode = PM_SLEEP_COLD;
+    }
+  else
+    {
+#ifdef CONFIG_BOARD_USB_DISABLE_IN_DEEP_SLEEPING
+      /* Disable USB detection to enter deep sleep with USB attached */
+
+      val = PMIC_SET_CHGOFF;
+      cxd56_pmic_write(PMIC_REG_CNT_USB2, &val, sizeof(val));
+#endif
+
+      /* Set DDC_ANA output to HiZ before deep sleep for power saving */
+
+      val = PMIC_PM_HIZ | PMIC_IOST_DEF | PMIC_IOMAX_DEF;
+      cxd56_pmic_write(PMIC_REG_DDC_ANA1, &val, sizeof(val));
+
+      /* Enter deep sleep mode */
+
+      mode = PM_SLEEP_DEEP;
+    }
+
+  /* this function never returns */
+
+  up_pm_sleep(mode);
 
   return 0;
 }

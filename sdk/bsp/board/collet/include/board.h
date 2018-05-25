@@ -153,6 +153,11 @@ enum board_power_device {
 
 };
 
+/* Power Off Level definitions *********************************************/
+
+#define BOARD_POWEROFF_DEEP (0)
+#define BOARD_POWEROFF_COLD (1)
+
 /* CXD5247 audio control definitions ***************************************/
 
 #define CXD5247_XRST  PIN_SPI3_CS2_X
