@@ -1,5 +1,5 @@
 ############################################################################
-# examples/adc_cxd56/Make.defs
+# examples/adc/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation
 #
@@ -32,6 +32,24 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_EXAMPLES_CXD56_ADC),y)
-CONFIGURED_APPS += adc_cxd56
-endif
+-include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
+
+# sensor built-in application info
+
+CONFIG_EXAMPLES_ADC_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+CONFIG_EXAMPLES_ADC_STACKSIZE ?= 2048
+
+APPNAME = adc
+PRIORITY = $(CONFIG_EXAMPLES_ADC_PRIORITY)
+STACKSIZE = $(CONFIG_EXAMPLES_ADC_STACKSIZE)
+
+# sensor Example
+
+ASRCS =
+MAINSRC = adc_main.c
+
+CONFIG_EXAMPLES_ADC_PROGNAME ?= adc$(EXEEXT)
+PROGNAME = $(CONFIG_EXAMPLES_ADC_PROGNAME)
+
+include $(APPDIR)/Application.mk

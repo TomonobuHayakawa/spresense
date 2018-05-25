@@ -3,16 +3,16 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-config EXAMPLES_CXD56_ADC
-	bool "CXD56 ADC example"
+config EXAMPLES_ADC
+	bool "ADC example"
 	default n
 	depends on CXD56_ADC
 	---help---
-		Enable the CXD56 ADC example
+		Enable the ADC example
 
-if EXAMPLES_CXD56_ADC
+if EXAMPLES_ADC
 
-config EXAMPLES_CXD56_ADC_PROGNAME
+config EXAMPLES_ADC_PROGNAME
 	string "Program name"
 	default "adc"
 	depends on BUILD_KERNEL
@@ -20,27 +20,27 @@ config EXAMPLES_CXD56_ADC_PROGNAME
 		This is the name of the program that will be use when the NSH ELF
 		program is installed.
 
-config EXAMPLES_CXD56_ADC_PRIORITY
+config EXAMPLES_ADC_PRIORITY
 	int "ADC example task priority"
 	default 100
 
-config EXAMPLES_CXD56_ADC_STACKSIZE
+config EXAMPLES_ADC_STACKSIZE
 	int "ADC example stack size"
 	default 2048
 
-config EXAMPLES_CXD56_ADC_DEVPATH
-    string "CXD56 ADC device path"
+config EXAMPLES_ADC_DEVPATH
+    string "ADC device path"
     default "/dev/lpadc0"
 	---help---
 		The default path to the ADC device. Default: /dev/lpadc0
 
-config EXAMPLES_CXD56_ADC_READCOUNT
+config EXAMPLES_ADC_READCOUNT
 	int "Number of reads"
 	default 10
 	---help---
 		Number of data reads.
 
-config EXAMPLES_CXD56_ADC_BUFSIZE
+config EXAMPLES_ADC_BUFSIZE
 	int "Buffer size"
 	default 16
 	---help---

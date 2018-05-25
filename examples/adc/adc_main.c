@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/adc_cxd56/adc_cxd56_main.c
+ * examples/adc/adc_main.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *
@@ -56,27 +56,33 @@
 #include <arch/chip/cxd56_adc.h>
 #endif
 
-#include "adc_cxd56.h"
-
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifndef CONFIG_EXAMPLES_CXD56_ADC_DEVPATH
-#  define CONFIG_EXAMPLES_CXD56_ADC_DEVPATH "/dev/lpadc0"
+#ifndef CONFIG_EXAMPLES_ADC_DEVPATH
+#  define CONFIG_EXAMPLES_ADC_DEVPATH "/dev/lpadc0"
 #endif
 
-#ifndef CONFIG_EXAMPLES_CXD56_ADC_READCOUNT
-#  define CONFIG_EXAMPLES_CXD56_ADC_READCOUNT 0
+#ifndef CONFIG_EXAMPLES_ADC_READCOUNT
+#  define CONFIG_EXAMPLES_ADC_READCOUNT 0
 #endif
 
-#ifndef CONFIG_EXAMPLES_CXD56_ADC_BUFSIZE
-#  define CONFIG_EXAMPLES_CXD56_ADC_BUFSIZE 0
+#ifndef CONFIG_EXAMPLES_ADC_BUFSIZE
+#  define CONFIG_EXAMPLES_ADC_BUFSIZE 0
 #endif
 
 /****************************************************************************
  * Private Types
  ****************************************************************************/
+
+struct adc_state_s
+{
+  bool      initialized;
+  FAR char *devpath;
+  int       count;
+  int       bufsize;
+};
 
 /****************************************************************************
  * Private Function Prototypes
@@ -86,7 +92,7 @@
  * Private Data
  ****************************************************************************/
 
-static struct adc_cxd56_state_s g_adcstate;
+static struct adc_state_s g_adcstate;
 
 /****************************************************************************
  * Public Data
@@ -100,7 +106,7 @@ static struct adc_cxd56_state_s g_adcstate;
  * Name: adc_devpath
  ****************************************************************************/
 
-static void adc_devpath(FAR struct adc_cxd56_state_s *adc,
+static void adc_devpath(FAR struct adc_state_s *adc,
                         FAR const char *devpath)
 {
   /* Get rid of any old device path */
@@ -119,7 +125,7 @@ static void adc_devpath(FAR struct adc_cxd56_state_s *adc,
  * Name: adc_help
  ****************************************************************************/
 
-static void adc_help(FAR struct adc_cxd56_state_s *adc)
+static void adc_help(FAR struct adc_state_s *adc)
 {
   printf("Usage: adc [OPTIONS]\n");
   printf("\nArguments are \"sticky\".  For example, once the ADC device is\n");
@@ -171,7 +177,7 @@ static int arg_decimal(FAR char **arg, FAR long *value)
  * Name: parse_args
  ****************************************************************************/
 
-static void parse_args(FAR struct adc_cxd56_state_s *adc, int argc,
+static void parse_args(FAR struct adc_state_s *adc, int argc,
                        FAR char **argv)
 {
   FAR char *ptr;
@@ -232,7 +238,7 @@ static void parse_args(FAR struct adc_cxd56_state_s *adc, int argc,
 #ifdef CONFIG_BUILD_KERNEL
 int main(int argc, FAR char *argv[])
 #else
-int adc_cxd56_main(int argc, char *argv[])
+int adc_main(int argc, char *argv[])
 #endif
 {
   int ret;
@@ -248,13 +254,13 @@ int adc_cxd56_main(int argc, char *argv[])
     {
       /* Set the default values */
 
-      adc_devpath(&g_adcstate, CONFIG_EXAMPLES_CXD56_ADC_DEVPATH);
-      g_adcstate.count = CONFIG_EXAMPLES_CXD56_ADC_READCOUNT;
+      adc_devpath(&g_adcstate, CONFIG_EXAMPLES_ADC_DEVPATH);
+      g_adcstate.count = CONFIG_EXAMPLES_ADC_READCOUNT;
       if (g_adcstate.count == 0)
         {
           g_adcstate.count = 10;
         }
-      g_adcstate.bufsize = CONFIG_EXAMPLES_CXD56_ADC_BUFSIZE;
+      g_adcstate.bufsize = CONFIG_EXAMPLES_ADC_BUFSIZE;
       if (g_adcstate.bufsize == 0)
         {
           g_adcstate.bufsize = 16;
