@@ -185,6 +185,23 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #if defined(CONFIG_BOARDCTL_POWEROFF) && !defined(CONFIG_NSH_DISABLE_POWEROFF)
 int cmd_poweroff(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
+  if (argc == 2)
+    {
+      /* Verify that the single argument is --cold */
+
+      if (strcmp(argv[1], "--cold") != 0)
+        {
+          nsh_output(vtbl, g_fmtarginvalid, argv[0]);
+          return ERROR;
+        }
+
+      /* Invoke the BOARDIOC_POWEROFF board control to sleep the board.  If
+       * the board_power_off function returns, then it was not possible to power-
+       * off the board due to some constraints.
+       */
+      (void)boardctl(BOARDIOC_POWEROFF, 1);
+    }
+
   /* Invoke the BOARDIOC_POWEROFF board control to shutdown the board.  If
    * the board_power_off function returns, then it was not possible to power-
    * off the board due to some constraints.
