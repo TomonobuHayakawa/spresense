@@ -73,7 +73,7 @@ BIN_DIR = $(APPDIR)$(DELIM)bin
 
 all: $(BIN)
 .PHONY: import install dirlinks context context_serialize context_rest .depdirs preconfig depend clean distclean
-.PRECIOUS: libexamples$(LIBEXT)
+.PRECIOUS: $(BIN)
 
 define MAKE_template
 	$(Q) cd $(1) && $(MAKE) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
@@ -95,6 +95,9 @@ $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
 
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) $(AR) $(BIN)
+	$(Q) for dir in $(CONFIGURED_APPS); do \
+		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)" install; \
+	done
 
 .install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
