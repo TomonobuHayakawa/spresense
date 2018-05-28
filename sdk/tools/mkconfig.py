@@ -4,6 +4,11 @@ import os
 import sys
 import re
 
+# DEQUOTE_SYMBOLS is listed configuration variable name that are quoted by
+# configuration tool but which must be unquoted when used in C code.
+
+DEQUOTE_SYMBOLS = ["CONFIG_SDK_USER_ENTRYPOINT"]
+
 # RESERVED_SYMBOLS is listed configuration definitions for avoid multiple
 # definition warnings.
 # For example, CONFIG_SENSORS exists both of source trees (nuttx and sdk).
@@ -50,6 +55,9 @@ with open(configfile, 'r') as f:
             sys.exit(2)
         name = m.group('name')
         value = m.group('value')
+
+        if name in DEQUOTE_SYMBOLS:
+            value = value[1:-1]
 
         isreserved = name in syms
         if isreserved:
