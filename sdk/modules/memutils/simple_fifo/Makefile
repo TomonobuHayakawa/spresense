@@ -64,6 +64,9 @@ LIB_OBJS = $(COBJS)
 all: $(BIN)
 .PHONY: context depend clean distclean
 
+$(COBJS): %$(OBJEXT): %.c
+	$(call COMPILE, $<, $@)
+
 $(CXXOBJS): %$(OBJEXT): %$.c
 	$(call COMPILE, $<, $@)
 
