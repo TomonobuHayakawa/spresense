@@ -90,7 +90,6 @@ $(MAINOBJ): %$(OBJEXT): %.c
 endif
 
 .built: $(OBJS)
-	$(call ARCHIVE, $(BIN), $(OBJS))
 	$(Q) touch $@
 
 ifeq ($(CONFIG_BUILD_KERNEL),y)
@@ -101,7 +100,8 @@ $(BIN_DIR)$(DELIM)$(PROGNAME): $(OBJS) $(MAINOBJ)
 
 install: $(BIN_DIR)$(DELIM)$(PROGNAME)
 else
-install:
+install: $(OBJS)
+	$(call ARCHIVE, $(BIN), $(OBJS))
 endif
 
 preconfig:

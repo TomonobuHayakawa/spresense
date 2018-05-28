@@ -85,7 +85,6 @@ $(COBJS) $(MAINOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
 really_build: $(OBJS)
-	$(call ARCHIVE, $(BIN), $(OBJS))
 	@touch .built
 
 .built:
@@ -103,6 +102,7 @@ install: $(BIN_DIR)$(DELIM)$(PROGNAME)
 
 else
 install:
+	$(call ARCHIVE, $(BIN), $(OBJS))
 
 endif
 
