@@ -77,16 +77,16 @@
 #define OUT_VSIZE_QVGA           (240)
 #define OUT_HSIZE_VGA            (640)
 #define OUT_VSIZE_VGA            (480)
-#define OUT_HSIZE_QUADVGA       (1280)
-#define OUT_VSIZE_QUADVGA        (960)
 #define OUT_HSIZE_HD            (1280)
 #define OUT_VSIZE_HD             (720)
+#define OUT_HSIZE_QUADVGA       (1280)
+#define OUT_VSIZE_QUADVGA        (960)
 #define OUT_HSIZE_FULLHD        (1920)
 #define OUT_VSIZE_FULLHD        (1080)
-#define OUT_HSIZE_5M            (2560)
-#define OUT_VSIZE_5M            (1920)
 #define OUT_HSIZE_3M            (2048)
 #define OUT_VSIZE_3M            (1536)
+#define OUT_HSIZE_5M            (2560)
+#define OUT_VSIZE_5M            (1920)
 
 #define OUT_YUV_VSIZE_MIN         (64)
 #define OUT_YUV_HSIZE_MIN         (96)
@@ -115,6 +115,18 @@
 #define OUT_JPGINT_30FPS_HSIZE_MAX (1280)
 #define OUT_JPGINT_15FPS_VSIZE_MAX (1224)
 #define OUT_JPGINT_15FPS_HSIZE_MAX (1632)
+
+#define AWB_ISX012_ATM              (0x20)
+#define AWB_ISX012_CLEARWEATHER     (0x04)
+#define AWB_ISX012_SHADE            (0x05)
+#define AWB_ISX012_CLOUDYWEATHER    (0x06)
+#define AWB_ISX012_FLUORESCENTLIGHT (0x07)
+#define AWB_ISX012_LIGHTBULB        (0x08)
+
+#define SHUTTER_ISX012_MAX          (65535)
+#define BRIGHTNESS_ISX012_MAX         (100)
+#define CONTRAST_ISX012_MAX           (100)
+#define JPEG_QUALITY_ISX012_MAX       (100)
 
 #define AF_EXT_TIMEOUT              (500) /* ms */
 #define AF_EXT_WAIT_TIME              (5) /* ms */
@@ -220,6 +232,21 @@ static int isx012_change_device_state(isx012_dev_t *priv, isx012_state_t state);
 static int isx012_write_reg(isx012_dev_t *priv, isx012_reg_t *reg);
 static int isx012_read_reg(isx012_dev_t *priv, isx012_reg_t *reg);
 static int isx012_change_mode_param(isx012_dev_t *priv, FAR isx012_t *imager);
+static int isx012_change_color(isx012_dev_t *priv, uint8_t val);
+static int isx012_change_iso(isx012_dev_t *priv, uint8_t val);
+static int isx012_change_shutter(isx012_dev_t *priv, uint16_t val);
+static int isx012_change_ev_correction(isx012_dev_t *priv, uint8_t val);
+static int isx012_change_brightness(isx012_dev_t *priv, uint8_t val);
+static int isx012_change_contrast(isx012_dev_t *priv, uint8_t val);
+static int isx012_change_jpeg_quality(isx012_dev_t *priv, uint8_t val);
+static int isx012_change_ygamma(isx012_dev_t *priv, uint8_t val);
+static int isx012_change_awb(isx012_dev_t *priv, uint8_t val);
+static int isx012_change_photometry(isx012_dev_t *priv, uint8_t val);
+static int isx012_get_iso(isx012_dev_t *priv, uint8_t *val);
+static int isx012_get_shutterl(isx012_dev_t *priv, uint16_t *val);
+static int isx012_get_shutterh(isx012_dev_t *priv, uint16_t *val);
+static int isx012_check_resolution(int16_t hsize, int16_t vsize);
+static int isx012_change_crop(isx012_dev_t *priv, isx012_param_crop_t *param);
 static int isx012_set_moni_refresh(isx012_dev_t *priv, unsigned long arg);
 
 /****************************************************************************
@@ -715,6 +742,9 @@ static int isx012_set_mode_param(isx012_dev_t *priv,
   return OK;
 }
 
+/******************************************************************************
+ * isx012_change_cisif
+ *****************************************************************************/
 static int isx012_change_cisif(isx012_dev_t *priv, cisif_param_t *param)
 {
   int ret = 0;
@@ -795,6 +825,9 @@ static int isx012_change_cisif(isx012_dev_t *priv, cisif_param_t *param)
   return ret;
 }
 
+/******************************************************************************
+ * isx012_change_camera_mode
+ *****************************************************************************/
 static int isx012_change_camera_mode(isx012_dev_t *priv, isx012_mode_t mode)
 {
   int ret = 0;
@@ -910,6 +943,9 @@ static int isx012_change_camera_mode(isx012_dev_t *priv, isx012_mode_t mode)
   return OK;
 }
 
+/******************************************************************************
+ * isx012_change_device_state
+ *****************************************************************************/
 static int isx012_change_device_state(isx012_dev_t *priv, isx012_state_t state)
 {
   int ret = 0;
@@ -1060,6 +1096,370 @@ static int isx012_change_mode_param(isx012_dev_t *priv, FAR isx012_t *imager)
   priv->image.cap_param.jpeg_vsize  = imager->cap_param.jpeg_vsize;
 
   return OK;
+}
+
+/******************************************************************************
+ * isx012_change_color
+ *****************************************************************************/
+static int isx012_change_color(isx012_dev_t *priv, uint8_t val)
+{
+  int ret;
+
+  if (val >= COLOR_ISX012_MAX)
+    {
+      return -EINVAL;
+    }
+
+  ret = isx012_putreg(priv, FMODE, val, 1);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_change_iso
+ *****************************************************************************/
+static int isx012_change_iso(isx012_dev_t *priv, uint8_t val)
+{
+  int ret;
+
+  if (val >= ISX012_ISO_MAX)
+    {
+      return -EINVAL;
+    }
+
+  ret = isx012_putreg(priv, ISO_TYPE1, val, 1);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_change_shutter
+ *****************************************************************************/
+static int isx012_change_shutter(isx012_dev_t *priv, uint16_t val)
+{
+  int ret;
+
+  if (val > SHUTTER_ISX012_MAX)
+    {
+      return -EINVAL;
+    }
+
+  ret = isx012_putreg(priv, SHT_PREMODE_TYPE1, val, 2);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_change_ev_correction
+ *****************************************************************************/
+static int isx012_change_ev_correction(isx012_dev_t *priv, uint8_t val)
+{
+  int ret;
+
+  if (val >= EV_ISX012_MAX)
+    {
+      return -EINVAL;
+    }
+
+  ret = isx012_putreg(priv, EVSEL, val, 1);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_change_brightness
+ *****************************************************************************/
+static int isx012_change_brightness(isx012_dev_t *priv, uint8_t val)
+{
+  int ret;
+
+  if (val > BRIGHTNESS_ISX012_MAX)
+    {
+      return -EINVAL;
+    }
+
+  ret = isx012_putreg(priv, UIBRIGHTNESS, val, 1);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_change_contrast
+ *****************************************************************************/
+static int isx012_change_contrast(isx012_dev_t *priv, uint8_t val)
+{
+  int ret;
+
+  if (val > CONTRAST_ISX012_MAX)
+    {
+      return -EINVAL;
+    }
+
+  ret = isx012_putreg(priv, UICONTRAST, val, 1);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_change_jpeg_quality
+ *****************************************************************************/
+static int isx012_change_jpeg_quality(isx012_dev_t *priv, uint8_t val)
+{
+  int ret;
+
+  if (val > JPEG_QUALITY_ISX012_MAX)
+    {
+      return -EINVAL;
+    }
+
+  ret = isx012_putreg(priv, INT_QLTY2, val, 1);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_change_ygamma
+ *****************************************************************************/
+static int isx012_change_ygamma(isx012_dev_t *priv, uint8_t val)
+{
+  int ret;
+
+  if (val >= YGAMMA_ISX012_MAX)
+    {
+      return -EINVAL;
+    }
+
+  ret = isx012_putreg(priv, YGAMMA_MODE, val, 1);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_change_awb
+ *****************************************************************************/
+static int isx012_change_awb(isx012_dev_t *priv, uint8_t val)
+{
+  int ret;
+  uint8_t num;
+  const uint8_t convawb[] =
+  {
+    AWB_ISX012_ATM,
+    AWB_ISX012_CLEARWEATHER,
+    AWB_ISX012_SHADE,
+    AWB_ISX012_CLOUDYWEATHER,
+    AWB_ISX012_FLUORESCENTLIGHT,
+    AWB_ISX012_LIGHTBULB,
+  };
+
+  if (val >= AWB_ISX012_MAX)
+    {
+      return -EINVAL;
+    }
+
+  num = convawb[val];
+  ret = isx012_putreg(priv, AWB_SN1, num, 1);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_change_photometry
+ *****************************************************************************/
+static int isx012_change_photometry(isx012_dev_t *priv, uint8_t val)
+{
+  int ret;
+
+  if (val >= PHOTOMETRY_ISX012_MAX)
+    {
+      return -EINVAL;
+    }
+
+  ret = isx012_putreg(priv, AE_SUB_SN1, val, 1);
+  return ret;
+}
+
+/******************************************************************************
+ * isx012_get_iso
+ *****************************************************************************/
+static int isx012_get_iso(isx012_dev_t *priv, uint8_t *val)
+{
+  *val = isx012_getreg(priv, ISOSENS_OUT, 1);
+  return OK;
+}
+
+/******************************************************************************
+ * isx012_get_shutterl
+ *****************************************************************************/
+static int isx012_get_shutterl(isx012_dev_t *priv, uint16_t *val)
+{
+  *val = isx012_getreg(priv, SHT_TIME_OUT_L, 2);
+  return OK;
+}
+
+/******************************************************************************
+ * isx012_get_shutterh
+ *****************************************************************************/
+static int isx012_get_shutterh(isx012_dev_t *priv, uint16_t *val)
+{
+  *val = isx012_getreg(priv, SHT_TIME_OUT_H, 2);
+  return OK;
+}
+
+static int isx012_check_resolution(int16_t hsize, int16_t vsize)
+{
+  int reso;
+
+  if ((hsize == OUT_HSIZE_QVGA) && (vsize == OUT_VSIZE_QVGA))
+    {
+      reso = RESOLUTION_ISX012_QVGA;
+    }
+  else if ((hsize == OUT_HSIZE_VGA) && (vsize == OUT_VSIZE_VGA))
+    {
+      reso = RESOLUTION_ISX012_VGA;
+    }
+  else if ((hsize == OUT_HSIZE_HD) && (vsize == OUT_VSIZE_HD))
+    {
+      reso = RESOLUTION_ISX012_HD;
+    }
+  else if ((hsize == OUT_HSIZE_QUADVGA) && (vsize == OUT_VSIZE_QUADVGA))
+    {
+      reso = RESOLUTION_ISX012_QUADVGA;
+    }
+  else if ((hsize == OUT_HSIZE_FULLHD) && (vsize == OUT_VSIZE_FULLHD))
+    {
+      reso = RESOLUTION_ISX012_FULLHD;
+    }
+  else if ((hsize == OUT_HSIZE_3M) && (vsize == OUT_VSIZE_3M))
+    {
+      reso = RESOLUTION_ISX012_3M;
+    }
+  else if ((hsize == OUT_HSIZE_5M) && (vsize == OUT_VSIZE_5M))
+    {
+      reso = RESOLUTION_ISX012_5M;
+    }
+  else
+    {
+      return -EINVAL;
+    }
+
+  return reso;
+}
+
+/******************************************************************************
+ * isx012_change_crop
+ *****************************************************************************/
+static int isx012_change_crop(isx012_dev_t *priv, isx012_param_crop_t *p)
+{
+  int ret = OK;
+  int idx;
+
+  const isx012_reg_t regs[EZOOM_ISX012_REGNUM] =
+    {
+      { EZOOM_MAG, 0x0100, 2 },
+      { OFFSET_X,  0x0000, 2 },
+      { OFFSET_Y,  0x0000, 2 },
+    };
+
+  if (!p->crop)
+    {
+      for (idx = 0; idx < EZOOM_ISX012_REGNUM; idx++)
+        {
+          ret = isx012_putreg(priv,
+                              regs[idx].regaddr,
+                              regs[idx].regval,
+                              regs[idx].regsize);
+          if (ret < 0)
+            {
+              return ret;
+            }
+
+        }
+
+    }
+  else
+    {
+      int format;
+      int rate;
+      int reso;
+      uint16_t hsize;
+      uint16_t vsize;
+      uint16_t px_offset;
+      uint16_t ezoom_val[EZOOM_ISX012_REGNUM];
+      uint16_t ezoom_mag_subsmpl[] =
+      {
+        1024,   /* QVGA     : x4  */
+         512,   /* VGA      : x2  */
+         256,   /* HD       : x1  */
+         256,   /* Quad-VGA : x1  */
+           0,   /* FULLHD   : invalid  */
+           0,   /* 3M       : invalid  */
+           0,   /* 5M       : invalid  */
+      };
+      uint16_t ezoom_mag_fllpx[] =
+      {
+        2048,   /* QVGA     : x8  */
+        1024,   /* VGA      : x4  */
+         512,   /* HD       : x2  */
+         512,   /* Quad-VGA : x2  */
+         256,   /* FULLHD   : x1  */
+         256,   /* 3M       : x1  */
+         256    /* 5M       : x1  */
+      };
+
+      if (g_mode == MODE_ISX012_MONITORING)
+        {
+          rate   = priv->image.moni_param.rate;
+          format = priv->image.moni_param.format;
+          hsize = (format == FORMAT_ISX012_YUV) ?
+            priv->image.moni_param.yuv_hsize:priv->image.moni_param.jpeg_hsize;
+          vsize = (format == FORMAT_ISX012_YUV) ?
+            priv->image.moni_param.yuv_vsize:priv->image.moni_param.jpeg_vsize;
+        }
+      else
+        {
+          rate   = priv->image.cap_param.rate;
+          format = priv->image.cap_param.format;
+          hsize = (format == FORMAT_ISX012_YUV) ?
+            priv->image.cap_param.yuv_hsize:priv->image.cap_param.jpeg_hsize;
+          vsize = (format == FORMAT_ISX012_YUV) ?
+            priv->image.cap_param.yuv_vsize:priv->image.cap_param.jpeg_vsize;
+        }
+
+      reso = isx012_check_resolution(hsize, vsize);
+      if (reso < 0)
+        {
+          return reso;
+        }
+
+      if ((rate>= RATE_ISX012_15FPS) && (rate <= RATE_ISX012_5FPS))
+        {
+          ezoom_val[EZOOM_ISX012_MAG] = ezoom_mag_fllpx[reso];
+          px_offset = EZOOM_ISX012_OFFSET_PX;
+        }
+      else if (rate == RATE_ISX012_30FPS)
+        {
+          if (!ezoom_mag_subsmpl[reso]) /* can not crop */
+            {
+              return -EPERM;
+            }
+
+          ezoom_val[EZOOM_ISX012_MAG] = ezoom_mag_subsmpl[reso];
+          px_offset = (EZOOM_ISX012_OFFSET_PX << 1);
+        }
+      else
+        {
+          return -EPERM; /* can not crop */
+        }
+
+      ezoom_val[EZOOM_ISX012_OFFSET_X] = p->x_offset * px_offset;
+      ezoom_val[EZOOM_ISX012_OFFSET_Y] = -(p->y_offset) * px_offset;
+
+      for (idx = 0; idx < EZOOM_ISX012_REGNUM; idx++)
+        {
+          ret = isx012_putreg(priv,
+                              regs[idx].regaddr,
+                              ezoom_val[idx],
+                              regs[idx].regsize);
+          if (ret < 0)
+            {
+              return ret;
+            }
+
+        }
+    }
+
+  return ret;
 }
 
 /******************************************************************************
@@ -1343,6 +1743,48 @@ int isx012_ioctl(int cmd, unsigned long arg)
         break;
       case IMGIOC_SETCISIF:
         ret = isx012_change_cisif(priv, (cisif_param_t *)arg);
+        break;
+      case IMGIOC_CHGCOLOR:
+        ret = isx012_change_color(priv, (uint8_t)arg);
+        break;
+      case IMGIOC_CHGISO:
+        ret = isx012_change_iso(priv, (uint8_t)arg);
+        break;
+      case IMGIOC_CHGSHUTTER:
+        ret = isx012_change_shutter(priv, (uint16_t)arg);
+        break;
+      case IMGIOC_CHGEV:
+        ret = isx012_change_ev_correction(priv, (uint8_t)arg);
+        break;
+      case IMGIOC_CHGBRIGHT:
+        ret = isx012_change_brightness(priv, (uint8_t)arg);
+        break;
+      case IMGIOC_CHGCONTRAST:
+        ret = isx012_change_contrast(priv, (uint8_t)arg);
+        break;
+      case IMGIOC_CHGJQUALITY:
+        ret = isx012_change_jpeg_quality(priv, (uint8_t)arg);
+        break;
+      case IMGIOC_CHGYGAMMA:
+        ret = isx012_change_ygamma(priv, (uint8_t)arg);
+        break;
+      case IMGIOC_CHGAWB:
+        ret = isx012_change_awb(priv, (uint8_t)arg);
+        break;
+      case IMGIOC_CHGPMETRY:
+        ret = isx012_change_photometry(priv, (uint8_t)arg);
+        break;
+      case IMGIOC_CHGCROP:
+        ret = isx012_change_crop(priv, (isx012_param_crop_t *)arg);
+        break;
+      case IMGIOC_GETISO:
+        ret = isx012_get_iso(priv, (uint8_t *)arg);
+        break;
+      case IMGIOC_GETSHTL:
+        ret = isx012_get_shutterl(priv, (uint16_t *)arg);
+        break;
+      case IMGIOC_GETSHTH:
+        ret = isx012_get_shutterh(priv, (uint16_t *)arg);
         break;
       case IMGIOC_READREG:
         ret = isx012_read_reg(priv, (isx012_reg_t *)arg);

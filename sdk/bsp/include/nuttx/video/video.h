@@ -97,8 +97,8 @@
 #define CONFIG_VIDEO_TASK_PRIORITY    100
 #define CONFIG_VIDEO_TASK_STKSIZE     2048
 
-#define VIDEO_JPEG_QUALITIY_MAX       100
-#define VIDEO_JPEG_QUALITIY_MIN       1
+#define VIDEO_JPEG_QUALITY_MAX        100
+#define VIDEO_JPEG_QUALITY_MIN        1
 
 #define VIDEO_CROP_30FPS_VGA_X_MAX    (320)
 #define VIDEO_CROP_30FPS_VGA_X_MIN    (-320)
@@ -308,15 +308,23 @@ typedef enum
   VIDEO_PARAM_ID_COLOR = 0,
   VIDEO_PARAM_ID_ISO,
   VIDEO_PARAM_ID_SHUTTER,
-  VIDEO_PARAM_ID_EV,
+  VIDEO_PARAM_ID_EV_CORRECTION,
   VIDEO_PARAM_ID_BRIGHTNESS,
   VIDEO_PARAM_ID_CONTRAST,
-  VIDEO_PARAM_ID_JPEG_QUALITIY,
+  VIDEO_PARAM_ID_JPEG_QUALITY,
   VIDEO_PARAM_ID_YGAMMA,
   VIDEO_PARAM_ID_AWB,
   VIDEO_PARAM_ID_PHOTOMETRY,
   VIDEO_PARAM_ID_MAX
-} video_img_sns_param_id_e;
+} video_img_sns_set_param_id_e;
+
+typedef enum
+{
+  VIDEO_PARAM_ID_RES_ISO = 0,
+  VIDEO_PARAM_ID_RES_SHT_L,
+  VIDEO_PARAM_ID_RES_SHT_H,
+  VIDEO_PARAM_ID_RES_MAX
+} video_img_sns_get_param_id_e;
 
 typedef enum
 {
@@ -396,9 +404,9 @@ typedef enum
 
 typedef enum
 {
-  VIDEO_DISABLE = 0,
-  VIDEO_ENABLE,
-  VIDEO_CTRL_MAX
+  VIDEO_CROP_DISABLE = 0,
+  VIDEO_CROP_ENABLE,
+  VIDEO_CROP_CTRL_MAX
 } video_ctrl_e;
 
 struct video_buffer_s
@@ -429,14 +437,6 @@ struct video_cap_param_s
 };
 
 typedef struct video_cap_param_s video_cap_param_t;
-
-struct video_api_set_cap_param_s
-{
-  video_mode_e mode;
-  video_cap_param_t param;
-};
-
-typedef struct video_api_set_cap_param_s video_api_set_cap_param_t;
 
 struct video_picture_info_s
 {
@@ -490,26 +490,6 @@ struct video_conti_cap_info_s
 
 typedef struct video_conti_cap_info_s video_conti_cap_info_t;
 
-struct video_img_sns_param_s
-{
-  video_img_sns_param_id_e id;
-  union
-  {
-    video_color_mode_e     color_mode;
-    video_iso_e            iso;
-    uint16_t               shutter;
-    video_ev_e             ev;
-    int8_t                 brightness;
-    uint8_t                contrast;
-    uint8_t                jpeg_qualitiy;
-    video_ygamma_e         ygamma;
-    video_awb_e            awb;
-    video_photometry_e     photometry;
-  } val;
-};
-
-typedef struct video_img_sns_param_s video_img_sns_param_t;
-
 struct video_img_sns_param_all_s
 {
   video_color_mode_e color_mode;
@@ -562,13 +542,6 @@ struct video_api_chg_img_sns_state_s
 };
 
 typedef struct video_api_chg_img_sns_state_s video_api_chg_img_sns_state_t;
-
-struct video_api_set_img_sns_param_s
-{
-  video_img_sns_param_t param;
-};
-
-typedef struct video_api_set_img_sns_param_s video_api_set_img_sns_param_t;
 
 struct video_api_set_img_sns_param_all_s
 {

@@ -71,14 +71,6 @@
 /* At initialization, it automatically transits to ACTIVE_MODE */
 /* #define VIDEO_INIT_ACTIVE */
 
-/* Select gamma table */
-#define VIDEO_GAMMA_DEFAULT
-/* #define VIDEO_GAMMA_BASIC */
-/* #define VIDEO_GAMMA_HIGH_BRIGHT */
-
-/* Test tuning code */
-/* #define VIDEO_IMG_TUNING */
-
 #define video_printf(format, ...)   _info(format, ##__VA_ARGS__)
 
 /*------------------
@@ -91,8 +83,6 @@
 #define VIDEO_FALSE             (0)
 
 #define VIDEO_EOI_CORRECT_MAX_SIZE  (32)
-
-#define VIDEO_EZOOM_OFFSET_PX   (16)
 
 #define VIDEO_INIT_REGNUM       (5)
 #define VIDEO_AE_AUTO_REGNUM    (6)
@@ -148,35 +138,6 @@ typedef enum
   VIDEO_APIID_MAX,
 } video_api_id_e;
 
-enum video_ezoom_reg_e
-{
-  VIDEO_EZOOM_MAG,
-  VIDEO_EZOOM_OFFSET_X,
-  VIDEO_EZOOM_OFFSET_Y,
-  VIDEO_EZOOM_REGNUM
-};
-
-struct video_api_msg_s
-{
-  video_api_id_e api_id;
-  int result;
-  union
-  {
-    video_api_chg_img_sns_state_t chg_state;
-    video_api_cap_frame_t cap_frame;
-    video_api_set_cap_param_t cap;
-    video_api_set_img_sns_param_t imgsns;
-    video_api_set_img_sns_param_all_t imgsns_all;
-    video_api_img_sns_reg_t w_reg;
-    video_api_img_sns_reg_t r_reg;
-    video_api_do_half_rel_t halfrel;
-    video_api_get_auto_param_t get_auto;
-    video_api_conti_cap_t conti_cap;
-  } u;
-};
-
-typedef struct video_api_msg_s video_api_msg_t;
-
 struct video_mng_s
 {
   int fd;
@@ -210,14 +171,6 @@ struct video_size_s
 
 typedef struct video_size_s video_size_t;
 
-struct video_sensor_reg_s
-{
-  uint16_t addr;
-  uint16_t regsize;
-};
-
-typedef struct video_sensor_reg_s video_sensor_reg_t;
-
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
@@ -229,14 +182,13 @@ static int  video_chg_img_sns_state(video_mng_t *priv,
                                     video_api_chg_img_sns_state_t *p);
 static int  video_capture_frame(video_mng_t *priv, video_api_cap_frame_t *p);
 static int  video_set_img_sns_param(video_mng_t *priv,
-                                    video_api_set_img_sns_param_t *p);
+                                    uint32_t id,
+                                    uint32_t val);
 static int  video_set_frame_info(video_mng_t *priv,
                                  video_api_cap_frame_t *p,
                                  video_cisif_result_t *res);
 static int  video_get_picture_info(video_picture_info_t *pict_info);
-static int  video_set_img_sns_crop(video_cap_param_t *param,
-                                   video_crop_t *crop);
-static int  video_set_img_sns_crop_off(void);
+static int  video_change_img_sns_crop(video_api_cap_frame_t *p);
 
 static uint32_t video_correct_jpeg_size(uint32_t addr, uint32_t size);
 static int  video_twaisem(sem_t *sem, uint32_t timeout_ms);
@@ -272,44 +224,6 @@ static const video_size_t video_rs2sz[VIDEO_RESOLUTION_MAX] =
   { VIDEO_HSIZE_FULLHD,   VIDEO_VSIZE_FULLHD  },
   { VIDEO_HSIZE_3M,       VIDEO_VSIZE_3M      },
   { VIDEO_HSIZE_5M,       VIDEO_VSIZE_5M      }
-};
-
-static const video_sensor_reg_t video_set_imgsns_regs[VIDEO_PARAM_ID_MAX] =
-{
-  { 0x01C5, 1 }, /* VIDEO_PARAM_ID_COLOR        : FMODE */
-  { 0x02A8, 1 }, /* VIDEO_PARAM_ID_ISO          : ISO_TYPE1 */
-  { 0x02A0, 2 }, /* VIDEO_PARAM_ID_SHUTTER      : SHT_PREMODE_TYPE1 */
-  { 0x0180, 1 }, /* VIDEO_PARAM_ID_EV           : EVSEL */
-  { 0x01C6, 1 }, /* VIDEO_PARAM_ID_BRIGHTNESS   : UIBRIGHTNESS */
-  { 0x01C7, 1 }, /* VIDEO_PARAM_ID_CONTRAST     : UICONTRAST */
-  { 0x00F9, 1 }, /* VIDEO_PARAM_ID_JPEG_QUALITIY: INIT_QLTY2 */
-  { 0x6C93, 1 }, /* VIDEO_PARAM_ID_YGAMMA       : YGAMMA_MODE    */
-  { 0x0282, 1 }, /* VIDEO_PARAM_ID_AWB          : AWB_SN1 */
-  { 0x02AC, 1 }  /* VIDEO_PARAM_ID_PHOTOMETRY   : AE_SUB_SN1 */
-};
-
-static const video_sensor_reg_t video_exif_regs[] =
-{
-  { 0x019A, 1 },  /* iso_sens     : ISOSENS_OUT */
-  { 0x019C, 2 },  /* shutter_speed: SHT_TIME_OUT_L */
-  { 0x019E, 2 }   /* shutter_speed: SHT_TIME_OUT_H */
-};
-
-static const isx012_reg_t video_ezoom_regs[VIDEO_EZOOM_REGNUM] =
-{
-  { EZOOM_MAG, 0x0100, 2 },
-  { OFFSET_X,  0x0000, 2 },
-  { OFFSET_Y,  0x0000, 2 },
-};
-
-static const uint8_t video_convawb[VIDEO_AWB_MAX] =
-{
-  0x20,   /* VIDEO_AWB_ATM */
-  0x04,   /* VIDEO_AWB_CLEARWEATHER  */
-  0x05,   /* VIDEO_AWB_SHADE  */
-  0x06,   /* VIDEO_AWB_CLOUDYWEATHER  */
-  0x07,   /* VIDEO_AWB_FLUORESCENTLIGHT */
-  0x08,   /* VIDEO_AWB_LIGHTBULB */
 };
 
 #ifdef VIDEO_TIME_MEASURE
@@ -348,213 +262,6 @@ static const struct file_operations g_videofops =
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-void video_set_cap_shtagc(int mode, uint16_t shutter, int8_t agc)
-{
-#define CAP_HALF_AE_CTRL_ADDR     (0x0181)
-#define CAP_SHT_ADDR              (0x0182)
-#define CAP_AGC_ADDR              (0x0184)
-
-  isx012_reg_t reg;
-
-  if (mode)
-    {
-      video_printf("ON:SHUTTER=%d,ACG=%d\n", shutter, agc);
-
-      reg.regaddr = CAP_SHT_ADDR;
-      reg.regsize = 2;
-      reg.regval  = shutter;
-      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-
-      reg.regaddr = CAP_AGC_ADDR;
-      reg.regsize = 1;
-      reg.regval  = (uint16_t)agc;
-      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-
-      reg.regaddr = CAP_HALF_AE_CTRL_ADDR;
-      reg.regsize = 1;
-      reg.regval  = 3;
-      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-    }
-  else
-    {
-      video_printf("OFF:SHUTTER=%d,ACG=%d\n", shutter, agc);
-      reg.regaddr = CAP_HALF_AE_CTRL_ADDR;
-      reg.regsize = 1;
-      reg.regval  = 0x01;
-      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-    }
-}
-
-
-
-#ifdef VIDEO_IMG_TUNING
-static int video_set_spot_window(uint8_t no)
-{
-#define SPOT_FRM_NUM_ADDR   0x5E33
-#define SPOT_SIDEWEIGHT     0x5E34
-  isx012_reg_t reg;
-
-  reg.regaddr = SPOT_FRM_NUM_ADDR;
-  reg.regsize = 1;
-  reg.regval  = (uint16_t)no;
-  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-
-  reg.regaddr = SPOT_SIDEWEIGHT;
-  reg.regsize = 1;
-  reg.regval  = 75;
-  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-
-  return 0;
-}
-
-static int video_show_ae_intmean(void)
-{
-#define INTMEAN_REG_NUM     63
-#define INTMEAN_REG_H_NUM   9
-#define INTMEAN_00_ADDR     (0x8A00 + 0x0088)
-  isx012_reg_t reg;
-  int idx;
-  uint16_t  intmean_val[INTMEAN_REG_NUM];
-
-  /* AE Window H=9 x V=7 */
-  printf("###### INTMEAN_00-62 #######\n");
-
-  reg.regsize = 2;
-  for(idx = 0; idx < INTMEAN_REG_NUM; idx++)
-    {
-      reg.regaddr = INTMEAN_00_ADDR + (idx << 1);
-      isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
-      intmean_val[idx] = (uint16_t)reg.regval;
-    }
-
-  for(idx = 0; idx < INTMEAN_REG_NUM; idx++)
-    {
-      printf("[%2d]%5d", idx, (uint16_t)intmean_val[idx]);
-      if ((idx % INTMEAN_REG_H_NUM) == (INTMEAN_REG_H_NUM-1))
-        {
-          printf("\n");
-        }
-      else
-        {
-          printf(", ");
-        }
-    }
-
-  return 0;
-}
-
-#define EVREF_TYPE_NUM      5
-static  int video_evref_type_idx = 0;
-static  uint16_t evref_type_val[EVREF_TYPE_NUM] =
-{
-  0x2272,
-  0x3697,
-  0x44E4,
-  0x5157,
-  0x7777,
-};
-
-static int video_set_evref_type(int idx)
-{
-#define EVREF_TYPE1_ADDR    (0x02FC)
-  isx012_reg_t reg;
-
-  reg.regaddr = EVREF_TYPE1_ADDR;
-  reg.regsize = 2;
-  reg.regval  = evref_type_val[idx];
-
-  isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-
-  video_printf("EVREF_TYPE_VAL = %d\n", reg.regval);
-  return 0;
-}
-#endif /* VIDEO_IMG_TUNING */
-
-#ifndef VIDEO_GAMMA_DEFAULT
-static int video_gamma_tble_idx = 0;
-#define GAMMA_TABLE_REG_NUM       19
-#define GAMMA_TABLE_NUM           4
-
-#define GAMMA_TABLE_DEFAULT       0
-#define GAMMA_TABLE_BASIC         1
-#define GAMMA_TABLE_BRIGHT        2
-#define GAMMA_TABLE_HIGH_BRIGHT   3
-
-static  uint16_t gamma_reg_val[GAMMA_TABLE_NUM][GAMMA_TABLE_REG_NUM] =
-{
-  /* GAMMA0 Default */
-  { 0, 7, 29, 47, 61, 74, 81, 90, 97, 106,
-   73, 130, 173, 204, 225, 237, 246, 262, 268},
-  /* Tagami-san Basic  */
-  { 0, 7, 30, 48, 62, 77, 88, 100, 108, 118,
-   82, 144, 188, 214, 230, 241, 250, 259, 258},
-  /* Tagami-san Bright */
-  { 0, 7, 50, 84, 104, 122, 135, 146, 154, 161,
-   133, 183, 206, 221, 232, 241, 250, 259, 258},
-  /* High Tagami-san Bright */
-  { 0, 111, 128, 138, 146, 153, 159, 164, 168, 172,
-   157, 183, 206, 221, 232, 241, 250, 259, 258},
-};
-
-#define VIDEO_GAMMA_REGNUM  8
-static const isx012_reg_t video_gamma_regs[VIDEO_GAMMA_REGNUM] =
-{
-  { G0_LOWGM_ON_R,         0x0330, 2 },
-  { G0_0CLIP_R,            0x0E00, 2 },
-  { G0_LOWGM_ON_G,         0x0330, 2 },
-  { G0_0CLIP_G,            0x0E00, 2 },
-  { G0_LOWGM_ON_B,         0x0330, 2 },
-  { G0_0CLIP_B,            0x0E00, 2 },
-  { G0_KNOT_GAINCTRL_TH_L,    103, 1 },
-  { G0_KNOT_GAINCTRL_TH_H,    108, 1 },
-};
-
-static const isx012_reg_t video_gamma_regs_def[VIDEO_GAMMA_REGNUM] =
-{
-  { G0_LOWGM_ON_R,         0x0661, 2 },
-  { G0_0CLIP_R,            0x1E0A, 2 },
-  { G0_LOWGM_ON_G,         0x0661, 2 },
-  { G0_0CLIP_G,            0x1E0A, 2 },
-  { G0_LOWGM_ON_B,         0x0661, 2 },
-  { G0_0CLIP_B,            0x1E0A, 2 },
-  { G0_KNOT_GAINCTRL_TH_L,    103, 1 },
-  { G0_KNOT_GAINCTRL_TH_H,    108, 1 },
-};
-
-static int video_set_gamma_table(int idx)
-{
-#define GAMMA0_ADDR               0x7000
-  int no;
-  isx012_reg_t reg;
-  isx012_reg_t *p_gamma_reg;
-
-  /* Set GAMMA0 registers */
-  p_gamma_reg = (isx012_reg_t *)video_gamma_regs_def;
-  if (idx != 0)
-    {
-      p_gamma_reg = (isx012_reg_t *)video_gamma_regs;
-    }
-
-  for(no = 0; no < VIDEO_GAMMA_REGNUM; no++)
-    {
-      isx012_ioctl(IMGIOC_READREG, (unsigned long)p_gamma_reg);
-      p_gamma_reg++;
-    }
-
-  reg.regsize = 2;
-  printf("gamma table = %d\n", idx);
-  for(no = 0; no < GAMMA_TABLE_REG_NUM; no++)
-    {
-      reg.regaddr = (uint16_t)(GAMMA0_ADDR + (no << 1));
-      reg.regval  = (uint16_t)gamma_reg_val[idx][no];
-      isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-      video_printf("[Knot%02d]%3d\n", no, reg.regval);
-    }
-
-  return 0;
-}
-#endif /* VIDEO_GAMMA_DEFAULT */
-
 static int video_twaisem(sem_t *sem, uint32_t timeout_ms)
 {
   struct timespec abstime = { 0 };
@@ -607,13 +314,6 @@ static int video_init_image_sensor(video_mng_t *priv)
   DBG_TIME_START();
   isx012_open();
   DBG_TIME_STOP("open isx012 driver");
-
-#ifdef VIDEO_GAMMA_BASIC
-  video_set_gamma_table(GAMMA_TABLE_BASIC);
-#endif /* VIDEO_GAMMA_BASIC */
-#ifdef VIDEO_GAMMA_HIGH_BRIGHT
-  video_set_gamma_table(GAMMA_TABLE_HIGH_BRIGHT);
-#endif /* VIDEO_GAMMA_HIGH_BRIGHT */
 
 #ifdef VIDEO_INIT_ACTIVE
   /* Cmera Device status Sleep -> Active */
@@ -718,90 +418,35 @@ static int video_chg_img_sns_state(video_mng_t *priv,
   return ret;
 }
 
-static int video_set_img_sns_crop_off(void)
+static int video_change_img_sns_crop(video_api_cap_frame_t *p)
 {
-  int idx;
   int ret;
+  isx012_param_crop_t param;
 
-  for (idx = 0; idx < VIDEO_EZOOM_REGNUM; idx++)
+  if (p->crop_ctrl == VIDEO_CROP_ENABLE)
     {
-      ret = isx012_ioctl(IMGIOC_WRITEREG,(unsigned long)&video_ezoom_regs[idx]);
+      param.crop = VIDEO_CROP_ENABLE;
+      param.x_offset = p->crop.x_offset;
+      param.y_offset = p->crop.y_offset;
+      ret = isx012_ioctl(IMGIOC_CHGCROP, (unsigned long)&param);
       if (ret < 0)
         {
-          break;
+          return ret;
         }
+
     }
-
-  return ret;
-}
-
-static int video_set_img_sns_crop(video_cap_param_t *param, video_crop_t *crop)
-{
-  int idx;
-  int ret;
-  uint16_t px_offset;
-  uint16_t ezoom_val[VIDEO_EZOOM_REGNUM];
-  uint16_t ezoom_mag_subsmpl[VIDEO_RESOLUTION_MAX] =
-  {
-    1024,   /* QVGA     : x4  */
-     512,   /* VGA      : x2  */
-     256,   /* Quad-VGA : x1  */
-     256,   /* HD       : x1  */
-       0,   /* FULLHD   : invalid  */
-       0,   /* 3M       : invalid  */
-       0,   /* 5M       : invalid  */
-  };
-  uint16_t ezoom_mag_fllpx[VIDEO_RESOLUTION_MAX] =
-  {
-    2048,   /* QVGA     : x8  */
-    1024,   /* VGA      : x4  */
-     512,   /* Quad-VGA : x2  */
-     512,   /* HD       : x2  */
-     256,   /* FULLHD   : x1  */
-     256,   /* 3M       : x1  */
-     256    /* 5M       : x1  */
-  };
-  isx012_reg_t reg;
-
-  video_printf("video_set_img_sns_crop :framerate=%d, resolution=%d\n",
-                param->framerate, param->resolution);
-
-  if ((param->framerate >= VIDEO_15FPS) && (param->framerate <= VIDEO_5FPS))
+  else if (p->crop_ctrl == VIDEO_CROP_DISABLE)
     {
-      ezoom_val[VIDEO_EZOOM_MAG] = ezoom_mag_fllpx[param->resolution];
-      px_offset = VIDEO_EZOOM_OFFSET_PX;
-    }
-  else if (param->framerate == VIDEO_30FPS)
-    {
-      if ((param->resolution == VIDEO_5M) || (param->resolution == VIDEO_3M))
+      param.crop = VIDEO_CROP_DISABLE;
+      ret = isx012_ioctl(IMGIOC_CHGCROP, (unsigned long)&param);
+      if (ret < 0)
         {
-          return 0;
+          return ret;
         }
-      ezoom_val[VIDEO_EZOOM_MAG] = ezoom_mag_subsmpl[param->resolution];
-      px_offset = (VIDEO_EZOOM_OFFSET_PX << 1);
     }
   else
     {
-      return 0;
-    }
-
-  ezoom_val[VIDEO_EZOOM_OFFSET_X] = crop->x_offset * px_offset;
-  ezoom_val[VIDEO_EZOOM_OFFSET_Y] = -(crop->y_offset) * px_offset;
-
-  video_printf("ezoom_val: mag=%d, x_offset=%d, y_offset=%d\n",
-                ezoom_val[0], (int16_t)ezoom_val[1], (int16_t)ezoom_val[2]);
-
-  for (idx = 0; idx < VIDEO_EZOOM_REGNUM; idx++)
-    {
-      reg.regaddr = video_ezoom_regs[idx].regaddr;
-      reg.regval  = ezoom_val[idx];
-      reg.regsize = video_ezoom_regs[idx].regsize;
-
-      ret = isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-      if (ret < 0)
-        {
-          break;
-        }
+      ret = -EINVAL;
     }
 
   return ret;
@@ -818,18 +463,7 @@ static int video_capture_frame(video_mng_t *priv, video_api_cap_frame_t *p)
       return -EBUSY;
     }
 
-  video_set_img_sns_crop_off();
-
-  if (p->crop_ctrl == VIDEO_ENABLE)
-    {
-      DBG_TIME_START();
-      video_set_img_sns_crop(&priv->cap_param[p->mode], &p->crop);
-      DBG_TIME_STOP("video_set_img_sns_crop");
-    }
-
-#ifdef VIDEO_IMG_TUNING
-  video_set_gamma_table(video_gamma_tble_idx);
-#endif /* VIDEO_IMG_TUNING */
+  video_change_img_sns_crop(p);
 
   if (p->mode == VIDEO_MODE_CAPTURE)
     {
@@ -965,40 +599,41 @@ static int video_set_frame_info(video_mng_t *priv,
 
 static int video_get_picture_info(video_picture_info_t *pict_info)
 {
+  int ret;
+  uint8_t val8;
+  uint16_t val16;
   uint32_t shutter_speed = 0;
   video_iso_e iso_sens = 0;
-  isx012_reg_t reg;
-  int ret;
 
   /* ISO */
-  reg.regaddr = video_exif_regs[0].addr;
-  reg.regsize = video_exif_regs[0].regsize;
-  ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
-  if (ret < 0)
+
+  ret = isx012_ioctl(IMGIOC_GETISO, (unsigned long)&val8);
+  if (ret != 0)
     {
       return ret;
     }
-  iso_sens = (video_iso_e)reg.regval;
+
+  iso_sens = val8;
 
   /* Shutter low */
-  reg.regaddr = video_exif_regs[1].addr;
-  reg.regsize = video_exif_regs[1].regsize;
-  ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
-  if (ret < 0)
+
+  ret = isx012_ioctl(IMGIOC_GETSHTL, (unsigned long)&val16);
+  if (ret != 0)
     {
       return ret;
     }
-  shutter_speed |= (uint32_t)(reg.regval & 0x0000FFFF);
+
+  shutter_speed |= (uint32_t)val16;
 
   /* Shutter high */
-  reg.regaddr = video_exif_regs[2].addr;
-  reg.regsize = video_exif_regs[2].regsize;
-  ret = isx012_ioctl(IMGIOC_READREG, (unsigned long)&reg);
-  if (ret < 0)
+
+  ret = isx012_ioctl(IMGIOC_GETSHTH, (unsigned long)&val16);
+  if (ret != 0)
     {
       return ret;
     }
-  shutter_speed |= (uint32_t)((reg.regval << 16) & 0xFFFF0000);
+
+  shutter_speed |= (uint32_t)((val16 << 16) & 0xFFFF0000);
 
   pict_info->iso_sens      = iso_sens;
   pict_info->shutter_speed = shutter_speed;
@@ -1006,83 +641,59 @@ static int video_get_picture_info(video_picture_info_t *pict_info)
   return 0;
 }
 
-static int video_set_img_sns_param(video_mng_t *priv,
-                                   video_api_set_img_sns_param_t *p)
+static int video_set_img_sns_param(video_mng_t *priv, uint32_t id, uint32_t val)
 {
-  isx012_reg_t reg;
   int ret;
+  int api;
 
-  if (p->param.id >= VIDEO_PARAM_ID_MAX)
-    {
-      return -EINVAL;
-    }
-
-  switch (p->param.id)
+  switch (id)
   {
     case VIDEO_PARAM_ID_COLOR:
-      reg.regval = (uint16_t)p->param.val.color_mode;
+      api = IMGIOC_CHGCOLOR;
       break;
 
     case VIDEO_PARAM_ID_ISO:
-      reg.regval = (uint16_t)p->param.val.iso;
+      api = IMGIOC_CHGISO;
       break;
 
     case VIDEO_PARAM_ID_SHUTTER:
-      reg.regval = p->param.val.shutter;
+      api = IMGIOC_CHGSHUTTER;
       break;
 
-    case VIDEO_PARAM_ID_EV:
-      if (p->param.val.ev >= VIDEO_EV_MAX)
-        {
-          return -EINVAL;
-        }
-      reg.regval = (uint16_t)p->param.val.ev;
+    case VIDEO_PARAM_ID_EV_CORRECTION:
+      api = IMGIOC_CHGEV;
       break;
 
     case VIDEO_PARAM_ID_BRIGHTNESS:
-      reg.regval = (uint16_t)p->param.val.brightness;
+      api = IMGIOC_CHGBRIGHT;
       break;
 
     case VIDEO_PARAM_ID_CONTRAST:
-      reg.regval = (uint16_t)p->param.val.contrast;
+      api = IMGIOC_CHGCONTRAST;
       break;
 
-    case VIDEO_PARAM_ID_JPEG_QUALITIY:
-      reg.regval = (uint16_t)p->param.val.jpeg_qualitiy;
+    case VIDEO_PARAM_ID_JPEG_QUALITY:
+      api = IMGIOC_CHGJQUALITY;
       break;
 
     case VIDEO_PARAM_ID_YGAMMA:
-      if (p->param.val.ygamma >= VIDEO_YGAMMA_MAX)
-        {
-          return -EINVAL;
-        }
-      reg.regval = (uint16_t)p->param.val.ygamma;
+      api = IMGIOC_CHGYGAMMA;
       break;
 
     case VIDEO_PARAM_ID_AWB:
-      if (p->param.val.awb >= VIDEO_AWB_MAX)
-        {
-          return -EINVAL;
-        }
-      reg.regval = (uint16_t)video_convawb[p->param.val.awb];
+      api = IMGIOC_CHGAWB;
       break;
 
     case VIDEO_PARAM_ID_PHOTOMETRY:
-      if (p->param.val.photometry >= VIDEO_PHOTOMETRY_MAX)
-        {
-          return -EINVAL;
-        }
-      reg.regval = (uint16_t)p->param.val.photometry;
+      api = IMGIOC_CHGPMETRY;
       break;
 
     default:
       return -EINVAL;
   }
 
-  reg.regaddr = video_set_imgsns_regs[p->param.id].addr;
-  reg.regsize = video_set_imgsns_regs[p->param.id].regsize;
-  ret = isx012_ioctl(IMGIOC_WRITEREG, (unsigned long)&reg);
-  if (ret < 0)
+  ret = isx012_ioctl(api, val);
+  if (ret != 0)
     {
       return ret;
     }
@@ -1110,7 +721,6 @@ int video_open(FAR struct file *filep)
 {
   FAR struct inode      *inode = filep->f_inode;
   video_mng_t           *priv  = inode->i_private;
-  video_api_set_img_sns_param_t iparam;
   int ret = ERROR;
 
   if (0 != sem_init(&priv->sem_cisifsync, 0, 0))
@@ -1126,10 +736,7 @@ int video_open(FAR struct file *filep)
       return ret;
     }
 
-  iparam.param.id = VIDEO_PARAM_ID_JPEG_QUALITIY;
-  iparam.param.val.jpeg_qualitiy = 75;
-  ret = video_set_img_sns_param(priv, &iparam);
-
+  ret = video_set_img_sns_param(priv, VIDEO_PARAM_ID_JPEG_QUALITY, 75);
   return ret;
 }
 
@@ -1223,7 +830,7 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
         break;
       case VIDIOC_DQBUF:
         cap.mode        = g_v4_buf_mode;
-        cap.crop_ctrl   = VIDEO_DISABLE;
+        cap.crop_ctrl   = VIDEO_CROP_DISABLE;
         cap.buffer.addr = g_v4_buf[g_v4_buf_cnt].m.userptr;
         cap.buffer.size = g_v4_buf[g_v4_buf_cnt].length;
         ret = video_capture_frame(priv, &cap);
