@@ -82,7 +82,10 @@ $(AOBJS): %$(OBJEXT): %.S
 	@echo "AS: $<"
 	$(Q) $(CC) -c $(AFLAGS) $< -o $@
 
-$(BIN): $(CXXOBJS) $(AOBJS)
+lib/libasmpw.a:
+	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" CROSSDEV=$(CROSSDEV)
+
+$(BIN): $(CXXOBJS) $(AOBJS) lib/libasmpw.a
 	@echo "LD: $@"
 	$(Q) $(LD) $(LDRAWELFFLAGS) $(LDLIBPATH) -o $@ $(ARCHCRT0OBJ) $^ $(LDLIBS)
 
