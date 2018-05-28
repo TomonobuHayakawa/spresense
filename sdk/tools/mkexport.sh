@@ -363,9 +363,6 @@ for lib in ${LIBLIST}; do
 		# and add the file to libnuttx
 
 		for file in `${AR} t ${SDKDIR}/${lib}`; do
-            if [ "${file}" = "builtin_list.o" ]; then
-                continue
-            fi
 			mv "${file}" "${shortname}-${file}"
 			${AR} rcs "${EXPORTSDKDIR}/libs/libsdk${LIBEXT}" "${shortname}-${file}"
 		done
