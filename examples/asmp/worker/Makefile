@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+.NOTPARALLEL:
+
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
