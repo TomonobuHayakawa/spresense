@@ -68,3 +68,24 @@
 void cxd56_boardinitialize(void)
 {
 }
+
+/************************************************************************************
+ * Name: sdk_entry
+ *
+ * Description:
+ *   This is a SDK entrypoint which performs the common processing independent
+ *   of each board and finally calls the user entrypoint defined as
+ *   CONFIG_SDK_USER_ENTRYPOINT.
+ *
+ ************************************************************************************/
+
+#ifdef CONFIG_SDK_USER_ENTRYPOINT
+
+int CONFIG_SDK_USER_ENTRYPOINT(int argc, char *argv[]);
+
+int sdk_entry(int argc, char *argv[])
+{
+  return CONFIG_SDK_USER_ENTRYPOINT(argc, argv);
+}
+
+#endif
