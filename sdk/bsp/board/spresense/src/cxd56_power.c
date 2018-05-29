@@ -483,6 +483,11 @@ int board_power_off(int status)
                       PMIC_GPO(4) | PMIC_GPO(5) | PMIC_GPO(6) | PMIC_GPO(7),
                       false);
 
+  /* Set DDC_ANA output to HiZ before sleeping for power saving */
+
+  val = PMIC_PM_HIZ | PMIC_IOST_DEF | PMIC_IOMAX_DEF;
+  cxd56_pmic_write(PMIC_REG_DDC_ANA1, &val, sizeof(val));
+
   if (BOARD_POWEROFF_COLD == status)
     {
       /* Flash power off */
@@ -501,11 +506,6 @@ int board_power_off(int status)
       val = PMIC_SET_CHGOFF;
       cxd56_pmic_write(PMIC_REG_CNT_USB2, &val, sizeof(val));
 #endif
-
-      /* Set DDC_ANA output to HiZ before deep sleep for power saving */
-
-      val = PMIC_PM_HIZ | PMIC_IOST_DEF | PMIC_IOMAX_DEF;
-      cxd56_pmic_write(PMIC_REG_DDC_ANA1, &val, sizeof(val));
 
       /* Enter deep sleep mode */
 
