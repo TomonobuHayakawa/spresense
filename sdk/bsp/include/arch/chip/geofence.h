@@ -1,5 +1,5 @@
 /****************************************************************************
- * sdk/bsp/include/arch/chip/geofence.h
+ * bsp/include/arch/chip/geofence.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

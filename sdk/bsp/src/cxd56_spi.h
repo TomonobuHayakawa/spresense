@@ -1,5 +1,5 @@
 /************************************************************************************
- * arch/arm/src/cxd56xx/cxd56_spi.h
+ * bsp/src/cxd56_spi.h
  *
  *   Copyright (C) 2012, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

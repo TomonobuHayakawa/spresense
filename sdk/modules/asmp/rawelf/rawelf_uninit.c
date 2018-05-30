@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/supervisor/rawelf/rawelf_uninit.c
+ * modules/asmp/rawelf/rawelf_uninit.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

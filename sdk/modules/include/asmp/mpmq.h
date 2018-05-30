@@ -1,5 +1,5 @@
 /********************************************************************************
- * include/asmp/mpmq.h
+ * modules/include/asmp/mpmq.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

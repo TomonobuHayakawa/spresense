@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/renderer/level_ctrl.h
+ * modules/audio/dma_controller/level_ctrl.h
  *
  *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/spresense/src/cxd56_appinit.c
+ * bsp/board/spresense/src/cxd56_appinit.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_routecmds.c
+ * system/nshlib/nsh_routecmds.c
  *
  *   Copyright (C) 2013, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

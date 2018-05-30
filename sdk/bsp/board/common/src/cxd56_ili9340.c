@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_ili9340.c
+ * bsp/board/common/src/cxd56_ili9340.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

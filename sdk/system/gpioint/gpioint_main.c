@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/gpioint/gpioint_main.c
+ * system/gpioint/gpioint_main.c
  *
  *   Copyright (C) 2018 Sony Corporation
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/zmodem/host/ascii.h
+ * system/zmodem/host/nuttx/ascii.h
  * ASCII Control Codes
  *
  *   Copyright (C) 2013 Gregory Nutt. All rights reserved.

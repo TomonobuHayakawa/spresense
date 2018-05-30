@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/memutils/memory_manager/include/MemHandle.h
+ * modules/include/memutils/memory_manager/MemHandle.h
  *
  * Description: Memory Manager Lite Memory Handle class
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_telnetd.c
+ * system/nshlib/nsh_telnetd.c
  *
  *   Copyright (C) 2007-2013, 2016-2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

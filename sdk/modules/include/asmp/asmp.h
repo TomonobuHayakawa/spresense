@@ -1,5 +1,5 @@
 /********************************************************************************
- * include/asmp/asmp.h
+ * modules/include/asmp/asmp.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

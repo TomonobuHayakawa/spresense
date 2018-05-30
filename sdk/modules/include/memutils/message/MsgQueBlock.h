@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/memutils/message/include/MsgQueBlock.h
+ * modules/include/memutils/message/MsgQueBlock.h
  *
  * Description: Message Queue Block class definition.
  *

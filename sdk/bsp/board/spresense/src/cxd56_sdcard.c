@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/spresense/src/cxd56_sdcard.c
+ * bsp/board/spresense/src/cxd56_sdcard.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

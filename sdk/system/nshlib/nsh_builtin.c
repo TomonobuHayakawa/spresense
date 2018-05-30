@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_builtin.c
+ * system/nshlib/nsh_builtin.c
  *
  * Originally by:
  *

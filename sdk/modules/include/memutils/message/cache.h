@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/include/memutils/message/cache.h
+ * modules/include/memutils/message/cache.h
  *
  * Description: Memory Manager Lite Manager class
  *

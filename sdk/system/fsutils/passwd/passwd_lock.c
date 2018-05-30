@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/fsutils/passwd/passwd_lock.c
+ * system/fsutils/passwd/passwd_lock.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/logsave/logsave.c
+ * system/logsave/logsave.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

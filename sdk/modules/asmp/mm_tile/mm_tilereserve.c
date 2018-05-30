@@ -1,5 +1,5 @@
 /****************************************************************************
- * mm/mm_tile/mm_tilereserve.c
+ * modules/asmp/mm_tile/mm_tilereserve.c
  *
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

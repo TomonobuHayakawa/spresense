@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_romfsetc.c
+ * system/nshlib/nsh_romfsetc.c
  *
  *   Copyright (C) 2008-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

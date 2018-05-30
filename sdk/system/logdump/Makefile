@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/logdump/Makefile
+# system/logdump/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation
 #

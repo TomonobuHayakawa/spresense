@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56/cxd56_audio_baseband.c
+ * bsp/src/cxd56_audio_baseband.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

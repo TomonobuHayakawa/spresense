@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_allocateheap.c
+ * bsp/src/cxd56_allocateheap.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

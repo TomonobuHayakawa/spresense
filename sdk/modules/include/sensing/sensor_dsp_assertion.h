@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/sensor_dsp_assertion.h
+ * modules/include/sensing/sensor_dsp_assertion.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

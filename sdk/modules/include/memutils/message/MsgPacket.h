@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/memutils/message/include/MsgPacket.h
+ * modules/include/memutils/message/MsgPacket.h
  *
  * Description: Message Packet class definition.
  *

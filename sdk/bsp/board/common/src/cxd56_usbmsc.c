@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd32_usbmsc.c
+ * bsp/board/common/src/cxd56_usbmsc.c
  *
  *   Copyright (C) 2009, 2011, 2013, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

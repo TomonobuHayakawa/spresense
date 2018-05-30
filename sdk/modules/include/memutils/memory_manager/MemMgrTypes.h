@@ -1,5 +1,5 @@
 /********************************************************************************
- * modules/include/emutils/memory_manager/MemMgeTypes.h
+ * modules/include/memutils/memory_manager/MemMgrTypes.h
  *
  *   Copyright (C) 2011, 2016 Sony Corporation
  *

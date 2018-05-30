@@ -1,5 +1,5 @@
 /****************************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd56_wdt.h
+ * bsp/src/chip/cxd56_wdt.h
  * Watchdog Timer (WDT) definitions for the CXD56XX
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.

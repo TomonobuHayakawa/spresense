@@ -1,5 +1,5 @@
 /****************************************************************************
- * sdk/modules/include/gpsutils/cxd56_gnss_compat.h
+ * modules/include/gpsutils/cxd56_gnss_compat.h
  *
  *   Copyright (C) 2016,2017 Sony Corporation. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/builtin/builtin_forindex.c
+ * system/builtin/builtin_forindex.c
  *
  *   Copyright (C) 2011 Uros Platise. All rights reserved.
  *   Copyright (C) 2011, 2016 Gregory Nutt. All rights reserved.

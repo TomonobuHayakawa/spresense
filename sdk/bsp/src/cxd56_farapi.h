@@ -1,5 +1,5 @@
 /********************************************************************************************
- * arch/arm/src/cxd56xx/farapi.h
+ * bsp/src/cxd56_farapi.h
  *
  *   Copyright (C) Sony Corporation. All rights reserved.
  *

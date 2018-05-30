@@ -1,5 +1,5 @@
 ############################################################################
-# modules/asmp/Makefile
+# drivers/Makefile
 #
 #   Copyright (C) 2016 Sony Corporation. All rights reserved.
 #

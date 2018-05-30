@@ -1,5 +1,5 @@
 /**************************************************************************************
- * include/nuttx/lcd/ili9340.h
+ * bsp/include/nuttx/lcd/ili9340.h
  *
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Authors: Gregory Nutt <gnutt@nuttx.org>

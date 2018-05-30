@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/aesm_dsp_command.h
+ * modules/include/sensing/aesm_dsp_command.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

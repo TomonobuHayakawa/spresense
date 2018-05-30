@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/zmodem/zm_dumpbuffer.c
+ * system/zmodem/zm_dumpbuffer.c
  *
  *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

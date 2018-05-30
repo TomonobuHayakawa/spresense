@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/system/zmodem.h
+ * system/include/system/zmodem.h
  *
  *   Copyright (C) 2013, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

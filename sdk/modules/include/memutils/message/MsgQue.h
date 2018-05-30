@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/memutils/message/include/MsgQue.h
+ * modules/include/memutils/message/MsgQue.h
  *
  * Description: Message Queue class definition.
  *

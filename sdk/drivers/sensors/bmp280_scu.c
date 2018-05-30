@@ -1,5 +1,5 @@
 /****************************************************************************
- * drivers/sensors/bmp280.c
+ * drivers/sensors/bmp280_scu.c
  *
  *   Copyright (C) 2016 Sony Corpration
  *

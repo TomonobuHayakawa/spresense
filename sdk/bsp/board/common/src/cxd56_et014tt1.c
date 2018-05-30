@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_et014tt1.c
+ * bsp/board/common/src/cxd56_et014tt1.c
  *
  *   Copyright (C) 2018 Sony Corporation
  *

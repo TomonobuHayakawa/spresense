@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/pmic/Makefile
+# system/pmic/Makefile
 #
 #   Copyright (C) 2018 Sony Corporation
 #

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/readline/readline.c
+ * system/readline/readline.c
  *
  *   Copyright (C) 2007-2008, 2011-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

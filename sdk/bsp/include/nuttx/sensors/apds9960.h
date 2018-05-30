@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/sensors/apds9960.h
+ * bsp/include/nuttx/sensors/apds9960.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

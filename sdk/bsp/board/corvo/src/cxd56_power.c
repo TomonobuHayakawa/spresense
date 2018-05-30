@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/corvo/src/cxd56_power.c
+ * bsp/board/corvo/src/cxd56_power.c
  *
  *   Copyright (C) 2017,2018 Sony Corporation. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_crashdump.c
+ * bsp/board/common/src/cxd56_crashdump.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: David Sidrane <david_s5@nscdg.com>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/zmodem/host/crc16.h
+ * system/zmodem/host/crc32.h
  *
  *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

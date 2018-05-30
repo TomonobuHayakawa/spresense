@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/i2c/i2ctool.h
+ * system/i2c/i2ctool.h
  *
  *   Copyright (C) 2011, 2014, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

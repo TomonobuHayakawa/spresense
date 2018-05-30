@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sdk/debug.h
+ * bsp/include/sdk/debug.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

@@ -1,5 +1,5 @@
 ############################################################################
-# apps/fsutils/inifile/Makefile
+# system/fsutils/inifile/Makefile
 #
 #   Copyright (C) 2014 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

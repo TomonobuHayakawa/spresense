@@ -1,5 +1,5 @@
 ############################################################################
-# apps/fsutils/mksmartfs/Makefile
+# system/fsutils/mksmartfs/Makefile
 #
 #   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

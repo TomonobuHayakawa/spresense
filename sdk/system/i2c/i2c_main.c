@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/i2c/i2c_main.c
+ * system/i2c/i2c_main.c
  *
  *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

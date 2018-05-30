@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_pmic.h
+ * bsp/src/cxd56_pmic.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

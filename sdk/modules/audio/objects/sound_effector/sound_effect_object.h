@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/objects/sound_effector/soud_effect_object.h
+ * modules/audio/objects/sound_effector/sound_effect_object.h
  *
  *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
  *

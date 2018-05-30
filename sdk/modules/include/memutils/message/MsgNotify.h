@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/include/memutils/message/MsgNotify.h
+ * modules/include/memutils/message/MsgNotify.h
  *
  * Description: Memory Manager Lite Manager class
  *

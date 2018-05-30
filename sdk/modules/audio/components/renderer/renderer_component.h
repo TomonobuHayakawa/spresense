@@ -1,5 +1,5 @@
 /****************************************************************************
- * audioutils/components/renderer/renderer_component.h
+ * modules/audio/components/renderer/renderer_component.h
  *
  *   Copyright (C) 2016, 2017 Sony Corporation. All rights reserved.
  *

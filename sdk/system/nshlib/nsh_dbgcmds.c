@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/dbg_dbgcmds.c
+ * system/nshlib/nsh_dbgcmds.c
  *
  *   Copyright (C) 2008-2009, 2011-2012, 2015, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

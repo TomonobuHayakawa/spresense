@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/gpio/gpio_status.c
+ * system/gpio/gpio_status.c
  *
  *   Copyright (C) 2018 Sony Corporation
  *

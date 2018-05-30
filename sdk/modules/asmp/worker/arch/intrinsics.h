@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/worker/arch/intrinsics.h
+ * modules/asmp/worker/arch/intrinsics.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

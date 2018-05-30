@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/worker/arch/startup.c
+ * modules/asmp/worker/arch/startup.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

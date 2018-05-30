@@ -1,5 +1,5 @@
 /****************************************************************************
- * sdk/bsp/src/cxd56_gnss.h
+ * bsp/src/cxd56_gnss.h
  *
  *   Copyright (C) 2016,2017 Sony Corporation. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_lpm013m091a.c
+ * bsp/board/common/src/cxd56_lpm013m091a.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

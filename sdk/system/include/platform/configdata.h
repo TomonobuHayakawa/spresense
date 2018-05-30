@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/platform/configdata.h
+ * system/include/platform/configdata.h
  *
  *   Copyright (C) 2013 Gregory Nutt.  All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

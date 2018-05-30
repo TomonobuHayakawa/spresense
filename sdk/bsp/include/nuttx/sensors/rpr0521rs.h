@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/sensors/rpr0521rs.h
+ * bsp/include/nuttx/sensors/rpr0521rs.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

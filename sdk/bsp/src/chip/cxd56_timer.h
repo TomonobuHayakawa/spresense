@@ -1,5 +1,5 @@
 /****************************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd56_timer.c
+ * bsp/src/chip/cxd56_timer.h
  * Dual Input Timer definitions for the CXD56XX
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.

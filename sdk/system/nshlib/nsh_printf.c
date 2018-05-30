@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_printf.c
+ * system/nshlib/nsh_printf.c
  *
  *   Copyright (C) 2016 Alan Carvalho de Assis. All rights reserved.
  *   Author: Alan Carvalho de Assis <acassis@gmail.com>

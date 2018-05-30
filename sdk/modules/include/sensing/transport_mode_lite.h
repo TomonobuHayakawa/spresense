@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/transport_mode_lite.h
+ * modules/include/sensing/transport_mode_lite.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

@@ -1,5 +1,5 @@
 ############################################################################
-# apps/platform/Makefile
+# system/platform/Makefile
 #
 #   Copyright (C) 2013-2014, 2016-2017 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

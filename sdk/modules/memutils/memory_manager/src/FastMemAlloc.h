@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/FastMemAlloc.h
+ * modules/memutils/memory_manager/src/FastMemAlloc.h
  *
  * Description: The fastest memory allocator.
  *

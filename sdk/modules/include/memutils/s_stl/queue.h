@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/include/memutils/s_stl/queue.h
+ * modules/include/memutils/s_stl/queue.h
  *
  * Description: Runtime depth decision queue class.
  *

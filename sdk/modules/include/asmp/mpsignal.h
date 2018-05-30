@@ -1,5 +1,5 @@
 /********************************************************************************
- * include/asmp/mpsignal.h
+ * modules/include/asmp/mpsignal.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

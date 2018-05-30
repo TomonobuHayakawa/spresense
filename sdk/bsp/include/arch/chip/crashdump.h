@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/crashdump.h
+ * bsp/include/arch/chip/crashdump.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

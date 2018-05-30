@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/worker/arch/cpuid.c
+ * modules/asmp/worker/arch/cpuid.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

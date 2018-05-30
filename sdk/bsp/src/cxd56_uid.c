@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56/cxd56_uid.c
+ * bsp/src/cxd56_uid.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

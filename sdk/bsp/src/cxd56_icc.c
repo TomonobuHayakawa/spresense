@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_icc.c
+ * bsp/src/cxd56_icc.c
  * Inter CPU Communication FIFO driver
  *
  *   Copyright (C) Sony Corporation. All rights reserved.

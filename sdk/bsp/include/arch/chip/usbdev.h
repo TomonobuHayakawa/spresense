@@ -1,5 +1,5 @@
 /********************************************************************************************
- * arch/arm/include/cxd56xx/usbdev.h
+ * bsp/include/arch/chip/usbdev.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************
- * arch/arm/src/cxd56xx/cxd56_powermgr.h
+ * bsp/src/cxd56_powermgr.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

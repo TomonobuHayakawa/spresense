@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_usbtrace.c
+ * system/nshlib/nsh_usbtrace.c
  *
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

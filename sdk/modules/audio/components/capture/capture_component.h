@@ -1,5 +1,5 @@
 /****************************************************************************
- * audioutils/components/capture/capture_component.h
+ * modules/audio/components/capture/capture_component.h
  *
  *   Copyright (C) 2015 Sony Corporation
  *

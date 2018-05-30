@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_command.c
+ * system/nshlib/nsh_command.c
  *
  *   Copyright (C) 2007-2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

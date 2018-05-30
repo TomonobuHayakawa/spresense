@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/cle/Makefile
+# system/cle/Makefile
 #
 #   Copyright (C) 2014, 2016 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/objects/media_recorder/raudio_recorder_sink.h
+ * modules/audio/objects/media_recorder/audio_recorder_sink.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

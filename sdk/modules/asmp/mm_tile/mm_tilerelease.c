@@ -1,5 +1,5 @@
 /****************************************************************************
- * mm/mm_tile/mm_tileinit.c
+ * modules/asmp/mm_tile/mm_tilerelease.c
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

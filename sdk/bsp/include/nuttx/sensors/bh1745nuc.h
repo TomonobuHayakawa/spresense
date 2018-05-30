@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/sensors/bh1745nuc.h
+ * bsp/include/nuttx/sensors/bh1745nuc.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

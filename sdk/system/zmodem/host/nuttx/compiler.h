@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/compiler.h
+ * system/zmodem/host/nuttx/compiler.h
  *
  *   Copyright (C) 2013, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

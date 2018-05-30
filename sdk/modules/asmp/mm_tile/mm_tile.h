@@ -1,5 +1,5 @@
 /****************************************************************************
- * mm/mm_tile/mm_tile.h
+ * modules/asmp/mm_tile/mm_tile.h
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

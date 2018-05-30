@@ -1,5 +1,5 @@
 /****************************************************************************
- * mm/mm_tile/mm_tilemark.c
+ * modules/asmp/mm_tile/mm_tilemark.c
  *
  *   Copyright (C) 2012, 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

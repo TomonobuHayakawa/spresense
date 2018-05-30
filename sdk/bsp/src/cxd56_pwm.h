@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_pwm.h
+ * bsp/src/cxd56_pwm.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

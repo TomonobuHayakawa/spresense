@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/supervisor/mpmq.c
+ * modules/asmp/supervisor/mpmq.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

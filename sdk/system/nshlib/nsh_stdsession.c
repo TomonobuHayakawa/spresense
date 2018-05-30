@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_stdsession.c
+ * system/nshlib/nsh_stdsession.c
  *
  *   Copyright (C) 2013-2014, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

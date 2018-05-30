@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/sensor_ecode.h
+ * modules/include/sensing/sensor_ecode.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

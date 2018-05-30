@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/zmodem/host/debug.h
+ * system/zmodem/host/debug.h
  *
  *   Copyright (C) 2007-2011, 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

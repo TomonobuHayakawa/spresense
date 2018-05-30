@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/src/audio/cxd56_audio_ac_reg.h
+ * bsp/src/audio/cxd56_audio_bca_reg.h
  *
  *   Copyright (C) 2016, 2017, 2018 Sony Corporation
  *

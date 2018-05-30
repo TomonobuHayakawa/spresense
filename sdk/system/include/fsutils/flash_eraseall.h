@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/fsutils/flash_eraseall.h
+ * system/include/fsutils/flash_eraseall.h
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

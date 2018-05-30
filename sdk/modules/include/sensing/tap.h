@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/tap.h
+ * modules/include/sensing/tap.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

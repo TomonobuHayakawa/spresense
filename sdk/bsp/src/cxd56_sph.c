@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_sph.c
+ * bsp/src/cxd56_sph.c
  * Hardware Semaphore Driver
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.

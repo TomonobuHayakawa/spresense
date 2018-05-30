@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/worker/arch/cpufifo.h
+ * modules/asmp/worker/arch/cpufifo.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

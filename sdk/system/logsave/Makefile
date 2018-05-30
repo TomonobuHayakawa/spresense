@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/logsave/Makefile
+# system/logsave/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation
 #

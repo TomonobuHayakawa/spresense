@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/fwuputils/fwup_client.h
+ * modules/include/fwuputils/fwup_client.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

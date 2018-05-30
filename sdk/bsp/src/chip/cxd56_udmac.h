@@ -1,5 +1,5 @@
 /********************************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd56_udmac.h
+ * bsp/src/chip/cxd56_udmac.h
  *
  *   Copyright (C) 2016 Sony Corporation
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_passwdcmds.c
+ * system/nshlib/nsh_passwdcmds.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

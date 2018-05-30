@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/supervisor/rawelf_symbols.c
+ * modules/asmp/rawelf/rawelf_symbols.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *   Copyright (C) 2012, 2014 Gregory Nutt. All rights reserved.

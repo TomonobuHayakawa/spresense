@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_scufifo.h
+ * bsp/src/cxd56_scufifo.h
  *
  *   Copyright (C) 2016 Sony Corporation
  *

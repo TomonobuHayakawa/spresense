@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/collet/src/cxd56_appinit.c
+ * bsp/board/collet/src/cxd56_appinit.c
  *
  *   Copyright (C) 2017 Sony Corporation.
  *

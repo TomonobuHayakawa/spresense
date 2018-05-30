@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/builtin/exec_builtin.c
+ * system/builtin/exec_builtin.c
  *
  * Originally by:
  *

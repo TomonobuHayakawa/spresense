@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/ScopedLock.h
+ * modules/memutils/memory_manager/src/ScopedLock.h
  *
  * Description: Memory Manager Lite Scoped Lock class
  *

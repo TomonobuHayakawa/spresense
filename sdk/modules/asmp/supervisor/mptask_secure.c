@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/supervisor/mptask_secure.c
+ * modules/asmp/supervisor/mptask_secure.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

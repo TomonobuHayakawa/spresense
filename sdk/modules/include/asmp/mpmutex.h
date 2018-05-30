@@ -1,5 +1,5 @@
 /********************************************************************************
- * include/asmp/mpmutex.h
+ * modules/include/asmp/mpmutex.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

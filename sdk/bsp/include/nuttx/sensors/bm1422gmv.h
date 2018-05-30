@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/sensors/bm1422gmv.h
+ * bsp/include/nuttx/sensors/bm1422gmv.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

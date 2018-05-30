@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_init.c
+ * system/nshlib/nsh_init.c
  *
  *   Copyright (C) 2007-2012, 2014-2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

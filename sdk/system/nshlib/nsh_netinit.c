@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_netinit.c
+ * system/nshlib/nsh_netinit.c
  *
  *   Copyright (C) 2010-2012, 2014-2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

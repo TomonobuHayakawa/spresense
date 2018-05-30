@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/gpio/Makefile
+# system/gpio/Makefile
 #
 #   Copyright (C) 2018 Sony Corporation
 #

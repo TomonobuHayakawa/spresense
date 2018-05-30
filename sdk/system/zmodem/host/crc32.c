@@ -1,5 +1,5 @@
 /************************************************************************************************
- * apps/system/zmodem/host/crc32.c
+ * system/zmodem/host/crc32.c
  *
  * This file is a part of NuttX:
  *

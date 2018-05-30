@@ -1,5 +1,5 @@
 /********************************************************************************************
- * arch/arm/include/cxd56xx/irq.h
+ * bsp/include/arch/chip/irq.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

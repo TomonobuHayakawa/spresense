@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/fsutils/inifile/inifile.c
+ * system/fsutils/inifile/inifile.c
  *
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

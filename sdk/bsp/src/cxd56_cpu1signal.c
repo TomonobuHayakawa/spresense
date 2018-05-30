@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch\arm\include\cxd56xx\cxd56_cpu1signal.h
+ * bsp/src/cxd56_cpu1signal.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

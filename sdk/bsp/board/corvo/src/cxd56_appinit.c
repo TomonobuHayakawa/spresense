@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/corvo/src/cxd56_appinit.c
+ * bsp/board/corvo/src/cxd56_appinit.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

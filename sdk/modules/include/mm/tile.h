@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/mm/tile.h
+ * modules/include/mm/tile.h
  * The tile memory allocator.
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.

@@ -1,5 +1,5 @@
 /************************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd56_i2c.h
+ * bsp/src/chip/cxd56_i2c.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

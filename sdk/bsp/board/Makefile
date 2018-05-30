@@ -1,5 +1,5 @@
 ############################################################################
-# configs/corvo/src/Makefile
+# bsp/board/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation.
 #

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/builtin/builtin.h
+ * system/include/builtin/builtin.h
  *
  * Originally by:
  *

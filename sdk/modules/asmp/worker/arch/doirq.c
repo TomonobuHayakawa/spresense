@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/worker/arch/up_doirq.c
+ * modules/asmp/worker/arch/doirq.c
  *
  *   Copyright (C) 2009, 2011, 2013-2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

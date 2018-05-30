@@ -1,5 +1,5 @@
 ############################################################################
-# libc/bin/Makefile
+# system/platform/bin/Makefile
 #
 #   Copyright (C) 2013 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

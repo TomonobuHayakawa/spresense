@@ -1,5 +1,5 @@
 /****************************************************************************
- * includ/sensing/arm_gesture_dsp_command.h
+ * modules/include/sensing/arm_gesture_dsp_command.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

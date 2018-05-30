@@ -1,5 +1,5 @@
 ############################################################################
-# apps/nshlib/Makefile
+# system/nshlib/Makefile
 #
 #   Copyright (C) 2011-2013, 2016 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

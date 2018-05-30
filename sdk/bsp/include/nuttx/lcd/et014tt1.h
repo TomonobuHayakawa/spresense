@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/lcd/et014tt1.h
+ * bsp/include/nuttx/lcd/et014tt1.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

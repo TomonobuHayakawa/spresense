@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/worker/mpmq.c
+ * modules/asmp/worker/mpmq.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

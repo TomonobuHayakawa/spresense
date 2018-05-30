@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_modcmds.c
+ * system/nshlib/nsh_modcmds.c
  *
  *   Copyright (C) 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

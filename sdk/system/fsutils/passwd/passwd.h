@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/fsutils/passwd/passwd.h
+ * system/fsutils/passwd/passwd.h
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

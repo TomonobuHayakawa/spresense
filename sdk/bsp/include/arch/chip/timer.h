@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/timer.h
+ * bsp/include/arch/chip/timer.h
  *
  *   Copyright (C) 2018 Sony Corporation.
  *

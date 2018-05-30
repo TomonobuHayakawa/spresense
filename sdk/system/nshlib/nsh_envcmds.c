@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_envcmds.c
+ * system/nshlib/nsh_envcmds.c
  *
  *   Copyright (C) 2007-2009, 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

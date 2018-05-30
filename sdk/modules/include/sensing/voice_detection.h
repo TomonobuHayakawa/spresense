@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/voice_detection.h
+ * modules/include/sensing/voice_detection.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

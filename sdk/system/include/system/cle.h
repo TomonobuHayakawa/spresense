@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/system/cle.h
+ * system/include/system/cle.h
  *
  *   Copyright (C) 2014, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

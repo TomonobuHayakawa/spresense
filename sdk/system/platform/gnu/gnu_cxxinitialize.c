@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/platform/gnu/gnu_cxxinitialize.c
+ * system/platform/gnu/gnu_cxxinitialize.c
  *
  *   Copyright (C) 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

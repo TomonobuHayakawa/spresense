@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/dbg_timcmds.c
+ * system/nshlib/nsh_timcmds.c
  *
  *   Copyright (C) 2011-2012, 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

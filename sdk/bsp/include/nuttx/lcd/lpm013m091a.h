@@ -1,5 +1,5 @@
 /********************************************************************************************
- * include/nuttx/lcd/lpm013m091a.h
+ * bsp/include/nuttx/lcd/lpm013m091a.h
  *
  *   Copyright (C) 2016 Sony Corporation
  *

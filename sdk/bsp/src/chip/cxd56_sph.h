@@ -1,5 +1,5 @@
 /********************************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd56_sph.h
+ * bsp/src/chip/cxd56_sph.h
  *
  *   Copyright (C) 2016 Nobuto Kobayshi. All rights reserved.
  *

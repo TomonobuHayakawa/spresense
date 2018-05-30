@@ -1,5 +1,5 @@
 /****************************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd56_rtc.h
+ * bsp/src/chip/cxd56_rtc.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

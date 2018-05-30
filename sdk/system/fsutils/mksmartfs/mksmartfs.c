@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/fsutils/mksmartfs/mksmartfs.c
+ * system/fsutils/mksmartfs/mksmartfs.c
  * Implementation of the SMARTFS mksmartfs utility
  *
  *   Copyright (C) 2015, Ken Pettit. All rights reserved.

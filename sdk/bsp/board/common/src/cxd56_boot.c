@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/cxd56xx/src/cxd56_boot.c
+ * bsp/board/common/src/cxd56_boot.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

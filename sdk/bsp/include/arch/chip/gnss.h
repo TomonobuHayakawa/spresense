@@ -1,5 +1,5 @@
 /****************************************************************************
- * sdk/bsp/include/arch/chip/gnss.h
+ * bsp/include/arch/chip/gnss.h
  *
  *   Copyright (C) 2016,2017 Sony Corporation. All rights reserved.
  *

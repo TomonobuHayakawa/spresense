@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/supervisor/asmp_init.c
+ * modules/asmp/supervisor/asmp_init.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

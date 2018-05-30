@@ -1,5 +1,5 @@
 /********************************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd5602_topreg.h
+ * bsp/src/chip/cxd5602_topreg.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

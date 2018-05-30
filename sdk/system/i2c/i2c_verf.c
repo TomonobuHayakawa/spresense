@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/i2c/i2c_verf.c
+ * system/i2c/i2c_verf.c
  *
  *   Copyright (C) 2011, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

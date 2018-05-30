@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/BasicPool.h
+ * modules/memutils/memory_manager/src/BasicPool.h
  *
  * Description: Memory Manager Lite Basic Memory Pool class
  *

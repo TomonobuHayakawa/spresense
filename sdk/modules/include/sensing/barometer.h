@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/barometer.h
+ * modules/include/sensing/barometer.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

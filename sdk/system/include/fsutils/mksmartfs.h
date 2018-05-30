@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/fsutils/mksmartfs.h
+ * system/include/fsutils/mksmartfs.h
  *
  *   Copyright (C) 2015 Ken Pettit. All rights reserved.
  *   Author: Ken Pettit <pettitkd@gmail.com>

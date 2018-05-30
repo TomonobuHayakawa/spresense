@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/fsutils/inifile.h
+ * system/include/fsutils/inifile.h
  *
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * nuttx/drivers/sensors/isx012.h
+ * bsp/include/nuttx/video/isx012.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

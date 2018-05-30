@@ -1,5 +1,5 @@
 /****************************************************************************
- * sdk/bsp/src/cxd56_geofence.c
+ * bsp/src/cxd56_geofence.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

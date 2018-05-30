@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/platform/cxxinitialize.h
+ * system/include/platform/cxxinitialize.h
  *
  *   Copyright (C) 2017 Gregory Nutt.  All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

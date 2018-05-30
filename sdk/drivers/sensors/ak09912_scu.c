@@ -1,5 +1,5 @@
 /****************************************************************************
- * drivers/sensors/ak09912.c
+ * drivers/sensors/ak09912_scu.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

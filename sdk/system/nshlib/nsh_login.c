@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_login.c
+ * system/nshlib/nsh_login.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

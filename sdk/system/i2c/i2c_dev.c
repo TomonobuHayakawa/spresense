@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/i2c/i2c_dev.c
+ * system/i2c/i2c_dev.c
  *
  *   Copyright (C) 2011, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

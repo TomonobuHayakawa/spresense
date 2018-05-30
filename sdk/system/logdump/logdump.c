@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/logdump/logdump.c
+ * system/logdump/logdump.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

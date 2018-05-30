@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/worker/mpshm.c
+ * modules/asmp/worker/mpshm.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

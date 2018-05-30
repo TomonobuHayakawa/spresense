@@ -1,5 +1,5 @@
 /********************************************************************************************
- * include/nuttx/sensors/ak09912.h
+ * bsp/include/nuttx/sensors/ak09912.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

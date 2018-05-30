@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_associate.c
+ * system/nshlib/nsh_associate.c
  *
  *   Copyright (C) 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

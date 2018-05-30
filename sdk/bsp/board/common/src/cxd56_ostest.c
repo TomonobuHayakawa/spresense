@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/cxd56xx/src/cxd56_ostest.c
+ * bsp/board/common/src/cxd56_ostest.c
  *
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

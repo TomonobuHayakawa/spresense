@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_clock.h
+ * bsp/src/cxd56_clock.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

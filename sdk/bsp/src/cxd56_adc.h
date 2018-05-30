@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_adc.h
+ * bsp/src/cxd56_adc.h
  *
  *   Copyright (C) 2016 Sony Corporation
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/supervisor/mptask_exec.c
+ * modules/asmp/supervisor/mptask_exec.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

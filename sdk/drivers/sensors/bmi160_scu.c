@@ -1,5 +1,5 @@
 /****************************************************************************
- * drivers/sensors/bmi160.c
+ * drivers/sensors/bmi160_scu.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

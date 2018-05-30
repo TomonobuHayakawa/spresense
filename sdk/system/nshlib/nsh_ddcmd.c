@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_ddcmd.c
+ * system/nshlib/nsh_ddcmd.c
  *
  *   Copyright (C) 2008-2009, 2012, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/src/audio/cxd56_audio.c
+ * bsp/src/audio/cxd56_audio_power.c
  *
  *   Copyright (C) 2016, 2017, 2018 Sony Corporation
  *

@@ -1,5 +1,5 @@
 /********************************************************************************
- * include/asmp/mptask.h
+ * modules/include/asmp/mptask.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

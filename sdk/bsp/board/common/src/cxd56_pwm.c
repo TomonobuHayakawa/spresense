@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_pwm.c
+ * bsp/board/common/src/cxd56_pwm.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

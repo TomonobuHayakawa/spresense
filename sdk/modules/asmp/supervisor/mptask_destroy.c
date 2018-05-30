@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/supervisor/mptask_destroy.c
+ * modules/asmp/supervisor/mptask_destroy.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

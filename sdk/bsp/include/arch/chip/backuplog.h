@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/backuplog.h
+ * bsp/include/arch/chip/backuplog.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

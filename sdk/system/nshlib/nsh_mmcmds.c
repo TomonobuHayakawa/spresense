@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_mmcmds.c
+ * system/nshlib/nsh_mmcmds.c
  *
  *   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

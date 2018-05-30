@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_timerisr.h
+ * bsp/src/cxd56_timerisr.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /********************************************************************************
- * apps/memutils/memory_manager/src/RuntimeQue.h
+ * modules/include/memutils/memory_manager/RuntimeQue.h
  *
  * Description: Runtime depth decision queue class.
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/step_counter.h
+ * modules/include/sensing/step_counter.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd5602_pinconfig.h
+ * bsp/src/chip/cxd5602_pinconfig.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************
- * arch/arm/src/cxd56xx/chip/cxd56_emmc.h
+ * bsp/src/chip/cxd56_emmc.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

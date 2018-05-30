@@ -1,5 +1,5 @@
 /****************************************************************************
- * memutils/message/include/message_type.h
+ * modules/include/memutils/message/message_type.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

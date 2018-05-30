@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/gpioint/Makefile
+# system/gpioint/Makefile
 #
 #   Copyright (C) 2018 Sony Corporation
 #

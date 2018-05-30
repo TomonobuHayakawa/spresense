@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/stackmonitor/stackmonitor.c
+ * system/stackmonitor/stackmonitor.c
  *
  *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

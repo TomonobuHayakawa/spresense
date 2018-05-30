@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_usbconsole.c
+ * system/nshlib/nsh_usbconsole.c
  *
  *   Copyright (C) 2012-2014, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

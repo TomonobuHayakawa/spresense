@@ -1,5 +1,5 @@
 /****************************************************************************
- * sensing/manager/sensor_manager.h
+ * modules/sensing/manager/sensor_manager.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

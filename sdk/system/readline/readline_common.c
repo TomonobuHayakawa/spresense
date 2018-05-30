@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/readline/readline_common.c
+ * system/readline/readline_common.c
  *
  *   Copyright (C) 2007-2008, 2011-2013, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

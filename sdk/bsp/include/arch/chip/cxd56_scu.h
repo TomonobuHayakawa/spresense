@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/cxd56_scu.h
+ * bsp/include/arch/chip/cxd56_scu.h
  *
  *   Copyright (C) 2016 Sony Corporation
  *

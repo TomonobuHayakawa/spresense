@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/builtin/builtin_list.c
+ * system/builtin/builtin_list.c
  *
  *   Copyright (C) 2011 Uros Platise. All rights reserved.
  *   Copyright (C) 2011 Gregory Nutt. All rights reserved.

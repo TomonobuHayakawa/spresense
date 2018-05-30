@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_netcmds.c
+ * system/nshlib/nsh_netcmds.c
  *
  *   Copyright (C) 2007-2012, 2014-2015, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

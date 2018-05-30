@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/cxd224x.h
+ * bsp/include/arch/chip/cxd224x.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

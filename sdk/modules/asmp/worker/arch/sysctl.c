@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/worker/arch/sysctl.c
+ * modules/asmp/worker/arch/sysctl.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

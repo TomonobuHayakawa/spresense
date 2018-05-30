@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/cxd56xx/src/cxd56_i2cdev.c
+ * bsp/board/common/src/cxd56_i2cdev.c
  *
  *   Copyright (C) 2018 Sony Corporation
  *

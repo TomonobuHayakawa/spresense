@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_test.c
+ * system/nshlib/nsh_test.c
  *
  *   Copyright (C) 2008, 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

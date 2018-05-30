@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/compass.h
+ * modules/include/sensing/compass.h
  *
  *   Copyright (C) 2016-2017 Sony Corporation
  *

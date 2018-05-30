@@ -1,5 +1,5 @@
 /****************************************************************************
- * sdk/modules/include/gpsutils/cxd56_geofence_compat.h
+ * modules/include/gpsutils/cxd56_geofence_comat.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

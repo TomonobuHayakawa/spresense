@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/sensor_message_type.h
+ * modules/include/sensing/sensor_message_types.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

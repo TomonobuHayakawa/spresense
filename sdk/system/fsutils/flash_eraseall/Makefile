@@ -1,5 +1,5 @@
 ############################################################################
-# apps/fsutils/flash_eraseall/Makefile
+# system/fsutils/flash_eraseall/Makefile
 #
 #   Copyright (C) 2016 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

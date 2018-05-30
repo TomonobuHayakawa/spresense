@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_usbkeyboard.c
+ * system/nshlib/nsh_usbkeyboard.c
  *
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

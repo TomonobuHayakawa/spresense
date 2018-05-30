@@ -1,5 +1,5 @@
 /*****************************************************************************
- * sdk/modules/include/gpsutils/cxd56_gnss_nmea.h
+ * modules/include/gpsutils/cxd56_gnss_nmea.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

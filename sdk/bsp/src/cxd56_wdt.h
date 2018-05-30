@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56xx/cxd56_wdt.h
+ * bsp/src/cxd56_wdt.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/stackmonitor/Makefile
+# system/stackmonitor/Makefile
 #
 #   Copyright (C) 2013, 2016 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

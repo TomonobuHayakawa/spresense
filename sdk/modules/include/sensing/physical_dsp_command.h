@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/physical_dsp_command.h
+ * modules/include/sensing/physical_dsp_command.h
  *
  *   Copyright (C) 2016-2017 Sony Corporation
  *

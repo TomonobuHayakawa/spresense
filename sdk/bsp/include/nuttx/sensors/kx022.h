@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/nuttx/sensors/kx022.h
+ * bsp/include/nuttx/sensors/kx022.h
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/fwuputils/manager/fwup_manager.c
+ * modules/fwuputils/manager/fwup_manager.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

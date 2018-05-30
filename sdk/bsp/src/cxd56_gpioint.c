@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/cxd56/cxd56_gpioint.c
+ * bsp/src/cxd56_gpioint.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

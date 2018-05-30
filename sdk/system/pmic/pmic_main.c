@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/pmic/pmic_main.c
+ * system/pmic/pmic_main.c
  *
  *   Copyright (C) 2018 Sony Corporation
  *

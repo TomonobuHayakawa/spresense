@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_console.h
+ * system/nshlib/nsh_console.h
  *
  *   Copyright (C) 2007-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

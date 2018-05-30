@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/pm.h
+ * bsp/include/arch/chip/pm.h
  *
  *   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
  *

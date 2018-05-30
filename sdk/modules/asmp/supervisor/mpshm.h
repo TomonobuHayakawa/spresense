@@ -1,5 +1,5 @@
 /****************************************************************************
- * asmp/supervisor/mpshm.h
+ * modules/asmp/supervisor/mpshm.h
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
 

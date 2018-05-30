@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/include/cxd56xx/pin.h
+ * bsp/include/arch/chip/pin.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

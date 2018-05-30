@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/collet/src/cxd56_power.c
+ * bsp/board/collet/src/cxd56_power.c
  *
  *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *

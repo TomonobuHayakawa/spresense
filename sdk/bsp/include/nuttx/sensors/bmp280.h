@@ -1,5 +1,5 @@
 /********************************************************************************************
- * include/nuttx/sensors/bmp280.h
+ * bsp/include/nuttx/sensors/bmp280.h
  *
  *   Copyright (C) 2016, 2017 Sony Corporation. All rights reserved.
  *

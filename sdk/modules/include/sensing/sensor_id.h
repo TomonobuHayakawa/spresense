@@ -1,5 +1,5 @@
 /****************************************************************************
- * include/sensing/sensor_id.h
+ * modules/include/sensing/sensor_id.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

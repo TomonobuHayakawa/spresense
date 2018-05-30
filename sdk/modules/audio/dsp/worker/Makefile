@@ -1,5 +1,5 @@
 ############################################################################
-# modules/audio/components/postfilter/worker/Makefile
+# modules/audio/dsp/worker/Makefile
 #
 #   Copyright (C) 2018 Sony Corporation. All rights reserved.
 #
