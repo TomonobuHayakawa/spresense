@@ -60,26 +60,26 @@ __APU_BEGIN_NAMESPACE
 #endif
 
 /**
- * Apuへの制御コマンド結果
+ * Result of Apu command
  */
 
 enum exec_result_e
 {
-  ApuExecOK,     /**< 実行成功 */
-  ApuExecError,  /**< Errorが発生 */
-  ApuWarning     /**< Warningが発生 */
+  ApuExecOK,
+  ApuExecError,
+  ApuWarning
 
 };
 typedef enum exec_result_e ExecResult;
 
 /**
- * Error 発生元
+ * Error source 
  */
 
 enum apu_internal_err_src_e
 {
-  FromDrv = 0,  /**< Driver 起因のエラー */
-  FromLib       /**< Library 起因のエラー */
+  FromDrv = 0,  /**< Driver error */
+  FromLib       /**< Library error */
 };
 typedef enum apu_internal_err_src_e ApuInternalErrorSource;
 
@@ -117,39 +117,39 @@ typedef enum apu_internal_err_src_e ApuInternalErrorSource;
 
 typedef unsigned char ApuInternalErrorCode;
 
-/* PCM format の型 */
+/*! PCM format */
 enum audio_pcm_format_type_e
 {
-  AudPcmFormatInt16 = 0,  /**< 符号付16bit整数型 */
-  AudPcmFormatInt24,      /**< 符号付24bit整数型 */
-  AudPcmFormatInt32,      /**< 符号付32bit整数型 */
-  AudPcmFormatFloat32     /**< 符号付32bit浮動小数点型 */
+  AudPcmFormatInt16 = 0,  /**< 16bit PCM */
+  AudPcmFormatInt24,      /**< 24bit PCM */
+  AudPcmFormatInt32,      /**< 32bit PCM */
+  AudPcmFormatFloat32     /**< 32bit PCM (float type) */
 };
 typedef enum audio_pcm_format_type_e AudioPcmFormatType;
 
-/* xLOUD処理モード */
+/* xLOUD mode */
 enum audio_xloud_mode_e
 {
-  AudXloudModeNormal = 0,  /**< 通常モード */
-  AudXloudModeCinema,      /**< 映画モード */
-  AudXloudModeDisable      /**< Disable, パスするー動作 */
+  AudXloudModeNormal = 0,  /**< Normal mode */
+  AudXloudModeCinema,      /**< Cinema mode */
+  AudXloudModeDisable      /**< Disable, Path through */
 };
 typedef enum audio_xloud_mode_e AudioXloudMode;
 
-/* EAX 環境適応処理モード */
+/* EAX mode */
 enum audio_eax_mode_e
 {
-  AudEaxModeNormal = 0,  /**< 標準モード */
-  AudEaxModeCall,        /**< 通話モード */
-  AudEaxModeDisable      /**< Disable, xLOUDの効果調整量 0 固定 */
+  AudEaxModeNormal = 0,  /**< Nomarl mode */
+  AudEaxModeCall,        /**< Call mode */
+  AudEaxModeDisable      /**< Disable, xLOUD not effective */
 };
 typedef enum audio_eax_mode_e AudioEaxMode;
 
-/* xLOUD処理モード */
+/* xLOUD set type */
 enum audio_xloud_set_type_e
 {
-  AudXloudSetCommon = 0,  /**< 共通 */
-  AudXloudSetIndividual,  /**< 個別 */
+  AudXloudSetCommon = 0,  /**< Common */
+  AudXloudSetIndividual,  /**< Individual */
   AudXloudSetTypeNum
 };
 typedef enum audio_xloud_set_type_e AudioXloudSetType;
@@ -161,10 +161,10 @@ typedef enum audio_xloud_set_type_e AudioXloudSetType;
 
 struct apu_cmd_header_s
 {
-  uint8_t core_id;       /**< コマンド受信先(Apuから見た場合)のcore id */
-  uint8_t context_id;    /**< 制御したいcore内のcontextのid */
-  uint8_t process_mode;  /**< Apuコマンドのprocess mode */
-  uint8_t event_type;    /**< Apuコマンドのevent種別 */
+  uint8_t core_id;       /**< Id of core which recieve command from APU */
+  uint8_t context_id;    /**< Context id which want to process */
+  uint8_t process_mode;  /**< Process mode */
+  uint8_t event_type;    /**< Event type */
 
   apu_cmd_header_s():
     core_id(0xFF),
@@ -340,7 +340,7 @@ public:
   bool                eax_enable_external_analysis; /**< EAX setting flag to use external library */
   FAR uint8_t        *p_eax_coef_image;       /**< EAX pointer of optimization coefficient table */
   uint32_t            eax_coef_size;          /**< EAX size of optimization coefficient table */
-  FAR void           *p_dma_info;             /**< Dma info 変数のアドレス */
+  FAR void           *p_dma_info;             /**< Dma info */
 };
 
 struct ApuInitFilterCmd
@@ -739,7 +739,7 @@ public:
 
 /****************************************************************************/
 /**
- * Apuへの制御コマンド
+ * Apu command
  */
 
 struct Wien2ApuCmd

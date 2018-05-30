@@ -56,8 +56,6 @@ __WIEN2_BEGIN_NAMESPACE
 
 struct AudioMngCmdCmpltResult
 {
-  /* TODO: 直接にリザルトコードを返すかどうか、迷い中 */
-  /* Sub-stateも一緒にobject layer->audio managerに返してあげたほうがよいかも */
   uint8_t    command_code;  /**< command code of high level API */
   uint8_t    sub_code;      /**< sub code of high level API */
   uint8_t    module_id;     /**< module id of high level API */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/objects/media_recorder/raudio_recorder_sink.cpp
+ * modules/audio/objects/media_recorder/audio_recorder_sink.cpp
  *
  *   Copyright (C) 2017 Sony Corporation
  *
@@ -100,8 +100,6 @@ bool AudioRecorderSink::write(const AudioRecSinkData_s &param)
 /*--------------------------------------------------------------------------*/
 bool AudioRecorderSink::finalize(void)
 {
-  /* Do nothing. */
-
   return true;
 }
 

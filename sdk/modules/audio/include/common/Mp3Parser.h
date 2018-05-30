@@ -47,31 +47,31 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/*----- 戻り値定義 -----*/
+/*----- Return Value -----*/
 
-#define MP3PARSER_SUCCESS           0  /* 成功 */
-#define MP3PARSER_NO_FRAME_HEADER   -1 /* フレームヘッダが無い */
-#define MP3PARSER_NO_OUTPUT_REGION  -2 /* フレーム取得用バッファサイズ不足 */
-#define MP3PARSER_NO_CAPABILITY     -3 /* 使用不可 */
-#define MP3PARSER_FILE_ERROR        -4 /* 指定ファイルが無い */
-#define MP3PARSER_PARAMETER_ERROR   -5 /* パラメータエラー */
+#define MP3PARSER_SUCCESS           0  /* Success */
+#define MP3PARSER_NO_FRAME_HEADER   -1 /* Frame header is not exist */
+#define MP3PARSER_NO_OUTPUT_REGION  -2 /* Buffer size for frame extraction is not enough */
+#define MP3PARSER_NO_CAPABILITY     -3 /* Cannot use */
+#define MP3PARSER_FILE_ERROR        -4 /* Specified file is not exist */
+#define MP3PARSER_PARAMETER_ERROR   -5 /* Parameter is not correct */
 
 /* (ready_to_extract_frames) */
 
-#define MP3PARSER_NEXT_SYNC_UNFOUND  0 /* 次のsyncwordが見つからない */
-#define MP3PARSER_NEXT_SYNC_FOUND    1 /* 次のsyncwordが見つかった */
+#define MP3PARSER_NEXT_SYNC_UNFOUND  0 /* Next SYNCWORD was not found */
+#define MP3PARSER_NEXT_SYNC_FOUND    1 /* Next SYNCWORD was found */
 
-/*----- Misc値デフォルト定義(未設定時にデフォルト設定します) -----*/
+/*----- Misc default value (If not specified, use this) -----*/
 
-/* 1つ目のsyncword検索上限デフォルト値(byte) */
+/* Upper limit of 1st SYNCWORD search range (byte) */
 
 #define MP3PARSER_DEFAULT_1ST_SYNC_SEARCH_MAX 0xFFFFFFFF
 
-/* 2つ目のsyncword検索上限デフォルト値(byte) */
+/* Upper limit of 2nd SYNCWORDK search range (byte) */
 
 #define MP3PARSER_DEFAULT_2ND_SYNC_SEARCH_MAX 256
 
-/* 切り出しモードのデフォルト値 */
+/* Default value of extraction mode */
 
 #define MP3PARSER_DEFAULT_EXTRACTION_MODE  (Mp3ParserExtractFrameOnly)
 
@@ -80,7 +80,7 @@
 #define MP3PARSER_SYNCWORD_1    0xFF
 #define MP3PARSER_SYNCWORD_2    0xF0
 
-/* 各アイテム値チェック用(reservedは使用されないはず) */
+/* For checking any items (reserved will not use) */
 
 #define MP3PARSER_FS_RESERVED        3    /* '11' */
 #define MP3PARSER_BITRATE_FREE       0    /* '0000' */
@@ -88,30 +88,30 @@
 #define MP3PARSER_PRIVATEBIT_ISOUSED 1    /* '1' */
 #define MP3PARSER_EMPHASIS_RESERVED  2    /* '10' */
 
-/* 2byte目のメンバ */
+/* Members of 2nd byte */
 
 #define MP3PARSER_GET_ID(byte)          ((byte & 0x08) >> 3)
 #define MP3PARSER_GET_LAYER(byte)       ((byte & 0x06) >> 1)
 #define MP3PARSER_GET_PROTECTION(byte)   (byte & 0x01)
-/* 3byte目のメンバ */
+/* Members of 3rd byte */
 #define MP3PARSER_GET_BR(byte)          ((byte & 0xF0) >> 4)
 #define MP3PARSER_GET_FS(byte)          ((byte & 0x0C) >> 2)
 #define MP3PARSER_GET_PADDING(byte)     ((byte & 0x02) >> 1)
 #define MP3PARSER_GET_PRIVATE(byte)      (byte & 0x01)
-/* 4byte目のメンバ */
+/* Members of 4th byte */
 #define MP3PARSER_GET_MODE(byte)        ((byte & 0xC0) >> 6)
 #define MP3PARSER_GET_MODEEXT(byte)     ((byte & 0x30) >> 4)
 #define MP3PARSER_GET_CPRIGHT(byte)     ((byte & 0x08) >> 3)
 #define MP3PARSER_GET_ORGHOME(byte)     ((byte & 0x04) >> 2)
 #define MP3PARSER_GET_EMPHAS(byte)       (byte & 0x02)
 
-#define MP3PARSER_BITLENGTH_BYTE     8      /* 1byteのbit長 */
-#define MP3PARSER_SLOTLENGTH_LAYER1  4      /* LAYER1の1-slot長 */
-#define MP3PARSER_SLOTLENGTH_LAYER23 1      /* LAYER1の2/3-slot長 */
+#define MP3PARSER_BITLENGTH_BYTE     8      /* Bit length per a byte */
+#define MP3PARSER_SLOTLENGTH_LAYER1  4      /* 1-slot length of LAYER1 */
+#define MP3PARSER_SLOTLENGTH_LAYER23 1      /* 2/3-slot length of LAYER1 */
 
-/* サンプル数(byteあたり)取得マクロ
- * ※ISO記述の「slot長算出式」に登場するマジックナンバー(定数144とか12とか)
- * が得られる
+/* Macros to get sample num ber a byte
+ * * You can get magic number(ex, 144, 12) which appears in
+ * "calculation expression for slot length" from ISO document.
  */
 
 #define MP3PARSER_CONST_BYTE_SAMPLES_V1(layer) \
@@ -126,19 +126,19 @@
           (mp3_parser_v2_num_samples_frame[Mp3ParserLayer1] / \
             MP3PARSER_BITLENGTH_BYTE / MP3PARSER_SLOTLENGTH_LAYER1)
 
-/* フレームバイト長算出マクロ
- * ・・・paddingがある場合は、この値に加算する
- * (一次元目の添え字=sampling_frequency)
- * (二次元目の添え字=bitrate_index)
+/* Macros to get frame byte length
+ * ...if padding is there, add to this value
+ * (1st dimention index = sampling_frequency)
+ * (2nd dimention index = bitrate_index)
  *
- *  値は、(byteあたりサンプル数 × bitrate ÷ sampling_frequency) ＋ padding長
+ * (sample num per a byte * bitrate ÷ sampling_frequency) + padding length
  */
 
-/* padding追加用(返す値の単位はslot数) */
+/* For padding addition(Unit of return value is "slot") */
 
 #define MP3PARSER_CALC_PADDING(padding)    ((padding == 1) ? 1 : 0)
 
-/* Layer1用・・・slot=4byte */
+/* Layer1 ... slot = 4byte */
 
 #define MP3PARSER_CALC_LAYER1_V1_FRAME_SIZE(br_idx,fs_idx,padding) \
           ((((MP3PARSER_CONST_BYTE_SAMPLES_V1_LAYER1 * \
@@ -151,7 +151,7 @@
             mp3_parser_v2_sampling_frequency[fs_idx])) + \
             MP3PARSER_CALC_PADDING(padding)) * MP3PARSER_SLOTLENGTH_LAYER1)
 
-/* Layer3/Layer2用 */
+/* Layer3/Layer2 */
 
 #define MP3PARSER_CALC_LAYER3_V1_FRAME_SIZE(layer,br_idx,fs_idx,padding) \
           ((MP3PARSER_CONST_BYTE_SAMPLES_V1(layer) * \
@@ -164,7 +164,7 @@
             mp3_parser_v2_sampling_frequency[fs_idx]) + \
             MP3PARSER_CALC_PADDING(padding))
 
-/* Layer共通(mpeg1/2別) */
+/* Common for any Layer (mpeg1/2 separated) */
 
 #define MP3PARSER_CALC_V1_FRAME_SIZE(layer,br_idx,fs_idx,padding)  \
           ((layer == Mp3ParserLayer1) ? \
@@ -175,27 +175,27 @@
             MP3PARSER_CALC_LAYER1_V2_FRAME_SIZE(br_idx,fs_idx,padding) : \
             MP3PARSER_CALC_LAYER3_V2_FRAME_SIZE(layer,br_idx,fs_idx,padding))
 
-/* Layer共通 */
+/* Common for any Layer */
 
 #define MP3PARSER_CALC_FRAME_SIZE(id,layer,br_idx,fs_idx,padding)  \
           ((id == Mp3ParserMpeg1) ? \
             MP3PARSER_CALC_V1_FRAME_SIZE(layer,br_idx,fs_idx,padding) : \
             MP3PARSER_CALC_V2_FRAME_SIZE(layer,br_idx,fs_idx,padding))
 
-/* MP3フレームのうち、最小のもの(MPEG2 Layer3 fs=24kHz br=8k) */
+/* Mininum frame of MP3 frmaes(MPEG2 Layer3 fs=24kHz br=8k) */
 
 #define MP3PARSER_MIN_MP3FRAME_LENGTH  (24 + 4)
 
 #define MP3PARSER_NULL          0
 #define MP3PARSER_HEADSIZE      4
 
-/* 切り出し対象がファイルの場合用 */
+/* For if extraction target is file */
 
-/* 内部関数内ファイル読み込み用ローカルバッファサイズ */
+/* Size of local buffer which used for file read */
 
 #define MP3PARSER_LOCAL_READFILE_BUFFERSIZE  32
 
-/* 内部関数内バッファ読み込み用ローカルバッファサイズ */
+/* Size of local buffer which used for file read */
 
 #define MP3PARSER_LOCAL_POLL_BUFFERSIZE      1024
 
@@ -204,43 +204,43 @@
 #endif
 
 #ifdef WINDOWS
-/* ファイルseek時の「origin指定＝ファイル先頭」 */
+/* File seek origin "Top of the file" */
 
 #define PA3PARSER_FILESEEK_ORIGIN_TOP  0
 
-/* ファイルseek時の「origin指定＝ファイル最後尾」 */
+/* File seek origin "Bottom of the file" */
 
 #define PA3PARSER_FILESEEK_ORIGIN_END  2
 #else
 /*--------------------- for CXD5602 --------------------*/
 
-/* ファイルseek時の「origin指定＝ファイル先頭」 */
+/* File seek origin "Top of the file" */
 
 #define PA3PARSER_FILESEEK_ORIGIN_TOP   1  /* FS_FSEEK_SET */
 
-/* ファイルseek時の「origin指定＝ファイル最後尾」 */
+/* File seek origin "Bottom of the file" */
 
 #define PA3PARSER_FILESEEK_ORIGIN_END   2  /* FS_FSEEK_END */
 #endif
 
-/* ID3v2タグ用 */
+/* ID3v2 tag */
 
 #define MP3PARSER_ID3V2_ID1      0x49  /* 'I' */
 #define MP3PARSER_ID3V2_ID2      0x44  /* 'D' */
 #define MP3PARSER_ID3V2_ID3      0x33  /* '3' */
 
-/* ID3v2タグ長取得マクロ(各byteの最上位bitは無効) */
+/* Get ID3v2 tag length (High oreder bit of every bytes are ignored) */
 
 #define MP3PARSER_ID3v2_GET_LENGTH(len1,len2,len3,len4) \
           (uint32_t)(((len1 & 0x7F) << 21) | ((len2 & 0x7F) << 14) | \
             ((len3 & 0x7F) << 7) | (len4 & 0x7F))
 
-/* ID3v1タグ長(固定長) */
+/* ID3v1 tag length(fixed value) */
 
 #define MP3PARSER_ID3v1_FIXED_LENGTH    128
 #define MP3PARSER_ID3v1_2_FIXED_LENGTH  227
 
-/* ID3v1タグ用 */
+/* ID3v1 tag */
 
 #define MP3PARSER_ID3V1_ID1     0x54  /* 'T' */
 #define MP3PARSER_ID3V1_ID2     0x41  /* 'A' */
@@ -251,87 +251,85 @@
  * Public Types
  ****************************************************************************/
 
-/* MP3切り出しモード(ライブラリ開始APIで指定) */
+/* MP3 extraction mode (Designate at start API) */
 
 enum mp3parser_extraction_mode_e
 {
-  Mp3ParserExtractFrameOnly = 0,          /* 算出フレーム長で切り出す */
-  Mp3ParserExtractFrameAndTrailingPadding /* 次syncwordまでをフレームとして
-                                           * 切り出す
-                                           */
+  Mp3ParserExtractFrameOnly = 0,          /* Extract by calcurated frame length */
+  Mp3ParserExtractFrameAndTrailingPadding /* Extract here to next SyncWord as a frame */
 };
 typedef enum mp3parser_extraction_mode_e MP3PARSER_ExtractionMode;
 
-/* MP3切り出し対象種別 */
+/* MP3 extraction target type */
 
 enum mp3parser_src_type_e
 {
-  Mp3ParserSrcBuffer = 0,   /* 切り出し対象がバッファ */
-  Mp3ParserSrcFile          /* 切り出し対象がファイル */
+  Mp3ParserSrcBuffer = 0,   /* Extraction target is buffer */
+  Mp3ParserSrcFile          /* Extraction target is file */
 };
 typedef enum mp3parser_src_type_e MP3PARSER_SrcType;
 
-/* ライブラリ機能チェックAPI用 */
+/* For library function check API */
 
 enum mp3parser_capability_e
 {
-  Mp3ParserCapabilityPeekable = 0,  /* PEKK可能か */
+  Mp3ParserCapabilityPeekable = 0,  /* Peekabale? */
 };
 typedef enum mp3parser_capability_e MP3PARSER_Capability;
 
-/** ライブラリ開始APIコール時の引数用の「その他パラメータ情報」
- *  (パラメータ情報のバッファはAPI呼び元で確保してください)
+/** "Other parameters" for Library start API
+ *  (Buffer for parameter information should be allocated by calling source)
  *
- *  ・本パラメータ情報は、切り出し対象「バッファ／ファイル」で兼用です
+ *  * This parameters are common for extraction target "buffer" and "file"
  */
 
 struct mp3parser_config_s
 {
-  uint32_t search_max_1st_sync; /* 1つ目syncwordの検索上限サイズ(byte長) */
-  uint32_t search_max_2nd_sync; /* 2つ目syncwordの検索上限サイズ(byte長) */
-  uint8_t  extraction_mode;     /* 切り出しモード */
+  uint32_t search_max_1st_sync; /* 1st syncword search range (byte) */
+  uint32_t search_max_2nd_sync; /* 2nd syncword search range (byte) */
+  uint8_t  extraction_mode;     /* Extranction mode */
   uint8_t  reserved[3];
 };
 typedef struct mp3parser_config_s MP3PARSER_Config;
 
-/** APIコール時の引数用のハンドル情報
- *  (ハンドル情報のバッファはAPI呼び元で確保してください)
+/** Handle information for API call
+ *  (Buffer for handle information should be allocated by calling source)
  *
- *  ・ライブラリ開始時に内容を初期設定し、一部情報は「切り出し毎」に更新します
+ *  * Initialize when library starts, and part of them will be modified every extraction
  *
  */
 
 struct mp3parser_handle_s
 {
-  int32_t  counter_of_extracted_frame; /* 取得済みフレーム数 */
-  MP3PARSER_SrcType src_type;          /* 切り出し対象種別 */
-  uint8_t  extraction_mode;            /* 切り出しモード */
-  uint32_t search_max_1st_sync;        /* 1つ目syncwordの検索上限サイズ */
-  uint32_t search_max_2nd_sync;        /* 2つ目syncwordの検索上限サイズ */
+  int32_t  counter_of_extracted_frame; /* Extracted frame num */
+  MP3PARSER_SrcType src_type;          /* Extraction target type */
+  uint8_t  extraction_mode;            /* Extraction mode */
+  uint32_t search_max_1st_sync;        /* 1st syncword search range (byte) */
+  uint32_t search_max_2nd_sync;        /* 2nd syncword search range (byte) */
   union
   {
-    /* 切り出し対象のSimpleFIFOハンドル情報(切り出し対象種別＝バッファ時) */
+    /* Simple Fifo handle of extraction target (When extraction target type = buffer) */
 
     FAR CMN_SimpleFifoHandle *simple_fifo_handler;
 
-    /* 切り出し対象バッファの先頭(切り出し対象種別＝バッファ時) */
+    /* Top of buffer for extraction target (When extraction target type = buffer) */
 
     FAR uint8_t *top_buff;
   } src;
 
-  /* 切り出し対象のサイズ(バッファ／ファイル共通) */
+  /* Size of Extraction target (Common for type "buffer" and "file") */
 
   uint32_t size_of_src;
 
-  /* 切り出し対象内の現在オフセット位置(バッファ／ファイル共通) */
+  /* Current offset of Extraction target (Common for type "buffer" and "file") */
 
   uint32_t current_offset;
-  FAR MP3PARSER_Config  *pConfig;      /* 「その他パラメータ情報」 */
+  FAR MP3PARSER_Config  *pConfig;      /* Othe parameters information */
 };
 typedef struct mp3parser_handle_s MP3PARSER_Handle;
 
 /*--------------------------------------------------------------------------*/
-#if 0  /* BitField構造体 － 未使用だが、ヘッダ内メンバ情報としてコメント代わりに残す */
+#if 0  /* BitField Structure -(Now not used, however, it remains as "header information" comment */
 #ifdef WINDOWS
 /** MP3 header - bit field
  *  (for little endian)
@@ -380,7 +378,7 @@ typedef struct mp3parser_header_s Mp3ParserHeader;
 #endif
 #endif
 
-/* MP3ヘッダ情報 */
+/* MP3 header info */
 
 struct mp3parser_union_head_s
 {
@@ -388,7 +386,7 @@ struct mp3parser_union_head_s
 };
 typedef struct mp3parser_union_head_s Mp3ParserUnionHead;
 
-/* Layer種別 */
+/* Layer type */
 
 enum mp3parser_header_layer_e
 {
@@ -399,7 +397,7 @@ enum mp3parser_header_layer_e
 };
 typedef enum mp3parser_header_layer_e Mp3ParserHeaderLayer;
 
-/* ID(version)種別 */
+/* ID(version) */
 
 enum mp3parser_header_id_e
 {
@@ -408,35 +406,35 @@ enum mp3parser_header_id_e
 };
 typedef enum mp3parser_header_id_e Mp3ParserHeaderId;
 
-/* 内部関数間のI/F用 */
+/* I/F for internal functions */
 
 struct mp3parser_local_info_s
 {
-  Mp3ParserUnionHead  uhd;   /* MP3ヘッダ(固定長4byte) */
-  FAR uint8_t *ptr_start;    /* (テンポラリ用) */
-  uint32_t max_search_byte;  /* (テンポラリ用) */
-  uint32_t search_offset;    /* (テンポラリ用) */
-  uint32_t found_offset;     /* (テンポラリ用) */
-  uint32_t sync_offset_1;    /* 1つ目のsyncword位置(先頭からのオフセット) */
-  uint32_t sync_offset_2;    /* 2つ目のsyncword位置(先頭からのオフセット) */
-  uint32_t frame_length_1;   /* 1つ目の算出フレーム長 */
-  uint32_t frame_length_2;   /* 2つ目の算出フレーム長 */
-  uint32_t remain_length;    /* 切り出し対象の残サイズ */
+  Mp3ParserUnionHead  uhd;   /* MP3 header(4byte fixed) */
+  FAR uint8_t *ptr_start;    /* temporary */
+  uint32_t max_search_byte;  /* temporary */
+  uint32_t search_offset;    /* temporary */
+  uint32_t found_offset;     /* temporary */
+  uint32_t sync_offset_1;    /* 1th syncword position (Offset from top) */
+  uint32_t sync_offset_2;    /* 2nd syncword position (Offset from top) */
+  uint32_t frame_length_1;   /* 1st frame length (calculated) */
+  uint32_t frame_length_2;   /* 2nd frame length (calculated) */
+  uint32_t remain_length;    /* Remain size */
 };
 typedef struct mp3parser_local_info_s Mp3ParserLocalInfo;
 
-/* ファイルアクセス関数の戻り値 */
+/* Return value of file access function */
 
 enum mp3parser_return_value_of_file_e
 {
-  Mp3ParserReturnNoFilename = (-3),     /* filename異常 */
-  Mp3ParserReturnFileOpenError = (-2),  /* ファイルエラー */
-  Mp3ParserReturnFileAccesError = (-1), /* ファイルエラー */
-  Mp3ParserReturnFileFavorable = 0,     /* 正常 */
+  Mp3ParserReturnNoFilename = (-3),     /* Filename Error */
+  Mp3ParserReturnFileOpenError = (-2),  /* File open error */
+  Mp3ParserReturnFileAccesError = (-1), /* File access error */
+  Mp3ParserReturnFileFavorable = 0,     /* No error */
 };
 typedef enum mp3parser_return_value_of_file_e Mp3ParserReturnValueOfFile;
 
-/* ID3v2タグヘッダの「byteテーブル」時のインデックス */
+/* index of "byte table" of ID3v2 tag header */
 
 enum mp3parser_id3v2_header_index_e
 {
@@ -450,11 +448,11 @@ enum mp3parser_id3v2_header_index_e
   Mp3ParserID3v2HeadIndexLen2,
   Mp3ParserID3v2HeadIndexLen3,
   Mp3ParserID3v2HeadIndexLen4,
-  Mp3ParserID3v2HeaderLength     /* 10byte目(ID3v2タグヘッダ長として使用) */
+  Mp3ParserID3v2HeaderLength     /* byte 10 (Use for ID3v2 tag header length) */
 };
 typedef enum mp3parser_id3v2_header_index_e Mp3ParserID3v2HeaderIndex;
 
-/* ID3v1タグヘッダの「byteテーブル」時のインデックス */
+/* index of "byte table" of ID3v1 tag header */
 
 enum mp3parser_id3v1_header_index_e
 {
@@ -465,18 +463,18 @@ enum mp3parser_id3v1_header_index_e
 };
 typedef enum mp3parser_id3v1_header_index_e Mp3ParserID3v1HeaderIndex;
 
-/* syncword検索関数からの戻り値 */
+/* Return value from syncword search function */
 
 enum mp3parser_return_value_of_sync_search_e
 {
-  Mp3ParserReturnNoSyncword = (-1), /* syncword未検出 */
-  Mp3ParserReturnPendding = 0,      /* 保留(指定サイズ終了直前にsyncword
-                                     * かもしれないものがあるが、ヘッダ情報
-                                     * は指定サイズ外にあるため確認できない)
+  Mp3ParserReturnNoSyncword = (-1), /* syncword not detected */
+  Mp3ParserReturnPendding = 0,      /* Pending(There is a data which seems to syncword 
+                                     * in range, however, header information is out of
+                                     * range, and cannot confirm.)
                                      */
-  Mp3ParserReturnFoundSyncword = 1, /* syncword検出 */
-  Mp3ParserReturnFound1stOnly,      /* 1つ目syncwordのみ検出 */
-  Mp3ParserReturnSearchContinue,    /* 偽syncをskipして処理続行 */
+  Mp3ParserReturnFoundSyncword = 1, /* syncword detected */
+  Mp3ParserReturnFound1stOnly,      /* Only 1st syncword is detected */
+  Mp3ParserReturnSearchContinue,    /* Skip fake syncword and continue processing */
 };
 typedef enum mp3parser_return_value_of_sync_search_e \
                Mp3ParserReturnValueOfSyncSearch;
@@ -485,7 +483,7 @@ typedef enum mp3parser_return_value_of_sync_search_e \
  * Public Data
  ****************************************************************************/
 
-/* 1フレーム内のサンプル数 順番は、上記Mp3ParserHeaderLayerと同じ) */
+/* Sample num per a frame. (Order is as same as "Mp3ParserHeaderLayer") */
 
 static const uint32_t mp3_parser_v1_num_samples_frame[] =
 {
@@ -503,9 +501,9 @@ static const uint32_t mp3_parser_v2_num_samples_frame[] =
   384
 };
 
-/* Layer別ビットレートテーブル
- * (一次元目の添え字=上記Mp3ParserHeaderLayer)
- * (二次元目の添え字=bitrate_index)
+/* Layer bitrate table 
+ * (1st dimention index = Mp3ParserHeaderLayer)
+ * (2nd dimention index = bitrate_index)
  */
 
 static const int32_t mp3_parser_v1_bitrate[4][16] =
@@ -682,7 +680,7 @@ static const int32_t mp3_parser_v2_bitrate[4][16] =
   }
 };
 
-/* サンプリング周波数テーブル(添え字=sampling_frequency) */
+/* Sampling frequency table (index = sampling_frequency) */
 
 static const uint32_t mp3_parser_v1_sampling_frequency[4] =
 {
@@ -708,7 +706,7 @@ static const uint32_t mp3_parser_v2_sampling_frequency[4] =
  * Public Function Prototypes
  ****************************************************************************/
 
-/* 外部API宣言 */
+/* External APIs */
 
 int32_t Mp3Parser_initialize(FAR MP3PARSER_Handle *ptr_hndl,
                              FAR CMN_SimpleFifoHandle *simple_fifo_handler,
@@ -722,7 +720,7 @@ int32_t Mp3Parser_finalize(FAR MP3PARSER_Handle *ptr_hndl);
 int32_t Mp3Parser_getSamplingRate(FAR MP3PARSER_Handle *ptr_hndl,
                                   FAR uint32_t *ptr_sampling_rate);
 
-/* ローカル関数宣言 */
+/* Internal functions */
 
 uint32_t mp3parser_extract_frame(FAR MP3PARSER_Handle *ptr_hndl,
                                  FAR Mp3ParserLocalInfo *ptr_info,

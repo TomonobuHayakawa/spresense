@@ -55,14 +55,10 @@ __WIEN2_BEGIN_NAMESPACE
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define APU_COMMAND_QUEUE_SIZE  3  /* ApuコマンドQueue段数 */
+#define APU_COMMAND_QUEUE_SIZE  3  /* Apu command Queue size */
 
-/* TODO: 暫定で固定値で対応。
- * 将来はパラメータで指定できるように変更する為、削除予定
- */
-
-#define SRC_CUT_OFF        0.91f  /* SRC カットオフ周波数倍率 */
-#define SRC_ATTENUATION    80     /* SRC フィルタ減衰量[dB] */
+#define SRC_CUT_OFF        0.91f  /* SRC cut off frequency */
+#define SRC_ATTENUATION    80     /* SRC filter attenuation [dB] */
 
 /****************************************************************************
  * Public Types
@@ -98,9 +94,9 @@ enum AudioSamplingRate
   AudFs_12000,
   AudFs_11025,
   AudFs_08000,
-  AudFs_128000,  /* TODO: 昇順or降順としたいがLibの定義変更にまで影響が及ぶため、暫定定義 */
-  AudFs_176400,  /* TODO: 同上 */
-  AudFs_192000,  /* TODO: 同上 */
+  AudFs_128000,
+  AudFs_176400,
+  AudFs_192000,
   AudFs_MAX
 };
 
@@ -117,7 +113,7 @@ enum AudioChannelConfig
   AUD_PCM_CH_CONFIG_3_1,
   AUD_PCM_CH_CONFIG_2_2,
   AUD_PCM_CH_CONFIG_3_2,
-  AUD_PCM_CH_CONFIG_3_2_LFE,  /* Apuに影響するためこの位置にする */
+  AUD_PCM_CH_CONFIG_3_2_LFE,  /* Depend on definition in Apu */
   AUD_PCM_CH_CONFIG_1_1_LFE,
   AUD_PCM_CH_CONFIG_1_0_LFE,
   AUD_PCM_CH_CONFIG_2_0_LFE,
@@ -177,12 +173,12 @@ enum PcmByteEndian
   BigEndian = 1
 };
 
-/* SRC入力/出力信号の語長サイズ[Byte] */
+/* SRC input-output bit length per a sample [Byte] */
 
 enum AudioSrcPcmWordLen
 {
-  AudSrc16BitLen = 2,   /* 16bitPCM信号 */
-  AudSrc32BitLen = 4    /* 32bitPCM信号 */
+  AudSrc16BitLen = 2,   /* 16bitPCM */
+  AudSrc32BitLen = 4    /* 32bitPCM */
 };
 
 enum AudioBitRate
@@ -233,24 +229,24 @@ const uint32_t AudioFs2ApuValue[] =
   12000,
   11025,
   8000,
-  128000,  /* TODO: 昇順or降順としたいがLibの定義変更にまで影響が及ぶため、暫定定義 */
-  176400,  /* TODO: 同上 */
-  192000   /* TODO: 同上 */
+  128000,
+  176400,
+  192000
 };
 
 static const uint32_t SampleNumPerFrame[AudCodecNum] =
 {
   1152,  /* AudCodecMP3 */
-  768,   /* AudCodecLPCM */ /* 任意正整数でよい */
+  768,   /* AudCodecLPCM */ /* Any integer in capable */
   1024,  /* AudCodecAAC */
   160,   /* AudCodecOPUS */
-  2048,  /* AudCodecHEAAC (未対応) */
-  0,     /* AudCodecMP2 (未対応) */
-  576,   /* AudCodecFLAC (未対応)  */
-  128*8, /* AudCodecSBC (未対応) */ /* Sample数調査中 */
-  128,   /* AudCodecLDAC (未対応) */
-  1024,  /* AudCodecWMA (未対応) */
-  0      /* AudCodecNoCodec (使用禁止) */
+  2048,  /* AudCodecHEAAC (Not suppot) */
+  0,     /* AudCodecMP2 (Not suppot) */
+  576,   /* AudCodecFLAC (Not suppot)  */
+  128*8, /* AudCodecSBC (Not suppot) */
+  128,   /* AudCodecLDAC (Not suppo) */
+  1024,  /* AudCodecWMA (Not suppot) */
+  0      /* AudCodecNoCodec (Don't use) */
 };
 
 

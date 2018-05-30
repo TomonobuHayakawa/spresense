@@ -169,7 +169,7 @@ bool LevelCtrl::init(cxd56_audio_dma_t dmac_id, bool auto_fade, bool fade_enable
 /*--------------------------------------------------------------------*/
 bool LevelCtrl::setFadeRamp(uint32_t* samples_for_fade)
 {
-  /* calc fade required samples */
+  /* set fade required samples */
 
   *samples_for_fade = 996;
 

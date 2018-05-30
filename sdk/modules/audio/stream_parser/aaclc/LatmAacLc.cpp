@@ -64,7 +64,7 @@
 
 #define LOCAL_CHECK_NG    -1
 
-/* bit’·‚ð’è‹` */
+/* bit length */
 
 #define LATM_BIT_OF_BYTE  8
 #define LATM_BIT_OF_LONG  32
@@ -858,11 +858,6 @@ static int32_t isoGASpecificConfig(LatmLocalInfo *ptr_info,
 
       dummy_read = bitReadLessByte(ptr_info, 1);
       bit_length++;
-      if (dummy_read)
-        {
-          /* TBD (by ISO) */
-
-        }
     }
 
   return bit_length;
@@ -1855,8 +1850,6 @@ static int32_t isoStreamMuxConfig(LatmLocalInfo *ptr_info,
     }
   else
     {
-      /* TBD (by ISO). */
-
       return LOCAL_CHECK_NG;
     }
 
@@ -1971,8 +1964,6 @@ static int32_t isoAudioMuxElement(LatmLocalInfo *ptr_info,
     }
   else
     {
-      /* TBD (by ISO). */
-
       return LOCAL_CHECK_NG;
     }
 

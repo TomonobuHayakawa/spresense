@@ -78,7 +78,7 @@ enum ApuProcessMode
 
 enum ApuFlushType
 {
-  InvalidApuFlushType = (-1), /* TODO: -1 か 0xFFかは見直し */
+  InvalidApuFlushType = (-1),
   Clear = 0,
   Purge,
   ApuFlushTypeNum
@@ -96,7 +96,7 @@ enum ApuFilterType
 
 enum ApuRecognitionType
 {
-  InvalidApuRecognitionType = (-1), /* TODO: -1 か 0xFFかは見直し */
+  InvalidApuRecognitionType = (-1),
   Vad = 0,
   Wuwsr,
   VadWuwsr,

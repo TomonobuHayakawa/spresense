@@ -2377,12 +2377,12 @@ void AudioManager::cmpltOnPlayer(const AudioMngCmdCmpltResult &cmd)
 
       case AUDCMD_PLAYPLAYER:
         result_code = AUDRLT_PLAYCMPLT;
-        m_SubState = AS_MNG_SUB_STATUS_PLAYACTIVE; /* tentative!! */
+        m_SubState = AS_MNG_SUB_STATUS_PLAYACTIVE;
         break;
 
       case AUDCMD_STOPPLAYER:
         result_code = AUDRLT_STOPCMPLT;
-        m_SubState = AS_MNG_SUB_STATUS_PLAYREADY; /* tentative!! */
+        m_SubState = AS_MNG_SUB_STATUS_PLAYREADY;
         break;
 
       case AUDCMD_CLKRECOVERY:
@@ -2455,12 +2455,12 @@ void AudioManager::cmpltOnRecorder(const AudioMngCmdCmpltResult &cmd)
 
       case AUDCMD_STARTREC:
         result_code = AUDRLT_RECCMPLT;
-        m_SubState = AS_MNG_SUB_STATUS_RECORDERACTIVE; /* tentative!! */
+        m_SubState = AS_MNG_SUB_STATUS_RECORDERACTIVE;
         break;
 
       case AUDCMD_STOPREC:
         result_code = AUDRLT_STOPRECCMPLT;
-        m_SubState = AS_MNG_SUB_STATUS_RECORDERREADY; /* tentative!! */
+        m_SubState = AS_MNG_SUB_STATUS_RECORDERREADY;
         break;
 
       case AUDCMD_SETREADYSTATUS:

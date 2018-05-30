@@ -1,7 +1,7 @@
 /****************************************************************************
- * audioutils/components/capture/capture_component.cpp
+ * modules/audio/components/capture/capture_component.cpp
  *
- *   Copyright (C) 2015 Sony Corporation
+ *   Copyright (C) 2015-2018 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -216,7 +216,6 @@ static void AS_CaptureNotifyDmaError(AudioDrvDmaError *p_param)
   switch (p_param->status)
     {
       case E_AS_BB_DMA_OK:
-          /* Impossible! */
           D_ASSERT(0);
           break;
 

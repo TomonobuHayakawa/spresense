@@ -69,7 +69,7 @@
 #define ADTSPARSER_SYNCWORD_1    0xFF
 #define ADTSPARSER_SYNCWORD_2    0xF0
 
-/* SYNCWORDチェック */
+/* check SYNCWORD */
 
 #define ADTS_CHECK_SYNCWORD(hdr0,hdr1)  \
           ((((hdr0 & ADTSPARSER_SYNCWORD_1) == ADTSPARSER_SYNCWORD_1) && \
@@ -78,15 +78,15 @@
 
 /*----- Profile -----*/
 
-#define ADTS_MASK_PROFILE     0xC0    /* [2]をマスク */
+#define ADTS_MASK_PROFILE     0xC0    /* Mask [2] */
 #define ADTS_PROFILE_AACLC    0x40    /* profile=AAC-LC */
 
 /*----- SamplingFrequency -----*/
 
-#define ADTS_MASK_SAMPLING_RATE    0x3C /* [2]をマスク */
-#define ADTS_RSHIFT_SAMPLING_RATE  2    /* マスク後の右シフト値 */
+#define ADTS_MASK_SAMPLING_RATE    0x3C /* Mask [2] */
+#define ADTS_RSHIFT_SAMPLING_RATE  2    /* Right shift width after mask */
 
-/* サンプリング周波数値取得マクロ */
+/* Macro for get sampling frequency */
 
 #define ADTS_GET_SAMPLING_RATE(hdr2)  \
           (AdtsSamplingFrequency[((hdr2 & ADTS_MASK_SAMPLING_RATE) >> \
@@ -94,14 +94,14 @@
 
 /*----- FrameLength -----*/
 
-#define ADTS_MASK_FRAMELENGTH_3    0x03    /* [3]をマスク */
-#define ADTS_MASK_FRAMELENGTH_4    0xFF    /* [4]をマスク */
-#define ADTS_MASK_FRAMELENGTH_5    0xE0    /* [5]をマスク */
-#define ADTS_LSHIFT_FRAMELENGTH_3  11      /* マスク後の左シフト値 */
-#define ADTS_LSHIFT_FRAMELENGTH_4  3       /* マスク後の左シフト値 */
-#define ADTS_RSHIFT_FRAMELENGTH_5  5       /* マスク後の右シフト値 */
+#define ADTS_MASK_FRAMELENGTH_3    0x03    /* Mask [3] */
+#define ADTS_MASK_FRAMELENGTH_4    0xFF    /* Mask [4] */
+#define ADTS_MASK_FRAMELENGTH_5    0xE0    /* Mask [5] */
+#define ADTS_LSHIFT_FRAMELENGTH_3  11      /* Left shift width after mask */
+#define ADTS_LSHIFT_FRAMELENGTH_4  3       /* Left shift width after mask */
+#define ADTS_RSHIFT_FRAMELENGTH_5  5       /* Right shift width after mask */
 
-/* フレームサイズ取得マクロ */
+/* Macro for get frame size */
 
 #define ADTS_GET_FRAMELENGTH(hdr3,hdr4,hdr5)  \
           (((hdr3 & ADTS_MASK_FRAMELENGTH_3) << ADTS_LSHIFT_FRAMELENGTH_3) | \
@@ -114,7 +114,7 @@
  * Public Types
  ****************************************************************************/
 
-/* ADTSヘッダ情報 */
+/* ADTS header information */
 
 struct adts_parser_union_head_s
 {
@@ -126,11 +126,11 @@ typedef struct adts_parser_union_head_s AdtsParserUnionHead;
  * Public Data
  ****************************************************************************/
 
-/* サンプリング周波数テーブル
+/* Sampling frequency table 
  * (indx=sampling_frequency）
  */
 
-/* SamplingFrequency（ISO準拠） */
+/* SamplingFrequency（ISO compliant） */
 
 const uint32_t AdtsSamplingFrequency[16] =
 {

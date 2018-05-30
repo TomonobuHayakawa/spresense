@@ -34,15 +34,11 @@
 
 #include "audio_dma_buffer.h"
 
+/*--------------------------------------------------------------------*/
 /* AS_AudioDrvDmaGetMicInput is used
  * to skip invalid data when 16bit odd channel DMA.
  */
 
-/* AS_AudioDrvDmaGetSwapData is used
- * to swap Lch/Rch data when 16bit DMA.
- */
-
-/*--------------------------------------------------------------------*/
 void AS_AudioDrvDmaGetMicInput(uint16_t sample,
                                uint8_t channel,
                                uint32_t dma_addr,
@@ -67,6 +63,10 @@ void AS_AudioDrvDmaGetMicInput(uint16_t sample,
 }
 
 /*--------------------------------------------------------------------*/
+/* AS_AudioDrvDmaGetSwapData is used
+ * to swap Lch/Rch data when 16bit DMA.
+ */
+
 void AS_AudioDrvDmaGetSwapData(uint32_t dma_addr, uint16_t sample)
 {
   uint32_t i = 0;

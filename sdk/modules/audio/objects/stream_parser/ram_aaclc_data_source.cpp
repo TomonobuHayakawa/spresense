@@ -308,8 +308,6 @@ bool RamAACLCDataSource::getChNum(FAR uint32_t *p_ch_num)
 
 bool RamAACLCDataSource::getBitPerSample(FAR uint32_t *p_bit_per_sample)
 {
-  /* Currently not implemented. */
-
   return false;
 }
 

@@ -45,20 +45,18 @@
  * Pre-processor Definitions
  ****************************************************************************/
  
-/* ユ－ザー側でconfig_lengthをセットする場合、
- * config_length_flagにも以下のdefineをセットすること
+/* If you set config_length, set value blow to config_length_flag
  */
 
-#define LATM_ENABLE_CONFIG_LENGTH  1 /* config_length_flag有効 */
+#define LATM_ENABLE_CONFIG_LENGTH  1 /* config_length_flag enable */
 
-/* 後述する構造体メンバ内の定義 */
+/* Definition for Structure menber */
 
 #define LATM_VAL_OF_4BIT    0xF
-#define LATM_MAX_STREAM_ID  15       /* ストリームIDの最大値 */
-#define LATM_MIN_STREAM_ID  0        /* ストリームIDの最小値 */
+#define LATM_MAX_STREAM_ID  15       /* Stream ID Max */
+#define LATM_MIN_STREAM_ID  0        /* Stream ID Min */
 
-/* 情報テーブルの配列では、ストリームID(0～15)を添字に使用するので
- * 最大数は+1する
+/* Index of information table is "Stream ID"
  */
 
 #define LATM_MAX_STREAM_ARRAY    (LATM_MAX_STREAM_ID + 1)
@@ -68,52 +66,49 @@
  ****************************************************************************/
 
 /*
- * AudioSpecificConfig情報
+ * AudioSpecificConfig
  *
- * StreamMuxConfig内の、StreamID毎に保持する
- * ※「use_same_configフラグ=1」時には、
- * 1つ前のAudioSpecificConfig保持情報をcopyする
+ * Keep every streamd ID in StreamMuxConfig
+ * * When "use_same_config flag = 1", copy previous AudioSpcificConfig 
  */
 
-struct info_audio_specific_config_s /* 添え字はstreamID */
+struct info_audio_specific_config_s /* Index is streamID */
 {
-  /* 上記useSameConfig=1の時は、その前のAudioSpecificConfig内容をcopy */
-
-  /* audioObjectType(構文上の最大値=95) */
+  /* audioObjectType(Max=95) */
 
   uint8_t audio_object_type;
 
-  /* channelConfiguration(4-bit(有効値0～0xf)) */
+  /* channelConfiguration(4-bit(valid range 0～0xf)) */
 
   uint8_t channel_configuration;
 
-  /* samplingFrequencyIndex(4-bit(有効値0～0xf)) */
+  /* samplingFrequencyIndex(4-bit(valid range 0～0xf)) */
 
   uint8_t sampling_frequency_index;
 
-  /* program_config_element使用時に、とりあえず以下の項目だけは保持しておく
-   * ～PCE情報全部だと大きすぎるので
+  /* When use program_config_element, keep information below at least
+   * (it too big to keep whole PCE information)
    */
 
-  /* chanelConfigurationが0時のprogram_config_element内に設定された
-   * object type
+  /* A object type which set in program_config_element
+   * when "chanelConfiguration = 0"
    */
 
   uint8_t pce_object_type;
 
-  /* chanelConfigurationが0時のprogram_config_element内に設定された
-   * samplingFrequencyIndex
+  /* samplingFrequencyIndex which set in program_config_element
+   * when "chanelConfiguration = 0"
    */
 
   uint8_t pce_sampling_frequency_index;
 
-  /* 以下は拡張用 */
+  /* For extention */
 
   int8_t   sbr_present_flag;     /* sbrPresentFlag */
   int8_t   ps_present_flag;      /* psPresentFlag */
   uint8_t  extension_audio_object_type; /* extensionAudioObjectType */
 
-  /* extensionChannelConfiguration(ER-BSAC時のみ) */
+  /* extensionChannelConfiguration(ER-BSAC) */
 
   uint8_t  extension_channel_configuration;
 
@@ -122,38 +117,37 @@ struct info_audio_specific_config_s /* 添え字はstreamID */
   uint8_t  extension_sampling_frequency_index;
 
   /* extensionSamplingFrequency
-   * (24-bit extensionSamplingFrequencyIndex=0xF(escape value)時に使用)
+   * (Use when 24-bit extensionSamplingFrequencyIndex=0xF(escape value))
    */
 
   uint32_t extension_sampling_frequency;
 
-  /* FS値は拡張用ではないが、構造体のアライメントを考慮して最後尾にセット */
+  /* FS value is not for extention, however, put on last due to alignment of structure */
 
   /* samplingFrequency
-   * (24-bit samplingFrequencyIndex=0xF(escape value)時に使用)
+   * (Use when 24-bit samplingFrequencyIndex=0xF(escape value))
    */
 
   uint32_t sampling_frequency;
 
-  /* config_lengthは、ユーザーが設定(未設定時は0として扱う) */
+  /* config_length is set by user (if not set, take as 0) */
 
-  /* config_length値の有効無効フラグ(1=有効 1≠無効) */
+  /* config_length enable/disable flag(=1 enable !=1 無効) */
 
   uint8_t config_length_flag;
   uint8_t reserved;
 
-  /* AudioSpecificConfigのbitサイズ(上記config_length_flag=1時にのみ有効) */
+  /* bit size of AudioSpecificConfig (Effective only when "config_length_flag=1" */
 
   int config_length;
 
-  /*----- 以下SpecificConfig情報(サイズが大きくなるのでコメントアウトしておく) -----*/
+  /*----- SpecificConfig (Comment out because size will be too big) -----*/
 
 #ifdef LATMTEST_DBG_COMMENT
   union
   {
-    /* channelConfiguration=0時は
-     * GASpecificConfig内のprogram_config_element()が頼りだが、
-     * parserには不要
+    /* When "channelConfiguration=0", depend on program_config_element()  
+     * in GASpecificConfig. But no need for parser
      */
 
     struct GASpecificConfig  ga;  /* AAC */
@@ -163,44 +157,44 @@ struct info_audio_specific_config_s /* 添え字はstreamID */
 };
 typedef struct info_audio_specific_config_s InfoAudioSpecificConfig;
 
-struct info_stream_id_s /* 添え字はstreamID */
+struct info_stream_id_s /* index is streamID */
 {
-  /* streamIDは、0～15の値(infoStreamID[]の添え字) */
+  /* streamID is 0-15 (index of infoStreamID[]) */
 
   int8_t stream_id;     /* streamID */
 
-  /* 逆引きstreamID */
+  /* (Revese resolution)streamID */
 
-  uint8_t prog;         /* streamIDに対応するprogram番号 */
-  uint8_t lay;          /* streamIDに対応するlayer番号 */
+  uint8_t prog;         /* Program number for the streamID */
+  uint8_t lay;          /* Layer number for the streamID */
 
-  /* 以下はstreamIDに対応する項目 */
+  /* Following is correspond to streamID */
 
-  /* frameLengthType(ペイロードタイプ) */
+  /* frameLengthType(payload type) */
 
   uint8_t frame_length_type;
 
-  /* frameLength(9-bit frameLengthType=1の時に使用) */
+  /* frameLength(User when "9-bit frameLengthType=1") */
 
   uint32_t frame_length;
 
-  /* latmBufferFullness(frameLengthType==0時のみ) */
+  /* latmBufferFullness(When "frameLengthType=0") */
 
   uint8_t latm_buffer_fullness;
 
-  /* useSameConfig(=1の場合、ストリーム上ではAudioSpecificConfig省略される) */
+  /* useSameConfig(if euqals to 1, AudioSpecificConfig is ignored) */
 
   uint8_t use_same_config;
 
-  /* useSameConfig値にかかわらず、AudioSpecificConfigを用意
-   * (論理的には、StreamMuxConfigが存在してもAudioSpecificConfigが
-   * 存在しないケースがあるため)
+  /* Regardless of useSameConfig, prepare AudioSpecificConfig
+   * (logically, there is a case that if StreamMuxConfig is exist
+   * but AudioSpecificConfig is not exist
    */
 
   InfoAudioSpecificConfig asc;
 
-  /* LATM先頭からのoffset
-   * 対応するpayloadのoffset値(StreamMuxConfigが存在する場合のみ)
+  /* Offset from top of LATM
+   * Correspond payload offset (Only if StreamMuxConfig exists)
    */
 
   uint32_t payload_offset;
@@ -209,42 +203,41 @@ typedef struct info_stream_id_s InfomationStreamID;
 
 struct info_stream_frame_s /* 添え字はstreamID */
 {
-    /* 以下はstreamIDに対応する項目 */
+  /* Following is correspond to streamID */
 
-  /* frameLengthType(ペイロードタイプ) */
+  /* frameLengthType (payload type) */
 
   uint8_t frame_length_type;
 
-  /* frameLength(9-bit frameLengthType=1の時に使用) */
+  /* frameLength(Use when 9-bit frameLengthType=1) */
 
   uint32_t frame_length;
 
-  /* LATM先頭からのoffset
-   * 対応するpayloadのoffset値(StreamMuxConfigが存在する場合のみ)
+  /* Offset from top of LATM
+   * Correspond payload offset (Only if StreamMuxConfig exist)
    */
 
   uint32_t payload_offset;
 };
 typedef struct info_stream_frame_s InfomationStreamFrame;
 
-/* StreamMuxConfig情報のうち、
- * 分岐判定のためユーザー側で保持しておいてほしい構造体情報
+/* A structure information which should be kept by user for internal process.
+ * (Of StreamMuxConfig)
  *
- * [使用方法]
- * 1. 提供するAPI関数の1回目の使用前に、本構造体サイズのバッファを確保
- * 2. API関数をコールする際の引数2を「構造体バッファの先頭」にする
- * 3. 以降、API関数を連続使用する間は、同バッファを解放しない
- *   (LATMフレームを連続して読み出す間は解放しない)
+ * [Usage]
+ * 1. User havet to allocate buffer for this structrue.
+ * 2. When call APIs, user gives pointer to top of the buffer as 2nd argument.
+ * 3. After this, if call APIs consecutive, don't free the buffer.
+ *    (Don't free the buffer while read LATM frame consecutively.)
  *
- * ※構造体メンバの「info_stream_id[].asc.config_length」は、ユーザー側で設定
- *   ・・・AudioConfigSpecific()のサイズがわかっている場合、
- *         そのサイズをbit長でセット
- *         不明な場合、0をセット
+ * * "info_stream_id[].asc.config_length", menber of structure, is set by user.
+ *   ...If you know size of AudioConfigSpecific(), set bit length by the size,
+ *      if you not, set to 0.
  */
 
 struct info_stream_mux_config_s
 {
-  /* 使用するstreamIDの最大値(有効値0～15) */
+  /* streamID MAX(0-15) */
 
   uint8_t max_stream_id;
 
@@ -265,35 +258,35 @@ struct info_stream_mux_config_s
   uint8_t other_data_present;
   uint8_t reserved;
 
-  /* 6-bit(有効値0～63) numSubFrames */
+  /* 6-bit(0-63) numSubFrames */
 
   uint8_t num_sub_frames;
 
-  /* 4-bit(有効値0～15) numProgram */
+  /* 4-bit(0-15) numProgram */
 
   uint8_t num_program;
 
-  /* 3-bit(有効値0～7)(添え字はprogram番号) numLayer */
+  /* 3-bit(0-7)(index is program) numLayer */
 
   uint8_t num_layer[(LATM_VAL_OF_4BIT + 1)];
 
-  /* otherDataLenBits(otherDataPresent=1の時に使用) */
+  /* otherDataLenBits(Use when otherDataPresent=1) */
 
   uint32_t other_data_len_bits;
 
-  /* progSIndx(allStreamsSameTimeFraming=0の時に使用) */
+  /* progSIndx(Use when allStreamsSameTimeFraming=0) */
 
   uint8_t   prog_stream_indx[LATM_MAX_STREAM_ID];
 
-  /* laySIndx(allStreamsSameTimeFraming=0の時に使用) */
+  /* laySIndx(Use when allStreamsSameTimeFraming=0) */
 
   uint8_t   lay_stream_indx[LATM_MAX_STREAM_ID];
 
-  /* 構文上は最大「Program×Layer」だが、streamIdx=streamCnt=streamIDであり、
-   * 実質の最大は16のはず
+  /* Syntactically, maximum is "Program×Layey", but streamIdx=streamCnt=streamID,
+   * therefore, actually maximun is 16.
    */
 
-  /* 添え字はstreamID */
+  /* Index is streamID */
 
   InfomationStreamID info_stream_id[LATM_MAX_STREAM_ARRAY];
   InfomationStreamFrame info_stream_frame[64];
@@ -315,13 +308,13 @@ typedef struct info_stream_mux_config_s InfoStreamMuxConfig;
 /*
  * AACLC_getNextLatm()
  *
- * 次LATM先頭を取得するAPI
+ * Get top of next LATM
  *
- * 引数1 : LOAS/LATMの先頭(例えば、ペイロードの先頭)
- * 引数2 : 上記で確保した構造体バッファの先頭
+ * arg1 : Top of LOAS/LATM(ex, top of payload)
+ * arg2 : Top of information structure (see above)
  *
- * 戻り値 : 引数1で始まるLATMフレームの次LATM先頭アドレス
- *          0=NG(LATMヘッダ内データにある、AudioObjectTypeが「未サポート」)
+ * return : Top of next LATM frame begin with current LATM frame which is appointed by arg1.
+ *          0=NG(AudioObjectType which is written in LATM header is out of support)
  */
 FAR uint8_t *AACLC_getNextLatm(FAR uint8_t *ptr_readbuff,
                                FAR InfoStreamMuxConfig *ptr_stream_mux_config);

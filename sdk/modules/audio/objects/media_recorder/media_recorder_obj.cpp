@@ -74,7 +74,6 @@ static MsgQueId s_apu_dtq;
 static PoolId   s_apu_pool_id;
 static PoolId   s_in_pool_id;
 static PoolId   s_out_pool_id;
-/* 当然クラスに隠蔽したい:TODO */
 
 static MediaRecorderObjectTask *s_rcd_obj = NULL;
 
@@ -283,7 +282,7 @@ bool MediaRecorderObjectTask::unloadCodec(void)
     }
   else
     {
-      /* Invalid codec type is indicated. Target for unload is not exist. */
+      /* No need to unload DSP because it is not loaded */
     }
 
   m_codec_type = InvalidCodecType;
@@ -581,8 +580,6 @@ void MediaRecorderObjectTask::init(MsgPacket *msg)
     {
       if (!unloadCodec())
         {
-          /* TODO:電源状態を見ないで、毎回落としている。*/
-
           m_callback(AsRecorderEventInit, AS_ECODE_DSP_UNLOAD_ERROR, 0);
           return;
         }
@@ -699,12 +696,12 @@ void MediaRecorderObjectTask::startOnReady(MsgPacket *msg)
       if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
         {
           filter_param.init_src_param.input_sampling_rate =
-            192000; /* Fixed value. */
+            AS_SAMPLINGRATE_192000;
         }
       else
         {
           filter_param.init_src_param.input_sampling_rate =
-            48000; /* Fixed value. */
+            AS_SAMPLINGRATE_48000;
         }
       filter_param.init_src_param.output_sampling_rate   = m_sampling_rate;
       filter_param.init_src_param.channel_num            = m_channel_num;
@@ -732,7 +729,7 @@ void MediaRecorderObjectTask::startOnReady(MsgPacket *msg)
     {
       InitEncParam enc_param;
       enc_param.codec_type           = m_codec_type;
-      enc_param.input_sampling_rate  = 48000; /* Fixed value. */
+      enc_param.input_sampling_rate  = AS_SAMPLINGRATE_48000;
       enc_param.output_sampling_rate = m_sampling_rate;
       enc_param.bit_width            = m_pcm_bit_width;
       enc_param.channel_num          = m_channel_num;

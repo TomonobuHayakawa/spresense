@@ -1,15 +1,36 @@
-/********************************************************************
+/****************************************************************************
+ * modules/audio/components/recognition/voice_recognition_command_component.h
  *
- *  File Name: voice_recognition_command_component.h
+ *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *
- *  Description: Component of Voice Recognition Command
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- *  Notes: (C) Copyright 2015 Sony Corporation
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name NuttX nor Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
- *  Author: Suzunosuke Hida
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************
- */
+ ****************************************************************************/
 
 #ifndef _VOICE_RECOGNITION_COMMAND_COMPONENT_H_
 #define _VOICE_RECOGNITION_COMMAND_COMPONENT_H_
@@ -43,7 +64,7 @@ public:
 
   typedef struct
   {
-    uint8_t vad_only;     /* Is VAD process onlu ? */
+    uint8_t vad_only;     /* Is VAD process only ? */
     uint8_t *p_vad_param; /* Cotrol parameter for VAD */
   } InitReqParam_t;
 
@@ -68,7 +89,7 @@ private:
 
   /*-variable-----------------------*/
 
-  uint32_t m_recognition_type; /* VAD/VAD+WUWSR */
+  uint32_t m_recognition_type; /* VAD or VAD+WUWSR */
   uint32_t m_is_found;
 
   void *m_dsp_handler;
@@ -86,11 +107,9 @@ private:
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* OBJECTから呼び出されるインタフェース */
 extern uint32_t AS_voiceCmdCmpActivate(MsgQueId recognizer_dtq,
                                        MsgQueId dsp_dtq,
                                        uint32_t *dsp_inf);
-
 extern bool AS_voiceCmdCmpDeactivate(void);
 extern int  AS_voiceCmdCmpInit(VoiceCmdComponent::InitReqParam_t *pCmdInit);
 extern int  AS_voiceCmdCmpExec(VoiceCmdComponent::ExecReqParam_t *pCmdExec);

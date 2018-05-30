@@ -290,14 +290,6 @@ void OutputMixToHPI2S::act(MsgPacket* msg)
         }
         break;
 
-      case SoundEffectOnly:
-        /* Create render component for rendering sound effect. */
-
-      case MainSoundEffectMix:
-        /* Create render components for rendering the mix of
-         * main sound and sound effect.
-         */
-
       default:
         /* Send error message. */
 

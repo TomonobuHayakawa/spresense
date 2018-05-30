@@ -56,10 +56,7 @@ __WIEN2_BEGIN_NAMESPACE
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define CAPTURE_DELAY_STAGE_NUM   3  /* TODO:
-                                      * baseband仕様依存
-                                      * ここで定義するのは適切ではない
-                                      */
+#define CAPTURE_DELAY_STAGE_NUM   3
 #define CAPTURE_PCM_BUF_QUE_SIZE  7
 #define FALT_HANDLE_ID            0xFF
 
@@ -194,14 +191,15 @@ private:
       return true;
     }
 
-  /* MP3Encの場合、16000Hz, 22050Hz, 24000Hz のfsは、1au処理単位は
-   * MP2規格仕様になり 1152/2=576サンプルとなるため
-   * SampleNumPerFrame[m_codec_type] の値を 2で割算する。
-   * さらに48000->録音fsへのSRC変換後が 576サンプルになるように
-   * 48000/m_sampling_rateの値を掛算した結果を返す。
-   * 以下の変換処理は、fsが、48000Hz, 16000hzのみ対応した処理です。
-   * 32000Hz, 44100Hz等に対応する場合は、その場合もSRC変換後が
-   * 1152サンプルになるように変換する処理が必要になる。
+  /* When MP3 encode and fs is 16kHz, 22.05kHz, 24kHz, sample num of
+   * 1au(access unit) is 1152/2 = 576 (It depend on MPEG2 compliant).
+   * Therefore, at first, value is (#1)"SampleNumPerFrame[m_codec_type] / 2".
+   * And sample num of captured and SRC filterd data is to be 576,
+   * return ((#1) * 48000 / m_sampling_rate(Hz)).
+   *
+   * The process below is only for fs is 48kHz, 16kHz.
+   * To correspontd to 32000Hz, 44100Hz..., need conversion process to 
+   * sample num per 1au to be 1152.
    */
   uint32_t getPcmCaptureSample()
     {

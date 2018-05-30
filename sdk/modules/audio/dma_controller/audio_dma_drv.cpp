@@ -589,7 +589,7 @@ bool AsDmaDrv::startDma(void *p_param)
       _info("RUN(%d)\n", m_dmac_id);
     }
 
-  /* Volume control */
+  /* Fade control */
 
   fadeControl();
 
@@ -761,7 +761,7 @@ bool AsDmaDrv::stop(void *p_param)
 
   _info("STOP(%d)\n", stopParam->dmac_id);
 
-  m_dmac_id = stopParam->dmac_id; /* c/m for build warning */
+  m_dmac_id = stopParam->dmac_id;
 
   return true;
 }

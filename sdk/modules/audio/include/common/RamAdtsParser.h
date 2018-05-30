@@ -46,7 +46,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* ヘッダ情報の妥当性チェック結果 */
+/* Result of header validity check */
 
 #define  HDR_OK            0x0000  /* No Error */
 #define  HDR_SYNCWORD_NG   0x0001  /* Error: syncword not found */
@@ -57,34 +57,34 @@
 
 #define PARSER_LOCAL_POLL_BUFFERSIZE 1024
 
-/* ADTS-API戻り値 */
+/* ADTS-API return value */
 
-#define  ADTS_OK    0    /* 成功 */
-#define  ADTS_ERR   1    /* 失敗 */
+#define  ADTS_OK    0    /* Success */
+#define  ADTS_ERR   1    /* Fail */
 
 /****************************************************************************
  * Public Types
  ****************************************************************************/
 
-/* ADTS-DATAアクセス用ハンドル(Parser内部で使用) */
+/* ADTS-DATA access handle (User in Parser) */
 
 struct adts_handle_s
 {
   FAR CMN_SimpleFifoHandle  *pSimpleFifoHandler;
-  uint32_t        current_pos;      /* 現在位置(先頭からのoffset) */
-  uint32_t        search_pos;       /* サーチ位置(先頭からのoffset) */
-  uint32_t        parse_size;       /* パースデータサイズ */
+  uint32_t        current_pos;      /* Current position(offset from top) */
+  uint32_t        search_pos;       /* Search Position(offset from top) */
+  uint32_t        parse_size;       /* Parse size */
 };
 typedef struct adts_handle_s AdtsHandle;
 
 enum adts_parser_error_detail_e
 {
-  AdtsParserNormal = 0,       /* 正常(エラーなし) */
-  AdtsParserAbnormalArg,      /* 引数エラー(戻り値=ADTS_ERR時) */
-  AdtsParserConnotDataAccess, /* ファイルアクセスエラー(戻り値=ADTS_ERR時) */
-  AdtsParserCannotGetHeader,  /* ヘッダ取得不可(戻り値=ADTS_ERR時) */
-  AdtsParserAbnormalHeader,   /* ヘッダ情報異常(戻り値=ADTS_ERR時) */
-  AdtsParserShortageBuffer,   /* バッファサイズ不足(戻り値=ADTS_ERR時) */
+  AdtsParserNormal = 0,       /* Normal (No error) */
+  AdtsParserAbnormalArg,      /* Argument error (when return valuse = ADTS_ERR) */
+  AdtsParserConnotDataAccess, /* File access error (when return valuse = ADTS_ERR) */
+  AdtsParserCannotGetHeader,  /* Cannnot Get Header (when return valuse = ADTS_ERR) */
+  AdtsParserAbnormalHeader,   /* Abnormal header (when return valuse = ADTS_ERR) */
+  AdtsParserShortageBuffer,   /* Shortage buffer (when return valuse = ADTS_ERR) */
 };
 typedef enum adts_parser_error_detail_e AdtsParserErrorDetail;
 
@@ -101,13 +101,13 @@ typedef enum adts_parser_error_detail_e AdtsParserErrorDetail;
  ****************************************************************************/
 
 /*!
- * @brief ADTS Parserの初期化
+ * @brief Initialize ADTS Parser
  *
- * @param[in] pHandle ADTS-DATAアクセス用ハンドルのポインタ
+ * @param[in] pHandle Pointer to ADTS-DATA access handle
  *
- * @param[in] simple_fifo_handler SimpleFIFOハンドル情報のポインタ
+ * @param[in] simple_fifo_handler Pointer SimpleFIFO handle
  *
- * @param[out] uipErrDetail エラー詳細
+ * @param[out] uipErrDetail Error Detail
  *
  * @return Function return code
  */
@@ -117,17 +117,17 @@ int32_t AdtsParser_Initialize(FAR AdtsHandle *pHandle,
                               FAR AdtsParserErrorDetail *uipErrDetail);
 
 /*!
- * @brief ADTS Dataからのフレーム取得(1フレーム)
+ * @brief Get a frame from ADTS Data
  *
- * @param[in] pHandle ADTS-DATAアクセス用ハンドルのポインタ
+ * @param[in] pHandle Pointer to ADTS-DATA access handle
  *
- * @param[in] buff 取得用バッファの先頭ポインタ
+ * @param[in] buff Pointer to result(frame) buffer
  *
- * @param[in/out] uiSize - [in] 取得バッファのサイズ  [out] 取得フレームのサイズ(Byte数)
+ * @param[in/out] uiSize - [in] result buffer size  [out] Frame size 
  *
- * @param[out] usResult ヘッダ情報の妥当性チェック結果
+ * @param[out] usResult Result of header validity check
  *
- * @param[out] uipErrDetail エラー詳細
+ * @param[out] uipErrDetail Error Detail
  *
  * @return Function return code
  */
@@ -139,11 +139,11 @@ int32_t AdtsParser_ReadFrame(FAR AdtsHandle *pHandle,
                              FAR AdtsParserErrorDetail *uipErrDetail);
 
 /*!
- * @brief ADTS Parserの終了
+ * @brief Finalize ADTS Parser
  *
- * @param[in] pHandle ADTS-DATAアクセス用ハンドルのポインタ
+ * @param[in] pHandle Pointer to ADTS-DATA access handle
  *
- * @param[out] uipErrDetail エラー詳細
+ * @param[out] uipErrDetail Error Detail
  *
  * @return Function return code
  */
@@ -152,13 +152,13 @@ int32_t AdtsParser_Finalize(FAR AdtsHandle *pHandle,
                             FAR AdtsParserErrorDetail *uipErrDetail);
 
 /*!
- * @brief サンプリング周波数取得(ADTSヘッダーからの簡易読み出し)
+ * @brief Get Sampling frequency (Simply read from ADTS header)
  *
- * @param[in] pHandle ADTS-DATAアクセス用ハンドルのポインタ
+ * @param[in] pHandle Pointer to ADTS-DATA access handle
  *
- * @param[in] uipSmplingRate 取得したサンプリング周波数値
+ * @param[in] uipSmplingRate pointer Sampling frequency
  *
- * @param[out] uipErrDetail エラー詳細
+ * @param[out] uipErrDetail Error Detail
  *
  * @return Function return code
  */

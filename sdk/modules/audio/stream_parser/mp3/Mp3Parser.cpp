@@ -148,8 +148,6 @@ static Mp3ParserReturnValueOfSyncSearch
       return Mp3ParserReturnNoSyncword;
     }
 
-  /* (Specified byte length - 3) search. */
-
   uint32_t i = 0;
   for (i = 0, ptr_check = ptr_info->ptr_start;
         i < (ptr_info->max_search_byte - 3);
@@ -462,7 +460,7 @@ Mp3ParserReturnValueOfFile
 {
   Mp3ParserReturnValueOfFile status = Mp3ParserReturnFileFavorable;
   ptr_hndl->current_offset             = 0;
-  ptr_hndl->counter_of_extracted_frame = 0;/* ファイルはopen時に初期化 */
+  ptr_hndl->counter_of_extracted_frame = 0;
 
   /* Read the file. */
 
@@ -700,7 +698,7 @@ int32_t  Mp3Parser_pollSingleFrame(MP3PARSER_Handle *ptr_hndl,
     }
 
   Mp3ParserLocalInfo local_info; /* Temporary information for
-                                  *library internal use. */
+                                  * library internal use. */
 
   /* Call distribution processing. */
 

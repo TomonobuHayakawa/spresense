@@ -91,7 +91,7 @@ private:
 
   MemMgrLite::PoolId m_es_pool_id;
   MemMgrLite::PoolId m_pcm_pool_id;
-  MemMgrLite::PoolId m_apu_pool_id; /* そもそも、Apuのコマンドは、Componentsで取得じゃないの？:TODO */
+  MemMgrLite::PoolId m_apu_pool_id;
 
 
   enum PlayerState

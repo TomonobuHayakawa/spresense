@@ -1,15 +1,36 @@
-/********************************************************************
+/****************************************************************************
+ * modules/audio/components/recognition/voice_recognition_command_component.cpp
  *
- *  File Name: voice_recognition_command_component.cxx
+ *   Copyright (C) 2017 Sony Corporation. All rights reserved.
  *
- *  Description: Component of Voice Recognition Command
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- *  Notes: (C) Copyright 2015 Sony Corporation
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name NuttX nor Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
- *  Author: Suzunosuke Hida
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************
- */
+ ****************************************************************************/
 
 /*===================================================================
  * include
@@ -34,9 +55,6 @@ using namespace Wien2::Apu;
 
 static VoiceCmdComponent *s_instance = NULL;
 
-/*******************************************************
-    global interface
-*******************************************************/
 extern "C" {
 
 /*--------------------------------------------------------------------*/
@@ -85,6 +103,8 @@ void voiceCmdCmpDspDoneCallback(void *p_response, void *p_instance)
     }
 }
 
+/*--------------------------------------------------------------------*/
+/*   global interface                                                 */
 /*--------------------------------------------------------------------*/
 uint32_t AS_voiceCmdCmpActivate(MsgQueId recognizer_dtq,
                                 MsgQueId dsp_dtq,
@@ -286,7 +306,8 @@ int VoiceCmdComponent::init(InitReqParam_t *p_param)
       }
 #endif
 
-        /* INITコマンド送信 */
+        /* Send INIT command */
+
         sendApu(&s_apu_init_cmd_param);
 
         return 0;
@@ -294,7 +315,8 @@ int VoiceCmdComponent::init(InitReqParam_t *p_param)
 
 int VoiceCmdComponent::exec(ExecReqParam_t *p_param)
 {
-  /* パラメータを設定 */
+  /* Set parameters */
+
   s_apu_exec_cmd_param.header.process_mode = RecognitionMode;
   s_apu_exec_cmd_param.header.event_type   = ExecEvent;
 
@@ -310,7 +332,7 @@ int VoiceCmdComponent::exec(ExecReqParam_t *p_param)
   s_apu_exec_cmd_param.exec_recognition_cmd.output_buffer.p_buffer =
     (unsigned long *)&m_is_found;
 
-  /* Send recorded one frame data to M4F. */
+  /* Send recorded one frame data to DSP. */
   sendApu(&s_apu_exec_cmd_param);
 
   return 0;

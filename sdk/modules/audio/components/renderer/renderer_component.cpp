@@ -1,5 +1,5 @@
 /****************************************************************************
- * audioutils/components/renderer/renderer_component.cpp
+ * modules/audio/components/renderer/renderer_component.cpp
  *
  *   Copyright (C) 2016, 2017 Sony Corporation
  *
@@ -44,7 +44,7 @@ __WIEN2_BEGIN_NAMESPACE
 #ifndef CONFIG_AUDIOUTILS_RENDERER_CH_NUM
 #define CONFIG_AUDIOUTILS_RENDERER_CH_NUM 2
 #endif
-/* Equals to the Max. number of available DMAC. resource. */
+/* Equals to the Max. number of available DMAC resources. */
 #define MAX_RENDER_COMP_INSTANCE_NUM  CONFIG_AUDIOUTILS_RENDERER_CH_NUM
 
 class RenderCompFactory
@@ -163,7 +163,6 @@ static void AS_RendererNotifyDmaError(AudioDrvDmaError *p_param)
   switch (p_param->status)
     {
       case E_AS_BB_DMA_OK:
-        /* Impossible! */
         D_ASSERT(0);
         break;
 

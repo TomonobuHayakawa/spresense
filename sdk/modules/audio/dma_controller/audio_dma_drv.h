@@ -150,7 +150,6 @@ private:
   Queue<AudioDrvDmaRunParam, READY_QUEUE_NUM> m_ready_que;
   Queue<AudioDrvDmaRunParam, RUNNING_QUEUE_NUM> m_running_que;
 
-  /* State Table  */
   static dmaDrvFuncTbl  m_func_tbl[];
 
   static uint32_t     m_funcTblNum;
