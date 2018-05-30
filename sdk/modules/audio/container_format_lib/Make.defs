@@ -37,3 +37,9 @@ CXXSRCS += wav_containerformat.cpp
 VPATH   += container_format_lib
 DEPPATH += --dep-path container_format_lib
 endif
+
+ifeq ($(CONFIG_AUDIOUTILS_PLAYER),y)
+CXXSRCS += wav_containerformat_parser.cpp
+VPATH   += container_format_lib
+DEPPATH += --dep-path container_format_lib
+endif
