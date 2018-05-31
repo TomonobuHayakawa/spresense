@@ -76,9 +76,10 @@
 /* Display of vsync timing */
 /* #define CAMERA_MAIN_CISIF_INTRTRACE */
 
-#define IMAGE_JPG_SIZE     (100000)
-#define IMAGE_YUV_SIZE     (320*240*2)
-#define IMG_BUF_INFO_SIZE  (512)
+/* Note: Buffer size must be multiple of 32. */
+
+#define IMAGE_JPG_SIZE     (100000)    /* FULLHD typical:90KB quality:75 */
+#define IMAGE_YUV_SIZE     (320*240*2) /* QVGA YUV422 */
 
 #define MAX_SLEEP_TIME     (500*1000)
 #define MID_SLEEP_TIME     (30)
@@ -384,7 +385,8 @@ int camera_main(int argc, char *argv[])
       return -ENODEV;
     }
 
-  /* Note: VIDIOC_S_FMT may change width and height. */
+  /* Note: VIDIOC_S_FMT set buffer size. */
+  /*       Currently, width and height are fixed. */
 
   memset(&fmt, 0, sizeof(v4l2_format_t));
   fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -429,10 +431,7 @@ int camera_main(int argc, char *argv[])
       return ERROR;
     }
 
-  /* Note: VIDIOC_QBUF set buffer pointer. */
-  /*       Buffer pointer must be 32bytes aligned. */
-
-  buffers = memalign(32, sizeof(v_buffer_t) * count);
+  buffers = malloc(sizeof(v_buffer_t) * count);
 
   if (!buffers)
     {
@@ -443,6 +442,10 @@ int camera_main(int argc, char *argv[])
   for (n_buffers = 0; n_buffers < count; ++n_buffers)
     {
       buffers[n_buffers].length = fsize;
+
+      /* Note: VIDIOC_QBUF set buffer pointer. */
+      /*       Buffer pointer must be 32bytes aligned. */
+
       buffers[n_buffers].start  = memalign(32, fsize);
       if (!buffers[n_buffers].start)
         {
