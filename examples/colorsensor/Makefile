@@ -1,5 +1,5 @@
 ############################################################################
-# examples/colorsensor/Makefile
+# colorsensor/Makefile
 #
 #   Copyright (C) 2016 Sony Corporation
 #

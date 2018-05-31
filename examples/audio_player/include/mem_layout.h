@@ -1,5 +1,5 @@
 /****************************************************************************
- * mem_layout.h
+ * audio_player/include/mem_layout.h
  *
  *   Copyright (C) 2018 Sony Corporation
  *

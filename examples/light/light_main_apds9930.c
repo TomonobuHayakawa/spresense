@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/light/light_main_apds9930.c
+ * light/light_main_apds9930.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

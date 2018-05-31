@@ -1,5 +1,5 @@
 ############################################################################
-# examples/audo_through/Makefile
+# audio_through/Makefile
 #
 #   Copyright (C) 2018 Sony Corporation
 #

@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/sixaxsi/sixaxis_main.c
+ * sixaxis/sixaxis_main.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

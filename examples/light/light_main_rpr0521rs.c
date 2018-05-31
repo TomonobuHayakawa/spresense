@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/light/light_main_rpr0521rs.c
+ * light/light_main_rpr0521rs.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

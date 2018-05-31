@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/fwupdate/fwupdate_file.c
+ * fwupdate/fwupdate_file.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

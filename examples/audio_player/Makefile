@@ -1,5 +1,5 @@
 ############################################################################
-# examples/audo_player/Makefile
+# audio_player/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #

@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/mag/mag_main.c
+ * mag/mag_main.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

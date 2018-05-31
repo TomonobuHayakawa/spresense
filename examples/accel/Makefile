@@ -1,5 +1,5 @@
 ############################################################################
-# examples/accel/Makefile
+# accel/Makefile
 #
 #   Copyright (C) 2016 Sony Corporation
 #

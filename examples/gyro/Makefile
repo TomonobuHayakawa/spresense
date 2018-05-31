@@ -1,5 +1,5 @@
 ############################################################################
-# examples/gyro/Makefile
+# gyro/Makefile
 #
 #   Copyright (C) 2016 Sony Corporation
 #

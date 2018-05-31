@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/fwupdate/Makefile
+# fwupdate/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation
 #

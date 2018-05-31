@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/alarm/alarm_main.c
+ * alarm/alarm_main.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

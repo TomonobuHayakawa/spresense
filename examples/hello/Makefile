@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/hello/Makefile
+# hello/Makefile
 #
 #   Copyright (C) 2008, 2010-2013 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

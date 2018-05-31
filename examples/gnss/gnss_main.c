@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/gnss/gnss_main.c
+ * gnss/gnss_main.c
  *
  *   Copyright (C) 2016,2017 Sony. All rights reserved.
  *

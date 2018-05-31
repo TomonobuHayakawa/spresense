@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/gyro/gyro_main.c
+ * gyro/gyro_main.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/epaper/epaper_bkgd.c
+ * epaper/epaper_bkgd.c
  *
  *   Copyright (C) 2011, 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

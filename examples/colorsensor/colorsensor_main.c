@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/colorsensor/colorsensor_main.c
+ * colorsensor/colorsensor_main.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

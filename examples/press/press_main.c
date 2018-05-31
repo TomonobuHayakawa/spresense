@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/press/press_main.c
+ * press/press_main.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

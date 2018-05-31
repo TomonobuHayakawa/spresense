@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/alarm/Makefile
+# alarm/Makefile
 #
 #   Copyright (C) 2016 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

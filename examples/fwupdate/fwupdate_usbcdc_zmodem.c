@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/fwupdate/fwupdate_usbcdc_zmodem.c
+ * fwupdate/fwupdate_usbcdc_zmodem.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/nximage/nximage_bkgd.c
+ * camera/camera_bkgd.c
  *
  *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

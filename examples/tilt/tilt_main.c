@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/tilt/tilt_main.c
+ * tilt/tilt_main.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

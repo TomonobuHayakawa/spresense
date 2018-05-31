@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/nximage/nximage.h
+ * camera/nximage.h
  *
  *   Copyright (C) 2011, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

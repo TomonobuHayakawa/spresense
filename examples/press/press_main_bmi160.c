@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/press/press_main.c
+ * press/press_main_bmi160.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

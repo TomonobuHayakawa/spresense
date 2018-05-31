@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/gnss_atcmd/gnss_atcmd_main.c
+ * gnss_atcmd/gnss_atcmd.h
  *
  *   Copyright (C) 2017 Sony. All rights reserved.
  *

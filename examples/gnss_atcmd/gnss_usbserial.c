@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/gnss_atcmd/gnss_atcmd_usbserial.c
+ * gnss_atcmd/gnss_usbserial.c
  *
  *   Copyright (C) 2017,2018 Sony. All rights reserved.
  *

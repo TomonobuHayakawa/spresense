@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/gnss_atcmd/gnss_atcmd_main.c
+ * gnss_atcmd/gnss_usbserial.h
  *
  *   Copyright (C) 2017 Sony. All rights reserved.
  *
@@ -61,4 +61,4 @@
  extern int gnss_usbserial_open(FAR int *fds);
  extern int gnss_usbserial_close(FAR int *fds);
  
- #endif /* __EXAMPLES_GNSS_ATCMD_GNSS_USBSERIAL_H */
+#endif /* __EXAMPLES_GNSS_ATCMD_GNSS_USBSERIAL_H */

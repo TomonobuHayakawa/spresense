@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/decimator/decimator_main.c
+ * decimator/decimator_main.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

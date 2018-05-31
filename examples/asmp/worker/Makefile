@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/elf/tests/Makefile
+# asmp/worker/Makefile
 #
 #   Copyright (C) 2012, 2014 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

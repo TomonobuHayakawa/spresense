@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/accel/accel_main.c
+ * accel/accel_main.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

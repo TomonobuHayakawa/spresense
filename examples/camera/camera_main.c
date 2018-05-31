@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/camera/camera_main.c
+ * camera/camera_main.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

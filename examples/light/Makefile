@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/light/Makefile
+# light/Makefile
 #
 #   Copyright (C) 2016 Sony Corporation
 #

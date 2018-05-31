@@ -1,5 +1,5 @@
 ############################################################################
-# examples/gnss_atcmd/Makefile
+# gnss_atcmd/Makefile
 #
 #   Copyright (C) 2017 Sony. All rights reserved.
 #

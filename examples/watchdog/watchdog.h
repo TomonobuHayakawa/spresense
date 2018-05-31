@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/examples/watchdog/watchdog.h
+ * watchdog/watchdog.h
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * fixed_fence.h
+ * voice_command/include/fixed_fence.h
  *
  *   Copyright (C) 2018 Sony Corporation
  *

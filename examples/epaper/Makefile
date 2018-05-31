@@ -1,5 +1,5 @@
 ############################################################################
-# examples/epaper/Makefile
+# epaper/Makefile
 #
 #   Copyright (C) 2018 Sony Corporation
 #

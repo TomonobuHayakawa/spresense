@@ -1,5 +1,5 @@
 ############################################################################
-# examples/mag/Makefile
+# mag/Makefile
 #
 #   Copyright (C) 2016 Sony Corporation
 #

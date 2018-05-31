@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/fwupdate/fwupdate_local.h
+ * fwupdate/fwupdate_local.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *

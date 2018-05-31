@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/light/light_main_bh1721fvc.c
+ * light/light_main_bh1721fvc.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

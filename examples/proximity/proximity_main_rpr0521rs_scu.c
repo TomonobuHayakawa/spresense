@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/proximity/proximity_main_rpr0521rs_scu.c
+ * proximity/proximity_main_rpr0521rs_scu.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

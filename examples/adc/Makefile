@@ -1,5 +1,5 @@
 ############################################################################
-# examples/adc/Makefile
+# adc/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation
 #

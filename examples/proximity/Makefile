@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/proximity/Makefile
+# proximity/Makefile
 #
 #   Copyright (C) 2016 Sony Corporation
 #

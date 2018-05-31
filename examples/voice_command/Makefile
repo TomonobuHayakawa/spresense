@@ -1,5 +1,5 @@
 ############################################################################
-# examples/voice_command/Makefile
+# voice_command/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #

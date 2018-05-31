@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/adc/adc_main.c
+ * adc/adc_main.c
  *
  *   Copyright (C) 2017 Sony Corporation
  *

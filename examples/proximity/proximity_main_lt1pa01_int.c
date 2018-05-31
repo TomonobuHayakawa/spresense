@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/proximity/proximity_main_lt1pa01_int.c
+ * proximity/proximity_main_lt1pa01_int.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

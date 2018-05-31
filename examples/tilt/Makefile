@@ -1,5 +1,5 @@
 ############################################################################
-# examples/tilt/Makefile
+# tilt/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation
 #

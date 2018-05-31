@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/epaper/epaper.h
+ * epaper/epaper.h
  *
  *   Copyright (C) 2011, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

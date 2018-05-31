@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/gnss/geofence_main.c
+ * geofence/geofence_main.c
  *
  *   Copyright (C) 2017 Sony. All rights reserved.
  *

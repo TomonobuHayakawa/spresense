@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/asmp_test/asmp_test_main.c
+ * asmp/asmp_main.c
  *
  *   Copyright (C) 2016 Sony Corporation. All rights reserved.
  *

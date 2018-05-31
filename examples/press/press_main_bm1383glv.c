@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/press/press_main_bm1383glv.c
+ * press/press_main_bm1383glv.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

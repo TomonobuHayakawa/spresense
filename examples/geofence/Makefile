@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/geofence/Makefile
+# geofence/Makefile
 #
 #   Copyright (C) 2017 Sony. All rights reserved.
 #

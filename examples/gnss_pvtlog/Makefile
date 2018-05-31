@@ -1,5 +1,5 @@
 ############################################################################
-# examples/gnss_pvtlog/Makefile
+# gnss_pvtlog/Makefile
 #
 #   Copyright (C) 2017 Sony. All rights reserved.
 #

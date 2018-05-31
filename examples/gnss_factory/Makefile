@@ -1,5 +1,5 @@
 ############################################################################
-# examples/gnss_factory/Makefile
+# gnss_factory/Makefile
 #
 #   Copyright (C) 2017 Sony. All rights reserved.
 #

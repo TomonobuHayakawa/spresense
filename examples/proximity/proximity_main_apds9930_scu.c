@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/proximity/proximity_main_apds9930_scu.c
+ * proximity/proximity_main_apds9930_scu.c
  *
  *   Copyright (C) 2016 Sony Corporation
  *

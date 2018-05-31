@@ -1,5 +1,5 @@
 ############################################################################
-# examples/audio_recorder/Makefile
+# audio_recorder/Makefile
 #
 #   Copyright (C) 2017 Sony Corporation. All rights reserved.
 #

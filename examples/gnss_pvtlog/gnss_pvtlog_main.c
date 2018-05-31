@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/gnss_pvtlog/gnss_pvtlog_main.c
+ * gnss_pvtlog/gnss_pvtlog_main.c
  *
  *   Copyright (C) 2017 Sony. All rights reserved.
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * pool_layout.h
+ * voice_call/include/pool_layout.h
  *
  *   Copyright (C) 2018 Sony Corporation
  *

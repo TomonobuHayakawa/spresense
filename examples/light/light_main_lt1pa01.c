@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/light/light_main_lt1pa01.c
+ * light/light_main_lt1pa01.c
  *
  *   Copyright (C) 2016 Sony Corporation
   *
