@@ -1302,6 +1302,12 @@ void cxd56_audio_ac_reg_poweroff_cic(void)
 CXD56_AUDIO_ECODE cxd56_audio_ac_reg_poweron_decim(uint8_t mic_mode,
                                                    uint8_t clk_mode)
 {
+  /* Enable AHBMASTER.
+   * Because the output of DecimationFilter is input to BusIF.
+   */
+
+  write_ac_reg(RI_MCK_AHBMSTR_EN, 1);
+
   /* Power on DECIM. */
 
   write_ac_reg(RI_DECIM0_EN, 1);
