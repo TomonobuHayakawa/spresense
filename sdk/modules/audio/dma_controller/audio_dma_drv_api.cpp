@@ -367,7 +367,7 @@ E_AS AS_RegistDmaIntCb(cxd56_audio_dma_t dmacId,
   drv_ret = cxd56_audio_set_dmacb(dmacId, p_dmaIntCb);
   if (CXD56_AUDIO_ECODE_OK != drv_ret)
     {
-      _err("cxd56_audio_set_dmacb() is failer. err = 0x%x\n", ret);
+      _err("cxd56_audio_set_dmacb() is failer. err = 0x%x\n", drv_ret);
       rtCode = E_AS_DMAC_ID_PARAM;
     }
 
