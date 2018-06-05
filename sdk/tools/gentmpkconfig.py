@@ -18,14 +18,17 @@ else:
 
 print(buf, file=outfile)
 
+EXCLUDES = ['nuttx', 'apps', 'sdk']
+
 # Search top of Kconfig in the same level directories
 
 kconfigs = glob.glob('../*/Kconfig')
 for c in kconfigs:
+    dn = os.path.dirname(c).split('/')[-1]
 
     # Add Kconfig excpet nuttx, apps and sdk directories
 
-    if 'nuttx' not in c and 'apps' not in c and 'sdk' not in c:
+    if dn not in EXCLUDES:
         print('source "%s"' % c, file=outfile)
 
 outfile.close()
