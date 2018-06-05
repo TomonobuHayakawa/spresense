@@ -1,5 +1,5 @@
 /****************************************************************************
- * audio_player/include/pool_layout.h
+ * pool_layout.h
  *
  *   Copyright (C) 2018 Sony Corporation
  *

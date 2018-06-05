@@ -472,8 +472,8 @@ static bool app_act_audio_sub_system(void)
   recorder_act_param.msgq_id.recorder      = MSGQ_AUD_RECORDER;
   recorder_act_param.msgq_id.mng           = MSGQ_AUD_MGR;
   recorder_act_param.msgq_id.dsp           = MSGQ_AUD_DSP;
-  recorder_act_param.pool_id.input         = MIC_IN_BUF_POOL;
-  recorder_act_param.pool_id.output        = OUTPUT_BUF_POOL;
+  recorder_act_param.pool_id.input         = INPUT_BUF_POOL;
+  recorder_act_param.pool_id.output        = ES_BUF_POOL;
   recorder_act_param.pool_id.dsp           = ENC_APU_CMD_POOL;
 
   result = AS_CreateMediaRecorder(&recorder_act_param);

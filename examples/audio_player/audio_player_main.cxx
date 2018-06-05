@@ -433,7 +433,7 @@ static bool app_act_audio_sub_system(void)
 
   AudioSubSystemIDs ids;
   ids.app         = MSGQ_AUD_APP;
-  ids.mng         = MSGQ_AUD_MGR;
+  ids.mng         = MSGQ_AUD_MNG;
   ids.player_main = MSGQ_AUD_PLY;
   ids.player_sub  = 0xFF;
   ids.mixer       = MSGQ_AUD_OUTPUT_MIX;
@@ -454,7 +454,7 @@ static bool app_act_audio_sub_system(void)
 
   AsCreatePlayerParam_t player_create_param;
   player_create_param.msgq_id.player = MSGQ_AUD_PLY;
-  player_create_param.msgq_id.mng    = MSGQ_AUD_MGR;
+  player_create_param.msgq_id.mng    = MSGQ_AUD_MNG;
   player_create_param.msgq_id.mixer  = MSGQ_AUD_OUTPUT_MIX;
   player_create_param.msgq_id.dsp    = MSGQ_AUD_DSP;
   player_create_param.pool_id.es     = DEC_ES_MAIN_BUF_POOL;

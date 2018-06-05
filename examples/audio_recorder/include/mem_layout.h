@@ -1,5 +1,5 @@
 /****************************************************************************
- * audio_recorder/include/mem_layout.h
+ * mem_layout.h
  *
  *   Copyright (C) 2018 Sony Corporation
  *
@@ -74,8 +74,8 @@
  * Pool IDs
  */
 #define NULL_POOL  0
-#define OUTPUT_BUF_POOL  1
-#define MIC_IN_BUF_POOL  2
+#define ES_BUF_POOL  1
+#define INPUT_BUF_POOL  2
 #define ENC_APU_CMD_POOL  3
 #define SRC_APU_CMD_POOL  4
 
@@ -90,21 +90,21 @@
 #define MEMMGR_L0_WORK_SIZE   0x00000060
 
 /* Skip 0x0004 bytes for alignment. */
-#define L0_OUTPUT_BUF_POOL_ALIGN    0x00000008
-#define L0_OUTPUT_BUF_POOL_L_FENCE  0x000c0004
-#define L0_OUTPUT_BUF_POOL_ADDR     0x000c0008
-#define L0_OUTPUT_BUF_POOL_SIZE     0x00006000
-#define L0_OUTPUT_BUF_POOL_U_FENCE  0x000c6008
-#define L0_OUTPUT_BUF_POOL_NUM_SEG  0x00000002
-#define L0_OUTPUT_BUF_POOL_SEG_SIZE 0x00003000
+#define L0_ES_BUF_POOL_ALIGN    0x00000008
+#define L0_ES_BUF_POOL_L_FENCE  0x000c0004
+#define L0_ES_BUF_POOL_ADDR     0x000c0008
+#define L0_ES_BUF_POOL_SIZE     0x00006000
+#define L0_ES_BUF_POOL_U_FENCE  0x000c6008
+#define L0_ES_BUF_POOL_NUM_SEG  0x00000002
+#define L0_ES_BUF_POOL_SEG_SIZE 0x00003000
 
-#define L0_MIC_IN_BUF_POOL_ALIGN    0x00000008
-#define L0_MIC_IN_BUF_POOL_L_FENCE  0x000c600c
-#define L0_MIC_IN_BUF_POOL_ADDR     0x000c6010
-#define L0_MIC_IN_BUF_POOL_SIZE     0x0000f000
-#define L0_MIC_IN_BUF_POOL_U_FENCE  0x000d5010
-#define L0_MIC_IN_BUF_POOL_NUM_SEG  0x00000005
-#define L0_MIC_IN_BUF_POOL_SEG_SIZE 0x00003000
+#define L0_INPUT_BUF_POOL_ALIGN    0x00000008
+#define L0_INPUT_BUF_POOL_L_FENCE  0x000c600c
+#define L0_INPUT_BUF_POOL_ADDR     0x000c6010
+#define L0_INPUT_BUF_POOL_SIZE     0x0000f000
+#define L0_INPUT_BUF_POOL_U_FENCE  0x000d5010
+#define L0_INPUT_BUF_POOL_NUM_SEG  0x00000005
+#define L0_INPUT_BUF_POOL_SEG_SIZE 0x00003000
 
 #define L0_ENC_APU_CMD_POOL_ALIGN    0x00000008
 #define L0_ENC_APU_CMD_POOL_L_FENCE  0x000d5014
