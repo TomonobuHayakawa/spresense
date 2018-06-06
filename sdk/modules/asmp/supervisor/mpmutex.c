@@ -37,6 +37,7 @@
  ****************************************************************************/
 
 #include <sdk/config.h>
+#include <sdk/debug.h>
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -46,7 +47,6 @@
 #include <asmp/mpmutex.h>
 
 #include <stdio.h>
-#include <debug.h>
 #include <errno.h>
 
 #include "up_arch.h"
@@ -59,17 +59,17 @@
  ****************************************************************************/
 
 #ifdef CONFIG_ASMP_DEBUG_ERROR
-#  define mperr(fmt, ...)  _err(fmt, ## __VA_ARGS__)
+#  define mperr(fmt, ...)  logerr(fmt, ## __VA_ARGS__)
 #else
 #  define mperr(fmt, ...)
 #endif
 #ifdef CONFIG_ASMP_DEBUG_WARN
-#  define mpwarn(fmt, ...)  _warn(fmt, ## __VA_ARGS__)
+#  define mpwarn(fmt, ...)  logwarn(fmt, ## __VA_ARGS__)
 #else
 #  define mpwarn(fmt, ...)
 #endif
 #ifdef CONFIG_ASMP_DEBUG_INFO
-#  define mpinfo(fmt, ...)  _info(fmt, ## __VA_ARGS__)
+#  define mpinfo(fmt, ...)  loginfo(fmt, ## __VA_ARGS__)
 #else
 #  define mpinfo(fmt, ...)
 #endif

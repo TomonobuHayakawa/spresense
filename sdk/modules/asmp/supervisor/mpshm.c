@@ -37,6 +37,7 @@
  ****************************************************************************/
 
 #include <sdk/config.h>
+#include <sdk/debug.h>
 
 #include <mm/tile.h>
 #include <asmp/types.h>
@@ -44,7 +45,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <debug.h>
 #include <errno.h>
 #include <semaphore.h>
 
@@ -73,17 +73,17 @@
 #define ADR_CONV_VSIZE         0x100000
 
 #ifdef CONFIG_ASMP_DEBUG_ERROR
-#  define mperr(fmt, ...)  _err(fmt, ## __VA_ARGS__)
+#  define mperr(fmt, ...)  logerr(fmt, ## __VA_ARGS__)
 #else
 #  define mperr(fmt, ...)
 #endif
 #ifdef CONFIG_ASMP_DEBUG_WARN
-#  define mpwarn(fmt, ...)  _warn(fmt, ## __VA_ARGS__)
+#  define mpwarn(fmt, ...)  logwarn(fmt, ## __VA_ARGS__)
 #else
 #  define mpwarn(fmt, ...)
 #endif
 #ifdef CONFIG_ASMP_DEBUG_INFO
-#  define mpinfo(fmt, ...)  _info(fmt, ## __VA_ARGS__)
+#  define mpinfo(fmt, ...)  loginfo(fmt, ## __VA_ARGS__)
 #else
 #  define mpinfo(fmt, ...)
 #endif

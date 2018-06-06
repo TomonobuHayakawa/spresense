@@ -39,10 +39,11 @@
  * Include Files
  ****************************************************************************/
 
+#include <sdk/debug.h>
+
 #include <stdint.h>
 #include <errno.h>
 #include <semaphore.h>
-#include <debug.h>
 #include <assert.h>
 
 #include <asmp/mptask.h>
@@ -66,17 +67,17 @@
 #define mptask_semgive(id) sem_post(id)
 
 #ifdef CONFIG_ASMP_DEBUG_ERROR
-#  define mperr(fmt, ...)  _err(fmt, ## __VA_ARGS__)
+#  define mperr(fmt, ...)  logerr(fmt, ## __VA_ARGS__)
 #else
 #  define mperr(fmt, ...)
 #endif
 #ifdef CONFIG_ASMP_DEBUG_WARN
-#  define mpwarn(fmt, ...)  _warn(fmt, ## __VA_ARGS__)
+#  define mpwarn(fmt, ...)  logwarn(fmt, ## __VA_ARGS__)
 #else
 #  define mpwarn(fmt, ...)
 #endif
 #ifdef CONFIG_ASMP_DEBUG_INFO
-#  define mpinfo(fmt, ...)  _info(fmt, ## __VA_ARGS__)
+#  define mpinfo(fmt, ...)  loginfo(fmt, ## __VA_ARGS__)
 #else
 #  define mpinfo(fmt, ...)
 #endif

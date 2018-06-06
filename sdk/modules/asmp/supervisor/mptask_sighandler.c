@@ -130,7 +130,7 @@ int mptask_sighandler(int8_t signo, uint16_t sigdata, uint32_t data,
 
       default:
         {
-          _err("Caught invalid signal %d.\n", signo);
+          mperr("Caught invalid signal %d.\n", signo);
           break;
         }
     }
