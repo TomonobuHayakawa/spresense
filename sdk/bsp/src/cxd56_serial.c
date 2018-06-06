@@ -1002,29 +1002,6 @@ static bool up_txempty(FAR struct uart_dev_s *dev)
 #ifdef USE_EARLYSERIALINIT
 void up_earlyserialinit(void)
 {
-  /* Configure all UARTs (except the CONSOLE UART) and disable interrupts */
-
-#  ifdef CONFIG_CXD56_UART0
-#    ifndef CONFIG_UART0_SERIAL_CONSOLE
-  cxd56_uart_setup(0);
-#    endif
-  up_disableuartint(&g_uart0priv, NULL);
-#  endif
-
-#  ifdef CONFIG_CXD56_UART1
-#    ifndef CONFIG_UART1_SERIAL_CONSOLE
-  cxd56_uart_setup(1);
-#    endif
-  up_disableuartint(&g_uart1priv, NULL);
-#  endif
-
-#  ifdef CONFIG_CXD56_UART2
-#    ifndef CONFIG_UART2_SERIAL_CONSOLE
-  cxd56_uart_setup(2);
-#    endif
-  up_disableuartint(&g_uart2priv, NULL);
-#  endif
-
   /* Configuration whichever one is the console */
 
 #  ifdef CONSOLE_DEV
