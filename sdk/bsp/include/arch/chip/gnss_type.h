@@ -642,25 +642,25 @@ struct cxd56_rtk_glonassephemeris_s {
   uint8_t  tk_h;    /**< [out] Current frame first time (hours) */
   uint8_t  tk_m;    /**< [out] Current frame first time (minutes) */
   uint8_t  tk_s;    /**< [out] Current frame first time (seconds) */
-  float    xv;      /**< [out] The velocity vector components of t_b */
+  double   xv;      /**< [out] The velocity vector components of t_b */
   float    xa;      /**< [out] The acceleration components of t_b */
-  float    xp;      /**< [out] The position of t_b */
+  double   xp;      /**< [out] The position of t_b */
   uint8_t  bn;      /**< [out] The health info */
   uint8_t  p2;      /**< [out] flag of oddness ("1") or evenness ("0") of
                          the value of t_b */
   uint16_t tb;      /**< [out] Reference time t_b (15...1425) */
   uint8_t  hn_e;    /**< [out] Carrier frequency number
                          (0...31, (25...31)=(7...-1)) */
-  float    yv;      /**< [out] The velocity vector components of t_b */
+  double   yv;      /**< [out] The velocity vector components of t_b */
   float    ya;      /**< [out] The acceleration components of t_b */
-  float    yp;      /**< [out] The position of t_b */
+  double   yp;      /**< [out] The position of t_b */
   uint8_t  p3;      /**< [out] Number of almanacs in the current frame */
   float    gn;      /**< [out] Carrier frequency relative deviation of t_b */
   uint8_t  p;       /**< [out] Origin of tau variable */
   uint8_t  health;  /**< [out] Health flag */
-  float    zv;      /**< [out] The velocity vector components of t_b */
+  double   zv;      /**< [out] The velocity vector components of t_b */
   float    za;      /**< [out] The acceleration components of t_b */
-  float    zp;      /**< [out] The position of t_b */
+  double   zp;      /**< [out] The position of t_b */
   float    tn;      /**< [out] Correction to the satellite time t_n relative
                          to GLONASS time t_c */
   float    dtn;     /**< [out] Difference in internal delay between L2 and
