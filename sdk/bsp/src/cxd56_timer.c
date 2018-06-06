@@ -170,6 +170,8 @@ static struct cxd56_lowerhalf_s g_tmrdevs[2];
 static int cxd56_timer_interrupt(int irq, FAR void *context, FAR void *arg)
 {
   FAR struct cxd56_lowerhalf_s *priv = (FAR struct cxd56_lowerhalf_s *)arg;
+  uint32_t timeout;
+  uint32_t load;
 
   tmrinfo("Entry\n");
   DEBUGASSERT((irq >= CXD56_IRQ_TIMER0) && (irq <= CXD56_IRQ_TIMER1));
@@ -178,10 +180,18 @@ static int cxd56_timer_interrupt(int irq, FAR void *context, FAR void *arg)
    * nullified, the timer will be stopped.
    */
 
-  if (priv->callback && priv->callback(&priv->timeout, priv->arg))
+  timeout = priv->timeout;
+  if (priv->callback && priv->callback(&timeout, priv->arg))
     {
-      /* If necessary, then do clock dither adjustment here */
+      if (timeout != priv->timeout)
+        {
+          /* Change period dynamically */
 
+          priv->timeout = timeout;
+          load =
+            (((uint64_t)timeout * priv->clkticks) / TIMER_DIVIDER / 1000000);
+          putreg32(load, priv->base + CXD56_TIMER_LOAD);
+        }
     }
   else
     {
