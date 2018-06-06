@@ -275,10 +275,6 @@ int board_app_initialize(uintptr_t arg)
     }
 #endif
 
-#ifdef CONFIG_SEDRIVER
-  devse_register();
-#endif
-
 #ifdef CONFIG_ASMP
   asmp_initialize();
 #endif
