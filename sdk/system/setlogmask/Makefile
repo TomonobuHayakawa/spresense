@@ -67,12 +67,12 @@ ifneq ($(CONFIG_BUILD_KERNEL),y)
 endif
 
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-  BIN = ..\..\libapps$(LIBEXT)
+  BIN = ..\libsystem$(LIBEXT)
 else
 ifeq ($(WINTOOL),y)
-  BIN = ..\\..\\libapps$(LIBEXT)
+  BIN = ..\\libsystem$(LIBEXT)
 else
-  BIN = ../../libapps$(LIBEXT)
+  BIN = ../libsystem$(LIBEXT)
 endif
 endif
 
