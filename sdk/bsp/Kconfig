@@ -83,8 +83,18 @@ config CXD56_FARAPI_VERSION_CHECK
 	default y
 	---help---
 		Enable the Far API version compatibility check. If the version
-		mismatch is deteced during system bootup, the target system calls
-		PANIC(). So then it's necessary to update the nxloader firmware.
+		mismatch is deteced during system bootup, the target system shows
+		the message to update the loader and gnssfw firmwares.
+
+if CXD56_FARAPI_VERSION_CHECK
+
+config CXD56_FARAPI_VERSION_FAILED_PANIC
+	bool "Far API Version Check Failed to PANIC"
+	default n
+	---help---
+		If the version mismatch is deteced, do PANIC() to stop the system.
+
+endif
 
 config CXD56_FARAPI_DEBUG
 	bool "Debug Far API"
