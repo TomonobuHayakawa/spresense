@@ -117,12 +117,10 @@ if CXD56_TIMER
 
 choice
 	prompt "Timer divider selection"
-	default CXD56_TIMER_DIVIDER_16
+	default CXD56_TIMER_DIVIDER_1
 	---help---
 		Timer divider selects 1, 16 or 256. The smaller the divider, the higher
 		time resolution, but the shorter the maximum time until wrap-around.
-
-# XXX arduino needs DIVIDER_1 for high resolusion timer!
 
 config CXD56_TIMER_DIVIDER_1
 	bool "Divider 1"
