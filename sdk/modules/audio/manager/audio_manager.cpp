@@ -421,8 +421,8 @@ int AS_SendAudioCommand(FAR AudioCommand *packet)
         msg_type = MSG_AUD_MGR_CMD_SETREADY;
         break;
 
-      case AUDCMD_SETBBACTIVESTATUS:
-        msg_type = MSG_AUD_MGR_CMD_SETACTIVE;
+      case AUDCMD_SETBASEBANDSTATUS:
+        msg_type = MSG_AUD_MGR_CMD_SETBASEBAND;
         break;
 
       case AUDCMD_SETPLAYERSTATUS:
@@ -632,7 +632,7 @@ AudioManager::MsgProc
   /* SetActive command. */
 
   {                                    /* AudioManager all status: */
-    &AudioManager::setActive,          /*   Ready state.           */
+    &AudioManager::setBaseBandStatus,  /*   Ready state.           */
     &AudioManager::illegal,            /*   PlayerReady state.     */
     &AudioManager::illegal,            /*   PlayerActive state.    */
     &AudioManager::illegal,            /*   PlayerPause state.     */
@@ -1754,13 +1754,13 @@ void AudioManager::setRdyOnThrough(AudioCommand &cmd)
 }
 
 /*--------------------------------------------------------------------------*/
-void AudioManager::setActive(AudioCommand &cmd)
+void AudioManager::setBaseBandStatus(AudioCommand &cmd)
 {
 #ifdef AS_FEATURE_EFFECTOR_ENABLE
   /* Before state transition, check parameters first. */
 
   bool check =
-    packetCheck(LENGTH_SET_BBACTIVE_STATUS, AUDCMD_SETBBACTIVESTATUS, cmd);
+    packetCheck(LENGTH_SET_BASEBAND_STATUS, AUDCMD_SETBASEBANDSTATUS, cmd);
   if (!check)
     {
       return;
@@ -2190,7 +2190,7 @@ void AudioManager::cmpltOnReady(const AudioMngCmdCmpltResult &cmd)
             deactivateRecorder();
             break;
 
-          case AUDCMD_SETBBACTIVESTATUS:
+          case AUDCMD_SETBASEBANDSTATUS:
             deactivateSoundFx();
             break;
         }
@@ -2222,7 +2222,7 @@ void AudioManager::cmpltOnReady(const AudioMngCmdCmpltResult &cmd)
             m_SubState = AS_MNG_SUB_STATUS_RECORDERREADY;
         break;
 
-      case AUDCMD_SETBBACTIVESTATUS:
+      case AUDCMD_SETBASEBANDSTATUS:
         result_code = AUDRLT_STATUSCHANGED;
         m_State    = AS_MNG_STATUS_BASEBAND;
         m_SubState = AS_MNG_SUB_STATUS_BASEBANDREADY;

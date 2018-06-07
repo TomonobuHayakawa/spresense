@@ -127,12 +127,6 @@
 
 #define LENGTH_SET_THROUGH_STATUS  3
 
-/*! \brief SetBBActive command ("AUDCMF_SETBBACTIVESTATUS)packet length,
- * Be removed in future
- */
-
-#define LENGTH_SET_BBACTIVE_STATUS (LENGTH_SET_BASEBAND_STATUS)
-
 /*! \brief InitAttentions command (#AUDCMD_INITATTENTIONS) packet length */
 
 #define LENGTH_INITATTENTIONS       3

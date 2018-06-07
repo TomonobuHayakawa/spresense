@@ -167,7 +167,7 @@ private:
   void setRdyOnPlay(AudioCommand &cmd);
   void setRdyOnRecorder(AudioCommand &cmd);
   void setRdyOnThrough(AudioCommand &cmd);
-  void setActive(AudioCommand &cmd);
+  void setBaseBandStatus(AudioCommand &cmd);
   void setPlayerStatus(AudioCommand &cmd);
   void setRecorder(AudioCommand &cmd);
   void voiceCommand(AudioCommand &cmd);
