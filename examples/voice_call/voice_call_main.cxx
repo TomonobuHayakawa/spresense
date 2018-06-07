@@ -349,8 +349,8 @@ static bool app_init_mic_gain(void)
 static bool app_set_bbactive_status(void)
 {
   AudioCommand command;
-  command.header.packet_length = LENGTH_SET_BBACTIVE_STATUS;
-  command.header.command_code  = AUDCMD_SETBBACTIVESTATUS;
+  command.header.packet_length = LENGTH_SET_BASEBAND_STATUS;
+  command.header.command_code  = AUDCMD_SETBASEBANDSTATUS;
   command.header.sub_code      = 0x00;
   command.set_baseband_status_param.with_MFE           = AS_SET_BBSTS_WITH_MFE_ACTIVE;
   command.set_baseband_status_param.with_Voice_Command = AS_SET_BBSTS_WITH_VCMD_NONE;
