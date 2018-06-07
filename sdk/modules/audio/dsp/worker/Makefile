@@ -93,6 +93,11 @@ clean:
 	$(call DELFILE, $(BIN))
 	$(call CLEAN)
 
+distclean: clean
+	$(call DELFILE, .context)
+	$(call DELFILE, Make.dep)
+	$(call DELFILE, .depend)
+
 install:
 	$(Q) mkdir -p $(ROMFS_DIR)
 ifeq ($(WINTOOL),y)
