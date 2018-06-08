@@ -3087,7 +3087,7 @@ errout:
 
 void up_usbuninitialize(void)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_usbdev_s *priv = &g_usbdev;
   irqstate_t flags;
 
   usbtrace(TRACE_DEVUNINIT, 0);
@@ -3305,7 +3305,7 @@ static void cxd56_reconstructep(FAR struct cxd56_usbdev_s *priv)
 
 int cxd56_usbdev_setsigno(int signo)
 {
-  struct cxd56_usbdev_s *priv = &g_usbdev;
+  FAR struct cxd56_usbdev_s *priv = &g_usbdev;
 
   uinfo("signo = %d\n", signo);
 
