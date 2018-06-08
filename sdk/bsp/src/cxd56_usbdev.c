@@ -76,6 +76,12 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+/* TOPREG VBUS regsiter */
+
+#define CLR_EDGE (1 << 9)
+#define CLR_EN   (1 << 8)
+#define VBUS_DET (1 << 0)
+
 /* Configuration ************************************************************/
 
 #ifndef CONFIG_USBDEV_MAXPOWER
@@ -274,11 +280,6 @@ const struct trace_msg_t g_usb_trace_strings_deverror[] =
 #define CXD56_EPBULKIN1          4          /* Bulk EP for send to host */
 #define CXD56_EPBULKOUT1         5          /* Bulk EP for recv to host */
 #define CXD56_EPINTRIN1          6          /* Intr EP for host poll */
-
-/* USB detect handler */
-
-#define USB_CABLE_DETACH         0   /* USB cable detach status */
-#define USB_CABLE_ATTACH         1   /* USB cable attach status */
 
 /* Request queue operations ****************************************************/
 
@@ -615,10 +616,6 @@ static const struct cxd56_epinfo_s g_epinfo[CXD56_NENDPOINTS] =
 
 static uint8_t g_ep0outbuffer[CXD56_EP0MAXPACKET];
 
-/* USB cable detach/attach status */
-
-static uint16_t g_usbcable_sts = USB_CABLE_DETACH;
-
 #ifdef CONFIG_FS_PROCFS
 
 /* See include/nutts/fs/procfs.h
@@ -654,6 +651,42 @@ static const struct procfs_entry_s g_procfs_usbdev =
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+/****************************************************************************
+ * Name: cxd56_cablestatus
+ *
+ * Description:
+ *   Set VBUS connected status to system register
+ *
+ ****************************************************************************/
+
+static inline void cxd56_cableconnected(bool connected)
+{
+  uint32_t val;
+
+  val = getreg32(CXD56_TOPREG_USB_VBUS);
+  if (connected)
+    {
+      putreg32(val | VBUS_DET, CXD56_TOPREG_USB_VBUS);
+    }
+  else
+    {
+      putreg32(val & ~VBUS_DET, CXD56_TOPREG_USB_VBUS);
+    }
+}
+
+/****************************************************************************
+ * Name: cxd56_iscableconnected
+ *
+ * Description:
+ *   Return the cable status. (true is connected)
+ *
+ ****************************************************************************/
+
+static inline bool cxd56_iscableconnected(void)
+{
+  return getreg32(CXD56_TOPREG_USB_VBUS) & VBUS_DET;
+}
 
 /****************************************************************************
  * Name: cxd56_rqdequeue
@@ -2902,8 +2935,10 @@ static int cxd56_vbusinterrupt(int irq, FAR void *context, FAR void *arg)
 {
   FAR struct cxd56_usbdev_s *priv = (FAR struct cxd56_usbdev_s *)arg;
 
+  cxd56_cableconnected(true);
+
   usbtrace(TRACE_INTENTRY(CXD56_TRACEINTID_VBUS), 0);
-  uinfo("irq=%d context=%08x attach=%d\n", irq, context, g_usbcable_sts);
+  uinfo("irq=%d context=%08x\n", irq, context);
 
   /* Toggle vbus interrupts */
 
@@ -2921,10 +2956,6 @@ static int cxd56_vbusinterrupt(int irq, FAR void *context, FAR void *arg)
     {
       cxd56_reconstructep(priv);
     }
-
-  /* Change the USB cable status */
-
-  g_usbcable_sts = USB_CABLE_ATTACH;
 
   /* Notify attach signal.
    * if class driver not binded, can't get supply curret value.
@@ -2948,9 +2979,11 @@ static int cxd56_vbusninterrupt(int irq, FAR void *context, FAR void *arg)
   FAR struct cxd56_ep_s *privep;
   int i;
 
+  cxd56_cableconnected(false);
+
   usbtrace(TRACE_INTENTRY(CXD56_TRACEINTID_VBUSN), 0);
 
-  uinfo("irq=%d context=%08x attach=%d\n", irq, context, g_usbcable_sts);
+  uinfo("irq=%d context=%08x\n", irq, context);
 
   /* Toggle vbus interrupts */
 
@@ -2976,10 +3009,6 @@ static int cxd56_vbusninterrupt(int irq, FAR void *context, FAR void *arg)
 
   up_disable_irq(CXD56_IRQ_USB_INT);
   up_disable_irq(CXD56_IRQ_USB_SYS);
-
-  /* Change the USB cable status */
-
-  g_usbcable_sts = USB_CABLE_DETACH;
 
   /* Notify dettach signal */
 
@@ -3008,10 +3037,6 @@ void up_usbinitialize(void)
   /* Enable USB clock */
 
   cxd56_usb_clock_enable();
-
-  /* Initilialize USB attach */
-
-  putreg32(getreg32(CXD56_TOPREG_USB_VBUS) | 1, CXD56_TOPREG_USB_VBUS);
 
   if (irq_attach(CXD56_IRQ_USB_SYS, cxd56_sysinterrupt, &g_usbdev) != 0)
     {
@@ -3146,7 +3171,7 @@ int usbdev_register(FAR struct usbdevclass_driver_s *driver)
       return ret;
     }
 
-  if (g_usbcable_sts == USB_CABLE_ATTACH)
+  if (cxd56_iscableconnected())
     {
       cxd56_reconstructep(&g_usbdev);
     }
@@ -3228,14 +3253,6 @@ static void cxd56_reconstructep(FAR struct cxd56_usbdev_s *priv)
 {
   uint32_t mask;
   int i;
-
-  /* Enable USB clock */
-
-  cxd56_usb_clock_enable();
-
-  /* Initilialize USB attach */
-
-  putreg32(getreg32(CXD56_TOPREG_USB_VBUS) | 1, CXD56_TOPREG_USB_VBUS);
 
   /* USB reset assert */
 
