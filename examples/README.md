@@ -1,1 +1,1 @@
-This directory contains many examples for SPRITZER SDK softwares.
+This directory contains many examples for SPRESENSE SDK softwares.
