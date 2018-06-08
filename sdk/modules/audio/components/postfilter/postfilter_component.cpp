@@ -105,7 +105,7 @@ uint32_t PostfilterComponent::init_apu(const InitPostfilterParam& param,
   p_cmd->header.process_mode = Wien2::Apu::FilterMode;
   p_cmd->header.event_type   = Wien2::Apu::InitEvent;
 
-  /* Note: Spritzer supports only stereo format. */
+  /* Note: CXD5602 supports only stereo format. */
 
   p_cmd->init_postfilter_cmd.ch_num    = param.channel_num;
   p_cmd->init_postfilter_cmd.bit_width = static_cast<Wien2::AudioPcmBitWidth>(param.bit_width);

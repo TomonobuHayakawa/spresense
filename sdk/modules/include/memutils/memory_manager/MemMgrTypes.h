@@ -45,7 +45,7 @@
  * @{
  * @file   MemMgeTypes.h
  * @brief  Types definitions for "Memory Manager".
- * @author Spritzer Media SW Team
+ * @author CXD5602 Media SW Team
  */
 
 #include <stdio.h>

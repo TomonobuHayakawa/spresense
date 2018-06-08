@@ -44,8 +44,8 @@
 
 /**
  * @file       CMN_SimpleFifo.h
- * @brief      Spritzer Sipmle Fifo API
- * @author     Spritzer Media SW Team
+ * @brief      CXD5602 Sipmle Fifo API
+ * @author     CXD5602 Media SW Team
  * @note       
  * @attention  
  */
@@ -641,7 +641,7 @@ size_t CMN_SimpleFifoCopyFromPeekHandleWithSpecificCopier(
  * order of update data contents and WP/RP for the purpose.
  *
  * @section how-to-use How to use
- * To use this API, include header file CMN_SimpleFifo.h. In Spritzer build system, add the following line in your C/C++ code.
+ * To use this API, include header file CMN_SimpleFifo.h. In CXD5602 build system, add the following line in your C/C++ code.
  * @code
  * #include <common/CMN_SimpleFifo.h>
  * @endcode

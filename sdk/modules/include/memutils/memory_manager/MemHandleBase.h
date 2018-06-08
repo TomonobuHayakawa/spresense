@@ -50,7 +50,7 @@
  * @{
  * @file MemHandleBase.h
  * @brief  Memory Manager Lite Memory Handle Base class API
- * @author Spritzer Media SW Team
+ * @author CXD5602 Media SW Team
  */
 
 #include "memutils/common_utils/common_errcode.h"

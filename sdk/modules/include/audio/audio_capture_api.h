@@ -45,8 +45,8 @@
  * @{
  *
  * @file       audio_capture_api.h
- * @brief      Spritzer Audio Capture API
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio Capture API
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

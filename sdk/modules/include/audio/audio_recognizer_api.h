@@ -45,8 +45,8 @@
  * @{
  *
  * @file       audio_recognizer_api.h
- * @brief      Spritzer Audio Recognizer API
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio Recognizer API
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

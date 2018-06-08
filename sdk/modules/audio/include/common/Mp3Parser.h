@@ -212,7 +212,7 @@
 
 #define PA3PARSER_FILESEEK_ORIGIN_END  2
 #else
-/*--------------------- for Spritzer --------------------*/
+/*--------------------- for CXD5602 --------------------*/
 
 /* ファイルseek時の「origin指定＝ファイル先頭」 */
 

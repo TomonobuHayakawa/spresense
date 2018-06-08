@@ -45,8 +45,8 @@
  * @{
  *
  * @file       audio_player_api.h
- * @brief      Spritzer Audio Player API
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio Player API
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

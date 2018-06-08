@@ -37,7 +37,7 @@
 -include $(SDKDIR)/Make.defs
 -include src$(DELIM)Make.defs
 
-# T.B.D: spritzer is only ARMv7-M
+# T.B.D: CXD5602 is only ARMv7-M
 
 ARCH_SUBDIR = armv7-m
 

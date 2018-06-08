@@ -50,7 +50,7 @@
  *
  * @file   Manager.h
  * @brief  Memory Manager API
- * @author Spritzer Media SW Team
+ * @author CXD5602 Media SW Team
  */
 
 #include "memutils/common_utils/common_errcode.h"

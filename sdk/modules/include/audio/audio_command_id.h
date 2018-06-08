@@ -45,8 +45,8 @@
  * @{
  *
  * @file       audio_command_id.h
- * @brief      Spritzer Audio Command ID
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio Command ID
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

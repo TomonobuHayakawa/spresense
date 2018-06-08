@@ -47,8 +47,8 @@
  * @{
  *
  * @file       audio_comomn_defs.h
- * @brief      Spritzer Audio Common Definitions
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio Common Definitions
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

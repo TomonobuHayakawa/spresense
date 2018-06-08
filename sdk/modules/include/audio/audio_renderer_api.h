@@ -45,8 +45,8 @@
  * @{
  *
  * @file       audio_renderer_api.h
- * @brief      Spritzer Audio Renderer API
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio Renderer API
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

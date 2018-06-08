@@ -47,8 +47,8 @@
  * @{
  *
  * @file       audio_effector_api.h
- * @brief      Spritzer Audio Effector API
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio Effector API
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

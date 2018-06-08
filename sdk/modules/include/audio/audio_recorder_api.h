@@ -45,8 +45,8 @@
  * @{
  *
  * @file       audio_recorder_api.h
- * @brief      Spritzer Audio Recorder API
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio Recorder API
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

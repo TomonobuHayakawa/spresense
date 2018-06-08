@@ -3,7 +3,7 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-mainmenu "SPRITZER SDK Configuration"
+mainmenu "SPRESENSE SDK Configuration"
 
 config SDKDIR
 	string

@@ -104,10 +104,10 @@ static INLINE size_t Chateau_CountSemaphore(Chateau_sem_handle_t h) {
 #define Chateau_StartCyclicHandler(h) F_ASSERT(sta_cyc(h) == E_OK)
 #define Chateau_StopCyclicHandler(h) F_ASSERT(stp_cyc(h) == E_OK)
 
-#elif defined(_SPRITZER_OS) /* For Spritzer */
+#elif defined(_SPRESENSE_OS) /* For CXD5602 */
 #include "board_config.h"
 #include <os_wrapper.h>
-#include <spritzer.h>
+#include <spresense.h>
 
 #define TIME_POLLING	TMO_POL
 #define TIME_FOREVER	(unsigned)TMO_FEVR

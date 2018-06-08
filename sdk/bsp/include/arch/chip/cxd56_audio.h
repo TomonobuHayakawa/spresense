@@ -46,8 +46,8 @@
  * @{
  *
  * @file       cxd56_audio.h
- * @brief      Spritzer Audio Driver API
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio Driver API
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

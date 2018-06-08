@@ -47,8 +47,8 @@
  * @{
  *
  * @file       audio_high_level_api.h
- * @brief      Spritzer Audio High Level API
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio High Level API
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

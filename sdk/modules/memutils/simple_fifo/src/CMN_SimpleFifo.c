@@ -16,8 +16,6 @@
 #include <stddef.h>
 #include <assert.h>
 
-//#include <spritzer.h> /* for __DSB() and __DMB() */
-
 static inline void __DMB(void) { asm volatile ("dmb"); }
 static inline void __DSB(void) { asm volatile ("dsb"); }
 

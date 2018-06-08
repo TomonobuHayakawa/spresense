@@ -216,7 +216,7 @@ uint32_t DecoderComponent::init_apu(const InitDecCompParam& param,
   p_apu_cmd->header.process_mode = Apu::DecMode;
   p_apu_cmd->header.event_type   = Apu::InitEvent;
 
-  /* Note: Spritzer supports only stereo format. */
+  /* Note: CXD5602 supports only stereo format. */
 
   p_apu_cmd->init_dec_cmd.codec_type     = param.codec_type;
   p_apu_cmd->init_dec_cmd.channel_num    = param.channel_num;
@@ -242,7 +242,7 @@ uint32_t DecoderComponent::init_apu(const InitDecCompParam& param,
       p_apu_cmd->init_dec_cmd.out_pcm_param.sampling_rate = 48000;
     }
 
-  /* Note: Spritzer supports only stereo format. */
+  /* Note: CXD5602 supports only stereo format. */
 
   p_apu_cmd->init_dec_cmd.out_pcm_param.channel_config =
     AUD_PCM_CH_CONFIG_2_0;

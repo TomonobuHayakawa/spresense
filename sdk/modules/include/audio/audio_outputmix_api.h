@@ -45,8 +45,8 @@
  * @{
  *
  * @file       audio_outputmix_api.h
- * @brief      Spritzer Audio OutputMix API
- * @author     Spritzer Audio SW Team
+ * @brief      CXD5602 Audio OutputMix API
+ * @author     CXD5602 Audio SW Team
  */
 
 /****************************************************************************

@@ -110,7 +110,7 @@ extern "C"
  * @retval -ENOMEM: No memory space left
  *
  * @note MP shared memory area is always allocated in meaningful size for
- * platform. On spritzer, its size is 128KB.
+ * platform. On CXD5602, its size is 128KB.
  */
 
 int mpshm_init(mpshm_t *shm, key_t key, size_t size);
