@@ -1071,6 +1071,11 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
       return &priv->spidev;
     }
 
+  /* Configure clocking */
+
+  cxd56_spi_clock_enable(port);
+  priv->spibasefreq = cxd56_get_spi_baseclock(port);
+
   /* DMA settings */
 
 #if defined(CONFIG_CXD56_DMAC_SPI4_TX) || defined(CONFIG_CXD56_DMAC_SPI4_RX)
@@ -1122,11 +1127,6 @@ FAR struct spi_dev_s *cxd56_spibus_initialize(int port)
       sem_init(&priv->dmasem, 0, 0);
     }
 #endif
-
-  /* Configure clocking */
-
-  cxd56_spi_clock_enable(port);
-  priv->spibasefreq = cxd56_get_spi_baseclock(port);
 
   /* CS control */
 
