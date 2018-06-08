@@ -452,8 +452,8 @@ static void cxd56_reqcomplete(FAR struct cxd56_ep_s *privep, int16_t result);
 static int cxd56_wrrequest(FAR struct cxd56_ep_s *privep);
 static int cxd56_rdrequest(FAR struct cxd56_ep_s *privep);
 static void cxd56_cancelrequests(FAR struct cxd56_ep_s *privep);
+static void cxd56_usbdevreset(FAR struct cxd56_usbdev_s *priv);
 static void cxd56_usbreset(FAR struct cxd56_usbdev_s *priv);
-static void cxd56_reconstructep(FAR struct cxd56_usbdev_s *priv);
 
 /* Interrupt handling */
 
@@ -468,9 +468,9 @@ static int cxd56_vbusninterrupt(int irq, FAR void *context, FAR void *arg);
 
 /* Initialization operations */
 
-static inline void cxd56_ep0initialize(FAR struct cxd56_usbdev_s *priv);
+static inline void cxd56_ep0hwinitialize(FAR struct cxd56_usbdev_s *priv);
 static void cxd56_ctrlinitialize(FAR struct cxd56_usbdev_s *priv);
-static void cxd56_usbhwinit(FAR struct cxd56_usbdev_s *priv);
+static void cxd56_epinitialize(FAR struct cxd56_usbdev_s *priv);
 
 /* Un-initialization operations */
 
@@ -1951,14 +1951,14 @@ static int cxd56_sysinterrupt(int irq, FAR void *context, FAR void *arg)
 }
 
 /****************************************************************************
- * Name: cxd56_epinitialize
+ * Name: cxd56_ep0hwinitialize
  *
  * Description:
  *   Initialize endpoints.  This is logically a part of cxd56_ctrlinitialize
  *
  ****************************************************************************/
 
-static void cxd56_ep0initialize(FAR struct cxd56_usbdev_s *priv)
+static void cxd56_ep0hwinitialize(FAR struct cxd56_usbdev_s *priv)
 {
   uint32_t maxp  = g_epinfo[0].maxpacket;
   uint32_t bufsz = g_epinfo[0].bufsize / 4;
@@ -1992,23 +1992,6 @@ static void cxd56_ep0initialize(FAR struct cxd56_usbdev_s *priv)
   putreg32(USB_ET(USB_EP_CONTROL) | USB_F, CXD56_USB_IN_EP_CONTROL(0));
   putreg32(USB_ET(USB_EP_CONTROL) | USB_SNAK, CXD56_USB_OUT_EP_CONTROL(0));
   putreg32(maxp << 19, CXD56_USB_DEV_UDC_EP(0));
-
-  /* Set up the standard stuff */
-
-  memset(&priv->eplist[0], 0, sizeof(struct cxd56_ep_s));
-  priv->eplist[0].ep.ops = &g_epops;
-  priv->eplist[0].dev    = priv;
-
-  /* The index, i, is the physical endpoint address;  Map this
-   * to a logical endpoint address usable by the class driver.
-   */
-
-  priv->eplist[0].epphy    = 0;
-  priv->eplist[0].ep.eplog = g_epinfo[0].addr;
-
-  /* Setup the endpoint-specific stuff */
-
-  priv->eplist[0].ep.maxpacket = g_epinfo[0].maxpacket;
 }
 
 /****************************************************************************
@@ -2041,14 +2024,14 @@ static void cxd56_ctrlinitialize(FAR struct cxd56_usbdev_s *priv)
 }
 
 /****************************************************************************
- * Name: cxd56_usbreset
+ * Name: cxd56_usbdevreset
  *
  * Description:
- *   Reset Usb engine
+ *   Reset USB engine
  *
  ****************************************************************************/
 
-static void cxd56_usbreset(FAR struct cxd56_usbdev_s *priv)
+static void cxd56_usbdevreset(FAR struct cxd56_usbdev_s *priv)
 {
   uint32_t mask;
   int i;
@@ -2097,7 +2080,7 @@ static void cxd56_usbreset(FAR struct cxd56_usbdev_s *priv)
 
   cxd56_ctrlinitialize(priv);
 
-  cxd56_ep0initialize(priv);
+  cxd56_ep0hwinitialize(priv);
 
   for (i = 1; i < CXD56_NENDPOINTS; i++)
     {
@@ -2121,10 +2104,6 @@ static void cxd56_usbreset(FAR struct cxd56_usbdev_s *priv)
           putreg32(USB_ET(info->attr) | USB_SNAK, CXD56_USB_OUT_EP_CONTROL(i));
         }
     }
-
-  /* Expose only the standard EP0 */
-
-  priv->usbdev.ep0 = &priv->eplist[0].ep;
 
   /* Enable device interrupts */
 
@@ -2855,20 +2834,41 @@ static int cxd56_pullup(FAR struct usbdev_s *dev, bool enable)
 }
 
 /****************************************************************************
- * Name: cxd56_usbhwinit
+ * Name: cxd56_epinitialize
  *
  * Description:
- *   Initialize USB hardware
+ *   Initialize all of the endpoint data
  *
  ****************************************************************************/
 
-static void cxd56_usbhwinit(FAR struct cxd56_usbdev_s *priv)
+static void cxd56_epinitialize(FAR struct cxd56_usbdev_s *priv)
 {
   int i;
 
   /* Initialize the device state structure */
 
   priv->usbdev.ops = &g_devops;
+
+  /* Set up the standard stuff */
+
+  memset(&priv->eplist[0], 0, sizeof(struct cxd56_ep_s));
+  priv->eplist[0].ep.ops = &g_epops;
+  priv->eplist[0].dev    = priv;
+
+  /* The index, i, is the physical endpoint address;  Map this
+   * to a logical endpoint address usable by the class driver.
+   */
+
+  priv->eplist[0].epphy    = 0;
+  priv->eplist[0].ep.eplog = g_epinfo[0].addr;
+
+  /* Setup the endpoint-specific stuff */
+
+  priv->eplist[0].ep.maxpacket = g_epinfo[0].maxpacket;
+
+  /* Expose only the standard EP0 */
+
+  priv->usbdev.ep0 = &priv->eplist[0].ep;
 
   /* Initilialize USB hardware */
 
@@ -2902,10 +2902,6 @@ static void cxd56_usbhwinit(FAR struct cxd56_usbdev_s *priv)
           privep->in = 1;
         }
     }
-
-  cxd56_usbreset(priv);
-
-  return;
 }
 
 /****************************************************************************
@@ -2923,8 +2919,6 @@ static void cxd56_usbhwuninit(void)
   /* USB Device Reset */
 
   putreg32(0, CXD56_USB_RESET);
-
-  return;
 }
 
 /****************************************************************************
@@ -2954,7 +2948,7 @@ static int cxd56_vbusinterrupt(int irq, FAR void *context, FAR void *arg)
 
   if (priv->driver)
     {
-      cxd56_reconstructep(priv);
+      cxd56_usbreset(priv);
     }
 
   /* Notify attach signal.
@@ -3067,9 +3061,9 @@ void up_usbinitialize(void)
   memset(&g_usbdev, 0, sizeof(struct cxd56_usbdev_s));
   g_usbdev.avail = 0xff;
 
-  /* Initialize USB hardware */
+  /* Initialize endpoint data */
 
-  cxd56_usbhwinit(&g_usbdev);
+  cxd56_epinitialize(&g_usbdev);
 
   /* Enable interrupts */
 
@@ -3152,7 +3146,7 @@ int usbdev_register(FAR struct usbdevclass_driver_s *driver)
     }
 #endif
 
-  /* get HighVoltage lock and wake lock */
+  /* Take freqlock to keep clock faster */
 
   up_pm_acquire_freqlock(&g_hv_lock);
   up_pm_acquire_wakelock(&g_wake_lock);
@@ -3169,11 +3163,6 @@ int usbdev_register(FAR struct usbdevclass_driver_s *driver)
       usbtrace(TRACE_DEVERROR(CXD56_TRACEERR_BINDFAILED), (uint16_t)-ret);
       g_usbdev.driver = NULL;
       return ret;
-    }
-
-  if (cxd56_iscableconnected())
-    {
-      cxd56_reconstructep(&g_usbdev);
     }
 
   /* Enable interrupts */
@@ -3241,7 +3230,7 @@ int usbdev_unregister(FAR struct usbdevclass_driver_s *driver)
 }
 
 /************************************************************************************
- * Name: cxd56_reconstructep
+ * Name: cxd56_usbreset
  *
  * Description:
  *   Reinitialize the endpoint and restore the EP configuration
@@ -3249,14 +3238,14 @@ int usbdev_unregister(FAR struct usbdevclass_driver_s *driver)
  *
  ************************************************************************************/
 
-static void cxd56_reconstructep(FAR struct cxd56_usbdev_s *priv)
+static void cxd56_usbreset(FAR struct cxd56_usbdev_s *priv)
 {
   uint32_t mask;
   int i;
 
   /* USB reset assert */
 
-  cxd56_usbreset(priv);
+  cxd56_usbdevreset(priv);
 
   /* Check all endpoints (except EP0) */
 
