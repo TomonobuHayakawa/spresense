@@ -127,6 +127,11 @@ if __name__ == '__main__':
         print('Any white spaces not allowed in <appname>', file=sys.stderr)
         sys.exit(1)
 
+    if not os.path.exists('Application.mk'):
+        print("This tool must run on the directory where 'Application.mk' file exists",
+              file=sys.stderr)
+        sys.exit(2)
+
     try:
         os.mkdir(targetdir)
     except:
@@ -145,5 +150,5 @@ if __name__ == '__main__':
     with open('.gitignore', "w") as f:
         f.write(GITIGNORE)
 
-    print("New %s app successfully created. Please 'make clean' from sdk first.")
+    print("New '%s' app successfully created. Please 'make clean' from sdk first." % appname)
 
