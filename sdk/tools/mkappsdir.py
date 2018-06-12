@@ -36,12 +36,12 @@ if __name__ == '__main__':
     verbose = opts.verbose
 
     srcdir = os.path.join('..', TEMPLATENAME)
-    targetdir = os.path.join('..', opts.appname)
+    targetdir = os.path.join('..', opts.dirname)
 
     # Sanity checks
 
-    if re.search(r'\s', opts.appname):
-        print('Any white spaces not allowed in <appname>', file=sys.stderr)
+    if re.search(r'\s', opts.dirname):
+        print('Any white spaces not allowed in <dir name>', file=sys.stderr)
         sys.exit(1)
 
     if not os.path.exists(srcdir):
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         dst = os.path.join(targetdir, f)
         if verbose > 0:
             print('Copying file %s -> %s' % (src, dst))
-        replaced_copy(src, dst, opts.appname)
+        replaced_copy(src, dst, opts.dirname)
 
     # Finally, replace menu description
 
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     if opts.desc:
         desc = opts.desc
     else:
-        desc = opts.appname.capitalize()
+        desc = opts.dirname.capitalize()
 
     pat = re.compile(r'MENUDESC\s*=\s*".*"')
     with open(makefile, "r") as f:
