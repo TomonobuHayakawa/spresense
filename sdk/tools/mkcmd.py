@@ -7,13 +7,11 @@ import re
 
 TOOL_DESCRIPTION = '''
 Create a new application
+'''
 
-  This tool create a new application in current directory.
-  So you need to move to where you want before run this tool.
-
-  e.g.
-  $ cd examples
-  $ ../sdk/tools/mkapp.py myapp
+EPILOG = '''This tool create a new application at examples directory.
+You can use '-d' option to change application directory, it is a same level
+of sdk and examples.
 '''
 
 KCONFIG_TMPL = '''
@@ -107,10 +105,13 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=TOOL_DESCRIPTION)
+                                     description=TOOL_DESCRIPTION,
+                                     epilog=EPILOG)
     parser.add_argument('appname', metavar='<app name>', type=str, help='New application name')
     parser.add_argument('desc', type=str, nargs="?", help='Menu description')
-    parser.add_argument('-v', '--verbose', action='count', default=0, help='verbose messages')
+    parser.add_argument('-d', '--basedir', type=str, default='examples',
+                        help='Base directory to create new application')
+    parser.add_argument('-v', '--verbose', action='count', default=0, help='Verbose messages')
     opts = parser.parse_args()
 
     verbose = opts.verbose
@@ -119,7 +120,10 @@ if __name__ == '__main__':
     optprefix = os.path.basename(os.getcwd()).upper()
     configname = optprefix + '_' + appname.upper()
     maincsrcfile = appname + '_main.c'
+    basedir = os.path.join('..', opts.basedir)
     targetdir = appname
+
+    os.chdir(basedir)
 
     # Sanity checks
 
@@ -151,4 +155,3 @@ if __name__ == '__main__':
         f.write(GITIGNORE)
 
     print("New '%s' app successfully created. Please 'make clean' from sdk first." % appname)
-
