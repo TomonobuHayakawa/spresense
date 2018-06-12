@@ -342,6 +342,28 @@ void cxd56_img_uart_clock_disable(void);
 
 uint32_t cxd56_get_img_uart_baseclock(void);
 
+#if defined(CONFIG_CXD56_CISIF)
+/****************************************************************************
+ * Name: cxd56_img_cisif_clock_enable
+ *
+ * Description:
+ *   Enable cisif clock.
+ *
+ ****************************************************************************/
+
+void cxd56_img_cisif_clock_enable(void);
+
+/****************************************************************************
+ * Name: cxd56_img_cisif_clock_dsiable
+ *
+ * Description:
+ *   Disable cisif clock.
+ *
+ ****************************************************************************/
+
+void cxd56_img_cisif_clock_disable(void);
+#endif
+
 /****************************************************************************
  * Name: cxd56_get_com_baseclock
  *

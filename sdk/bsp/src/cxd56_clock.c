@@ -1159,6 +1159,36 @@ void cxd56_img_uart_clock_disable()
   disable_pwd(PDID_APP_SUB);
 }
 
+#if defined(CONFIG_CXD56_CISIF)
+/****************************************************************************
+ * Name: cxd56_img_cisif_clock_enable
+ *
+ * Description:
+ *   Enable img cisif clock.
+ *
+ ****************************************************************************/
+
+void cxd56_img_cisif_clock_enable(void)
+{
+  enable_pwd(PDID_APP_SUB);
+  cxd56_img_clock_enable();
+}
+
+/****************************************************************************
+ * Name: cxd56_img_cisif_clock_disable
+ *
+ * Description:
+ *   Disable img cisif clock.
+ *
+ ****************************************************************************/
+
+void cxd56_img_cisif_clock_disable(void)
+{
+  cxd56_img_clock_disable();
+  disable_pwd(PDID_APP_SUB);
+}
+#endif
+
 static uint32_t cxd56_get_clock(enum clock_source cs)
 {
   if (!rcosc_clock)

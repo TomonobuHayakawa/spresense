@@ -49,6 +49,7 @@
 
 #include "up_arch.h"
 
+#include "cxd56_clock.h"
 #include "chip/cxd56_cisif.h"
 #include "cxd56_cisif.h"
 
@@ -748,6 +749,9 @@ int cxd56_cisifinit(void)
       return -EPERM;
     }
 
+  /* enable CISIF clock */
+  cxd56_img_cisif_clock_enable();
+
   /* disable CISIF interrupt */
   cisif_reg_write(CISIF_INTR_DISABLE, ALL_CLEAR_INT);
   cisif_reg_write(CISIF_INTR_CLEAR, ALL_CLEAR_INT);
@@ -784,6 +788,9 @@ int cxd56_cisiffinalize(void)
   /* disable CISIF interrupt */
   cisif_reg_write(CISIF_INTR_DISABLE, ALL_CLEAR_INT);
   cisif_reg_write(CISIF_INTR_CLEAR, ALL_CLEAR_INT);
+
+  /* disable CISIF clock */
+  cxd56_img_cisif_clock_disable();
 
   g_state = STATE_STANDBY;
 
