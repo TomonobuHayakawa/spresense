@@ -16,7 +16,7 @@ of sdk and examples.
 
 KCONFIG_TMPL = '''
 config {configname}
-	bool "{appname} app"
+	bool "{menudesc}"
 	default n
 	---help---
 		Enable the {appname} app
@@ -96,9 +96,10 @@ GITIGNORE = '''/Make.dep
 /*.src
 '''
 
-def create_from_template(template, filename, appname, configname):
+def create_from_template(template, filename, appname, configname, menudesc=None):
     with open(filename, "w") as f:
-        f.write(template.format(appname=appname, configname=configname))
+        f.write(template.format(appname=appname, configname=configname,
+                                menudesc=menudesc))
 
 if __name__ == '__main__':
 
@@ -117,11 +118,15 @@ if __name__ == '__main__':
     verbose = opts.verbose
 
     appname = opts.appname
-    optprefix = os.path.basename(os.getcwd()).upper()
+    optprefix = opts.basedir.upper()
     configname = optprefix + '_' + appname.upper()
     maincsrcfile = appname + '_main.c'
     basedir = os.path.join('..', opts.basedir)
     targetdir = appname
+    if opts.desc:
+        menudesc = opts.desc
+    else:
+        menudesc = '%s app' % appname
 
     os.chdir(basedir)
 
@@ -146,7 +151,7 @@ if __name__ == '__main__':
 
     os.chdir(targetdir)
 
-    create_from_template(KCONFIG_TMPL, 'Kconfig', appname, configname)
+    create_from_template(KCONFIG_TMPL, 'Kconfig', appname, configname, menudesc)
     create_from_template(MAKEFILE_TMPL, 'Makefile', appname, configname)
     create_from_template(MAKEDEFS_TMPL, 'Make.defs', appname, configname)
     create_from_template(MAINCSRC_TMPL, maincsrcfile, appname, configname)
