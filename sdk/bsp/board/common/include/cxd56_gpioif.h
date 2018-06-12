@@ -46,23 +46,6 @@
 
 #include <nuttx/irq.h>
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define PIN_FLOAT               (0) /**< Floating */
-#define PIN_PULLUP              (1) /**< Internal Weak Pull Up */
-#define PIN_PULLDOWN            (2) /**< Internal Weak Pull Down */
-#define PIN_BUSKEEPER           (3) /**< Internal Bus-Keeper */
-
-#define INT_HIGH_LEVEL          (2) /**< High Level */
-#define INT_LOW_LEVEL           (3) /**< Low Level */
-#define INT_RISING_EDGE         (4) /**< Rising Edge */
-#define INT_FALLING_EDGE        (5) /**< Falling Edge */
-#define INT_BOTH_EDGE           (7) /**< Both Edge */
-
-#ifndef __ASSEMBLY__
-
 #undef EXTERN
 #if defined(__cplusplus)
 #define EXTERN extern "C"
@@ -71,6 +54,45 @@ extern "C"
 #else
 #define EXTERN extern
 #endif
+
+/**
+ * @defgroup gpioif GPIO Interface driver
+ * @{
+ */
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/**
+ * @defgroup gpioif_defs Defines
+ * @{
+ */
+
+/**
+ * @name Pin Pull Setting
+ * Pin floating, pull up, pull down definitions
+ */
+
+#define PIN_FLOAT               (0) /**< Floating */
+#define PIN_PULLUP              (1) /**< Internal Weak Pull Up */
+#define PIN_PULLDOWN            (2) /**< Internal Weak Pull Down */
+#define PIN_BUSKEEPER           (3) /**< Internal Bus-Keeper */
+
+/**
+ * @name GPIO Interrupt Setting
+ * GPIO interrupt level and edge trigger types
+ */
+
+#define INT_HIGH_LEVEL          (2) /**< High Level */
+#define INT_LOW_LEVEL           (3) /**< Low Level */
+#define INT_RISING_EDGE         (4) /**< Rising Edge */
+#define INT_FALLING_EDGE        (5) /**< Falling Edge */
+#define INT_BOTH_EDGE           (7) /**< Both Edge */
+
+/* @} gpioif_defs */
+
+#ifndef __ASSEMBLY__
 
 /****************************************************************************
  * Public Function Prototypes
@@ -180,6 +202,7 @@ int board_gpio_intstatus(uint32_t pin, int *mode, bool *filter, bool *enabled);
 
 int board_gpio_int(uint32_t pin, bool enable);
 
+/* @} gpioif */
 
 #undef EXTERN
 #if defined(__cplusplus)
