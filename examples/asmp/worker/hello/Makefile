@@ -59,10 +59,6 @@ CELFFLAGS += -I$(APPDIR)
 CELFFLAGS += -I$(SDKDIR)/modules/asmp/worker
 endif
 
-ifneq ($(CONFIG_EXAMPLES_ASMP_WORKER_STACKSIZE),)
-WORKERSTACKSIZE = $(CONFIG_EXAMPLES_ASMP_WORKER_STACKSIZE)
-endif
-
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
 
@@ -79,15 +75,8 @@ $(AOBJS): %$(OBJEXT): %.S
 $(BIN): $(COBJS) $(AOBJS)
 	@echo "LD: $<"
 	$(Q) $(LD) $(LDRAWELFFLAGS) $(LDLIBPATH) -o $@ $(ARCHCRT0OBJ) $^ $(LDLIBS)
+	$(Q) $(STRIP) -d $(BIN)
 
 clean:
 	$(call DELFILE, $(BIN))
 	$(call CLEAN)
-
-install: $(BIN)
-	$(Q) mkdir -p $(ROMFS_DIR)
-ifeq ($(WINTOOL),y)
-	$(Q) $(STRIP) -d -o "$(shell cygpath -w $(ROMFS_DIR)/$(BIN))" $(BIN)
-else
-	$(Q) $(STRIP) -d -o $(ROMFS_DIR)/$(BIN) $(BIN)
-endif
