@@ -59,7 +59,20 @@
 #undef PINCONF_UART2_CTS
 #define PINCONF_UART2_CTS                   PINCONF(PIN_UART2_CTS,      1, 1, 0, PINCONF_PULLDOWN)
 
+#undef PINCONF_SPI4_CS_X
+#undef PINCONF_SPI4_SCK
 #undef PINCONF_SPI4_MOSI
+#define PINCONF_SPI4_CS_X                   PINCONF(PIN_SPI4_CS_X,      1, 0, 1, 0)
+#define PINCONF_SPI4_SCK                    PINCONF(PIN_SPI4_SCK,       1, 0, 1, 0)
 #define PINCONF_SPI4_MOSI                   PINCONF(PIN_SPI4_MOSI,      1, 0, 1, 0)
+
+#undef PINCONF_PWM0
+#undef PINCONF_PWM1
+#undef PINCONF_PWM2
+#undef PINCONF_PWM3
+#define PINCONF_PWM0                        PINCONF(PIN_PWM0,           1, 0, 1, 0)
+#define PINCONF_PWM1                        PINCONF(PIN_PWM1,           1, 0, 1, 0)
+#define PINCONF_PWM2                        PINCONF(PIN_PWM2,           1, 0, 1, 0)
+#define PINCONF_PWM3                        PINCONF(PIN_PWM3,           1, 0, 1, 0)
 
 #endif  /* __BSP_BOARD_SPRESENSE_INCLUDE_BOARD_PINCONFIG_H */
