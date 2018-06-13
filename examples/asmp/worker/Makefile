@@ -1,8 +1,7 @@
 ############################################################################
 # asmp/worker/Makefile
 #
-#   Copyright (C) 2012, 2014 Gregory Nutt. All rights reserved.
-#   Author: Gregory Nutt <gnutt@nuttx.org>
+#   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -33,71 +32,33 @@
 #
 ############################################################################
 
-.NOTPARALLEL:
-
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
-ALL_SUBDIRS = hello
-BUILD_SUBDIRS = hello
+WORKER_ELFS = hello/hello
 
-ASMP_DIR = $(APPDIR)/asmp
-WORKER_DIR = $(ASMP_DIR)/worker
-ROMFS_DIR = $(WORKER_DIR)/romfs
-ROMFS_IMG = $(WORKER_DIR)/romfs.img
-ROMFS_HDR = $(WORKER_DIR)/romfs.h
-DIRLIST_HDR = $(WORKER_DIR)/dirlist.h
-SYMTAB_SRC = $(WORKER_DIR)/symtab.c
+SUBDIRS = $(dir $(WORKER_ELFS))
 
 define DIR_template
 $(1)_$(2):
-	$(Q) $(MAKE) -C $(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)" CROSSDEV=$(CROSSDEV)
+	$(Q) $(MAKE) -C $(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 endef
 
-all: $(ROMFS_HDR) $(DIRLIST_HDR) $(SYMTAB_SRC)
-.PHONY: all build clean install populate depend lib
-
-$(foreach DIR, $(BUILD_SUBDIRS), $(eval $(call DIR_template,$(DIR),build, all)))
-$(foreach DIR, $(ALL_SUBDIRS), $(eval $(call DIR_template,$(DIR),clean,clean)))
-$(foreach DIR, $(BUILD_SUBDIRS), $(eval $(call DIR_template,$(DIR),install,install)))
-
-# Build program(s) in each sud-directory
-
-build: $(foreach DIR, $(BUILD_SUBDIRS), $(DIR)_build)
-
-# Install each program in the romfs directory
-
-install: $(foreach DIR, $(BUILD_SUBDIRS), $(DIR)_install)
-
-# Create the romfs directory
-
-$(ROMFS_DIR):
-	$(Q) mkdir $(ROMFS_DIR)
-
-# Populate the romfs directory
-
-populate:  $(ROMFS_DIR) build install
+all: romfs.h
+.PHONY: all clean depend lib
 
 # Create the romfs.img file from the populated romfs directory
 
-$(ROMFS_IMG): populate
-	$(Q) genromfs -f $@ -d $(ROMFS_DIR) -V "WORKER"
+romfs.img: $(WORKER_ELFS)
+	$(Q) mkdir -p romfs
+	$(Q) cp $^ romfs
+	$(Q) genromfs -f $@ -d romfs -V "WORKER"
 
 # Create the romfs.h header file from the romfs.img file
 
-$(ROMFS_HDR) : $(ROMFS_IMG)
-	$(Q) (cd $(WORKER_DIR); xxd -i romfs.img | sed -e "s/^unsigned/static const unsigned/g" >$@)
-
-# Create the dirlist.h header file from the romfs directory
-
-$(DIRLIST_HDR) : populate
-	$(Q) $(WORKER_DIR)/mkdirlist.sh $(ROMFS_DIR) >$@
-
-# Create the exported symbol table
-
-$(SYMTAB_SRC): build
-	$(Q) $(WORKER_DIR)/mksymtab.sh $(ROMFS_DIR) >$@
+romfs.h: romfs.img
+	$(Q) xxd -i $< | sed -e "s/^unsigned/static const unsigned/g" >$@
 
 # Build ASMP worker library
 
@@ -105,6 +66,11 @@ lib/libasmpw.a:
 	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
 lib: lib/libasmpw.a
+
+# Build workers
+
+$(WORKER_ELFS): lib
+	$(Q) $(MAKE) -C $(dir $@) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
 .depend:
 	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) depend
@@ -117,6 +83,7 @@ depend: .depend
 lib_clean:
 	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" clean
 
-clean: $(foreach DIR, $(ALL_SUBDIRS), $(DIR)_clean) lib_clean
-	$(Q) rm -f $(ROMFS_HDR) $(DIRLIST_HDR) $(ROMFS_IMG) $(SYMTAB_SRC)
-	$(Q) rm -rf $(ROMFS_DIR)
+clean: $(foreach DIR, $(SUBDIRS), $(DIR)_clean) lib_clean
+	$(Q) rm -rf romfs romfs.img romfs.h
+
+$(foreach DIR, $(SUBDIRS), $(eval $(call DIR_template,$(DIR),clean,clean)))
