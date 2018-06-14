@@ -155,9 +155,9 @@ static bool app_init_attention(void)
   return printAudCmdResult(command.header.command_code, result);
 }
 
-static bool app_act_audio_sub_system(void)
+static bool app_create_audio_sub_system(void)
 {
-  /* Activate manager of AudioSubSystem. */
+  /* Create manager of AudioSubSystem. */
 
   AudioSubSystemIDs ids;
   ids.app         = MSGQ_AUD_APP;
@@ -169,7 +169,7 @@ static bool app_act_audio_sub_system(void)
   ids.effector    = 0xFF;
   ids.recognizer  = 0xFF;
 
-  AS_ActivateAudioSubSystem(ids);
+  AS_CreateAudioManager(ids);
 
   /* Set callback function of attention message */
 
@@ -184,7 +184,7 @@ static bool app_act_audio_sub_system(void)
 
 static void app_deact_audio_sub_system(void)
 {
-  AS_DeactivateAudioSubSystem();
+  AS_DeleteAudioManager();
 }
 
 static bool app_power_on(void)
@@ -469,9 +469,9 @@ extern "C" int audio_through_main(int argc, char *argv[])
       return 1;
     }
 
-  /* Next, Activate the features used by AudioSubSystem. */
+  /* Next, Create the features used by AudioSubSystem. */
 
-  if (!app_act_audio_sub_system())
+  if (!app_create_audio_sub_system())
     {
       printf("Error: act_audiosubsystem() failure.\n");
       return 1;

@@ -441,11 +441,11 @@ static bool app_init_attention(void)
   return printAudCmdResult(command.header.command_code, result);
 }
 
-static bool app_act_audio_sub_system(void)
+static bool app_create_audio_sub_system(void)
 {
   bool result = false;
 
-  /* Activate manager of AudioSubSystem. */
+  /* Create manager of AudioSubSystem. */
 
   AudioSubSystemIDs ids;
   ids.app         = MSGQ_AUD_APP;
@@ -457,7 +457,7 @@ static bool app_act_audio_sub_system(void)
   ids.effector    = 0xFF;
   ids.recognizer  = 0xFF;
 
-  AS_ActivateAudioSubSystem(ids);
+  AS_CreateAudioManager(ids);
 
   /* Set callback function of attention message */
 
@@ -468,30 +468,30 @@ static bool app_act_audio_sub_system(void)
     }
 
 
-  AsActRecorderParam_t recorder_act_param;
-  recorder_act_param.msgq_id.recorder      = MSGQ_AUD_RECORDER;
-  recorder_act_param.msgq_id.mng           = MSGQ_AUD_MGR;
-  recorder_act_param.msgq_id.dsp           = MSGQ_AUD_DSP;
-  recorder_act_param.pool_id.input         = INPUT_BUF_POOL;
-  recorder_act_param.pool_id.output        = ES_BUF_POOL;
-  recorder_act_param.pool_id.dsp           = ENC_APU_CMD_POOL;
+  AsCreateRecorderParam_t recorder_create_param;
+  recorder_create_param.msgq_id.recorder      = MSGQ_AUD_RECORDER;
+  recorder_create_param.msgq_id.mng           = MSGQ_AUD_MGR;
+  recorder_create_param.msgq_id.dsp           = MSGQ_AUD_DSP;
+  recorder_create_param.pool_id.input         = INPUT_BUF_POOL;
+  recorder_create_param.pool_id.output        = ES_BUF_POOL;
+  recorder_create_param.pool_id.dsp           = ENC_APU_CMD_POOL;
 
-  result = AS_CreateMediaRecorder(&recorder_act_param);
+  result = AS_CreateMediaRecorder(&recorder_create_param);
   if (!result)
     {
       printf("Error: AS_CreateMediaRecorder() failure. system memory insufficient!\n");
       return false;
     }
 
-  /* Activate renderer feature. */
+  /* Create renderer feature. */
 
-  AsActCaptureParam_t capture_act_param;
-  capture_act_param.msgq_id.dev0_req  = MSGQ_AUD_CAP;
-  capture_act_param.msgq_id.dev0_sync = MSGQ_AUD_CAP_SYNC;
-  capture_act_param.msgq_id.dev1_req  = 0xFF;
-  capture_act_param.msgq_id.dev1_sync = 0xFF;
+  AsCreateCaptureParam_t capture_create_param;
+  capture_create_param.msgq_id.dev0_req  = MSGQ_AUD_CAP;
+  capture_create_param.msgq_id.dev0_sync = MSGQ_AUD_CAP_SYNC;
+  capture_create_param.msgq_id.dev1_req  = 0xFF;
+  capture_create_param.msgq_id.dev1_sync = 0xFF;
 
-  result = AS_CreateCapture(&capture_act_param);
+  result = AS_CreateCapture(&capture_create_param);
   if (!result)
     {
       printf("Error: As_CreateCapture() failure. system memory insufficient!\n");
@@ -503,7 +503,7 @@ static bool app_act_audio_sub_system(void)
 
 static void app_deact_audio_sub_system(void)
 {
-  AS_DeactivateAudioSubSystem();
+  AS_DeleteAudioManager();
   AS_DeleteMediaRecorder();
   AS_DeleteCapture();
 }
@@ -988,9 +988,9 @@ extern "C" int recorder_main(int argc, char *argv[])
       return 1;
     }
 
-  /* Next, Activate the features used by AudioSubSystem. */
+  /* Next, Create the features used by AudioSubSystem. */
 
-  if (!app_act_audio_sub_system())
+  if (!app_create_audio_sub_system())
     {
       printf("Error: act_audiosubsystem() failure.\n");
       return 1;

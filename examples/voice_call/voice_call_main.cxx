@@ -159,11 +159,11 @@ static mpshm_t s_shm;
  * Private Functions
  ****************************************************************************/
 
-static bool app_act_audio_sub_system(void)
+static bool app_create_audio_sub_system(void)
 {
   bool result = false;
 
-  /* Activate manager of AudioSubSystem. */
+  /* Create manager of AudioSubSystem. */
 
   AudioSubSystemIDs ids;
   ids.app         = MSGQ_AUD_APP;
@@ -175,52 +175,52 @@ static bool app_act_audio_sub_system(void)
   ids.effector    = MSGQ_AUD_SOUND_EFFECT;
   ids.recognizer  = 0xFF;
 
-  AS_ActivateAudioSubSystem(ids);
+  AS_CreateAudioManager(ids);
 
-  /* Activate effector feature. */
+  /* Create effector feature. */
 
-  AsActEffectorParam_t effector_act_param;
-  effector_act_param.msgq_id.effector   = MSGQ_AUD_SOUND_EFFECT;
-  effector_act_param.msgq_id.mng        = MSGQ_AUD_MGR;
-  effector_act_param.msgq_id.recognizer = MSGQ_AUD_RCG_CMD;
-  effector_act_param.msgq_id.dsp        = MSGQ_AUD_DSP;
-  effector_act_param.pool_id.mic_in     = MIC_IN_BUF_POOL;
-  effector_act_param.pool_id.i2s_in     = I2S_IN_BUF_POOL;
-  effector_act_param.pool_id.sphp_out   = HP_OUT_BUF_POOL;
-  effector_act_param.pool_id.i2s_out    = I2S_OUT_BUF_POOL;
-  effector_act_param.pool_id.mfe_out    = MFE_OUT_BUF_POOL;
+  AsCreateEffectorParam_t effector_create_param;
+  effector_create_param.msgq_id.effector   = MSGQ_AUD_SOUND_EFFECT;
+  effector_create_param.msgq_id.mng        = MSGQ_AUD_MGR;
+  effector_create_param.msgq_id.recognizer = MSGQ_AUD_RCG_CMD;
+  effector_create_param.msgq_id.dsp        = MSGQ_AUD_DSP;
+  effector_create_param.pool_id.mic_in     = MIC_IN_BUF_POOL;
+  effector_create_param.pool_id.i2s_in     = I2S_IN_BUF_POOL;
+  effector_create_param.pool_id.sphp_out   = HP_OUT_BUF_POOL;
+  effector_create_param.pool_id.i2s_out    = I2S_OUT_BUF_POOL;
+  effector_create_param.pool_id.mfe_out    = MFE_OUT_BUF_POOL;
 
-  result = AS_CreateEffector(&effector_act_param);
+  result = AS_CreateEffector(&effector_create_param);
   if (!result)
     {
       printf("Error: AS_CreateEffector failure. system memory insufficient!\n");
       return false;
     }
 
-  /* Activate renderer feature. */
+  /* Create renderer feature. */
 
-  AsActRendererParam_t renderer_act_param;
-  renderer_act_param.msgq_id.dev0_req  = MSGQ_AUD_RND_SPHP;
-  renderer_act_param.msgq_id.dev0_sync = MSGQ_AUD_RND_SPHP_SYNC;
-  renderer_act_param.msgq_id.dev1_req  = MSGQ_AUD_RND_I2S;
-  renderer_act_param.msgq_id.dev1_sync = MSGQ_AUD_RND_I2S_SYNC;
+  AsCreateRendererParam_t renderer_create_param;
+  renderer_create_param.msgq_id.dev0_req  = MSGQ_AUD_RND_SPHP;
+  renderer_create_param.msgq_id.dev0_sync = MSGQ_AUD_RND_SPHP_SYNC;
+  renderer_create_param.msgq_id.dev1_req  = MSGQ_AUD_RND_I2S;
+  renderer_create_param.msgq_id.dev1_sync = MSGQ_AUD_RND_I2S_SYNC;
 
-  result = AS_CreateRenderer(&renderer_act_param);
+  result = AS_CreateRenderer(&renderer_create_param);
   if (!result)
     {
       printf("Error: AS_CreateRenderer failure. system memory insufficient!\n");
       return false;
     }
 
-  /* Activate capture feature. */
+  /* Create capture feature. */
 
-  AsActCaptureParam_t capture_act_param;
-  capture_act_param.msgq_id.dev0_req  = MSGQ_AUD_CAP_MIC;
-  capture_act_param.msgq_id.dev0_sync = MSGQ_AUD_CAP_MIC_SYNC;
-  capture_act_param.msgq_id.dev1_req  = MSGQ_AUD_CAP_I2S;
-  capture_act_param.msgq_id.dev1_sync = MSGQ_AUD_CAP_I2S_SYNC;
+  AsCreateCaptureParam_t capture_create_param;
+  capture_create_param.msgq_id.dev0_req  = MSGQ_AUD_CAP_MIC;
+  capture_create_param.msgq_id.dev0_sync = MSGQ_AUD_CAP_MIC_SYNC;
+  capture_create_param.msgq_id.dev1_req  = MSGQ_AUD_CAP_I2S;
+  capture_create_param.msgq_id.dev1_sync = MSGQ_AUD_CAP_I2S_SYNC;
 
-  result = AS_CreateCapture(&capture_act_param);
+  result = AS_CreateCapture(&capture_create_param);
   if (!result)
     {
       printf("Error: AS_CreateCapture failure. system memory insufficient!\n");
@@ -232,7 +232,7 @@ static bool app_act_audio_sub_system(void)
 
 static void app_deact_audio_sub_system(void)
 {
-  AS_DeactivateAudioSubSystem();
+  AS_DeleteAudioManager();
   AS_DeleteEffector();
   AS_DeleteRenderer();
   AS_DeleteCapture();
@@ -601,9 +601,9 @@ extern "C" int voice_call_main(int argc, char *argv[])
       return 1;
     }
 
-  /* Next, Activate the features used by AudioSubSystem. */
+  /* Next, Create the features used by AudioSubSystem. */
 
-  if (!app_act_audio_sub_system())
+  if (!app_create_audio_sub_system())
     {
       printf("Error: act_audiosubsystem failure.\n");
       return 1;
