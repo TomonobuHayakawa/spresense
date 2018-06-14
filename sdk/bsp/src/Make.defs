@@ -166,12 +166,6 @@ CHIP_CSRCS += cxd56_adc.c
 endif
 endif
 
-# NFC
-
-ifeq ($(CONFIG_CXD224X),y)
-CHIP_CSRCS += cxd56_cxd224x.c
-endif
-
 ifeq ($(CONFIG_CXD56_BACKUPLOG),y)
 CHIP_CSRCS += cxd56_backuplog.c
 endif

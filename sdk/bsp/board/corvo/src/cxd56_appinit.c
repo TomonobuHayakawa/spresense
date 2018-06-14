@@ -93,10 +93,6 @@
 #  include <asmp/asmp.h>
 #endif
 
-#if defined (CONFIG_LIBNFC) || defined(CONFIG_NFC_SEQUENCER)
-#  include "cxd56_cxd224x.h"
-#endif
-
 #ifdef CONFIG_CXD5247_CHARGER
 #  include <nuttx/power/battery_charger.h>
 #endif
@@ -307,10 +303,6 @@ int board_app_initialize(uintptr_t arg)
 
 #ifdef CONFIG_ASMP
   asmp_initialize();
-#endif
-
-#if (defined(CONFIG_LIBNFC) || defined(CONFIG_NFC_SEQUENCER)) && defined(CONFIG_CXD56_I2C1)
-  cxd224x_initialize("/dev/cxd224x-i2c", 1);
 #endif
 
 #ifdef CONFIG_CXD5247_CHARGER
