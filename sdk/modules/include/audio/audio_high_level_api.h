@@ -1783,7 +1783,7 @@ int AS_ReceiveAudioResult(AudioResult* packet);
  * @retval error code
  */
 
-int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids);
+int AS_CreateAudioManager(AudioSubSystemIDs ids);
 
 /**
  * @brief Deactivate AudioSubSystem
@@ -1791,7 +1791,7 @@ int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids);
  * @retval error code
  */
 
-int AS_DeactivateAudioSubSystem(void);
+int AS_DeleteAudioManager(void);
 
 #ifdef __cplusplus
 }

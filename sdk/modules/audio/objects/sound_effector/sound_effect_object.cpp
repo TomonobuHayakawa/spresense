@@ -97,7 +97,7 @@ int AS_SoundEffectObjEntry(int argc, char *argv[])
 }
 
 /*--------------------------------------------------------------------*/
-bool AS_CreateEffector(FAR AsActEffectorParam_t *param)
+bool AS_CreateEffector(FAR AsCreateEffectorParam_t *param)
 {
   /* Paramter check */
 
@@ -1681,7 +1681,6 @@ void* SoundEffectObject::allocMfeOutBuf()
   if (!m_mfe_out_buf_mh_que.push(data))
     {
       SOUNDFX_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return NULL;
     }
 
   return mh.getPa();

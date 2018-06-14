@@ -727,7 +727,7 @@ typedef struct
   /*! \brief [in] ID of memory pool for processing data */
 
   AsEffectorPoolId_t   pool_id;
-} AsActEffectorParam_t;
+} AsCreateEffectorParam_t;
 
 /****************************************************************************
  * Public Data
@@ -753,7 +753,7 @@ extern "C"
  * @retval     true  : success
  * @retval     false : failure
  */
-bool AS_CreateEffector(FAR AsActEffectorParam_t *param);
+bool AS_CreateEffector(FAR AsCreateEffectorParam_t *param);
 
 /**
  * @brief Deactivate sound effector feature

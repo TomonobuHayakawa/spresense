@@ -89,7 +89,7 @@ typedef struct
   /*! \brief [in] ID for sending messages to each channels */
 
   AsCaptureMsgQueId_t msgq_id;
-} AsActCaptureParam_t;
+} AsCreateCaptureParam_t;
 
 /****************************************************************************
  * Public Data
@@ -116,7 +116,7 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_CreateCapture(FAR AsActCaptureParam_t *param);
+bool AS_CreateCapture(FAR AsCreateCaptureParam_t *param);
 
 /**
  * @brief Deactivate audio capture feature

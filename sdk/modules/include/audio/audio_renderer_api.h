@@ -89,7 +89,7 @@ typedef struct
   /*! \brief ID for sending messages to each channels */
 
   AsRendererMsgQueId_t msgq_id;
-} AsActRendererParam_t;
+} AsCreateRendererParam_t;
 
 /****************************************************************************
  * Public Data
@@ -116,7 +116,7 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_CreateRenderer(FAR AsActRendererParam_t *param);
+bool AS_CreateRenderer(FAR AsCreateRendererParam_t *param);
 
 /**
  * @brief Deactivate renderer

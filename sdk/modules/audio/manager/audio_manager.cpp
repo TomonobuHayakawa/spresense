@@ -473,7 +473,7 @@ int AS_AudioManagerEntry(void)
 }
 
 /*--------------------------------------------------------------------------*/
-int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids)
+int AS_CreateAudioManager(AudioSubSystemIDs ids)
 {
   s_selfMid    = (MsgQueId)ids.mng;
   s_appMid     = (MsgQueId)ids.app;
@@ -491,7 +491,7 @@ int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids)
                            0);
   if (s_amng_pid < 0)
     {
-      _err("ERROR AS_ActivateAudioSubSystem failed\n");
+      _err("ERROR AS_CreateAudioManager failed\n");
       return AS_ERR_CODE_TASK_CREATE;
     }
 
@@ -499,7 +499,7 @@ int AS_ActivateAudioSubSystem(AudioSubSystemIDs ids)
 }
 
 /*--------------------------------------------------------------------------*/
-int AS_DeactivateAudioSubSystem(void)
+int AS_DeleteAudioManager(void)
 {
   if (s_amng_pid < 0)
     {

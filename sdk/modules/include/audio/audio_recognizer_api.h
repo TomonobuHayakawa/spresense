@@ -197,7 +197,7 @@ typedef struct
   /*! \brief [in] ID of memory pool for processing data */
 
   AsRecognizerPoolId_t   pool_id;
-} AsActRecognizerParam_t;
+} AsCreateRecognizerParam_t;
 
 /****************************************************************************
  * Public Data
@@ -224,7 +224,7 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_CreateRecognizer(FAR AsActRecognizerParam_t *param);
+bool AS_CreateRecognizer(FAR AsCreateRecognizerParam_t *param);
 
 /**
  * @brief Deactivate voice recognizer

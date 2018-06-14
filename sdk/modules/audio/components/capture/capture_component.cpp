@@ -264,7 +264,7 @@ int AS_CaptureCmpEntryDev1(int argc, char *argv[])
 #endif
 
 /*--------------------------------------------------------------------*/
-bool AS_CreateCapture(FAR AsActCaptureParam_t *param)
+bool AS_CreateCapture(FAR AsCreateCaptureParam_t *param)
 {
   /* Parameter check */
 

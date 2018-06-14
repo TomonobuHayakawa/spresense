@@ -1657,7 +1657,7 @@ bool MediaRecorderObjectTask::checkAndSetMemPool(void)
 extern "C"
 {
 /*--------------------------------------------------------------------------*/
-bool AS_CreateMediaRecorder(FAR AsActRecorderParam_t *param)
+bool AS_CreateMediaRecorder(FAR AsCreateRecorderParam_t *param)
 {
   /* Parameter check */
 

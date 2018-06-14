@@ -397,7 +397,7 @@ int AS_VoiceCmdObjEntry(int argc, char *argv[])
   return 0;
 }
 
-bool AS_CreateRecognizer(FAR AsActRecognizerParam_t *param)
+bool AS_CreateRecognizer(FAR AsCreateRecognizerParam_t *param)
 {
   /* Parameter check */
 

@@ -386,7 +386,7 @@ typedef struct
   /*! \brief [in] ID of memory pool for processing data */
 
   AsRecorderPoolId_t   pool_id;
-} AsActRecorderParam_t;
+} AsCreateRecorderParam_t;
 
 /****************************************************************************
  * Public Data
@@ -413,7 +413,7 @@ extern "C"
  * @retval     false : failure
  */
 
-bool AS_CreateMediaRecorder(FAR AsActRecorderParam_t *param);
+bool AS_CreateMediaRecorder(FAR AsCreateRecorderParam_t *param);
 
 /**
  * @brief Activate audio recorder
