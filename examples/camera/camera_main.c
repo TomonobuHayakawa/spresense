@@ -104,23 +104,18 @@ struct uyvy_s
   uint8_t y1;
 };
 
-struct capture_info_s
-{
-  uint8_t code;
-  uint8_t last_frame;
-  uint32_t size;
-  uint32_t addr;
+struct v_buffer {
+  uint32_t             *start;
+  uint32_t             length;
 };
+typedef struct v_buffer v_buffer_t;
 
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
 
 #ifndef CONFIG_EXAMPLES_CAMERA_INFINITE
-static int  write_file(uint8_t                *data,
-                       size_t                  len,
-                       video_cap_frame_info_t *info,
-                       video_crop_t           *crop);
+static int  write_file(uint8_t *data, size_t len);
 #endif
 
 /****************************************************************************
@@ -276,9 +271,7 @@ static void yuv2rgb(void *buf, uint32_t size)
 #ifndef CONFIG_EXAMPLES_CAMERA_INFINITE
 static int write_file(
   uint8_t *data,
-  size_t len,
-  video_cap_frame_info_t *info,
-  video_crop_t *crop
+  size_t len
 )
 {
   FILE *fp;
@@ -499,7 +492,7 @@ int camera_main(int argc, char *argv[])
         }
 
 #ifndef CONFIG_EXAMPLES_CAMERA_INFINITE
-      write_file((uint8_t *)buf.m.userptr, (size_t)buf.bytesused, NULL, NULL);
+      write_file((uint8_t *)buf.m.userptr, (size_t)buf.bytesused);
 #endif
 
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
