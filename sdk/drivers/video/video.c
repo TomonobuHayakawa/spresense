@@ -52,6 +52,7 @@
 #include <arch/chip/cisif.h>
 #include <arch/board/board.h>
 #include <nuttx/video/video.h>
+#include <nuttx/video/video_internal.h>
 #include <nuttx/video/isx012.h>
 
 #include <pthread.h>
