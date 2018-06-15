@@ -95,7 +95,7 @@ bool AS_decode_exec(const ExecDecCompParam *param, void *p_instance)
 
   if (param == NULL || p_instance == NULL)
     {
-      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+      return false;
     }
 
   /* Execute */
@@ -110,7 +110,7 @@ bool AS_decode_stop(const StopDecCompParam *param, void *p_instance)
 
   if (param == NULL || p_instance == NULL)
     {
-      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+      return false;
     }
 
   /* Stop */
@@ -125,7 +125,7 @@ bool AS_decode_setparam(const SetDecCompParam *param, void *p_instance)
 
   if (param == NULL || p_instance == NULL)
     {
-      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+      return false;
     }
 
   /* Set param */

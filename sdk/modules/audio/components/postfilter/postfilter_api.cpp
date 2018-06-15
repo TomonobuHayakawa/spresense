@@ -64,7 +64,7 @@ bool AS_postfilter_exec(const ExecPostfilterParam *param, void *p_instance)
   if (param == NULL || p_instance == NULL)
     {
       POSTFILTER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+      return false;
     }
 
   /* Execute */
@@ -80,7 +80,7 @@ bool AS_postfilter_flush(const FlushPostfilterParam *param, void *p_instance)
   if (param == NULL || p_instance == NULL)
     {
       POSTFILTER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+      return false;
     }
 
   /* Execute */
@@ -96,7 +96,7 @@ bool AS_postfilter_recv_done(void *p_instance, PostfilterCmpltParam *output)
   if (p_instance == NULL)
     {
       POSTFILTER_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
-      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+      return false;
     }
 
   /* Execute */

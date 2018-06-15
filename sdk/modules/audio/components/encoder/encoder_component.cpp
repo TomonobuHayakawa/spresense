@@ -101,7 +101,7 @@ bool AS_encode_exec(const ExecEncParam *param)
 
   if (param == NULL)
     {
-      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+      return false;
     }
 
   /* Execute */
@@ -116,7 +116,7 @@ bool AS_encode_stop(const StopEncParam *param)
 
   if (param == NULL)
     {
-      return AS_ECODE_COMMAND_PARAM_OUTPUT_DATE;
+      return false;
     }
 
   /* Stop */
