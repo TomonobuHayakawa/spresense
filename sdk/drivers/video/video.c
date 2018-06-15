@@ -777,28 +777,70 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
   v4l2_format_t                *fmt_lp = (v4l2_format_t *)arg;
   v4l2_requestbuffers_t        *req_lp = (v4l2_requestbuffers_t *)arg;
   v4l2_buffer_t                *buf_lp = (v4l2_buffer_t *)arg;
+  enum v4l2_buf_type           *type   = (enum v4l2_buf_type *)arg;
   video_api_cap_frame_t         cap;
   video_api_chg_img_sns_state_t stat_l;
 
   switch (cmd)
     {
       case VIDIOC_S_FMT:
-        g_v4_buf_mode = (fmt_lp->fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY) ?
-          VIDEO_MODE_MONITORING : VIDEO_MODE_CAPTURE;
-        break;
-      case VIDIOC_REQBUFS:
-        g_v4_buf_rcnt = req_lp->count;
-        if (g_v4_buf_rcnt > VIDEO_V4_BUF_MAX_CNT)
+        if (fmt_lp == NULL || &(fmt_lp->fmt.pix) == NULL)
           {
-            ret = -ENOMEM;
+            ret = -EPERM;
           }
         else
           {
-            g_v4_buf = calloc(g_v4_buf_rcnt, sizeof(v4l2_buffer_t));
-            g_v4_buf_cnt = 0;
-            if (g_v4_buf == NULL)
+            if (fmt_lp->fmt.pix.field != V4L2_FIELD_ANY)
               {
-                ret = -ENOMEM;
+                ret = -ENOSYS;
+              }
+            else if ((fmt_lp->fmt.pix.pixelformat != V4L2_PIX_FMT_UYVY) &&
+                     (fmt_lp->fmt.pix.pixelformat != V4L2_PIX_FMT_JPEG))
+              {
+                ret = -ENOSYS;
+              }
+            else
+              {
+                g_v4_buf_mode = (fmt_lp->fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY) ?
+                  VIDEO_MODE_MONITORING : VIDEO_MODE_CAPTURE;
+              }
+
+          }
+
+        break;
+      case VIDIOC_REQBUFS:
+        if (req_lp == NULL)
+          {
+            ret = -EPERM;
+          }
+        else
+          {
+            if (req_lp->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
+              {
+                ret = -ENOSYS;
+              }
+            else if (req_lp->memory != V4L2_MEMORY_USERPTR)
+              {
+                ret = -ENOSYS;
+              }
+            else
+              {
+                g_v4_buf_rcnt = req_lp->count;
+                if (g_v4_buf_rcnt > VIDEO_V4_BUF_MAX_CNT)
+                  {
+                    ret = -ENOMEM;
+                  }
+                else
+                  {
+                    g_v4_buf = calloc(g_v4_buf_rcnt, sizeof(v4l2_buffer_t));
+                    g_v4_buf_cnt = 0;
+                    if (g_v4_buf == NULL)
+                      {
+                        ret = -ENOMEM;
+                      }
+
+                  }
+
               }
 
           }
@@ -811,7 +853,15 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
           }
         else
           {
-            if (buf_lp->index >= g_v4_buf_rcnt)
+            if (buf_lp->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
+              {
+                ret = -ENOSYS;
+              }
+            else if (buf_lp->memory != V4L2_MEMORY_USERPTR)
+              {
+                ret = -ENOSYS;
+              }
+            else if (buf_lp->index >= g_v4_buf_rcnt)
               {
                 ret = -EPERM;
               }
@@ -829,25 +879,54 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 
         break;
       case VIDIOC_DQBUF:
-        cap.mode        = g_v4_buf_mode;
-        cap.crop_ctrl   = VIDEO_CROP_DISABLE;
-        cap.buffer.addr = g_v4_buf[g_v4_buf_cnt].m.userptr;
-        cap.buffer.size = g_v4_buf[g_v4_buf_cnt].length;
-        ret = video_capture_frame(priv, &cap);
-        if (!ret)
+        if (buf_lp == NULL)
           {
-            buf_lp->m.userptr = g_v4_buf[g_v4_buf_cnt].m.userptr;
-            buf_lp->length    = g_v4_buf[g_v4_buf_cnt].length;
-            buf_lp->bytesused = g_v_cisif.size;
-            buf_lp->index     = g_v4_buf_cnt;
-            g_v4_buf_cnt = (g_v4_buf_cnt < (g_v4_buf_rcnt-1)) ? g_v4_buf_cnt+1 : 0;
+            ret = -EPERM;
+          }
+        else
+          {
+            if (buf_lp->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
+              {
+                ret = -ENOSYS;
+              }
+            else if (buf_lp->memory != V4L2_MEMORY_USERPTR)
+              {
+                ret = -ENOSYS;
+              }
+            else
+              {
+                cap.mode        = g_v4_buf_mode;
+                cap.crop_ctrl   = VIDEO_CROP_DISABLE;
+                cap.buffer.addr = g_v4_buf[g_v4_buf_cnt].m.userptr;
+                cap.buffer.size = g_v4_buf[g_v4_buf_cnt].length;
+                ret = video_capture_frame(priv, &cap);
+                if (!ret)
+                  {
+                    buf_lp->m.userptr = g_v4_buf[g_v4_buf_cnt].m.userptr;
+                    buf_lp->length    = g_v4_buf[g_v4_buf_cnt].length;
+                    buf_lp->bytesused = g_v_cisif.size;
+                    buf_lp->index     = g_v4_buf_cnt;
+                    g_v4_buf_cnt = (g_v4_buf_cnt < (g_v4_buf_rcnt-1)) ?
+                                   g_v4_buf_cnt+1 : 0;
+                  }
+
+              }
+
           }
 
         break;
       case VIDIOC_STREAMON:
-        stat_l.state = VIDEO_STATE_ACTIVE;
-        ret = video_chg_img_sns_state(priv, &stat_l);
-        usleep(100000);
+        if (*type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
+          {
+            ret = -ENOSYS;
+          }
+        else
+          {
+            stat_l.state = VIDEO_STATE_ACTIVE;
+            ret = video_chg_img_sns_state(priv, &stat_l);
+            usleep(100000);
+          }
+
         break;
       default:
         videoerr("Unrecognized cmd: %d\n", cmd);
