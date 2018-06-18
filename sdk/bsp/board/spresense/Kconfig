@@ -5,20 +5,6 @@
 
 if BOARD_SPRESENSE
 
-menu "Variant Configuration"
-choice
-	prompt "Variant Selection"
-	default VARIANT_PROTO3
-
-	config VARIANT_PROTO3
-		bool "SPRESENSE Proto 3 board"
-
-	config VARIANT_DVT
-		bool "SPRESENSE DVT board"
-
-endchoice
-endmenu
-
 config BOARD_CUSTOM_PINCONFIG
 	bool
 	default y
