@@ -52,7 +52,6 @@
 #include <arch/chip/cisif.h>
 #include <arch/board/board.h>
 #include <nuttx/video/video.h>
-#include <nuttx/video/video_internal.h>
 #include <nuttx/video/isx012.h>
 
 #include <pthread.h>
@@ -61,6 +60,7 @@
 
 #include <time.h>
 
+#include "video_internal.h"
 #include "isx012_reg.h"
 
 /****************************************************************************
