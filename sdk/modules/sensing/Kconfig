@@ -22,7 +22,6 @@ config SENSING_MANAGER_POWERCTRL
 endif
 
 source "$SDKDIR/modules/sensing/gnss/Kconfig"
-source "$SDKDIR/modules/sensing/arm_gesture/Kconfig"
 source "$SDKDIR/modules/sensing/barometer/Kconfig"
 source "$SDKDIR/modules/sensing/compass/Kconfig"
 source "$SDKDIR/modules/sensing/tap/Kconfig"
