@@ -24,6 +24,5 @@ endif
 source "$SDKDIR/modules/sensing/gnss/Kconfig"
 source "$SDKDIR/modules/sensing/barometer/Kconfig"
 source "$SDKDIR/modules/sensing/tap/Kconfig"
-source "$SDKDIR/modules/sensing/voice_detection/Kconfig"
 
 endmenu # Sensor Utilities
