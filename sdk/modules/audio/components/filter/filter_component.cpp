@@ -33,7 +33,7 @@
  ****************************************************************************/
 
 #include "filter_component.h"
-#include "common/audio_message_types.h"
+#include "common/audio_internal_message_types.h"
 #include "debug/dbg_log.h"
 
 __WIEN2_BEGIN_NAMESPACE

@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/include/common/audio_message_types.h
+ * modules/audio/include/common/audio_internal_message_types.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *
@@ -32,14 +32,15 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_AUDIO_INCLUDE_COMMON_AUDIO_MESSAGE_TYPES_H
-#define __MODULES_AUDIO_INCLUDE_COMMON_AUDIO_MESSAGE_TYPES_H
+#ifndef __MODULES_AUDIO_INCLUDE_COMMON_AUDIO_INTERNAL_MESSAGE_TYPES_H
+#define __MODULES_AUDIO_INCLUDE_COMMON_AUDIO_INTERNAL_MESSAGE_TYPES_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include "memutils/message/Message.h"
+#include "audio/audio_message_types.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -47,30 +48,51 @@
 
 /************************************************************************
  *
- *  request / response
+ *    MSG_CAT_AUD_MNG: Audio Manager Command/Result(bi-directional)
+ *
+ *   D15 D14 D13 D12 D11 D10 D9  D8  D7  D6  D5  D4  D3  D2  D1  D0
+ *  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+ *  |REQ|USER_AUDIO |  MSG_CAT_MNG  | MSG_SUB_TYPE                  |
+ *  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
  *
  ************************************************************************
  */
+#define MSG_AUD_MNG_REQ    (MSG_TYPE_AUD_REQ | MSG_CAT_AUD_MNG)
+#define MSG_AUD_MNG_RES    (MSG_TYPE_AUD_RES | MSG_CAT_AUD_MNG)
 
-#define MSG_TYPE_AUD_RES  (MSG_TYPE_RESPONSE | MSG_TYPE_USER_AUDIO_DRV)
-#define MSG_TYPE_AUD_REQ  (MSG_TYPE_REQUEST  | MSG_TYPE_USER_AUDIO_DRV)
+#define MSG_AUD_MGR_CMD_PLAYER           (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x00))
+#define MSG_AUD_MGR_CMD_SETREADY         (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x01))
+#define MSG_AUD_MGR_CMD_SETBASEBAND      (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x02))
+#define MSG_AUD_MGR_CMD_SETPLAYER        (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x03))
+#define MSG_AUD_MGR_CMD_VOICECOMMAND     (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x04))
+#define MSG_AUD_MGR_CMD_SETRECORDER      (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x05))
+#define MSG_AUD_MGR_CMD_RECORDER         (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x06))
+#define MSG_AUD_MGR_CMD_SOUNDFX          (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x07))
+#define MSG_AUD_MGR_CMD_MFE              (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x08))
+#define MSG_AUD_MGR_CMD_MPP              (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x09))
+#define MSG_AUD_MGR_CMD_GETSTATUS        (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x0a))
+#define MSG_AUD_MGR_CMD_INITATTENTIONS   (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x0b))
+#define MSG_AUD_MGR_CMD_INITMICGAIN      (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x0c))
+#define MSG_AUD_MGR_CMD_INITI2SPARAM     (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x0d))
+#define MSG_AUD_MGR_CMD_INITDEQPARAM     (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x0e))
+#define MSG_AUD_MGR_CMD_INITOUTPUTSELECT (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x0f))
+#define MSG_AUD_MGR_CMD_INITDNCPARAM     (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x10))
+#define MSG_AUD_MGR_CMD_INITCLEARSTEREO  (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x11))
+#define MSG_AUD_MGR_CMD_SETVOLUME        (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x12))
+#define MSG_AUD_MGR_CMD_SETVOLUMEMUTE    (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x13))
+#define MSG_AUD_MGR_CMD_SETBEEP          (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x14))
+#define MSG_AUD_MGR_CMD_POWERON          (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x15))
+#define MSG_AUD_MGR_CMD_POWEROFF         (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x16))
+#define MSG_AUD_MGR_CMD_OUTPUTMIXER      (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x17))
+#define MSG_AUD_MGR_CMD_SETTHROUGH       (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x18))
+#define MSG_AUD_MGR_CMD_SETTHROUGHPATH   (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x19))
+#define MSG_AUD_MGR_CMD_SETRENDERINGCLK  (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x1a))
+#define MSG_AUD_MGR_CMD_INVALID          (MSG_AUD_MNG_REQ | MSG_SET_SUBTYPE(0x1b))
 
-/************************************************************************
- *
- *  category
- *
- ************************************************************************
- */
+#define LAST_AUD_MGR_MSG     (MSG_AUD_MGR_CMD_INVALID + 1)
+#define AUD_MGR_MSG_NUM      (LAST_AUD_MGR_MSG & MSG_TYPE_SUBTYPE)
 
-#define MSG_CAT_AUD_ISR           (MSG_SET_CATEGORY(0x0))
-#define MSG_CAT_AUD_PLY           (MSG_SET_CATEGORY(0x1))
-#define MSG_CAT_AUD_BB            (MSG_SET_CATEGORY(0x2))
-#define MSG_CAT_AUD_RCG           (MSG_SET_CATEGORY(0x3))
-#define MSG_CAT_AUD_VRC           (MSG_SET_CATEGORY(0x4))
-#define MSG_CAT_AUD_SNK           (MSG_SET_CATEGORY(0x5))
-#define MSG_CAT_AUD_MIX           (MSG_SET_CATEGORY(0x6))
-#define MSG_CAT_AUD_MIX_SEF       (MSG_SET_CATEGORY(0x7))
-#define MSG_CAT_AUD_SEF           (MSG_SET_CATEGORY(0x8))
+#define MSG_AUD_MGR_CALL_ATTENTION  (MSG_AUD_MNG_RES | MSG_SET_SUBTYPE(0x01))
 
 /************************************************************************
  *
@@ -292,6 +314,17 @@
 
 #define MSG_AUD_SEF_RST     (MSG_AUD_SEF_RES | MSG_SET_SUBTYPE(0x00))
 
+/************************************************************************
+ *
+ *  responce from AudioSubSystem
+ *
+ ************************************************************************
+ */
+
+#define MSG_AUD_MGR_RST             (MSG_TYPE_AUD_RES)
+#define MSG_AUD_MGR_FIND_TRIGGER    (MSG_AUD_RCG_FIND_TRIGGER)
+#define MSG_AUD_MGR_FIND_COMMAND    (MSG_AUD_RCG_FIND_COMMAND)
+
 /****************************************************************************
  * Public Types
  ****************************************************************************/
@@ -308,4 +341,4 @@
  * Public Function Prototypes
  ****************************************************************************/
 
-#endif /* __MODULES_AUDIO_INCLUDE_COMMON_AUDIO_MESSAGE_TYPES_H */
+#endif /* __MODULES_AUDIO_INCLUDE_COMMON_AUDIO_INTERNAL_MESSAGE_TYPES_H */

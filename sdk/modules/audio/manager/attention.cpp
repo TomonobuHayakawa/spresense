@@ -1,7 +1,7 @@
 /****************************************************************************
- * audioutils/manager/attention.cpp
+ * sdk/modules/audio/manager/attention.cpp
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2017 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,7 +35,7 @@
 #include "audio/audio_high_level_api.h"
 #include "memutils/common_utils/common_attention.h"
 #include "attention.h"
-#include "audio_manager_message_types.h"
+#include "common/audio_internal_message_types.h"
 
 extern "C"
 {

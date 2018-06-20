@@ -92,8 +92,7 @@ typedef unsigned short MSG_TYPE;
 
 #define MSG_TYPE_USER          (MSG_TYPE_USER_FIELD_SIZE << MSG_TYPE_USER_FIELD_OFFSET)
 
-#define MSG_TYPE_USER_AUDIO_UTIL   (0x5 << MSG_TYPE_USER_FIELD_OFFSET)
-#define MSG_TYPE_USER_AUDIO_DRV    (0x6 << MSG_TYPE_USER_FIELD_OFFSET)
+#define MSG_TYPE_USER_AUDIO_UTIL   (0x6 << MSG_TYPE_USER_FIELD_OFFSET)
 #define MSG_TYPE_USER_SENSOR_UTIL  (0x7 << MSG_TYPE_USER_FIELD_OFFSET)
 
 /************************************************************************

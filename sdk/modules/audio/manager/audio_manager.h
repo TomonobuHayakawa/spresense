@@ -39,7 +39,7 @@
 #include <arch/chip/cxd56_audio.h>
 #include "attention.h"
 #include "wien2_common_defs.h"
-#include "audio_manager_message_types.h"
+#include "common/audio_internal_message_types.h"
 #include "memutils/s_stl/queue.h"
 #include "wien2_internal_packet.h"
 

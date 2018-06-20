@@ -46,7 +46,7 @@
 #include "memutils/memory_manager/MemHandle.h"
 #include "wien2_common_defs.h"
 #include "audio_state.h"
-#include "common/audio_message_types.h"
+#include "common/audio_internal_message_types.h"
 #include "player_input_device_handler.h"
 #include "wien2_internal_packet.h"
 

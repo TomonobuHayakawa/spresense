@@ -46,7 +46,7 @@
 #include "memutils/s_stl/queue.h"
 #include "audio/audio_high_level_api.h"
 #include "wien2_internal_packet.h"
-#include "common/audio_message_types.h"
+#include "common/audio_internal_message_types.h"
 #include "audio_state.h"
 
 __USING_WIEN2

@@ -44,7 +44,7 @@
 #include "memutils/s_stl/queue.h"
 #include "memutils/memory_manager/MemHandle.h"
 #include "audio/audio_high_level_api.h"
-#include "common/audio_message_types.h"
+#include "common/audio_internal_message_types.h"
 #include "audio_recorder_sink.h"
 #include "components/capture/capture_component.h"
 #include "wien2_common_defs.h"

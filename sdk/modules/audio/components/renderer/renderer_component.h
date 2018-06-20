@@ -45,7 +45,7 @@
 
 #include "debug/dbg_log.h"
 #include "memutils/common_utils/common_assert.h"
-#include "common/audio_message_types.h"
+#include "common/audio_internal_message_types.h"
 
 __WIEN2_BEGIN_NAMESPACE
 

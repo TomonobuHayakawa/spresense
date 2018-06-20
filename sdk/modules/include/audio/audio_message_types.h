@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/objects/output_mixer/output_mix_obj.h
+ * modules/include/audio/audio_message_types.h
  *
  *   Copyright (C) 2017 Sony Corporation
  *
@@ -32,61 +32,50 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_AUDIO_OBJECTS_OUTPUT_MIXER_OUTPUT_MIX_OBJ_H
-#define __MODULES_AUDIO_OBJECTS_OUTPUT_MIXER_OUTPUT_MIX_OBJ_H
+#ifndef __MODULES_INCLUDE_AUDIO_AUDIO_MESSAGE_TYPE_H
+#define __MODULES_INCLUDE_AUDIO_AUDIO_MESSAGE_TYPE_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include "memutils/message/Message.h"
-#include "memutils/message/MsgPacket.h"
-#include "memutils/memory_manager/MemHandle.h"
-#include "common/audio_internal_message_types.h"
-#include "output_mix_sink_device.h"
-#include "wien2_common_defs.h"
-
-__WIEN2_BEGIN_NAMESPACE
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
+/************************************************************************
+ *
+ *  request / response
+ *
+ ************************************************************************
+ */
+
+#define MSG_TYPE_AUD_RES  (MSG_TYPE_RESPONSE | MSG_TYPE_USER_AUDIO_UTIL)
+#define MSG_TYPE_AUD_REQ  (MSG_TYPE_REQUEST  | MSG_TYPE_USER_AUDIO_UTIL)
+
+/************************************************************************
+ *
+ *  category
+ *
+ ************************************************************************
+ */
+
+#define MSG_CAT_AUD_MNG           (MSG_SET_CATEGORY(0x0))
+#define MSG_CAT_AUD_ISR           (MSG_SET_CATEGORY(0x1))
+#define MSG_CAT_AUD_PLY           (MSG_SET_CATEGORY(0x2))
+#define MSG_CAT_AUD_BB            (MSG_SET_CATEGORY(0x3))
+#define MSG_CAT_AUD_RCG           (MSG_SET_CATEGORY(0x4))
+#define MSG_CAT_AUD_VRC           (MSG_SET_CATEGORY(0x5))
+#define MSG_CAT_AUD_SNK           (MSG_SET_CATEGORY(0x6))
+#define MSG_CAT_AUD_MIX           (MSG_SET_CATEGORY(0x7))
+#define MSG_CAT_AUD_MIX_SEF       (MSG_SET_CATEGORY(0x8))
+#define MSG_CAT_AUD_SEF           (MSG_SET_CATEGORY(0x9))
+
 /****************************************************************************
  * Public Types
  ****************************************************************************/
-
-class OutputMixObjectTask
-{
-public:
-  static void create(MsgQueId self_dtq,
-                     MsgQueId dev0_apu_dtq,
-                     MsgQueId dev1_apu_dtq,
-                     MemMgrLite::PoolId dev0_pcm_pool_id,
-                     MemMgrLite::PoolId dev1_pcm_pool_id,
-                     MemMgrLite::PoolId dev0_apu_pool_id,
-                     MemMgrLite::PoolId dev1_apu_pool_id);
-
-  OutputMixObjectTask(MsgQueId self_dtq,
-                      MsgQueId dev0_apu_dtq,
-                      MsgQueId dev1_apu_dtq,
-                      MemMgrLite::PoolId dev0_pcm_pool_id,
-                      MemMgrLite::PoolId dev1_pcm_pool_id,
-                      MemMgrLite::PoolId dev0_apu_pool_id,
-                      MemMgrLite::PoolId dev1_apu_pool_id);
-
-private:
-  MsgQueId m_self_dtq;
-  static const int HPI2SoutChNum = 2;
-
-  OutputMixToHPI2S m_output_mix_to_hpi2s[HPI2SoutChNum];
-
-  AsOutputMixDevice m_output_device;
-
-  void run();
-  int getHandle(MsgPacket* msg);
-  void parse(MsgPacket* msg);
-};
 
 /****************************************************************************
  * Public Data
@@ -100,7 +89,4 @@ private:
  * Public Function Prototypes
  ****************************************************************************/
 
-__WIEN2_END_NAMESPACE
-
-#endif /* __MODULES_AUDIO_OBJECTS_OUTPUT_MIXER_OUTPUT_MIX_OBJ_H */
-
+#endif /* __MODULES_INCLUDE_AUDIO_AUDIO_MESSAGE_TYPE_H */
