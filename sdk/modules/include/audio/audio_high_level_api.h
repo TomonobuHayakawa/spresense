@@ -127,10 +127,6 @@
 
 #define LENGTH_SET_THROUGH_STATUS  3
 
-/*! \brief InitAttentions command (#AUDCMD_INITATTENTIONS) packet length */
-
-#define LENGTH_INITATTENTIONS       3
-
 /*! \brief SetReadyStatus command (#AUDCMD_SETREADYSTATUS) packet length */
 
 #define LENGTH_SET_READY_STATUS     2
@@ -731,25 +727,16 @@ typedef struct
  */
 
 #ifndef ATTENTION_USE_FILENAME_LINE
-typedef void (*AudioAttentionCallbackFunction)(uint8_t module_id,
-                                               uint8_t error_code,
-                                               uint8_t sub_code);
+typedef void (*AudioAttentionCb)(uint8_t module_id,
+                                 uint8_t error_code,
+                                 uint8_t sub_code);
 #else
-typedef void (*AudioAttentionCallbackFunction)(uint8_t module_id,
-                                               uint8_t error_code,
-                                               uint8_t sub_code,
-                                               FAR const char *file_name,
-                                               uint32_t line);
+typedef void (*AudioAttentionCb)(uint8_t module_id,
+                                 uint8_t error_code,
+                                 uint8_t sub_code,
+                                 FAR const char *file_name,
+                                 uint32_t line);
 #endif
-
-/** InitAttentions Command (#AUDCMD_INITATTENTIONS) parameter */
-
-typedef struct
-{
-  /*! \brief [in] callback function */
-
-  AudioAttentionCallbackFunction attention_callback_function;
-} InitAttentionsParam;
 
 /** InitMicGain Command (#AUDCMD_INITMICGAIN) parameter */
 
@@ -1090,11 +1077,6 @@ typedef struct
   AudioCommandHeader header;
   union
   {
-    /*! \brief [in] for InitAttentions
-     * (header.command_code==#AUDCMD_INITATTENTIONS)
-     */
-
-    InitAttentionsParam init_attentions_param;
 #ifdef AS_FEATURE_EFFECTOR_ENABLE
     /*! \brief [in] for InitMFE
      * (header.command_code==#AUDCMD_INITMFE)
@@ -1795,7 +1777,7 @@ int AS_ReceiveAudioResult(AudioResult* packet);
  * @retval error code
  */
 
-int AS_CreateAudioManager(AudioSubSystemIDs ids);
+int AS_CreateAudioManager(AudioSubSystemIDs ids, AudioAttentionCb att_cb);
 
 /**
  * @brief Deactivate AudioSubSystem

@@ -62,6 +62,8 @@ static MsgQueId s_rcdSubMid  = MSGQID_UNUSED;
 static MsgQueId s_effectMid  = MSGQID_UNUSED;
 static MsgQueId s_rcgMid     = MSGQID_UNUSED;
 
+static AudioAttentionCb s_attention_cb  = NULL;
+
 static AudioManager *s_mng = NULL;
 
 #ifdef AS_FEATURE_PLAYER_ENABLE
@@ -443,10 +445,6 @@ int AS_SendAudioCommand(FAR AudioCommand *packet)
         msg_type = MSG_AUD_MGR_CMD_SETTHROUGHPATH;
         break;
 
-      case AUDCMD_INITATTENTIONS:
-        msg_type = MSG_AUD_MGR_CMD_INITATTENTIONS;
-        break;
-
       default:
         msg_type = MSG_AUD_MGR_CMD_INVALID;
         break;
@@ -470,12 +468,12 @@ static pid_t s_amng_pid = -1;
 /*--------------------------------------------------------------------------*/
 int AS_AudioManagerEntry(void)
 {
-  AudioManager::create(s_selfMid, s_plyMainMid, s_plySubMid, s_mixerMid);
+  AudioManager::create(s_selfMid, s_plyMainMid, s_plySubMid, s_mixerMid, s_attention_cb);
   return 0;
 }
 
 /*--------------------------------------------------------------------------*/
-int AS_CreateAudioManager(AudioSubSystemIDs ids)
+int AS_CreateAudioManager(AudioSubSystemIDs ids, AudioAttentionCb att_cb)
 {
   s_selfMid    = (MsgQueId)ids.mng;
   s_appMid     = (MsgQueId)ids.app;
@@ -485,6 +483,8 @@ int AS_CreateAudioManager(AudioSubSystemIDs ids)
   s_rcdSubMid  = (MsgQueId)ids.recorder;
   s_effectMid  = (MsgQueId)ids.effector;
   s_rcgMid     = (MsgQueId)ids.recognizer;
+
+  s_attention_cb = att_cb;
 
   s_amng_pid = task_create("AMNG",
                            AUDIO_TASK_PRIORITY,
@@ -554,11 +554,12 @@ MsgQueId AS_GetSelfDtq(void)
 void AudioManager::create(MsgQueId selfDtq,
                           MsgQueId playerDtq,
                           MsgQueId subplayerDtq,
-                          MsgQueId outMixerDtq)
+                          MsgQueId outMixerDtq,
+                          AudioAttentionCb att_cb)
 {
   if (s_mng == NULL)
     {
-      s_mng = new AudioManager(selfDtq, playerDtq, subplayerDtq, outMixerDtq);
+      s_mng = new AudioManager(selfDtq, playerDtq, subplayerDtq, outMixerDtq, att_cb);
       if (s_mng == NULL)
         {
           MANAGER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
@@ -773,22 +774,6 @@ AudioManager::MsgProc
     &AudioManager::getstatus,          /*   WaitCommandWord state. */
     &AudioManager::getstatus,          /*   PowerOff state.        */
     &AudioManager::getstatus           /*   Through state.         */
-  },
-
-  /* InitAttentions command. */
-
-  {                                    /* AudioManager all status: */
-    &AudioManager::initAttentions,     /*   Ready state.           */
-    &AudioManager::illegal,            /*   PlayerReady state.     */
-    &AudioManager::illegal,            /*   PlayerActive state.    */
-    &AudioManager::illegal,            /*   PlayerPause state.     */
-    &AudioManager::illegal,            /*   RecorderReady state.   */
-    &AudioManager::illegal,            /*   RecorderActive state.  */
-    &AudioManager::illegal,            /*   BasebandReady state.   */
-    &AudioManager::illegal,            /*   BasebandActive state.  */
-    &AudioManager::illegal,            /*   WaitCommandWord state. */
-    &AudioManager::initAttentions,     /*   PowerOff state.        */
-    &AudioManager::illegal             /*   Through state.         */
   },
 
   /* InitMicGain command. */
@@ -1144,30 +1129,6 @@ void AudioManager::getstatus(AudioCommand &cmd)
                                        m_selfDtq,
                                        packet);
   F_ASSERT(er == ERR_OK);
-}
-
-/*--------------------------------------------------------------------------*/
-void AudioManager::initAttentions(AudioCommand &cmd)
-{
-  bool check =
-    packetCheck(LENGTH_INITATTENTIONS, AUDCMD_INITATTENTIONS, cmd);
-  if (!check)
-    {
-      return;
-    }
-
-  if (cmd.init_attentions_param.attention_callback_function != NULL)
-    {
-      m_attentionCBFunc =
-        cmd.init_attentions_param.attention_callback_function;
-      sendResult(AUDRLT_INITATTENTIONSCMPLT);
-    }
-  else
-    {
-      sendErrRespResult(cmd.header.sub_code,
-                        AS_MODULE_ID_AUDIO_MANAGER,
-                        AS_ECODE_COMMAND_PARAM_CALLBACK);
-    }
 }
 
 /*--------------------------------------------------------------------------*/

@@ -73,7 +73,8 @@ public:
   static void create(MsgQueId selfDtq,
                      MsgQueId playerDtq,
                      MsgQueId subplayerDtq,
-                     MsgQueId outMixerDtq);
+                     MsgQueId outMixerDtq,
+                     AudioAttentionCb att_cb);
 
   ~AudioManager()
   {
@@ -83,14 +84,15 @@ private:
   AudioManager(MsgQueId selfDtq,
                MsgQueId playerDtq,
                MsgQueId subplayerDtq,
-               MsgQueId outMixerDtq) :
+               MsgQueId outMixerDtq,
+               AudioAttentionCb att_cb) :
     m_selfDtq(selfDtq),
     m_playerDtq(playerDtq),
     m_subplayerDtq(subplayerDtq),
     m_outMixerDtq(outMixerDtq),
     m_State(AS_MNG_STATUS_POWEROFF),
     m_SubState(AS_MNG_SUB_STATUS_NONE),
-    m_attentionCBFunc(NULL),
+    m_attentionCBFunc(att_cb),
     m_active_player(0),
     m_player_transition_count(0),
     m_input_en(false),
@@ -124,7 +126,7 @@ private:
       MNG_ALLSTATE_NUM
   };
 
-  AudioAttentionCallbackFunction          m_attentionCBFunc;
+  AudioAttentionCb m_attentionCBFunc;
 #ifdef CONFIG_AUDIOUTILS_VOICE_COMMAND
   static AudioFindCommandCallbackFunction m_findCommandCBFunc;
 #endif
@@ -174,7 +176,6 @@ private:
   void setThroughStatus(AudioCommand &cmd);
   void setThroughPath(AudioCommand &cmd);
   void getstatus(AudioCommand &cmd);
-  void initAttentions(AudioCommand &cmd);
 
   void illegalCmplt(const AudioMngCmdCmpltResult &cmd);
   void cmpltOnReady(const AudioMngCmdCmpltResult &cmd);
