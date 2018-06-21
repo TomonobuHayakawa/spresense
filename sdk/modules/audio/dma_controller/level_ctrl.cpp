@@ -38,6 +38,8 @@
 #include "debug/dbg_log.h"
 #include "level_ctrl.h"
 
+#define SAMPLES_FOR_FADE 996 /* Numbers of required samples to fade in,out */
+
 /*--------------------------------------------------------------------*/
 LevelCtrl::LevelCtrlState LevelCtrl::chgMuteState[CmdNum][StatusNum] =
 {
@@ -171,7 +173,7 @@ bool LevelCtrl::setFadeRamp(uint32_t* samples_for_fade)
 {
   /* set fade required samples */
 
-  *samples_for_fade = 996;
+  *samples_for_fade = SAMPLES_FOR_FADE;
 
   /* if mute is not enabled, DIG_SFT register is 0 (fade not support) */
 

@@ -50,6 +50,11 @@ static MPPComponent *sp_mpp_component = NULL;
 
 #define DSP_CORE_ID_DUMMY 3
 
+#define XLOUD_DEFAULT_LEVEL 30
+#define XLOUD_DEFAULT_HEADROOM_IN 0
+#define XLOUD_DEFAULT_HEADROOM_OUT 0
+#define XLOUD_DEFAULT_EAX_LEVEL 30
+
 /*--------------------------------------------------------------------*/
 void mpp_filter_dsp_done_callback(void *p_response, void *p_instance)
 {
@@ -281,14 +286,13 @@ bool MPPComponent::exec_apu(ExecXLOUDParam param)
   m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.output_buffer =
     param.output_buffer;
 
-  /* TODO: tetative, fixed value operation */
-  m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.level = 30;
-  m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.headroom_in = 0;
-  m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.headroom_out = 0;
+  m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.level = XLOUD_DEFAULT_LEVEL;
+  m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.headroom_in = XLOUD_DEFAULT_HEADROOM_IN;
+  m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.headroom_out = XLOUD_DEFAULT_HEADROOM_OUT;
   m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.enable_mute = false;
   m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.enable_hybrid_gain_mode =
     true;
-  m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.eax_level = 30;
+  m_apu_cmd_buf[m_buf_idx].exec_filter_cmd.exec_xloud_cmd.eax_level = XLOUD_DEFAULT_EAX_LEVEL;
 
   send_apu(m_apu_cmd_buf[m_buf_idx]);
   m_buf_idx = (m_buf_idx + 1) % APU_COMMAND_QUEUE_SIZE;

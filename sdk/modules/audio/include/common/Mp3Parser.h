@@ -61,6 +61,8 @@
 #define MP3PARSER_NEXT_SYNC_UNFOUND  0 /* Next SYNCWORD was not found */
 #define MP3PARSER_NEXT_SYNC_FOUND    1 /* Next SYNCWORD was found */
 
+#define MP3PARSER_SYNCWORD_LENGTH    3 /* Syncword length */
+
 /*----- Misc default value (If not specified, use this) -----*/
 
 /* Upper limit of 1st SYNCWORD search range (byte) */

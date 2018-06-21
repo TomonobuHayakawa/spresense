@@ -143,14 +143,14 @@ static Mp3ParserReturnValueOfSyncSearch
 
   ptr_info->found_offset = 0;
 
-  if (ptr_info->max_search_byte <= 3)
+  if (ptr_info->max_search_byte <= MP3PARSER_SYNCWORD_LENGTH)
     {
       return Mp3ParserReturnNoSyncword;
     }
 
   uint32_t i = 0;
   for (i = 0, ptr_check = ptr_info->ptr_start;
-        i < (ptr_info->max_search_byte - 3);
+        i < (ptr_info->max_search_byte - MP3PARSER_SYNCWORD_LENGTH);
           i++, ptr_check++)
     {
       /* Check 1st byte. */
@@ -237,7 +237,7 @@ static Mp3ParserReturnValueOfSyncSearch
        * Just to be sure, reset ptr_check.
        */
 
-      ptr_check = (ptr_info-> ptr_start + (ptr_info->max_search_byte - 3));
+      ptr_check = (ptr_info-> ptr_start + (ptr_info->max_search_byte - MP3PARSER_SYNCWORD_LENGTH));
       if (((*ptr_check & MP3PARSER_SYNCWORD_1) == MP3PARSER_SYNCWORD_1) &&
            ((*(ptr_check + 1) & MP3PARSER_SYNCWORD_2) == MP3PARSER_SYNCWORD_2))
         {

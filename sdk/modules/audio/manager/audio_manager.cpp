@@ -47,18 +47,20 @@
 #define BB_POWER_INPUT  1
 #define BB_POWER_OUTPUT 2
 
+#define MSGQID_UNUSED 0xFF
+
 #include <nuttx/arch.h>
 
 __USING_WIEN2
 
-static MsgQueId s_selfMid    = 0xFF;  /* Invalid ID. */
-static MsgQueId s_appMid     = 0xFF;  /* Invalid ID. */
-static MsgQueId s_plyMainMid = 0xFF;  /* Invalid ID. */
-static MsgQueId s_plySubMid  = 0xFF;  /* Invalid ID. */
-static MsgQueId s_mixerMid   = 0xFF;  /* Invalid ID. */
-static MsgQueId s_rcdSubMid  = 0xFF;  /* Invalid ID. */
-static MsgQueId s_effectMid  = 0xFF;  /* Invalid ID. */
-static MsgQueId s_rcgMid     = 0xFF;  /* Invalid ID. */
+static MsgQueId s_selfMid    = MSGQID_UNUSED;
+static MsgQueId s_appMid     = MSGQID_UNUSED;
+static MsgQueId s_plyMainMid = MSGQID_UNUSED;
+static MsgQueId s_plySubMid  = MSGQID_UNUSED;
+static MsgQueId s_mixerMid   = MSGQID_UNUSED;
+static MsgQueId s_rcdSubMid  = MSGQID_UNUSED;
+static MsgQueId s_effectMid  = MSGQID_UNUSED;
+static MsgQueId s_rcgMid     = MSGQID_UNUSED;
 
 static AudioManager *s_mng = NULL;
 

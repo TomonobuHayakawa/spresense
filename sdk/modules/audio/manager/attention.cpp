@@ -70,11 +70,6 @@ void _Attention(uint8_t module_id,
     };
   MsgQueId msgq_aud_mgr = AS_GetSelfDtq();
 
-  if (msgq_aud_mgr == 0xFF)
-    {
-      F_ASSERT(0);
-    }
-
   err_t er = MsgLib::send(msgq_aud_mgr,
                           MsgPriNormal,
                           MSG_AUD_MGR_CALL_ATTENTION,
@@ -104,11 +99,6 @@ void _Attention(uint8_t module_id,
       sub_code
     };
   MsgQueId msgq_aud_mgr = AS_GetSelfDtq();
-
-  if (msgq_aud_mgr == 0xFF)
-    {
-      F_ASSERT(0);
-    }
 
   err_t er = MsgLib::send(msgq_aud_mgr,
                           MsgPriNormal,
