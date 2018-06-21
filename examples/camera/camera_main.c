@@ -78,7 +78,7 @@
 
 /* Note: Buffer size must be multiple of 32. */
 
-#define IMAGE_JPG_SIZE     (100000)    /* FULLHD typical:90KB quality:75 */
+#define IMAGE_JPG_SIZE     (512*1024)  /* 512kB */
 #define IMAGE_YUV_SIZE     (320*240*2) /* QVGA YUV422 */
 
 #define MAX_SLEEP_TIME     (500*1000)
