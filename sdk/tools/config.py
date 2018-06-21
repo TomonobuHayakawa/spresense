@@ -164,13 +164,18 @@ if __name__ == "__main__":
         configdir = d
         kconfigdir = os.path.join(d, 'kernel')
 
-    if not os.path.isdir(configdir) or not os.path.isdir(kconfigdir):
-        print('Config directory not found.', file=sys.stderr)
-        sys.exit(2)
 
     if opts.kernel:
+        if not os.path.isdir(kconfigdir):
+            print('Kernel config directory not found.', file=sys.stderr)
+            sys.exit(3)
+
         configs = get_defconfigs(kconfigdir)
     else:
+        if not os.path.isdir(configdir):
+            print('Config directory not found.', file=sys.stderr)
+            sys.exit(2)
+
         configs = get_defconfigs(configdir)
 
     if opts.list:
