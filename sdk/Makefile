@@ -250,6 +250,7 @@ clean: subdir_clean depend_clean
 	$(call DELFILE, $(BIN))
 	$(call DELFILE, $(SPK))
 	$(call DELFILE, System.map)
+	$(call DELFILE, nuttx.map)
 PHONY += clean
 
 subdir_distclean:
