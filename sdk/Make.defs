@@ -42,3 +42,19 @@ LDRAWELFFLAGS += -defsym STACK_SIZE=$(WORKERSTACKSIZE)
 ifeq ($(WORKERSTACKSIZE),)
 WORKERSTACKSIZE = 1024
 endif
+
+# Output map file with cross reference table
+
+ifeq ($(WINTOOL),y)
+  LDFLAGS += -Map="${shell cygpath -w $(SDKDIR)/nuttx.map}" --cref
+else
+  LDFLAGS += -Map=$(SDKDIR)/nuttx.map --cref
+endif
+
+ifneq ($(CONFIG_RAM_SIZE),)
+ifneq ($(CONFIG_ASMP_MEMSIZE),)
+  LDFLAGS += --defsym __stack=_vectors+${shell expr $(CONFIG_RAM_SIZE) \- `printf "%d" $(CONFIG_ASMP_MEMSIZE)`}
+else
+  LDFLAGS += --defsym __stack=_vectors+$(CONFIG_RAM_SIZE)
+endif
+endif

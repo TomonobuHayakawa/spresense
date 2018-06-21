@@ -158,14 +158,14 @@ endif
 
 # Output map file with cross reference table
 
-ifeq ($(WINTOOL),y)
-  LDFLAGS += -Map="${shell cygpath -w $(TOPDIR)/nuttx.map}" --cref
-else
-  LDFLAGS += -Map=$(TOPDIR)/nuttx.map --cref
-endif
+LDFLAGS += -Map=nuttx.map --cref
 
-ifneq ($(CONFIG_CXD56_RAM1_SIZE),)
-  LDFLAGS += --defsym __stack=_vectors+${shell awk -F"=" '/CXD56_RAM1_SIZE/ {print $$2}' $(TOPDIR)/.config}
+ifneq ($(CONFIG_RAM_SIZE),)
+ifneq ($(CONFIG_ASMP_MEMSIZE),)
+  LDFLAGS += --defsym __stack=_vectors+${shell expr $(CONFIG_RAM_SIZE) \- `printf "%d" $(CONFIG_ASMP_MEMSIZE)`}
+else
+  LDFLAGS += --defsym __stack=_vectors+$(CONFIG_RAM_SIZE)
+endif
 endif
 
 HOSTCC = gcc
