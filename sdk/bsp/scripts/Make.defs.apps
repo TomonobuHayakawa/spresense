@@ -1,8 +1,9 @@
 ############################################################################
-# configs/corvo/nsh/Make.defs
+# bsp/scripts/Make.defs.apps
 #
 #   Copyright (C) 2014 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
+#   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
