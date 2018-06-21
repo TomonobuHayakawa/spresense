@@ -411,20 +411,6 @@ static void app_attention_callback(uint8_t module_id,
   printf("Attention!! %s L%d ecode %d subcode %d\n", file_name, line, error_code, sub_code);
 }
 
-static bool app_init_attention(void)
-{
-  AudioCommand command;
-  command.header.packet_length = LENGTH_INITATTENTIONS;
-  command.header.command_code  = AUDCMD_INITATTENTIONS;
-  command.header.sub_code      = 0x00;
-  command.init_attentions_param.attention_callback_function = app_attention_callback;
-  AS_SendAudioCommand(&command);
-
-  AudioResult result;
-  AS_ReceiveAudioResult(&result);
-  return printAudCmdResult(command.header.command_code, result);
-}
-
 static bool app_create_audio_sub_system(void)
 {
   bool result = false;
@@ -441,16 +427,7 @@ static bool app_create_audio_sub_system(void)
   ids.effector    = 0xFF;
   ids.recognizer  = 0xFF;
 
-  AS_CreateAudioManager(ids);
-
-  /* Set callback function of attention message */
-
-  if (!app_init_attention())
-    {
-      printf("Error: app_init_attention() failure.\n");
-      return 1;
-    }
-
+  AS_CreateAudioManager(ids, app_attention_callback);
 
   AsCreatePlayerParam_t player_create_param;
   player_create_param.msgq_id.player = MSGQ_AUD_PLY;

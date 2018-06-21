@@ -158,6 +158,14 @@ static mpshm_t s_shm;
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+static void app_attention_callback(uint8_t module_id,
+                                   uint8_t error_code,
+                                   uint8_t sub_code,
+                                   const char* file_name,
+                                   uint32_t line)
+{
+  printf("Attention!! %s L%d ecode %d subcode %d\n", file_name, line, error_code, sub_code);
+}
 
 static bool app_create_audio_sub_system(void)
 {
@@ -175,7 +183,7 @@ static bool app_create_audio_sub_system(void)
   ids.effector    = MSGQ_AUD_SOUND_EFFECT;
   ids.recognizer  = MSGQ_AUD_RCG_CMD;
 
-  AS_CreateAudioManager(ids);
+  AS_CreateAudioManager(ids, app_attention_callback);
 
   /* Create effector feature. */
 
@@ -468,29 +476,6 @@ static bool app_init_volume(void)
   return printAudCmdResult(command.header.command_code, result);
 }
 
-static void app_attention_callback(uint8_t module_id,
-                                   uint8_t error_code,
-                                   uint8_t sub_code,
-                                   const char* file_name,
-                                   uint32_t line)
-{
-  printf("Attention!! %s L%d ecode %d subcode %d\n", file_name, line, error_code, sub_code);
-}
-
-static bool app_init_attention(void)
-{
-  AudioCommand command;
-  command.header.packet_length = LENGTH_INITATTENTIONS;
-  command.header.command_code  = AUDCMD_INITATTENTIONS;
-  command.header.sub_code      = 0x00;
-  command.init_attentions_param.attention_callback_function = app_attention_callback;
-  AS_SendAudioCommand(&command);
-
-  AudioResult result;
-  AS_ReceiveAudioResult(&result);
-  return printAudCmdResult(command.header.command_code, result);
-}
-
 static void app_voice_command_Cb(uint16_t keyword, uint8_t status)
 {
   /* This function is executed by recognizer feature task.
@@ -683,15 +668,7 @@ extern "C" int voice_command_main(int argc, char *argv[])
       return 1;
     }
 
-  /* On and after this point, AudioSubSystem must be active.
-   * Register the callback function to be notified when a problem occurs.
-   */
-
-  if (!app_init_attention())
-    {
-      printf("Error: app_init_attention failure.\n");
-      return 1;
-    }
+  /* On and after this point, AudioSubSystem must be active. */
 
   /* Change AudioSubsystem to Ready state so that I/O parameters can be changed. */
 
