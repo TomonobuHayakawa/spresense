@@ -460,6 +460,18 @@
 
 #define AS_ECODE_DSP_VERSION_ERROR               0x09
 
+/*! \brief DSP Exec Error */
+
+#define AS_ECODE_DSP_EXEC_ERROR                  0x3b
+
+/*! \brief DSP Stop Error */
+
+#define AS_ECODE_DSP_STOP_ERROR                  0x3c
+
+/*! \brief DSP set Error */
+
+#define AS_ECODE_DSP_SET_ERROR                   0x3d
+
 /*! \brief Set Audio Data Path Error */
 
 #define AS_ECODE_SET_AUDIO_DATA_PATH_ERROR       0x0A

@@ -285,14 +285,14 @@ void OutputMixToHPI2S::act(MsgPacket* msg)
           if (!AS_get_render_comp_handler(&m_render_comp_handler,
                                           render_device))
             {
+              OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
               return;
             }
         }
         break;
 
       default:
-        /* Send error message. */
-
+        OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_UNEXPECTED_PARAM);
         return;
     }
 
@@ -374,11 +374,13 @@ void OutputMixToHPI2S::input_data_on_ready(MsgPacket* msg)
                                         m_p_postfliter_instance,
                                         &dsp_info))
     {
+      OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_DSP_EXEC_ERROR);
       return;
     }
 
   if (!AS_postfilter_recv_done(m_p_postfliter_instance, NULL))
     {
+      OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_DSP_EXEC_ERROR);
       return;
     }
 
@@ -391,7 +393,7 @@ void OutputMixToHPI2S::input_data_on_ready(MsgPacket* msg)
 
   if (!AS_postfilter_exec(&exec, m_p_postfliter_instance))
     {
-      /* Do nothing */
+      OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_DSP_EXEC_ERROR);
     }
 
   /* Init renderer */
@@ -423,7 +425,7 @@ void OutputMixToHPI2S::input_data_on_active(MsgPacket* msg)
 
   if (!AS_postfilter_exec(&exec, m_p_postfliter_instance))
     {
-      /* Do nothing */
+      OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_DSP_EXEC_ERROR);
     }
 
   /* If last frame, send flush command */
@@ -442,6 +444,7 @@ void OutputMixToHPI2S::input_data_on_active(MsgPacket* msg)
 
       if (!AS_postfilter_flush(&flush_param, m_p_postfliter_instance))
         {
+          OUTPUT_MIX_ERR(AS_ATTENTION_SUB_CODE_DSP_EXEC_ERROR);
           return;
         }
     }

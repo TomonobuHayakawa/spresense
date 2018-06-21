@@ -742,7 +742,6 @@ void PlayerObj::stopOnPrePlay(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(AsPlayerEventStop))
     {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       m_callback(AsPlayerEventStop, AS_ECODE_QUEUE_OPERATION_ERROR, 0);
       return;
     }
@@ -777,7 +776,6 @@ void PlayerObj::stopOnPrePlayUnderflow(MsgPacket *msg)
 
   if (!m_external_cmd_que.push(AsPlayerEventStop))
     {
-      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       m_callback(AsPlayerEventStop, AS_ECODE_QUEUE_OPERATION_ERROR, 0);
       return;
     }
@@ -1214,7 +1212,11 @@ void PlayerObj::setGain(MsgPacket *msg)
 
   if (AS_decode_setparam(&setparam, m_p_dec_instance) == false)
     {
-      /* Do nothing. */
+      m_external_cmd_que.pop();
+
+      m_callback(AsPlayerEventSetGain,
+                 AS_ECODE_DSP_SET_ERROR, 0);
+      return;
     }
 
   /* Response is sent after decoder_component done */
@@ -1361,7 +1363,7 @@ void PlayerObj::stopPlay(void)
     {
       if (AS_decode_stop(&param, m_p_dec_instance) == false)
         {
-          /* Do nothing. */
+          MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_DSP_EXEC_ERROR);
         }
     }
 
@@ -1413,7 +1415,7 @@ void PlayerObj::decode(void* p_es, uint32_t es_size)
 
   if (AS_decode_exec(&param, m_p_dec_instance) == false)
     {
-      /* Do nothing. */
+      MEDIA_PLAYER_ERR(AS_ATTENTION_SUB_CODE_DSP_EXEC_ERROR);
     }
 }
 
