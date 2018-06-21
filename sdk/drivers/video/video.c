@@ -336,12 +336,14 @@ static int video_init_image_sensor(video_mng_t *priv)
 static void video_init_internal_param(video_mng_t *priv)
 {
   priv->cap_param[VIDEO_MODE_CAPTURE].format     = VIDEO_FORMAT_JPEG;
-  priv->cap_param[VIDEO_MODE_CAPTURE].resolution = VIDEO_FULLHD;
   priv->cap_param[VIDEO_MODE_CAPTURE].framerate  = VIDEO_15FPS;
+  priv->cap_param[VIDEO_MODE_CAPTURE].jpeg_hsize = VIDEO_HSIZE_FULLHD;
+  priv->cap_param[VIDEO_MODE_CAPTURE].jpeg_vsize = VIDEO_VSIZE_FULLHD;
 
   priv->cap_param[VIDEO_MODE_MONITORING].format     = VIDEO_FORMAT_YUV;
-  priv->cap_param[VIDEO_MODE_MONITORING].resolution = VIDEO_QVGA;
   priv->cap_param[VIDEO_MODE_MONITORING].framerate  = VIDEO_30FPS;
+  priv->cap_param[VIDEO_MODE_MONITORING].yuv_hsize  = VIDEO_HSIZE_QVGA;
+  priv->cap_param[VIDEO_MODE_MONITORING].yuv_vsize  = VIDEO_VSIZE_QVGA;
 }
 
 static int video_chg_img_sns_state(video_mng_t *priv,
@@ -564,12 +566,6 @@ static int video_set_frame_info(video_mng_t *priv,
                                 video_api_cap_frame_t *p,
                                 video_cisif_result_t *res)
 {
-  int      cidx;
-  int      midx;
-
-  cidx = priv->cap_param[VIDEO_MODE_CAPTURE].resolution;
-  midx = priv->cap_param[VIDEO_MODE_MONITORING].resolution;
-
   p->info.mode = p->mode;
   memcpy(&p->info.cap_param,
          &priv->cap_param[p->mode],
@@ -580,13 +576,13 @@ static int video_set_frame_info(video_mng_t *priv,
 
   if (p->mode == VIDEO_MODE_CAPTURE)
     {
-      p->info.h_size = video_rs2sz[cidx].h;
-      p->info.v_size = video_rs2sz[cidx].v;
+      p->info.h_size = priv->cap_param[VIDEO_MODE_CAPTURE].jpeg_hsize;
+      p->info.v_size = priv->cap_param[VIDEO_MODE_CAPTURE].jpeg_vsize;
     }
   else
     {
-      p->info.h_size = video_rs2sz[midx].h;
-      p->info.v_size = video_rs2sz[midx].v;
+      p->info.h_size = priv->cap_param[VIDEO_MODE_MONITORING].yuv_hsize;
+      p->info.v_size = priv->cap_param[VIDEO_MODE_MONITORING].yuv_vsize;
     }
 
   if ((priv->cap_param[p->mode].format == VIDEO_FORMAT_JPEG) &&
@@ -781,6 +777,7 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
   enum v4l2_buf_type           *type   = (enum v4l2_buf_type *)arg;
   video_api_cap_frame_t         cap;
   video_api_chg_img_sns_state_t stat_l;
+  isx012_t                      isx012_format;
 
   switch (cmd)
     {
@@ -802,10 +799,65 @@ int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
               }
             else
               {
-                g_v4_buf_mode = (fmt_lp->fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY) ?
-                  VIDEO_MODE_MONITORING : VIDEO_MODE_CAPTURE;
-              }
+                /* YUV: monitor, JPEG: capture */
 
+                if (fmt_lp->fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
+                  {
+                    /* Change paramer for monitoring */
+
+                    isx012_format.moni_param.format     = VIDEO_FORMAT_YUV;
+                    isx012_format.moni_param.rate       = VIDEO_30FPS;
+                    isx012_format.moni_param.yuv_hsize  = fmt_lp->fmt.pix.width;
+                    isx012_format.moni_param.yuv_vsize  = fmt_lp->fmt.pix.height;
+
+                    /* Maintain current setting for capture */
+
+                    isx012_format.cap_param.format      = VIDEO_FORMAT_JPEG;
+                    isx012_format.cap_param.rate        = VIDEO_15FPS;
+                    isx012_format.cap_param.jpeg_hsize  = priv->cap_param[VIDEO_MODE_CAPTURE].jpeg_hsize;
+                    isx012_format.cap_param.jpeg_vsize  = priv->cap_param[VIDEO_MODE_CAPTURE].jpeg_vsize;
+                  }
+                else  /* VIDEO_MODE_CAPTURE */
+                  {
+                    /* Change paramer for capture */
+
+                    isx012_format.cap_param.format      = VIDEO_FORMAT_JPEG;
+                    isx012_format.cap_param.rate        = VIDEO_15FPS;
+                    isx012_format.cap_param.jpeg_hsize  = fmt_lp->fmt.pix.width; 
+                    isx012_format.cap_param.jpeg_vsize  = fmt_lp->fmt.pix.height;
+
+                    /* Maintain current setting for monitoring */
+
+                    isx012_format.moni_param.format     = VIDEO_FORMAT_YUV;
+                    isx012_format.moni_param.rate       = VIDEO_30FPS;
+                    isx012_format.moni_param.yuv_hsize  = priv->cap_param[VIDEO_MODE_MONITORING].yuv_hsize;
+                    isx012_format.moni_param.yuv_vsize  = priv->cap_param[VIDEO_MODE_MONITORING].yuv_vsize;
+                  }
+
+                ret = isx012_ioctl(IMGIOC_SETMODEP, (unsigned long)&isx012_format);
+                if (ret < 0)
+                  {
+                    video_printf("ERROR: ioctl IMGIOC_SETMODEP %d.\n", ret);
+                    return ret;
+                  }
+
+                if (fmt_lp->fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
+                  {
+                    /* Update internal information for monitoring */
+
+                    g_v4_buf_mode = VIDEO_MODE_MONITORING;
+                    priv->cap_param[VIDEO_MODE_MONITORING].yuv_hsize = fmt_lp->fmt.pix.width;
+                    priv->cap_param[VIDEO_MODE_MONITORING].yuv_vsize = fmt_lp->fmt.pix.height;
+                  }
+                else
+                  {
+                    /* Update internal information for capture */
+
+                    g_v4_buf_mode = VIDEO_MODE_CAPTURE;
+                    priv->cap_param[VIDEO_MODE_CAPTURE].jpeg_hsize = fmt_lp->fmt.pix.width;
+                    priv->cap_param[VIDEO_MODE_CAPTURE].jpeg_vsize = fmt_lp->fmt.pix.height;
+                  } 
+              }
           }
 
         break;
