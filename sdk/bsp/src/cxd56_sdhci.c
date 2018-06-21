@@ -298,6 +298,10 @@ struct cxd56_sdiodev_s
   volatile uint8_t   xfrflags;   /* Used to synchronize SDIO and DMA completion events */
   bool usedma;
   bool dmasend_prepare;
+  size_t   receive_size;
+  uint8_t  *aligned_buffer; /* Used to buffer alignment */
+  uint8_t  *receive_buffer; /* Used to keep receive buffer address */
+  uint32_t dma_cmd;
   uint32_t dmasend_cmd;
   uint32_t dmasend_regcmd;
 #endif
@@ -1871,6 +1875,7 @@ static int cxd56_sdio_sendcmd(FAR struct sdio_dev_s *dev, uint32_t cmd, uint32_t
   /* Clear interrupt status and write the SDHC CMD */
   putreg32(SDHCI_RESPDONE_INTS, CXD56_SDHCI_IRQSTAT);
 #ifdef CONFIG_SDIO_DMA
+  priv->dma_cmd = cmd;
   if (priv->dmasend_prepare)
     {
       priv->dmasend_regcmd = regval;
@@ -2047,6 +2052,18 @@ static int cxd56_sdio_cancel(FAR struct sdio_dev_s *dev)
 {
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)dev;
   uint32_t regval;
+
+#ifdef CONFIG_SDIO_DMA
+  /* Release allocated buffer */
+  if (priv->aligned_buffer)
+    {
+      /* Free aligned buffer */
+
+      kmm_free(priv->aligned_buffer);
+
+      priv->aligned_buffer = NULL;
+    }
+#endif
 
   /* Disable all transfer- and event- related interrupts */
 
@@ -2608,6 +2625,21 @@ static sdio_eventset_t cxd56_sdio_eventwait(FAR struct sdio_dev_s *dev,
   cxd56_configwaitints(priv, 0, 0, 0);
 #ifdef CONFIG_SDIO_DMA
   priv->xfrflags   = 0;
+  if (priv->aligned_buffer)
+    {
+      if (priv->dma_cmd == MMCSD_CMD17 || priv->dma_cmd == MMCSD_CMD18)
+        {
+          /* Copy receive buffer from aligned address */
+
+          memcpy(priv->receive_buffer, priv->aligned_buffer, priv->receive_size);
+        }
+
+      /* Free aligned buffer */
+
+      kmm_free(priv->aligned_buffer);
+
+      priv->aligned_buffer = NULL;
+    }
 #endif
 
   cxd56_dumpsamples(priv);
@@ -2773,9 +2805,38 @@ static int cxd56_sdio_dmarecvsetup(FAR struct sdio_dev_s *dev, FAR uint8_t *buff
 {
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)dev;
   unsigned int blocksize;
+  int          ret = OK;
 
   DEBUGASSERT(priv != NULL && buffer != NULL && buflen > 0);
   DEBUGASSERT(((uint32_t)buffer & 3) == 0);
+
+  if ((uint32_t)buffer & 3)
+    {
+      if (priv->aligned_buffer)
+        {
+          /* If buffer not freed,  free it */
+
+          kmm_free(priv->aligned_buffer);
+
+          priv->aligned_buffer = NULL;
+        }
+
+      /* Allocate aligned buffer */
+
+      priv->aligned_buffer = (uint8_t *) kmm_malloc(sizeof(uint8_t) * buflen);
+
+      /* Keep receive buffer address */
+
+      priv->receive_buffer = buffer;
+
+      /* Keep receive data size */
+
+      priv->receive_size = buflen;
+
+      /* Switch to aligned buffer */
+
+      buffer = priv->aligned_buffer;
+    }
 
   /* Reset the DPSM configuration */
 
@@ -2802,7 +2863,8 @@ static int cxd56_sdio_dmarecvsetup(FAR struct sdio_dev_s *dev, FAR uint8_t *buff
         }
       else
         {
-          return -EIO;
+          ret = -EIO;
+          goto error;
         }
     }
   cxd56_dataconfig(priv, false,  blocksize, buflen / blocksize, SDHCI_DTOCV_DATATIMEOUT);
@@ -2819,6 +2881,13 @@ static int cxd56_sdio_dmarecvsetup(FAR struct sdio_dev_s *dev, FAR uint8_t *buff
 
   cxd56_sample(priv, SAMPLENDX_AFTER_SETUP);
   return OK;
+error:
+  /* Free allocated align buffer */
+
+  kmm_free(priv->aligned_buffer);
+
+  priv->aligned_buffer = NULL;
+  return ret;
 }
 #endif
 
@@ -2846,12 +2915,36 @@ static int cxd56_sdio_dmasendsetup(FAR struct sdio_dev_s *dev,
                               FAR const uint8_t *buffer, size_t buflen)
 {
   uint32_t r1;
-  int ret;
+  int      ret = OK;
   struct cxd56_sdiodev_s *priv = (struct cxd56_sdiodev_s *)dev;
   unsigned int blocksize;
 
   DEBUGASSERT(priv != NULL && buffer != NULL && buflen > 0);
   DEBUGASSERT(((uint32_t)buffer & 3) == 0);
+
+  if ((uint32_t)buffer & 3)
+    {
+      if (priv->aligned_buffer)
+        {
+          /* If buffer not freed,  free it */
+
+          kmm_free(priv->aligned_buffer);
+
+          priv->aligned_buffer = NULL;
+        }
+
+      /* Allocate aligned buffer */
+
+      priv->aligned_buffer = (uint8_t *) kmm_malloc(sizeof(uint8_t) * buflen);
+
+      /* Copy buffer to aligned address */
+
+      memcpy(priv->aligned_buffer, buffer, buflen);
+
+      /* Switch to aligned buffer */
+
+      buffer = priv->aligned_buffer;
+    }
 
   /* Reset the DPSM configuration */
 
@@ -2878,7 +2971,8 @@ static int cxd56_sdio_dmasendsetup(FAR struct sdio_dev_s *dev,
         }
       else
         {
-          return -EIO;
+          ret = -EIO;
+          goto error;
         }
     }
   cxd56_dataconfig(priv, true, blocksize, buflen / blocksize, SDHCI_DTOCV_DATATIMEOUT);
@@ -2895,7 +2989,7 @@ static int cxd56_sdio_dmasendsetup(FAR struct sdio_dev_s *dev,
       ret = cxd56_sdio_recvshortcrc(dev, priv->dmasend_cmd, &r1);
       if (ret != OK)
         {
-          return ret;
+          goto error;
         }
     }
 
@@ -2906,7 +3000,15 @@ static int cxd56_sdio_dmasendsetup(FAR struct sdio_dev_s *dev,
   /* Enable TX interrupts */
 
   cxd56_configxfrints(priv, SDHCI_DMADONE_INTS);
+
   return OK;
+error:
+  /* Free allocated align buffer */
+
+  kmm_free(priv->aligned_buffer);
+
+  priv->aligned_buffer = NULL;
+  return ret;
 }
 #endif
 
