@@ -44,6 +44,7 @@
 #include <string.h>
 #include <errno.h>
 #include <debug.h>
+#include <assert.h>
 
 #include <nuttx/arch.h>
 #include <nuttx/i2c/i2c_master.h>
@@ -265,6 +266,8 @@ static void cxd56_i2c_setfrequency(struct cxd56_i2cdev_s *priv,
   uint64_t tHigh;
   uint32_t base = cxd56_get_i2c_baseclock(priv->port);
   uint32_t spklen;
+
+  ASSERT(base);
 
   if ((priv->frequency == frequency) && (priv->baseFreq == base))
     {
