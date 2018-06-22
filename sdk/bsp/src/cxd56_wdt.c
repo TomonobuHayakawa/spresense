@@ -37,11 +37,11 @@
  ****************************************************************************/
 
 #include <sdk/config.h>
+#include <sdk/debug.h>
 #include <nuttx/arch.h>
 
 #include <stdint.h>
 #include <errno.h>
-#include <debug.h>
 
 #include <nuttx/irq.h>
 #include <nuttx/timers/watchdog.h>
@@ -180,7 +180,7 @@ static uint32_t cxd56_getreg(uintptr_t regaddr)
         {
           if (count == 4)
             {
-              lldbg("...\n");
+              logdebug("...\n");
             }
 
           return regval;
@@ -197,7 +197,7 @@ static uint32_t cxd56_getreg(uintptr_t regaddr)
         {
           /* Yes.. then show how many times the value repeated */
 
-          lldbg("[repeats %d more times]\n", count - 3);
+          logdebug("[repeats %d more times]\n", count - 3);
         }
 
       /* Save the new address, value, and count */
@@ -209,7 +209,7 @@ static uint32_t cxd56_getreg(uintptr_t regaddr)
 
   /* Show the register value read */
 
-  lldbg("%08x->%08\n", regaddr, regval);
+  logdebug("%08x->%08\n", regaddr, regval);
   return regval;
 }
 #endif
@@ -227,7 +227,7 @@ static void cxd56_putreg(uint32_t regval, uintptr_t regaddr)
 {
   /* Show the register value being written */
 
-  lldbg("%08x<-%08x\n", regaddr, regval);
+  logdebug("%08x<-%08x\n", regaddr, regval);
 
   /* Write the value */
 

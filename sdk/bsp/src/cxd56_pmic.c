@@ -37,13 +37,13 @@
  ****************************************************************************/
 
 #include <sdk/config.h>
+#include <sdk/debug.h>
 
 #include <sys/types.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <assert.h>
-#include <debug.h>
 
 #include <nuttx/arch.h>
 #include <nuttx/irq.h>
@@ -188,7 +188,7 @@ static int pmic_int_handler(int irq, void *context)
   ret = work_queue(LPWORK, &g_irqwork, pmic_int_worker, NULL, 0);
   if (ret < 0)
     {
-      lldbg("ERROR: work_queue failed: %d\n", ret);
+      logerr("ERROR: work_queue failed: %d\n", ret);
     }
 
   /* Disable any further pmic interrupts */

@@ -40,6 +40,7 @@
 
 #include <arch/board/board.h>
 #include <sdk/config.h>
+#include <sdk/debug.h>
 
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
@@ -117,7 +118,7 @@ static void up_idlepm(void)
 
       /* Perform board-specific, state-dependent logic here */
 
-      llvdbg("newstate= %d oldstate=%d\n", newstate, oldstate);
+      logdebug("newstate= %d oldstate=%d\n", newstate, oldstate);
 
       /* Then force the global state change */
 
