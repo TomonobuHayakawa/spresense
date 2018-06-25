@@ -168,6 +168,11 @@ if __name__ == "__main__":
         configdir = d
         kconfigdir = os.path.join(d, 'kernel')
 
+        # Set 'default-defconfig' to configname list when it is not specified.
+        # Only for base directory change option.
+
+        if len(opts.configname) == 0:
+            opts.configname = ['default']
 
     if opts.kernel:
         if not os.path.isdir(kconfigdir):
