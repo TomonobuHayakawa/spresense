@@ -12,6 +12,10 @@ MODE_MENUCONFIG = "menuconfig"
 MODE_QCONFIG = "qconfig"
 MODE_GCONFIG = "gconfig"
 
+BOARDDIR = "board"
+FEATUREDIR = "feature"
+DEVDIR = "device"
+
 def get_defconfigs(directory):
     return list(map(lambda x: os.path.basename(str(x)),
                     glob.glob(os.path.join(directory, '*-defconfig'))))
@@ -178,10 +182,29 @@ if __name__ == "__main__":
 
         configs = get_defconfigs(configdir)
 
+        # Get defconfigs from each reserved subdirectories and add
+        # their subdirectory name to the prefix.
+
+        l = get_defconfigs(os.path.join(configdir, BOARDDIR))
+        bconfigs = list(map(lambda x: os.path.join(BOARDDIR, str(x)), l))
+        l = get_defconfigs(os.path.join(configdir, FEATUREDIR))
+        fconfigs = list(map(lambda x: os.path.join(FEATUREDIR, str(x)), l))
+        l = get_defconfigs(os.path.join(configdir, DEVDIR))
+        dconfigs = list(map(lambda x: os.path.join(DEVDIR, str(x)), l))
+
+        # Sort them before join
+
+        bconfigs.sort()
+        fconfigs.sort()
+        dconfigs.sort()
+
+        configs += bconfigs
+        configs += fconfigs
+        configs += dconfigs
+
     if opts.list:
         print('Available configurations:')
 
-        configs.sort()
         for c in configs:
             print('\t%s' % c.replace('-defconfig', ''))
 
