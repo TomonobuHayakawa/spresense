@@ -319,6 +319,7 @@ int camera_main(int argc, char *argv[])
 #endif
 {
   int ret;
+  int exitcode = ERROR;
   int i;
   int v_fd;
   uint32_t mode;
@@ -340,7 +341,7 @@ int camera_main(int argc, char *argv[])
       if (ret < 0)
         {
           printf("camera_main: Failed to get NX handle: %d\n", errno);
-          return -EPERM;
+          return ERROR;
         }
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
     }
@@ -367,7 +368,7 @@ int camera_main(int argc, char *argv[])
   if (ret != 0)
     {
       printf("ERROR: Failed to init video. %d\n", errno);
-      return -EPERM;
+      goto errout_with_nx;
     }
 #endif
 
@@ -375,7 +376,7 @@ int camera_main(int argc, char *argv[])
   if (v_fd < 0)
     {
       printf("ERROR: Failed to open video. %d\n", errno);
-      return -ENODEV;
+      goto errout_with_isx;
     }
 
   /* Note: VIDIOC_S_FMT set buffer size. */
@@ -406,7 +407,7 @@ int camera_main(int argc, char *argv[])
   if (ret)
     {
       printf("Fail set format %d\n", errno);
-      return ERROR;
+      goto errout_with_device;
     }
 
   /* Note: VIDIOC_REQBUFS set buffer stages. */
@@ -421,7 +422,7 @@ int camera_main(int argc, char *argv[])
   if (ret)
     {
       printf("Does not support user pointer i/o %d\n", errno);
-      return ERROR;
+      goto errout_with_device;
     }
 
   buffers = malloc(sizeof(v_buffer_t) * count);
@@ -429,7 +430,7 @@ int camera_main(int argc, char *argv[])
   if (!buffers)
     {
       printf("Out of memory\n");
-      return ERROR;
+      goto errout_with_device;
     }
 
   for (n_buffers = 0; n_buffers < count; ++n_buffers)
@@ -442,10 +443,9 @@ int camera_main(int argc, char *argv[])
       buffers[n_buffers].start  = memalign(32, fsize);
       if (!buffers[n_buffers].start)
         {
-              printf("Out of memory\n");
-              return ERROR;
+          printf("Out of memory\n");
+          goto errout_with_buffer;
         }
-
     }
 
   for (i = 0; i < n_buffers; i++)
@@ -461,9 +461,8 @@ int camera_main(int argc, char *argv[])
       if (ret)
         {
           printf("Fail QBUF %d\n", errno);
-          return ERROR;
+          goto errout_with_buffer;
         }
-
     }
 
   /* Note: VIDIOC_STREAMON start video. */
@@ -473,7 +472,7 @@ int camera_main(int argc, char *argv[])
   if (ret)
     {
       printf("Fail STREAMON %d\n", errno);
-      return ERROR;
+      goto errout_with_buffer;
     }
 
   while (loop-- > 0)
@@ -488,7 +487,7 @@ int camera_main(int argc, char *argv[])
       if (ret)
         {
           printf("Fail DQBUF %d\n", errno);
-          return ERROR;
+          goto errout_with_buffer;
         }
 
 #ifndef CONFIG_EXAMPLES_CAMERA_INFINITE
@@ -512,21 +511,35 @@ int camera_main(int argc, char *argv[])
       if (ret)
         {
           printf("Fail QBUF %d\n", errno);
-          return ERROR;
+          goto errout_with_buffer;
         }
     }
 
-  close(v_fd);
+  exitcode = OK;
+
+errout_with_buffer:
   for (i = 0; i < count; i++)
     {
-      free(buffers[i].start);
+      if (buffers[n_buffers].start)
+        {
+          free(buffers[i].start);
+        }
     }
 
   free(buffers);
 
+errout_with_device:
+  close(v_fd);
+
+errout_with_isx:
+#ifdef CONFIG_VIDEO_ISX012
+  board_isx012_uninitialize();
+#endif
+
+errout_with_nx:
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
   nx_close(g_nximage.hnx);
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
-  board_isx012_uninitialize();
-  return 0;
+
+  return exitcode;
 }
