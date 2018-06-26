@@ -492,7 +492,6 @@ void get_serial_param(asSerDesParam *param)
     {
       mic_sel = (CXD56_AUDIO_CFG_MIC >> (i * MIC_CH_BITNUM)) & MIC_CH_BITMAP;
       param->selCh.in[i]  = (asAcaPulcoSerSelChId)mic_sel;
-      param->selCh.out[i] = AS_SDES_DES_SEL_CH1 + i;
     }
 }
 
