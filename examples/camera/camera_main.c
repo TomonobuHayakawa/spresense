@@ -520,7 +520,7 @@ int camera_main(int argc, char *argv[])
 errout_with_buffer:
   for (i = 0; i < count; i++)
     {
-      if (buffers[n_buffers].start)
+      if (buffers[i].start)
         {
           free(buffers[i].start);
         }
