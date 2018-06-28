@@ -82,6 +82,7 @@ void audio_pin_setpdm(void)
 /*--------------------------------------------------------------------------*/
 void audio_pin_seti2s(void)
 {
+#ifdef CONFIG_CXD56_I2S0
   /* I2S1 device setting */
 
   if (CXD56_AUDIO_CFG_I2S1_MODE == CXD56_AUDIO_CFG_I2S_MODE_MASTER)
@@ -106,7 +107,9 @@ void audio_pin_seti2s(void)
           CXD56_PIN_CONFIGS(PINCONFS_I2S0_S_NORM);
         }
     }
+#endif
 
+#ifdef CONFIG_CXD56_I2S1
   /* I2S2 device setting */
 
   if (CXD56_AUDIO_CFG_I2S2_MODE == CXD56_AUDIO_CFG_I2S_MODE_MASTER)
@@ -131,6 +134,7 @@ void audio_pin_seti2s(void)
           CXD56_PIN_CONFIGS(PINCONFS_I2S1_S_NORM);
         }
     }
+#endif
 }
 
 /****************************************************************************
