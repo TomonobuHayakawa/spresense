@@ -125,9 +125,14 @@ if __name__ == '__main__':
         configdir = d
         kconfigdir = os.path.join(d, 'kernel')
 
-    if not os.path.isdir(configdir) or not os.path.isdir(kconfigdir):
-        print('Error: configuration directory not found.', file=sys.stderr)
-        sys.exit(4)
+    if savekernel:
+        if not os.path.isdir(kconfigdir):
+            print('Error: kernel configuration directory not found.', file=sys.stderr)
+            sys.exit(4)
+    elif savesdk:
+        if not os.path.isdir(configdir):
+            print('Error: configuration directory not found.', file=sys.stderr)
+            sys.exit(5)
 
     logging.debug('Kernel dir: %s', topdir)
     logging.debug('SDK dir   : %s', sdkdir)
