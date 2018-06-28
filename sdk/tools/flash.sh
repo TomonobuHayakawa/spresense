@@ -17,6 +17,8 @@ function show_help()
 	echo "  Optional arguments:"
 	echo "       -c: Serial port (default: /dev/ttyUSB0)"
 	echo "       -b: Serial baudrate (default: 115200)"
+	echo "       -e: Extract loader archive"
+	echo "       -l: Flash loader"
 	echo "       -h: Show help (This message)"
 	exit
 }
@@ -27,11 +29,15 @@ function show_help()
 # -h: Show Help
 UART_BAUDRATE="115200"
 UART_PORT="/dev/ttyUSB0"
-while getopts b:c:s:h OPT
+UPDATE_ZIP=""
+LOADR_PATH=""
+while getopts b:c:s:e:l:h OPT
 do
 	case $OPT in
 		'b' ) UART_BAUDRATE=$OPTARG;;
 		'c' ) UART_PORT=$OPTARG;;
+		'e' ) UPDATE_ZIP=$OPTARG;;
+		'l' ) LOADR_PATH=$OPTARG;;
 		'h' ) show_help;;
 	esac
 done
@@ -52,8 +58,17 @@ do
 	fi
 done
 
+if [ "${UPDATE_ZIP}" != "" ]; then
+	${SCRIPT_DIR}/eula.py -i ${UPDATE_ZIP}
+	exit
+fi
+
 # Check loader version
 ${SCRIPT_DIR}/eula.py -c
+
+if [ "${LOADR_PATH}" != "" ]; then
+	ESPK_FILES="`find ${LOADR_PATH} -name "*.espk"`"
+fi
 
 if [ "${SPK_FILES}${ESPK_FILES}" == "" ]; then
 	echo "ERROR: No (e)spk files are contains."
