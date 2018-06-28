@@ -52,6 +52,9 @@ do
 	fi
 done
 
+# Check loader version
+${SCRIPT_DIR}/eula.py -c
+
 if [ "${SPK_FILES}${ESPK_FILES}" == "" ]; then
 	echo "ERROR: No (e)spk files are contains."
 	echo ""

@@ -8,6 +8,8 @@ import glob
 import shutil
 import re
 
+import eula
+
 MODE_MENUCONFIG = "menuconfig"
 MODE_QCONFIG = "qconfig"
 MODE_GCONFIG = "gconfig"
@@ -230,6 +232,11 @@ if __name__ == "__main__":
         ret = apply_defconfig(defconfigs, configs, topdir, sdkdir, opts.kernel)
         if ret != 0:
             sys.exit(ret)
+
+        if not opts.kernel:
+            # Check loader version
+            eula_handler = eula.EULAhander()
+            eula_handler.check()
 
     if len(spices) > 0:
         if opts.kernel:
