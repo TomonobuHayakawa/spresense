@@ -362,7 +362,7 @@ for lib in ${LIBLIST}; do
 		# Rename each object file (to avoid collision when they are combined)
 		# and add the file to libnuttx
 
-		for file in `${AR} t ${SDKDIR}/${lib}`; do
+		for file in `${AR} t ${SDKDIR}/${lib} | sed -e "s/[\r\n]\+//g"`; do
 			mv "${file}" "${shortname}-${file}"
 			${AR} rcs "${EXPORTSDKDIR}/libs/libsdk${LIBEXT}" "${shortname}-${file}"
 		done
