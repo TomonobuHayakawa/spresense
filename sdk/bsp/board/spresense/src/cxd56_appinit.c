@@ -54,6 +54,8 @@
 #include "cxd56_powermgr.h"
 #include "cxd56_uart.h"
 #include "cxd56_timerisr.h"
+#include "cxd56_gpio.h"
+#include "cxd56_pinconfig.h"
 #include <arch/chip/pm.h>
 
 #ifdef CONFIG_CXD56_RTC
@@ -290,6 +292,18 @@ int board_app_initialize(uintptr_t arg)
       _err("ERROR: Failed to initialze SPI-Flash. %d\n", errno);
     }
 #endif
+
+  /* In order to prevent Hi-Z from being input to the SD Card controller,
+   * Initialize SDIO pins to GPIO low output with internal pull-down.
+   */
+
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_GPIO);
+  cxd56_gpio_write(PIN_SDIO_CLK, false);
+  cxd56_gpio_write(PIN_SDIO_CMD, false);
+  cxd56_gpio_write(PIN_SDIO_DATA0, false);
+  cxd56_gpio_write(PIN_SDIO_DATA1, false);
+  cxd56_gpio_write(PIN_SDIO_DATA2, false);
+  cxd56_gpio_write(PIN_SDIO_DATA3, false);
 
 #if defined(CONFIG_CXD56_SDIO) && !defined(CONFIG_CXD56_SPISD)
   ret = board_sdcard_initialize();

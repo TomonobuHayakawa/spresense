@@ -56,6 +56,7 @@
 #include "up_arch.h"
 
 #include <arch/board/board.h>
+#include <arch/chip/pin.h>
 #include <arch/chip/pm.h>
 #include "cxd56_gpio.h"
 #include "cxd56_pinconfig.h"
@@ -293,7 +294,6 @@ static int board_sdcard_detect_int(int irq, FAR void *context, FAR void *arg)
                            GPIOINT_PSEUDO_EDGE_RISE :
                            GPIOINT_PSEUDO_EDGE_FALL,
                            board_sdcard_detect_int);
-
     }
 
    return OK;
@@ -316,13 +316,26 @@ int board_sdcard_initialize(void)
 {
   int ret = OK;
 
+  cxd56_gpio_config(SDCARD_TXS02612_SEL, false);
+
+#ifdef CONFIG_SDCARD_TXS02612_PORT0
+  /* Select port0 for SD-Card */
+
+  cxd56_gpio_write(SDCARD_TXS02612_SEL, false);
+#else
+  /* Select port1 for SDIO other than SD-Card */
+
+  cxd56_gpio_write(SDCARD_TXS02612_SEL, true);
+#endif
+
 #ifdef CONFIG_MMCSD_HAVECARDDETECT
   /* Initialize Card insert status */
 
   g_sdhci.inserted = false;
 
-  /* Configure Interrupt pin */
+  /* Configure Interrupt pin with internal pull-up */
 
+  cxd56_pin_config(PINCONF_SDIO_CD_GPIO);
   ret = cxd56_gpioint_config(PIN_SDIO_CD,
                              GPIOINT_PSEUDO_EDGE_FALL,
                              board_sdcard_detect_int);
@@ -359,6 +372,8 @@ int board_sdcard_finalize(void)
 {
   int ret = OK;
 
+  /* At first, Disable interrupt of the card detection */
+
   if (g_sdhci.inserted)
     {
       board_sdcard_disable(NULL);
@@ -371,6 +386,27 @@ int board_sdcard_finalize(void)
 
   cxd56_gpioint_disable(PIN_SDIO_CD);
 #endif
+
+#ifdef CONFIG_SDCARD_TXS02612_PORT0
+  /* Disable SDIO pin configuration */
+
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_GPIO);
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOB_GPIO);
+#else
+  /* Disable SDIO pin configuration */
+
+  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_GPIO);
+#endif
+
+  /* Set GPIO pin to initial state */
+
+  cxd56_gpio_write(PIN_SDIO_CLK, false);
+  cxd56_gpio_write(PIN_SDIO_CMD, false);
+  cxd56_gpio_write(PIN_SDIO_DATA0, false);
+  cxd56_gpio_write(PIN_SDIO_DATA1, false);
+  cxd56_gpio_write(PIN_SDIO_DATA2, false);
+  cxd56_gpio_write(PIN_SDIO_DATA3, false);
+  cxd56_gpio_write_hiz(SDCARD_TXS02612_SEL);
 
   return ret;
 }
@@ -385,17 +421,6 @@ int board_sdcard_finalize(void)
 
 void board_sdcard_pin_initialize(void)
 {
-  cxd56_gpio_config(SDCARD_TXS02612_SEL, false);
-
-#ifdef CONFIG_SDCARD_TXS02612_PORT0
-  /* Select port0 for SD-Card */
-
-  cxd56_gpio_write(SDCARD_TXS02612_SEL, false);
-#else
-  /* Select port1 for SDIO other than SD-Card */
-
-  cxd56_gpio_write(SDCARD_TXS02612_SEL, true);
-#endif
 }
 
 /****************************************************************************
@@ -408,19 +433,6 @@ void board_sdcard_pin_initialize(void)
 
 void board_sdcard_pin_finalize(void)
 {
-#ifdef CONFIG_SDCARD_TXS02612_PORT0
-  /* Disable SDIO pin configuration */
-
-  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_GPIO);
-  CXD56_PIN_CONFIGS(PINCONFS_SDIOB_GPIO);
-#else
-  /* Disable SDIO pin configuration */
-
-  CXD56_PIN_CONFIGS(PINCONFS_SDIOA_GPIO);
-#endif
-  /* Disable pin configuration */
-
-  cxd56_gpio_config(SDCARD_TXS02612_SEL, false);
 }
 
 /****************************************************************************
@@ -428,6 +440,7 @@ void board_sdcard_pin_finalize(void)
  *
  * Description:
  *   Configure SD Card pins on the board.
+ *   This is called when SDHCI is used.
  *
  ****************************************************************************/
 
@@ -439,6 +452,15 @@ void board_sdcard_pin_configuraton(void)
               SDHCI_UDEF1_SDCLKI_SEL_INT);
   modifyreg32(CXD56_SDHCI_USERDEF2CTL, SDHCI_UDEF2_CMD_SEL,
               SDHCI_UDEF2_CMD_SEL_INT);
+
+  /* Disable GPIO output */
+
+  cxd56_gpio_write_hiz(PIN_SDIO_CLK);
+  cxd56_gpio_write_hiz(PIN_SDIO_CMD);
+  cxd56_gpio_write_hiz(PIN_SDIO_DATA0);
+  cxd56_gpio_write_hiz(PIN_SDIO_DATA1);
+  cxd56_gpio_write_hiz(PIN_SDIO_DATA2);
+  cxd56_gpio_write_hiz(PIN_SDIO_DATA3);
 
 #ifdef CONFIG_SDCARD_TXS02612_PORT0
   /* SDIO pin configuration */
