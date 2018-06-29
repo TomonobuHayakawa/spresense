@@ -62,7 +62,7 @@ int board_gpio_config(uint32_t pin, int mode, bool input, bool drive,
 {
   uint32_t pinconf;
 
-  pinconf = PINCONF_SET_PIN(pin) | PINCONF_SET_MODE(PINCONF_MODE0);
+  pinconf = PINCONF_SET_PIN(pin);
   pinconf |= (input) ? PINCONF_INPUT_ENABLE : PINCONF_INPUT_DISABLE;
   pinconf |= (drive) ? PINCONF_DRIVE_HIGH : PINCONF_DRIVE_NORMAL;
 
@@ -81,11 +81,6 @@ int board_gpio_config(uint32_t pin, int mode, bool input, bool drive,
       case PIN_FLOAT:
         pinconf |= PINCONF_FLOAT;
         break;
-    }
-
-  if (input)
-    {
-      pinconf |= PINCONF_INPUT_ENABLE;
     }
 
   pinconf |= PINCONF_SET_MODE(mode);
