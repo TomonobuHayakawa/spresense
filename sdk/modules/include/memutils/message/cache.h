@@ -1,12 +1,7 @@
-/********************************************************************************
+/****************************************************************************
  * modules/include/memutils/message/cache.h
  *
- * Description: Memory Manager Lite Manager class
- *
- *   Copyright (C) 2010-16 Sony Corporation. All rights reserved.
- *   Author: Satoru AIZAWA
- *           Tomonobu Hayakawa
- *           Masahiro Takeyama
+ *   Copyright (C) 2010-2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,7 +30,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************/
+ ****************************************************************************/
+
 #ifndef CACHE_H_INCLUDED
 #define CACHE_H_INCLUDED
 

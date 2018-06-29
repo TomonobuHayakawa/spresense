@@ -1,12 +1,7 @@
-/********************************************************************************
+/****************************************************************************
  * modules/include/memutils/message/MsgQueBlock.h
  *
- * Description: Message Queue Block class definition.
- *
- *   Copyright (C) 2011-16 Sony Corporation. All rights reserved.
- *   Author: Satoru AIZAWA
- *           Tomonobu Hayakawa
- *           Masahiro Takeyama
+ *   Copyright (C) 2011-2016 Sony Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,7 +30,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- ********************************************************************************/
+ ****************************************************************************/
 
 /**
  * @defgroup memutils Memory Utility Libraries
