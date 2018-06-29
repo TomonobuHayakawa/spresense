@@ -56,16 +56,16 @@ while [ ! -z "$1" ]; do
 			shift
 			TOPDIR=$1
 			;;
-        -s )
-            shift
-            SDKDIR=$1
-            ;;
+		-s )
+			shift
+			SDKDIR=$1
+			;;
 		-u )
 			USRONLY=y
 			;;
-        -w | -wn | -wy)
-            # TODO: ignore now
-            ;;
+		-w | -wn | -wy)
+			# TODO: ignore now
+			;;
 		-x )
 			shift
 			LIBEXT=$1
@@ -118,8 +118,8 @@ if [ ! -f "${TOPDIR}/.version" ]; then
 fi
 
 if [ ! -f "${SDKDIR}/.config" ]; then
-    echo "MK: File ${SDKDIR}/.config does not exist"
-    exit 1
+	echo "MK: File ${SDKDIR}/.config does not exist"
+	exit 1
 fi
 
 # Check if the make environment variable has been defined
@@ -135,15 +135,15 @@ fi
 #	VERSION="-${CONFIG_VERSION_STRING}"
 #fi
 if [ -f "${SDKDIR}"/sdk_version ]; then
-    VERSION="-`cat ${SDKDIR}/sdk_version`"
+	VERSION="-`cat ${SDKDIR}/sdk_version`"
 fi
 
 # Check whether the environment is Cygwin and create the export directory
 
 if [ $(uname -o) = "Cygwin" ]; then
-  TMPDIR=`mktemp -d | cygpath -m -f -`
+	TMPDIR=`mktemp -d | cygpath -m -f -`
 else
-  TMPDIR=`mktemp -d`
+	TMPDIR=`mktemp -d`
 fi
 OUTPUTDIR="sdk-export${VERSION}"
 EXPORTDIR="${TMPDIR}/${OUTPUTDIR}"
@@ -348,16 +348,16 @@ for lib in ${LIBLIST}; do
 		cp -p "${SDKDIR}/${lib}" "${EXPORTSDKDIR}/libs/." || \
 			{ echo "MK: cp ${TOPDIR}/${lib} failed"; exit 1; }
 	else
-        echo "Merging archive: `basename ${lib} ${LIBEXT}`"
-        # Save current working directory
+		echo "Merging archive: `basename ${lib} ${LIBEXT}`"
+		# Save current working directory
 
-        PREVDIR="$PWD"
+		PREVDIR="$PWD"
 
 		# Create a temporary directory and extract all of the objects there
 		# Hmmm.. this probably won't work if the archiver is not 'ar'
 
 		cd "${ARTMPDIR}"
-	    ${AR} x "${SDKDIR}/${lib}"
+		${AR} x "${SDKDIR}/${lib}"
 
 		# Rename each object file (to avoid collision when they are combined)
 		# and add the file to libnuttx
@@ -367,11 +367,11 @@ for lib in ${LIBLIST}; do
 			${AR} rcs "${EXPORTSDKDIR}/libs/libsdk${LIBEXT}" "${shortname}-${file}"
 		done
 
-        # Remove all of extracted object files
+		# Remove all of extracted object files
 
-        rm -f *.o
+		rm -f *.o
 
-        cd "${PREVDIR}"
+		cd "${PREVDIR}"
 	fi
 done
 
@@ -383,10 +383,10 @@ cd "${TMPDIR}" || \
 if [ "X${TGZ}" = "Xy" ]; then
 	tar cvf "${OUTPUTDIR}.tar" "${OUTPUTDIR}" 1>/dev/null 2>&1
 	gzip -f "${OUTPUTDIR}.tar"
-    cp "${OUTPUTDIR}.tar.gz" "${SDKDIR}"
+	cp "${OUTPUTDIR}.tar.gz" "${SDKDIR}"
 else
 	zip -r "${OUTPUTDIR}.zip" "${OUTPUTDIR}" 1>/dev/null 2>&1
-    cp "${OUTPUTDIR}.zip" "${SDKDIR}"
+	cp "${OUTPUTDIR}.zip" "${SDKDIR}"
 fi
 
 # Clean up after ourselves
