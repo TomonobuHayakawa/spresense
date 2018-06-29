@@ -55,8 +55,8 @@ CXXSRCS = postfilter_ctrl.cpp main.cpp
 CXXELFFLAGS += -Os
 ifeq ($(WINTOOL),y)
 #CXXELFFLAGS += -I"$(shell cygpath -w $(APPDIR))"
-CXXELFFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIB)asmp$(DELIM)worker)"
-CXXELFFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIB)audio$(DELIM)include)"
+CXXELFFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIM)asmp$(DELIM)worker)"
+CXXELFFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIM)audio$(DELIM)include)"
 else
 #CXXELFFLAGS += -I$(APPDIR)
 CXXELFFLAGS += -I$(SDKDIR)/modules/asmp/worker
