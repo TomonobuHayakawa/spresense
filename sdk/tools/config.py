@@ -17,6 +17,7 @@ MODE_GCONFIG = "gconfig"
 BOARDDIR = "board"
 FEATUREDIR = "feature"
 DEVDIR = "device"
+EXAMPLESDIR = "examples"
 
 def get_defconfigs(directory):
     return list(map(lambda x: os.path.basename(str(x)),
@@ -198,16 +199,20 @@ if __name__ == "__main__":
         fconfigs = list(map(lambda x: os.path.join(FEATUREDIR, str(x)), l))
         l = get_defconfigs(os.path.join(configdir, DEVDIR))
         dconfigs = list(map(lambda x: os.path.join(DEVDIR, str(x)), l))
+        l = get_defconfigs(os.path.join(configdir, EXAMPLESDIR))
+        econfigs = list(map(lambda x: os.path.join(EXAMPLESDIR, str(x)), l))
 
         # Sort them before join
 
         bconfigs.sort()
         fconfigs.sort()
         dconfigs.sort()
+        econfigs.sort()
 
         configs += bconfigs
         configs += fconfigs
         configs += dconfigs
+        configs += econfigs
 
     if opts.list:
         print('Available configurations:')
