@@ -67,6 +67,12 @@ void audio_pin_setmclk(void)
 }
 
 /*--------------------------------------------------------------------------*/
+void audio_pin_unsetmclk(void)
+{
+  CXD56_PIN_CONFIGS(PINCONFS_MCLK_GPIO);
+}
+
+/*--------------------------------------------------------------------------*/
 void audio_pin_setpdm(void)
 {
   if (CXD56_AUDIO_CFG_PDM_DS == CXD56_AUDIO_CFG_LOEMI_2MA)
@@ -77,6 +83,12 @@ void audio_pin_setpdm(void)
     {
       CXD56_PIN_CONFIGS(PINCONFS_PDM_HIGH);
     }
+}
+
+/*--------------------------------------------------------------------------*/
+void audio_pin_unsetpdm(void)
+{
+  CXD56_PIN_CONFIGS(PINCONFS_PDM_GPIO);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -137,23 +149,71 @@ void audio_pin_seti2s(void)
 #endif
 }
 
+/*--------------------------------------------------------------------------*/
+void audio_pin_unseti2s(void)
+{
+#ifdef CONFIG_CXD56_I2S0
+  /* I2S0 device setting */
+
+  CXD56_PIN_CONFIGS(PINCONFS_I2S0_GPIO);
+
+#endif
+
+#ifdef CONFIG_CXD56_I2S1
+
+  /* I2S1 device setting */
+  CXD56_PIN_CONFIGS(PINCONFS_I2S1_GPIO);
+#endif
+}
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 void cxd56_audio_pin_set(void)
 {
-  /* GPIO Setting for Audio MCLK. */
+  /* Select MCLK. */
 
 #ifndef CONFIG_CXD56_AUDIO_ANALOG_NONE
   audio_pin_setmclk();
 #endif
 
-  /* GPIO Setting for Audio PDM. */
+  /* Select PDM_CLK, PDM_IN, PDM_OUT. */
 
   audio_pin_setpdm();
+}
 
-  /* GPIO Setting for Audio I2S. */
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_pin_unset(void)
+{
+  /* Select GPIO(P1x_00). */
+
+#ifndef CONFIG_CXD56_AUDIO_ANALOG_NONE
+  audio_pin_unsetmclk();
+#endif
+
+  /* Select GPIO(P1y_00/01/02). */
+
+  audio_pin_unsetpdm();
+
+  /* Select GPIO(P1v_00/01/02/03, P1w_00/01/02/03). */
+
+  audio_pin_unseti2s();
+}
+
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_pin_i2s_set(void)
+{
+  /* Select I2S0/1_BCK, I2S0/1_LRCK, I2S0/1_DATA_IN, I2S0/1_DATA_OUT. */
 
   audio_pin_seti2s();
 }
+
+/*--------------------------------------------------------------------------*/
+void cxd56_audio_pin_i2s_unset(void)
+{
+ /* Select GPIO(P1v_00/01/02/03, P1w_00/01/02/03). */
+
+  audio_pin_unseti2s();
+}
+

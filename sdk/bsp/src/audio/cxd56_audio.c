@@ -371,6 +371,10 @@ CXD56_AUDIO_ECODE cxd56_audio_poweroff(void)
   cxd56_audio_irq_disable();
   cxd56_audio_irq_detach();
 
+  /* Unset global pin. */
+
+  cxd56_audio_pin_unset();
+
   /* Update status. */
 
   g_status = AUDIO_POWER_STATE_OFF;
@@ -1263,6 +1267,30 @@ CXD56_AUDIO_ECODE cxd56_audio_dis_digsft(void)
     }
 
   cxd56_audio_ac_reg_disable_digsft();
+
+  return ret;
+}
+
+/*--------------------------------------------------------------------------*/
+CXD56_AUDIO_ECODE cxd56_audio_en_i2s_io(void)
+{
+  CXD56_AUDIO_ECODE ret = CXD56_AUDIO_ECODE_OK;
+
+  /* Enable I2S pin. */
+
+  cxd56_audio_pin_i2s_set();
+
+  return ret;
+}
+
+/*--------------------------------------------------------------------------*/
+CXD56_AUDIO_ECODE cxd56_audio_dis_i2s_io(void)
+{
+  CXD56_AUDIO_ECODE ret = CXD56_AUDIO_ECODE_OK;
+
+  /* Disable I2S pin. */
+
+  cxd56_audio_pin_i2s_unset();
 
   return ret;
 }

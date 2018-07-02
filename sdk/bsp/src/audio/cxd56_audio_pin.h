@@ -62,5 +62,8 @@
  ****************************************************************************/
 
 void cxd56_audio_pin_set(void);
+void cxd56_audio_pin_unset(void);
+void cxd56_audio_pin_i2s_set(void);
+void cxd56_audio_pin_i2s_unset(void);
 
 #endif /* __BSP_SRC_AUDIO_CXD56_AUDIO_PIN_H */

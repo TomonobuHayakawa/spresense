@@ -1731,6 +1731,10 @@ void AudioManager::setBaseBandStatus(AudioCommand &cmd)
 
   uint32_t rst = AS_ECODE_OK;
 
+  /* Enable I2S pin. */
+
+  cxd56_audio_en_i2s_io();
+
   rst = powerOnBaseBand(BB_POWER_INPUT | BB_POWER_OUTPUT);
   if (rst != AS_ECODE_OK)
     {
@@ -1979,7 +1983,11 @@ void AudioManager::setRecorder(AudioCommand &cmd)
     {
       case AS_SETRECDR_STS_INPUTDEVICE_MIC_A:
       case AS_SETRECDR_STS_INPUTDEVICE_MIC_D:
+        break;
       case AS_SETRECDR_STS_INPUTDEVICE_I2S_IN:
+        /* Enable I2S pin. */
+
+        cxd56_audio_en_i2s_io();
         break;
 
       default:
@@ -2739,16 +2747,19 @@ void AudioManager::setOutputSelect(AudioCommand &cmd)
   switch (cmd.init_output_select_param.output_device_sel)
     {
       case AS_OUT_OFF:
+        cxd56_audio_dis_i2s_io();
         error_code = cxd56_audio_dis_output();
         break;
 
       case AS_OUT_SP:
+        cxd56_audio_dis_i2s_io();
         cxd56_audio_set_spout(true);
         error_code = cxd56_audio_en_output();
         break;
 
       case AS_OUT_I2S:
         {
+          cxd56_audio_en_i2s_io();
           cxd56_audio_set_spout(false);
           error_code = cxd56_audio_en_output();
           if (error_code != CXD56_AUDIO_ECODE_OK)
@@ -3169,6 +3180,16 @@ void AudioManager::setThroughPath(AudioCommand &cmd)
                             AS_ECODE_SET_AUDIO_DATA_PATH_ERROR);
           return;
         }
+    }
+
+  /* Enable I2S pin. */
+
+  if ((cmd.set_through_path.path1.in == AS_THROUGH_PATH_IN_I2S1)  ||
+      (cmd.set_through_path.path1.in == AS_THROUGH_PATH_IN_I2S2)  ||
+      (cmd.set_through_path.path2.in == AS_THROUGH_PATH_OUT_I2S1) ||
+      (cmd.set_through_path.path2.in == AS_THROUGH_PATH_OUT_I2S2))
+    {
+      cxd56_audio_en_i2s_io();
     }
 
   sendResult(AUDRLT_SETTHROUGHPATHCMPLT);

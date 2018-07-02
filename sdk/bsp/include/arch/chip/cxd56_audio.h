@@ -878,6 +878,24 @@ CXD56_AUDIO_ECODE cxd56_audio_en_digsft(cxd56_audio_dsr_rate_t rate);
  */
 CXD56_AUDIO_ECODE cxd56_audio_dis_digsft(void);
 
+/**
+ * @brief Enable I2S I/O
+ *
+ * @param none
+ *
+ * @retval CXD56_AUDIO_ECODE return code
+ */
+CXD56_AUDIO_ECODE cxd56_audio_en_i2s_io(void);
+
+/**
+ * @brief Disable I2S I/O
+ *
+ * @param none
+ *
+ * @retval CXD56_AUDIO_ECODE return code
+ */
+CXD56_AUDIO_ECODE cxd56_audio_dis_i2s_io(void);
+
 #ifdef __cplusplus
 } /* end of extern "C" */
 #endif /* __cplusplus */
