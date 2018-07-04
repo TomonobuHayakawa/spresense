@@ -71,8 +71,18 @@ typedef uint32_t	drm_t;		/* DRM address. 0 origin byte addressing */
 static const uint32_t	INVALID_DRM = 0xffffffffU;	/* Invalid DRM address */
 
 #if (!defined(_ITRON_H_) && !defined(_POSIX))
-#define TRUE		(1)
-#define FALSE		(0)
+#  ifndef TRUE
+#    define TRUE  1
+#  else
+S_ASSERT(TRUE == 1); /* ERROR: TRUE is not 1 */
+#  endif
+
+
+#  ifndef FALSE
+#    define FALSE  0
+#  else
+S_ASSERT(FALSE == 0);  /* ERROR: FALSE is not 0 */
+#  endif
 #endif /* _ITRON_H_  && _POSIX */
 
 /* 違う値で2重定義になるので削除 */
