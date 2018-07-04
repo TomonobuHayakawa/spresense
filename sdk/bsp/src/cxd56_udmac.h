@@ -3,6 +3,9 @@
  *
  *   Copyright (C) 2016 Sony Corporation
  *
+ *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
+ *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -42,12 +45,12 @@
 
 #include "cxd56_dmac_common.h"
 
-/************************************************************************************
+/****************************************************************************
  * Pre-processor Definitions
- ************************************************************************************/
+ ****************************************************************************/
 
-/* Bit encoded input parameter to cxd56_channel().  These encodings must fit in the
- * an unsigned integer of type dma_config_t.
+/* Bit encoded input parameter to cxd56_channel(). These encodings must fit
+ * in the an unsigned integer of type dma_config_t.
  *
  * Current limitations/assumptions in the encoding:
  *
@@ -70,9 +73,9 @@
 #  define CXD56_UDMA_MEMINCR              (1 << 13) /*         1=Increment memory address */
 #  define CXD56_UDMA_NOINCR               (0)       /*         0=No memory address increment */
 
-/************************************************************************************
+/****************************************************************************
  * Public Types
- ************************************************************************************/
+ ****************************************************************************/
 
 #ifdef CONFIG_DEBUG_DMA
 struct cxd56_udmaregs_s
@@ -97,9 +100,9 @@ struct cxd56_udmaregs_s
 #endif
 
 
-/************************************************************************************
+/****************************************************************************
  * Public Data
- ************************************************************************************/
+ ****************************************************************************/
 
 #ifndef __ASSEMBLY__
 
@@ -112,19 +115,20 @@ extern "C"
 #define EXTERN extern
 #endif
 
-/************************************************************************************
+/****************************************************************************
  * Public Function Prototypes
- ************************************************************************************/
+ ****************************************************************************/
 
-/************************************************************************************
+/****************************************************************************
  * Name: cxd56_udmachannel
  *
  * Description:
- *   Allocate a DMA channel.  This function gives the caller mutually exclusive
- *   access to a DMA channel.
+ *   Allocate a DMA channel. This function gives the caller mutually
+ *   exclusive access to a DMA channel.
  *
- *   If no DMA channel is available, then cxd56_udmachannel() will wait until the
- *   holder of a channel relinquishes the channel by calling cxd56_udmafree().
+ *   If no DMA channel is available, then cxd56_udmachannel() will wait until
+ *   the holder of a channel relinquishes the channel by calling
+ *   cxd56_udmafree().
  *
  * Input parameters:
  *   None
@@ -135,19 +139,19 @@ extern "C"
  * Assumptions:
  *   - The caller can wait for a DMA channel to be freed if it is not available.
  *
- ************************************************************************************/
+ ****************************************************************************/
 
 DMA_HANDLE cxd56_udmachannel(void);
 
-/************************************************************************************
+/****************************************************************************
  * Name: cxd56_udmafree
  *
  * Description:
- *   Release a DMA channel.  If another thread is waiting for this DMA channel in a
- *   call to cxd56_udmachannel, then this function will re-assign the DMA channel to
- *   that thread and wake it up.  NOTE:  The 'handle' used in this argument must
- *   NEVER be used again until cxd56_udmachannel() is called again to re-gain access
- *   to the channel.
+ *   Release a DMA channel.  If another thread is waiting for this DMA
+ *   channel in a call to cxd56_udmachannel, then this function will re-assign
+ *   the DMA channel to that thread and wake it up.
+ *   NOTE:  The 'handle' used in this argument must NEVER be used again until
+ *   cxd56_udmachannel() is called again to re-gain access to the channel.
  *
  * Returned Value:
  *   None
@@ -156,11 +160,11 @@ DMA_HANDLE cxd56_udmachannel(void);
  *   - The caller holds the DMA channel.
  *   - There is no DMA in progress
  *
- ************************************************************************************/
+ ****************************************************************************/
 
 void cxd56_udmafree(DMA_HANDLE handle);
 
-/************************************************************************************
+/****************************************************************************
  * Name: cxd56_rxudmasetup
  *
  * Description:
@@ -173,12 +177,12 @@ void cxd56_udmafree(DMA_HANDLE handle);
  *            configured transfer size.
  *   config - Channel configuration selections
  *
- ************************************************************************************/
+ ****************************************************************************/
 
 void cxd56_rxudmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
                        size_t nbytes, dma_config_t config);
 
-/************************************************************************************
+/****************************************************************************
  * Name: cxd56_txudmasetup
  *
  * Description:
@@ -191,12 +195,12 @@ void cxd56_rxudmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
  *            configured transfer size.
  *   config - Channel configuration selections
  *
- ************************************************************************************/
+ ****************************************************************************/
 
 void cxd56_txudmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
                        size_t nbytes, dma_config_t config);
 
-/************************************************************************************
+/****************************************************************************
  * Name: cxd56_udmastart
  *
  * Description:
@@ -206,25 +210,26 @@ void cxd56_txudmasetup(DMA_HANDLE handle, uintptr_t paddr, uintptr_t maddr,
  *   - DMA handle allocated by cxd56_udmachannel()
  *   - No DMA in progress
  *
- ************************************************************************************/
+ ****************************************************************************/
 
 void cxd56_udmastart(DMA_HANDLE handle, dma_callback_t callback, void *arg);
 
-/************************************************************************************
+/****************************************************************************
  * Name: cxd56_udmastop
  *
  * Description:
- *   Cancel the DMA.  After cxd56_udmastop() is called, the DMA channel is reset and
- *   cxd56_udmasetup() must be called before cxd56_udmastart() can be  called again
+ *   Cancel the DMA.  After cxd56_udmastop() is called, the DMA channel is
+ *   reset and cxd56_udmasetup() must be called before cxd56_udmastart() can
+ *   be called again.
  *
  * Assumptions:
  *   - DMA handle allocated by cxd56_udmachannel()
  *
- ************************************************************************************/
+ ****************************************************************************/
 
 void cxd56_udmastop(DMA_HANDLE handle);
 
-/************************************************************************************
+/****************************************************************************
  * Name: cxd56_udmasample
  *
  * Description:
@@ -233,7 +238,7 @@ void cxd56_udmastop(DMA_HANDLE handle);
  * Assumptions:
  *   - DMA handle allocated by cxd56_udmachannel()
  *
- ************************************************************************************/
+ ****************************************************************************/
 
 #ifdef CONFIG_DEBUG_DMA
 void cxd56_udmasample(DMA_HANDLE handle, struct cxd56_udmaregs_s *regs);
@@ -241,7 +246,7 @@ void cxd56_udmasample(DMA_HANDLE handle, struct cxd56_udmaregs_s *regs);
 #  define cxd56_udmasample(handle,regs)
 #endif
 
-/************************************************************************************
+/****************************************************************************
  * Name: cxd56_udmadump
  *
  * Description:
@@ -250,7 +255,7 @@ void cxd56_udmasample(DMA_HANDLE handle, struct cxd56_udmaregs_s *regs);
  * Assumptions:
  *   - DMA handle allocated by cxd56_udmachannel()
  *
- ************************************************************************************/
+ ****************************************************************************/
 
 #ifdef CONFIG_DEBUG_DMA
 void cxd56_udmadump(DMA_HANDLE handle, const struct cxd56_udmaregs_s *regs,

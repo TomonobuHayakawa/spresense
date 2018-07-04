@@ -1,7 +1,10 @@
 /****************************************************************************
  * bsp/src/cxd56_allocateheap.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
+ *   Copyright (C) 2016 Sony Corporation.
+ *
+ *   Copyright (C) 2012-2013, 2015-2017 Gregory Nutt. All rights reserved.
+ *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -1,7 +1,10 @@
 /****************************************************************************
  * modules/asmp/worker/arch/startup.c
  *
- *   Copyright (C) 2017 Sony Corporation. All rights reserved.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation.
+ *
+ *   Copyright (C) 2012, 2015 Gregory Nutt. All rights reserved.
+ *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,6 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
+
 #include <sdk/config.h>
 #include <arch/irq.h>
 #include <asmp/mpmq.h>
