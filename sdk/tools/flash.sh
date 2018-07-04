@@ -76,5 +76,23 @@ if [ "${SPK_FILES}${ESPK_FILES}" == "" ]; then
 	show_help
 fi
 
+# Get platform type
+case "$(uname -s)" in
+	Linux*)
+		PLATFORM=linux
+		;;
+	Darwin*)
+		PLATFORM=macosx
+		;;
+	CYGWIN*|MINGW32*|MSYS*)
+		PLATFORM=windows
+		;;
+	*)
+		echo "ERROR: Unknown platform"
+		echo ""
+		show_help
+		;;
+esac
+
 # Flash into spresense board
-${SCRIPT_DIR}/linux/flash_writer -s -c ${UART_PORT} -d -b ${UART_BAUDRATE} -n ${ESPK_FILES} ${SPK_FILES}
+${SCRIPT_DIR}/${PLATFORM}/flash_writer -s -c ${UART_PORT} -d -b ${UART_BAUDRATE} -n ${ESPK_FILES} ${SPK_FILES}
