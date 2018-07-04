@@ -376,13 +376,13 @@ static int pwm_start(FAR struct pwm_lowerhalf_s *dev,
     {
       ret = convert_freq2period(info->frequency, info->duty, &param);
       if (ret < 0)
-	{
-	  return -EINVAL;
-	}
+        {
+          return -EINVAL;
+        }
 
       if (PWM_REG(priv->ch)->EN & 1)
         {
-          /* Change duty cycle dynamically if already running */ 
+          /* Change duty cycle dynamically if already running */
 
           PWM_REG(priv->ch)->PARAM = param;
           return OK;
