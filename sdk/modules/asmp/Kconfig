@@ -11,7 +11,7 @@ if ASMP
 
 	config ASMP_MEMSIZE
 	hex "ASMP shared memory size"
-	default 0x100000
+	default 0xc0000
 	help
 		Memory size for shared memory area in ASMP Framework.
 
