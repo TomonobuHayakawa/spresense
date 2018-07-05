@@ -166,7 +166,7 @@ int mptask_init(mptask_t *task, const char *filename)
     }
 
   fd = open(filename, O_RDONLY);
-  if (!fd)
+  if (fd < 0)
     {
       return -ENOENT;
     }
