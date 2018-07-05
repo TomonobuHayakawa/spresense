@@ -78,11 +78,11 @@ struct info_audio_specific_config_s /* Index is streamID */
 
   uint8_t audio_object_type;
 
-  /* channelConfiguration(4-bit(valid range 0Å`0xf)) */
+  /* channelConfiguration(4-bit(valid range 0 - 0xf)) */
 
   uint8_t channel_configuration;
 
-  /* samplingFrequencyIndex(4-bit(valid range 0Å`0xf)) */
+  /* samplingFrequencyIndex(4-bit(valid range 0 - 0xf)) */
 
   uint8_t sampling_frequency_index;
 
@@ -132,7 +132,7 @@ struct info_audio_specific_config_s /* Index is streamID */
 
   /* config_length is set by user (if not set, take as 0) */
 
-  /* config_length enable/disable flag(=1 enable !=1 ñ≥å¯) */
+  /* config_length enable/disable flag(=1 enable !=1 disable) */
 
   uint8_t config_length_flag;
   uint8_t reserved;
@@ -201,7 +201,7 @@ struct info_stream_id_s /* index is streamID */
 };
 typedef struct info_stream_id_s InfomationStreamID;
 
-struct info_stream_frame_s /* ìYÇ¶éöÇÕstreamID */
+struct info_stream_frame_s
 {
   /* Following is correspond to streamID */
 
@@ -282,7 +282,7 @@ struct info_stream_mux_config_s
 
   uint8_t   lay_stream_indx[LATM_MAX_STREAM_ID];
 
-  /* Syntactically, maximum is "ProgramÅ~Layey", but streamIdx=streamCnt=streamID,
+  /* Syntactically, maximum is "Program x Layey", but streamIdx=streamCnt=streamID,
    * therefore, actually maximun is 16.
    */
 

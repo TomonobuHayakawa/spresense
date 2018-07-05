@@ -44,7 +44,7 @@
 #include "common/LatmAacLc.h"
 
 /* Syncword to use with LATM / LOAS.
- * (Compare after obtaining with 11bit value Å® long value)
+ * (Compare after obtaining with 11bit value -> long value)
  */
 
 #define LATM_LENGTH_OF_SYNCWORD  11
@@ -227,14 +227,6 @@ static uint8_t bitReadLessByte(LatmLocalInfo *ptr_info,
           (BitMaskLessByteTable[length_for_read] >> modulo_bit));
       ptr_info->total_bit_length += length_for_read;
 
-      /* At this point, the bit-masked bit is acquired.
-       * When acquiring a part bit in 1btye as follows:
-       * MSB     LSB
-       *  --11 01--
-       *     Å´
-       * Need a right shift.
-       */
-
       if (ptr_info->total_bit_length % LATM_BIT_OF_BYTE)
         {
           rtn_value >>=
@@ -244,19 +236,6 @@ static uint8_t bitReadLessByte(LatmLocalInfo *ptr_info,
     }
   else
     {
-      /*
-       * Example: When you want to acquire 5 bit as below
-       * MSB     LSB   MSB     LSB
-       *  ----  -101   10--  ----
-       *      Å™           Å™
-       *    1byte      2byte
-       * 1. Get 1st byte bit
-       * 2. Before acquiring the 2nd byte, shift the acquired bit of
-       *    1st byte to the left
-       * 3. Obtain 2nd byte and shift right
-       * 4. Take OR of 2. and 3.
-       */
-
       /* Read 1st byte. */
 
       rtn_value =
@@ -1557,7 +1536,7 @@ static int32_t isoStreamMuxConfig(LatmLocalInfo *ptr_info,
           for (int32_t lay = 0; lay <= tmp_value; lay++)
             {
               /* [ISO standard] Only the following two items have
-               * streamCntÅÇstreamID.
+               * streamCnt not equal streamID.
                */
 
               ptr_stream_mux_config->
@@ -1567,7 +1546,7 @@ static int32_t isoStreamMuxConfig(LatmLocalInfo *ptr_info,
 
               /* Subsequent items are synchronized with streamID:
                * In the ISO standard, StreamID [prog] [lay] is used,
-               * but 16Å~8 two-dimensional array (=128) of 16Å~8 is useless,
+               * but 16 x 8 two-dimensional array (=128) of 16 x 8 is useless,
                * so it is not used.
                */
 
