@@ -40,7 +40,6 @@
 #include <debug.h>
 
 #include "sensing/barometer.h"
-#include "sensing/sensor_dsp_command.h"
 
 /****************************************************************************
  * Pre-processor Definitions
