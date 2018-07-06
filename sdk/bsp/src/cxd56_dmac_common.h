@@ -1,7 +1,7 @@
 /****************************************************************************
  * bsp/src/cxd56_dmac_common.h
  *
- *   Copyright (C) 2017 Sony Corporation.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  *   Copyright (C) 2009, 2011-2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

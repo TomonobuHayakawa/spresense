@@ -1,7 +1,7 @@
 /****************************************************************************
  * bsp/src/cxd56_spi.c
  *
- *   Copyright (C) 2016 Sony Corporation.
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  *   Copyright (C) 2015-2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

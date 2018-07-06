@@ -1,7 +1,7 @@
 ############################################################################
 # modules/memutils/message/tool/msgq_layout.rb
 #
-#   Copyright (C) 2012 Sony Corporation
+#   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -68,7 +68,7 @@ def output_header_comment(out, title)
  * This file was created by #{File.basename($0)}
  * !!! CAUTION! don't edit this file manually !!!
  *
- *   Notes: (C) Copyright 2012 Sony Corporation
+ *   Notes: (C) Copyright 2018 Sony Semiconductor Solutions Corporation
  */
 
 	EOB
