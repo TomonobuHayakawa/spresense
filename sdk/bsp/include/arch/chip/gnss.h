@@ -119,7 +119,7 @@ extern "C" {
  * direction as positive.\n
  * When specifying south latitude or west longitude, set it to a negative
  * value.\n
- * 
+ *
  * The receiver position, current time and TCXO offset value, ephemeris data
  * are required in order to initiate a hot start
  * so the position must have been set to GNSS using this command prior to hot
@@ -285,7 +285,7 @@ extern "C" {
 
 /**
  * Open CEP data file for GNSS device. \n
- * 
+ *
  * Open the CEP data file and make the data available from the device.\n
  * The file name to be opened is specified by Kconfig.\n
  * This command must be issued in idle mode, between calling open function
@@ -525,7 +525,7 @@ extern "C" {
 /**
  * Start PVTLOG .\n
  * Automatically saves the PVT log in the GNSS core.
- * 
+ *
  * @param arg
  * Address pointing to #cxd56_pvtlog_setting_s object.
  */
@@ -553,7 +553,7 @@ extern "C" {
  * Get PVTLOG status.\n
  * This command is for getting the log stored status.
  * The status data include stored log data count and logging time.
- * 
+ *
  * @param arg
  * Address pointing to #cxd56_pvtlog_status_s.
  */
@@ -648,7 +648,7 @@ extern "C" {
 
 /**
  * @name Offset value that specifies the data type to read from GNSS
- * 
+ *
  */
 /* @{ */
 /** Offset for last GNSS data */
@@ -695,7 +695,7 @@ extern "C" {
 
 /**
  * @name Signal types from GNSS
- * 
+ *
  */
 /* @{ */
 /** Signal type is GNSS */
@@ -944,7 +944,7 @@ struct cxd56_gnss_signal_setting_s
 };
 
 /** @struct cxd56_gnss_signal_info_s
- *  @brief Information for use after being signaled 
+ *  @brief Information for use after being signaled
  *         to read data asychronously
  */
 
@@ -961,7 +961,7 @@ struct cxd56_gnss_signal_info_s
  *         If the log interval(cycle) is smaller than the positioning interval,
  *         it is logged every positioning interval.
  *         The output timing is specified by the ratio to the log buffer in the
- *         GNSS device by threshold. Possible values ​​are
+ *         GNSS device by threshold. Possible values are
  *         #CXD56_GNSS_PVTLOG_THRESHOLD_FULL, #CXD56_GNSS_PVTLOG_THRESHOLD_HALF,
  *         and #CXD56_GNSS_PVTLOG_THRESHOLD_ONE_DATA.
  */
