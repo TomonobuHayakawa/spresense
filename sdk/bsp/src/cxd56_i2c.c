@@ -498,6 +498,13 @@ static int cxd56_i2c_receive(struct cxd56_i2cdev_s *priv, int last)
 
   DEBUGASSERT(msg != NULL);
 
+  /* Support only for less than or equal to 32 bytes */
+
+  if (msg->length > 32)
+    {
+      return -EINVAL;
+    }
+
   /* update threshold value of the receive buffer */
 
   i2c_reg_write(priv, CXD56_IC_RX_TL, msg->length - 1);
