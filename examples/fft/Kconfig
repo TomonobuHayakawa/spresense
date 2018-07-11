@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_FFT
+	bool "FFT Example"
+	default n
+	---help---
+		Fast Fourier Transform offload to DSP
+
+if EXAMPLES_FFT
+
+config EXAMPLES_FFT_DSPMATH_PATH
+	string "DSP Math library executable"
+	default "/mnt/vfat/BIN/DSPMATH"
+
+config EXAMPLES_FFT_DISABLE_MATH_OFFLOAD
+	bool "Disable offload math functions"
+	default n
+	---help---
+		Disable offloading CMSIS math library functions.
+		This option will be CMSIS DSP library linked directly.
+		It is used for debug purpose only.
+
+config EXAMPLES_FFT_WORKER_STACKSIZE
+    int "Example worker stack size"
+    default 1024
+
+endif
