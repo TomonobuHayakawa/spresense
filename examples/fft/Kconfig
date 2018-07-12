@@ -11,17 +11,39 @@ config EXAMPLES_FFT
 
 if EXAMPLES_FFT
 
+config EXAMPLES_FFT_DSPLIB_PATH
+    string "Path to top of the CMSIS Library source tree"
+    default "CMSIS_5/CMSIS"
+    ---help---
+        Refer to ARM CMSIS version 5 source and binary path.
+        This path will be used on building stage.
+        You can download it or clone it from https://github.com/ARM-software/CMSIS_5.
+        ARM CMSIS is licensed under Apache-2.0.
+
+config EXAMPLES_FFT_DSPLIB_FROM_SOURCE
+    bool "Build DSP math functions"
+    default n
+    ---help---
+        Compile CMSIS-DSP math functions (precompiled archive file never been used).
+        If you choose y, then compile DSP math functions from sources. It is useful
+        for debug and/or optimization.
+
+if !EXAMPLES_FFT_DSPLIB_FROM_SOURCE
+
+config EXAMPLES_FFT_DSPLIB_ARCHIVEFILE
+    string "Link archive name"
+    default "arm_cortexM4lf_math"
+    ---help---
+        Set filename except "lib" and ".a" name. This options will be passed
+        linker -l option directly. If filename is missing, link error will be happend.
+
+endif
+
 config EXAMPLES_FFT_DSPMATH_PATH
 	string "DSP Math library executable"
 	default "/mnt/vfat/BIN/DSPMATH"
-
-config EXAMPLES_FFT_DISABLE_MATH_OFFLOAD
-	bool "Disable offload math functions"
-	default n
-	---help---
-		Disable offloading CMSIS math library functions.
-		This option will be CMSIS DSP library linked directly.
-		It is used for debug purpose only.
+    ---help---
+        Set path to dspmath worker program ELF file on the board.
 
 config EXAMPLES_FFT_WORKER_STACKSIZE
     int "Example worker stack size"

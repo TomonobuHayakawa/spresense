@@ -34,21 +34,35 @@
 ############################################################################
 
 -include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
+include $(APPDIR)/Make.defs
 
-ifeq ($(WINTOOL),y)
-NUTTXLIB = "${shell cygpath -w $(TOPDIR)$(DELIM)lib}"
-else
-NUTTXLIB = "$(TOPDIR)$(DELIM)lib"
+# By default, this example uses link binary archive file (.a).
+# User can be change any modification to source, set 'n' to compile from
+# sources and link objects directly.
+
+ifeq ($(CONFIG_EXAMPLES_FFT_DSPLIB_FROM_SOURCE),y)
+USE_DSP_ARCHIVE := n
+endif
+USE_DSP_ARCHIVE ?= y
+
+ifeq ($(USE_DSP_ARCHIVE),y)
+LDLIBPATH += -L $(DSPLIBDIR)/Lib/GCC
+LDLIBS += -l$(call dequoted,$(CONFIG_EXAMPLES_FFT_DSPLIB_ARCHIVEFILE))
 endif
 
-LDLIBPATH +=  -L $(NUTTXLIB)
+# Setup to build and linking worker support library
 
-LIBGCC = "$(shell "$(CC)" $(ARCHCPUFLAGS) -print-libgcc-file-name)"
+WORKER_DIR = $(SDKDIR)$(DELIM)modules$(DELIM)asmp$(DELIM)worker
+WORKER_LIB = $(WORKER_DIR)$(DELIM)libasmpw$(LIBEXT)
+LDLIBPATH += -L $(WORKER_DIR)
 LDLIBS += -lasmpw
 
 BIN = dspmath
 
 CSRCS = dspmath_main.c
+
+ifneq ($(USE_DSP_ARCHIVE),y)
 
 # DSP/Source/TransformFunctions
 
@@ -110,31 +124,33 @@ CSRCS += arm_mult_q31.c
 CSRCS += arm_shift_q15.c
 CSRCS += arm_shift_q31.c
 
+VPATH  = $(DSPLIBDIR)/DSP/Source/TransformFunctions
+VPATH += $(DSPLIBDIR)/DSP/Source/SupportFunctions
+VPATH += $(DSPLIBDIR)/DSP/Source/BasicMathFunctions
+VPATH += $(DSPLIBDIR)/DSP/Source/ComplexMathFunctions
+VPATH += $(DSPLIBDIR)/DSP/Source/CommonTables
+
+endif
+
 CFLAGS += -O3
 ifeq ($(WINTOOL),y)
-CFLAGS += -I"$(shell cygpath -w $(APPDIR))"
-CFLAGS += -I"$(shell cygpath -w $(TOPDIR)/asmp/worker)"
-CFLAGS += -I"$(shell cygpath -w $(APPDIR)/examples/fft)"
-CFLAGS += -I"$(shell cygpath -w $(APPDIR)/examples/fft/dsp/CMSIS/Core/Include)"
-CFLAGS += -I"$(shell cygpath -w $(APPDIR)/examples/fft/dsp/CMSIS/DSP/Include)"
+CFLAGS += -I"$(shell cygpath -w $(SDKDIR)/modules/asmp/worker)"
+CFLAGS += -I"$(shell cygpath -w $(APPDIR)/fft)"
+CFLAGS += -I"$(shell cygpath -w $(DSPLIBDIR)/Core/Include)"
+CFLAGS += -I"$(shell cygpath -w $(DSPLIBDIR)/DSP/Include)"
 else
-CFLAGS += -I$(APPDIR)
-CFLAGS += -I$(TOPDIR)/asmp/worker
-CFLAGS += -I$(APPDIR)/examples/fft
-CFLAGS += -I$(APPDIR)/examples/fft/dsp/CMSIS/Core/Include
-CFLAGS += -I$(APPDIR)/examples/fft/dsp/CMSIS/DSP/Include
+CFLAGS += -I$(SDKDIR)/modules/asmp/worker
+CFLAGS += -I$(APPDIR)/fft
+CFLAGS += -I$(DSPLIBDIR)/Core/Include
+CFLAGS += -I$(DSPLIBDIR)/DSP/Include
 endif
 
 CFLAGS += -DARM_MATH_CM4 -D__FPU_PRESENT=1
 
-VPATH  = ../CMSIS/DSP/Source/TransformFunctions
-VPATH += ../CMSIS/DSP/Source/SupportFunctions
-VPATH += ../CMSIS/DSP/Source/BasicMathFunctions
-VPATH += ../CMSIS/DSP/Source/ComplexMathFunctions
-VPATH += ../CMSIS/DSP/Source/CommonTables
-
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
+
+LIBGCC = "$(shell "$(CC)" $(ARCHCPUFLAGS) -print-libgcc-file-name)"
 
 all: $(BIN)
 
@@ -146,7 +162,7 @@ $(AOBJS): %$(OBJEXT): %.S
 	@echo "AS: $<"
 	$(Q) $(CC) -c $(AFLAGS) $< -o $@
 
-$(BIN): $(COBJS) $(AOBJS)
+$(BIN): $(COBJS) $(AOBJS) | $(WORKER_LIB)
 	@echo "LD: $@"
 	$(Q) $(LD) $(LDRAWELFFLAGS) -e main --gc-sections $(LDLIBPATH) -o $@ \
 		--start-group $(ARCHCRT0OBJ) $^ $(LDLIBS) $(LIBGCC) --end-group
@@ -158,10 +174,10 @@ clean:
 	$(call DELFILE, $(BIN).debug.elf)
 	$(call CLEAN)
 
-install:
-	$(Q) mkdir -p $(ROMFS_DIR)
-ifeq ($(WINTOOL),y)
-	$(Q) $(STRIP) -d -o "$(shell cygpath -w $(ROMFS_DIR)/$(BIN))" $(BIN)
-else
-	$(Q) $(STRIP) -d -o $(ROMFS_DIR)/$(BIN) $(BIN)
-endif
+# Rules for building worker support library
+
+libdepend:
+	$(Q) $(MAKE) -C $(WORKER_DIR) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" depend
+
+$(WORKER_LIB): libdepend
+	$(Q) $(MAKE) -C $(WORKER_DIR) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libasmpw$(LIBEXT)

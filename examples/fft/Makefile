@@ -33,11 +33,16 @@
 #
 ############################################################################
 
--include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
-# ELF Example
+# External library path
+# Convert path to CMSIS to absolute path for refer from dsp/math Makefile.
+
+DSPLIBDIR := $(realpath $(call dequoted,$(CONFIG_EXAMPLES_FFT_DSPLIB_PATH)))
+
+# FFT Example
 
 APPNAME = fft
 PRIORITY = SCHED_PRIORITY_DEFAULT
@@ -49,64 +54,17 @@ MAINSRC = fft_main.c
 CSRCS += arm_convolution_example_f32.c math_helper.c
 CSRCS += dsp_rpc.c
 
-ifeq ($(CONFIG_EXAMPLES_FFT_DISABLE_MATH_OFFLOAD),y)
-
-# DSP/Source/TransformFunctions
-
-ASRCS += arm_bitreversal2.S
-CSRCS += arm_bitreversal.c
-CSRCS += arm_cfft_f32.c
-CSRCS += arm_cfft_q15.c
-CSRCS += arm_cfft_q31.c
-CSRCS += arm_cfft_radix2_f32.c
-CSRCS += arm_cfft_radix2_init_f32.c
-CSRCS += arm_cfft_radix2_init_q15.c
-CSRCS += arm_cfft_radix2_init_q31.c
-CSRCS += arm_cfft_radix2_q15.c
-CSRCS += arm_cfft_radix2_q31.c
-CSRCS += arm_cfft_radix4_f32.c
-CSRCS += arm_cfft_radix4_init_f32.c
-CSRCS += arm_cfft_radix4_init_q15.c
-CSRCS += arm_cfft_radix4_init_q31.c
-CSRCS += arm_cfft_radix4_q15.c
-CSRCS += arm_cfft_radix4_q31.c
-CSRCS += arm_cfft_radix8_f32.c
-CSRCS += arm_dct4_f32.c
-CSRCS += arm_dct4_init_f32.c
-CSRCS += arm_dct4_init_q15.c
-CSRCS += arm_dct4_init_q31.c
-CSRCS += arm_dct4_q15.c
-CSRCS += arm_dct4_q31.c
-CSRCS += arm_rfft_f32.c
-CSRCS += arm_rfft_fast_f32.c
-CSRCS += arm_rfft_fast_init_f32.c
-CSRCS += arm_rfft_init_f32.c
-CSRCS += arm_rfft_init_q15.c
-CSRCS += arm_rfft_init_q31.c
-CSRCS += arm_rfft_q15.c
-CSRCS += arm_rfft_q31.c
-
-# DSP/Source/SupportFunctions
-
-CSRCS += arm_fill_f32.c
-CSRCS += arm_copy_f32.c
-
-# DSP/Source/ComplexMathFunctions
-
-CSRCS += arm_cmplx_mult_cmplx_f32.c
-
-# DSP/Source/CommonTables
-
-CSRCS += arm_common_tables.c
-
-endif
-
 # Predefined must be specify for building CMSIS-DSP libraries
 
 CFLAGS += -DARM_MATH_CM4 -D__FPU_PRESENT=1
 
-CFLAGS += -Idsp/CMSIS/Core/Include
-CFLAGS += -Idsp/CMSIS/DSP/Include
+ifeq ($(WINTOOL),y)
+CFLAGS += -I"$(shell cygpath - w $(DSPLIBDIR)/Core/Include)"
+CFLAGS += -I"$(shell cygpath - w $(DSPLIBDIR)/DSP/Include)"
+else
+CFLAGS += -I$(DSPLIBDIR)/Core/Include
+CFLAGS += -I$(DSPLIBDIR)/DSP/Include
+endif
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -140,22 +98,6 @@ PROGNAME = $(CONFIG_FFT_TEST_PROGNAME)
 
 ROOTDEPPATH  = --dep-path .
 
-ifeq ($(CONFIG_EXAMPLES_FFT_DISABLE_MATH_OFFLOAD),y)
-
-ROOTDEPPATH += --dep-path dsp/CMSIS/DSP/Source/TransformFunctions
-ROOTDEPPATH += --dep-path dsp/CMSIS/DSP/Source/SupportFunctions
-ROOTDEPPATH += --dep-path dsp/CMSIS/DSP/Source/ComplexMathFunctions
-ROOTDEPPATH += --dep-path dsp/CMSIS/DSP/Source/CommonTables
-
-# Build targets
-
-VPATH  = dsp/CMSIS/DSP/Source/TransformFunctions
-VPATH += dsp/CMSIS/DSP/Source/SupportFunctions
-VPATH += dsp/CMSIS/DSP/Source/ComplexMathFunctions
-VPATH += dsp/CMSIS/DSP/Source/CommonTables
-
-endif
-
 all: .built
 .PHONY: .built really_build clean_dsp clean depend distclean
 
@@ -175,9 +117,7 @@ really_build: $(OBJS)
 	@touch .built
 
 .built:
-ifneq ($(CONFIG_EXAMPLES_FFT_DISABLE_MATH_OFFLOAD),y)
-	@$(MAKE) -C dsp TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
-endif
+	@$(MAKE) -C dsp TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) DSPLIBDIR="$(DSPLIBDIR)"
 	@$(MAKE) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" really_build
 
 ifeq ($(CONFIG_BUILD_KERNEL),y)
@@ -190,6 +130,7 @@ install: $(BIN_DIR)$(DELIM)$(PROGNAME)
 
 else
 install:
+	$(call ARCHIVE, $(BIN), $(OBJS))
 
 endif
 
