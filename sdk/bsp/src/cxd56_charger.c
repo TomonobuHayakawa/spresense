@@ -99,6 +99,12 @@ struct charger_dev_s
  * Private Function Prototypes
  ****************************************************************************/
 
+static int charger_get_status(FAR enum battery_charger_status_e *status);
+static int charger_get_health(FAR enum battery_charger_health_e *health);
+static int charger_online(FAR bool *online);
+static int charger_get_temptable(FAR struct battery_temp_table_s *table);
+static int charger_set_temptable(FAR struct battery_temp_table_s *table);
+
 static int charger_open(FAR struct file *filep);
 static int charger_close(FAR struct file *filep);
 static ssize_t charger_read(FAR struct file *filep, FAR char *buffer,
@@ -184,6 +190,10 @@ static int charger_therm2temp(int val)
 #endif
 }
 
+/****************************************************************************
+ * Name: charger_get_status
+ ****************************************************************************/
+
 static int charger_get_status(FAR enum battery_charger_status_e *status)
 {
   uint8_t state;
@@ -239,6 +249,10 @@ static int charger_get_status(FAR enum battery_charger_status_e *status)
   return OK;
 }
 
+/****************************************************************************
+ * Name: charger_get_health
+ ****************************************************************************/
+
 static int charger_get_health(FAR enum battery_charger_health_e *health)
 {
   FAR struct pmic_gauge_s gauge;
@@ -285,6 +299,10 @@ static int charger_get_health(FAR enum battery_charger_health_e *health)
   return OK;
 }
 
+/****************************************************************************
+ * Name: charger_online
+ ****************************************************************************/
+
 static int charger_online(FAR bool *online)
 {
   if (online == NULL)
@@ -294,6 +312,10 @@ static int charger_online(FAR bool *online)
   *online = true;
   return OK;
 }
+
+/****************************************************************************
+ * Name: charger_get_temptable
+ ****************************************************************************/
 
 static int charger_get_temptable(FAR struct battery_temp_table_s *table)
 {
@@ -313,6 +335,10 @@ static int charger_get_temptable(FAR struct battery_temp_table_s *table)
 
   return OK;
 }
+
+/****************************************************************************
+ * Name: charger_set_temptable
+ ****************************************************************************/
 
 static int charger_set_temptable(FAR struct battery_temp_table_s *table)
 {
