@@ -150,10 +150,10 @@ struct pmic_gauge_s
 
 struct pmic_temp_table_s
 {
-    int T60;
-    int T45;
-    int T10;
-    int T00;
+  int T60;
+  int T45;
+  int T10;
+  int T00;
 };
 
 struct pmic_mon_s

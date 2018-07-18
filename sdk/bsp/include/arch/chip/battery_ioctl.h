@@ -44,20 +44,14 @@
 
 /* ioctl commands */
 
-#define BATIOC_GET_STATUS        _BATIOC(0x0010)
-#define BATIOC_GET_HEALTH        _BATIOC(0x0011)
-#define BATIOC_GET_VOLTAGE       _BATIOC(0x0012)
-#define BATIOC_GET_CAPACITY      _BATIOC(0x0013)
-
-#define BATIOC_GET_CHGVOLTAGE    _BATIOC(0x0020)
-#define BATIOC_SET_CHGVOLTAGE    _BATIOC(0x0021)
-#define BATIOC_GET_CHGCURRENT    _BATIOC(0x0022)
-#define BATIOC_SET_CHGCURRENT    _BATIOC(0x0023)
-#define BATIOC_GET_RECHARGEVOL   _BATIOC(0x0024)
-#define BATIOC_SET_RECHARGEVOL   _BATIOC(0x0025)
-
-#define BATIOC_GET_COMPCURRENT   _BATIOC(0x0026)
-#define BATIOC_SET_COMPCURRENT   _BATIOC(0x0027)
+#define BATIOC_GET_CHGVOLTAGE    _BATIOC(0x0010)
+#define BATIOC_GET_CHGCURRENT    _BATIOC(0x0012)
+#define BATIOC_GET_RECHARGEVOL   _BATIOC(0x0013)
+#define BATIOC_SET_RECHARGEVOL   _BATIOC(0x0014)
+#define BATIOC_GET_COMPCURRENT   _BATIOC(0x0015)
+#define BATIOC_SET_COMPCURRENT   _BATIOC(0x0016)
+#define BATIOC_GET_TEMPTABLE     _BATIOC(0x0017)
+#define BATIOC_SET_TEMPTABLE     _BATIOC(0x0018)
 
 #define BATIOC_MONITOR_ENABLE    _BATIOC(0x0030)
 #define BATIOC_MONITOR_STATUS    _BATIOC(0x0031)
@@ -66,13 +60,11 @@
 
 #define BATIOC_DEBUG             _BATIOC(0x00db)
 
-/* for status */
-
 /****************************************************************************
  * Public Types
  ****************************************************************************/
 
-struct bat_temperature_table_s
+struct battery_temp_table_s
 {
   int T60; /* 60 degree C */
   int T45; /* 45 degree C */

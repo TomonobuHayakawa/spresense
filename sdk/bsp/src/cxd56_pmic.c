@@ -1152,7 +1152,7 @@ int cxd56_pmic_gettemptable(FAR struct pmic_temp_table_s *table)
  *
  ****************************************************************************/
 
-int cxd56_pmic_settemptable(struct pmic_temp_table_s *table)
+int cxd56_pmic_settemptable(FAR struct pmic_temp_table_s *table)
 {
   return PM_PmicControl(PMIC_CMD_SET_CHG_TEMPERATURE_TABLE, table);
 }
