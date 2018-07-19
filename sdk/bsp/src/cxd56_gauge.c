@@ -76,17 +76,6 @@
 #define batdbg(fmt, ...)
 #endif
 
-/* Configuration */
-
-#undef USE_FLOAT_CONVERSION
-
-#ifdef CONFIG_CXD56_GAUGE_TEMP_PRECISE
-#  if !defined(CONFIG_LIBM)
-#    error Temperature conversion in float requires math library.
-#  endif
-#  define USE_FLOAT_CONVERSION 1
-#endif
-
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -229,6 +218,8 @@ static int gauge_get_capacity(FAR b16_t *capacity)
       return -EINVAL;
     }
 
+  /* Get current battery voltage and upper/lower limit settings from PMIC. */
+
   ret = gauge_get_vol(&vol);
   if (ret < 0)
     {
@@ -246,17 +237,26 @@ static int gauge_get_capacity(FAR b16_t *capacity)
       return -EIO;
     }
 
-  /* Calculate capacity */
+  /* Calculate capacity (0-100%)
+   * Actually, battery voltage possible to be under lower limit voltage.
+   */
 
-  upper -= lower;
-  vol -= lower;
-  *capacity = (vol * 100) / upper;
-  
+  if (vol > lower)
+    {
+      upper -= lower;
+      vol -= lower;
+      *capacity = (vol * 100) / upper;
+    }
+  else
+    {
+      *capacity = 0;
+    }
+
   return OK;
 }
 
 /****************************************************************************
- * Name: gauge_get_capacity
+ * Name: gauge_online
  ****************************************************************************/
 
 static int gauge_online(FAR bool *online)
