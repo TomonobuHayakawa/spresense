@@ -1625,7 +1625,6 @@ endif # CXD56_PM
 config CXD56_GAUGE
     bool "CXD5247 battery gauge"
     default n
-    depends on BOARD_CORVO || BOARD_COLLET
     ---help---
         Enable battery gauge driver.
         This is not a lower half of power driver, but compatible with NuttX gauge driver.
