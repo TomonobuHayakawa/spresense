@@ -239,6 +239,10 @@ static int gauge_get_capacity(FAR b16_t *capacity)
 
   /* Calculate capacity (0-100%)
    * Actually, battery voltage possible to be under lower limit voltage.
+   *
+   * NOTE: This logic is tentative, linear from lower to upper. But it
+   * depends on the battery. Thus, user should be apply a voltage
+   * characteristic for capacity calculation if you want to more accuracy.
    */
 
   if (vol > lower)
