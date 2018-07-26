@@ -159,16 +159,33 @@ static inline void tile_common_free(FAR struct tile_s *priv,
 
 void tile_free(FAR void *memory, size_t size)
 {
+  FAR struct tile_s *priv = g_tileinfo;
   size_t tsize;
 
-  tile_common_free(g_tileinfo, memory, size);
+  tile_common_free(priv, memory, size);
 
   /* Tile power off. */
 
-  tsize = size + ((1 << g_tileinfo->log2tile) - 1);
-  tsize &= ~((1 << g_tileinfo->log2tile) - 1);
+  tsize = size + ((1 << priv->log2tile) - 1);
+  tsize &= ~((1 << priv->log2tile) - 1);
 
-  up_pmramctrl(PMCMD_RAM_OFF, (uintptr_t)memory, tsize);
+  if (priv->log2tile == 17)
+    {
+      /* If block size is 128KB, just do power off */
+
+      up_pmramctrl(PMCMD_RAM_OFF, (uintptr_t)memory, tsize);
+    }
+  else
+    {
+      uintptr_t addr = (uintptr_t)memory;
+      unsigned int idx;
+
+      idx = ((addr - priv->heapstart) >> 17) * 2;
+      if ((priv->at[0] & (3 << idx)) == 0)
+        {
+          up_pmramctrl(PMCMD_RAM_OFF, (uintptr_t)memory, tsize);
+        }
+    }
 }
 
 #endif /* CONFIG_MM_TILE */
