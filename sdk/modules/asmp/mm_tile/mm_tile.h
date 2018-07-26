@@ -70,7 +70,6 @@ struct tile_s
   uint16_t   ntiles;    /* The total number of (aligned) tiles in the heap */
   sem_t      exclsem;   /* For exclusive access to the AT */
   uintptr_t  heapstart; /* The aligned start of the tile heap */
-  uint32_t   memstat;   /* Tile power status */
   uint32_t   at[1];     /* Start of the tile allocation table */
 };
 
