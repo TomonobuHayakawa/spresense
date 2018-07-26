@@ -1074,9 +1074,9 @@ void AudioManager::parse(FAR MsgPacket *msg)
         }
       else if (msg->getType() == MSG_AUD_MGR_CALL_ATTENTION)
         {
-          const AttentionInfo& info = msg->peekParam<AttentionInfo>();
+          const ErrorAttentionParam& info = msg->peekParam<ErrorAttentionParam>();
           execAttentions(info);
-          msg->popParam<AttentionInfo>();
+          msg->popParam<ErrorAttentionParam>();
 #ifdef AS_FEATURE_RECOGNIZER_ENABLE
         }
       else if (msg->getType() == MSG_AUD_MGR_FIND_COMMAND)
@@ -1133,21 +1133,11 @@ void AudioManager::getstatus(AudioCommand &cmd)
 }
 
 /*--------------------------------------------------------------------------*/
-void AudioManager::execAttentions(const AttentionInfo& info)
+void AudioManager::execAttentions(const ErrorAttentionParam& info)
 {
   if (m_attentionCBFunc != NULL)
     {
-#ifndef ATTENTION_USE_FILENAME_LINE
-      (m_attentionCBFunc)(info.module_id,
-                          info.attention_id,
-                          info.sub_code);
-#else
-      (m_attentionCBFunc)(info.module_id,
-                          info.attention_id,
-                          info.sub_code,
-                          info.file_name,
-                          info.line);
-#endif  /* ATTENTION_USE_FILENAME_LINE */
+      (m_attentionCBFunc)(&info);
     }
 }
 

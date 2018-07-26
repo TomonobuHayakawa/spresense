@@ -189,7 +189,7 @@ private:
 
   static void execFindCommandCallback(uint16_t key_word, uint8_t status);
 
-  void execAttentions(const AttentionInfo&);
+  void execAttentions(const ErrorAttentionParam& info);
   static void execAttentionsCallback(FAR void *);
 
   uint32_t powerOnBaseBand(uint8_t power_id);

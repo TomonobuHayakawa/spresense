@@ -54,7 +54,7 @@ extern "C" {
 
 #ifdef ATTENTION_USE_FILENAME_LINE
 extern void _Attention(uint8_t module_id, uint8_t attention_code, uint8_t sub_code,
-		       const char* filename, uint32_t line);
+		       const char* filename, uint16_t line);
 #else
 extern void _Attention(uint8_t module_id, uint8_t attention_code, uint8_t sub_code);
 #endif
