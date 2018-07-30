@@ -3,6 +3,7 @@
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -72,8 +73,8 @@
 static FAR void *tile_common_alloc(FAR struct tile_s *priv, size_t size,
                                    int log2align)
 {
-  uintptr_t addr;
-  uint32_t mask;
+  uintptr_t    addr;
+  uint32_t     mask;
   unsigned int idx;
   unsigned int ntiles;
   unsigned int step;
@@ -157,8 +158,8 @@ alloc_error:
 FAR void *tile_alloc(size_t size)
 {
   FAR struct tile_s *priv = g_tileinfo;
-  void *addr;
-  size_t tsize;
+  void              *addr;
+  size_t             tsize;
 
   addr = tile_common_alloc(priv, size, 0);
   if (addr)
@@ -194,8 +195,8 @@ FAR void *tile_alloc(size_t size)
 FAR void *tile_alignalloc(size_t size, uint32_t log2align)
 {
   FAR struct tile_s *priv = g_tileinfo;
-  void *addr;
-  size_t tsize;
+  void              *addr;
+  size_t             tsize;
 
   addr = tile_common_alloc(priv, size, log2align);
   if (addr)

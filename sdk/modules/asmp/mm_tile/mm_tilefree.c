@@ -3,6 +3,7 @@
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -130,7 +131,7 @@ finish:
 void tile_free(FAR void *memory, size_t size)
 {
   FAR struct tile_s *priv = g_tileinfo;
-  size_t tsize;
+  size_t             tsize;
 
   tile_common_free(priv, memory, size);
 
@@ -146,7 +147,7 @@ void tile_free(FAR void *memory, size_t size)
     }
   else
     {
-      uintptr_t addr = (uintptr_t)memory;
+      uintptr_t    addr = (uintptr_t)memory;
       unsigned int idx;
 
       /* If 64KB block size, we need to check a same tile block is
