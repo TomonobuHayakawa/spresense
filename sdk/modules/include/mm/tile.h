@@ -93,7 +93,6 @@ extern "C"
  *   heapsize  - Size of heap in bytes
  *   log2tile  - Log base 2 of the size of one tile.  0->1 byte,
  *               1->2 bytes, 2->4 bytes, 3->8 bytes, etc.
- *   log2align - not implemented. for compatibility.
  *
  * Returned Value:
  *   On success, a non-NULL handle is returned that may be used with other
@@ -101,8 +100,7 @@ extern "C"
  *
  ****************************************************************************/
 
-int tile_initialize(FAR void *heapstart, size_t heapsize, uint8_t log2tile,
-                    uint8_t log2align);
+int tile_initialize(FAR void *heapstart, size_t heapsize, uint8_t log2tile);
 
 /****************************************************************************
  * Name: tile_release

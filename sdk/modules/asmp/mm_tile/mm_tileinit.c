@@ -74,8 +74,8 @@ FAR struct tile_s *g_tileinfo;
  * Input Parameters:
  *   heapstart - Start of the tile allocation heap
  *   heapsize  - Size of heap in bytes
- *   log2tile  - Log base 2 of the size of one tile.  0->1 byte,
- *               1->2 bytes, 2->4 bytes, 3-> 8 bytes, etc.
+ *   log2tile  - Log base 2 of the size of one tile.  16 -> 64KB, 17 -> 128KB.
+ *               Currently, only 16 and 17 are supported.
  *
  * Returned Value:
  *   On success, a non-NULL info structure is returned that may be used with
@@ -95,6 +95,12 @@ tile_common_initialize(FAR void *heapstart, size_t heapsize, uint8_t log2tile)
 
   DEBUGASSERT(heapstart && heapsize > 0 &&
               log2tile > 0 && log2tile < 32);
+
+  if (log2tile != 16 && log2tile != 17)
+    {
+      terr("Tile allocator supported block size is 64KB or 128KB .\n");
+      return NULL;
+    }
 
   /* Allocate exact size of the structure, tile allocator supports less than
    * or equal to 32 tiles for now.
@@ -134,9 +140,8 @@ tile_common_initialize(FAR void *heapstart, size_t heapsize, uint8_t log2tile)
  * Input Parameters:
  *   heapstart - Start of the tile allocation heap
  *   heapsize  - Size of heap in bytes
- *   log2tile  - Log base 2 of the size of one tile.  0->1 byte,
- *               1->2 bytes, 2->4 bytes, 3->8 bytes, etc.
- *   log2align - not implemented. for compatibility.
+ *   log2tile  - Log base 2 of the size of one tile.  16 -> 64KB, 17 -> 128KB.
+ *               Currently, only 16 and 17 are supported.
  *
  * Returned Value:
  *   On success, a non-NULL handle is returned that may be used with other
@@ -144,8 +149,7 @@ tile_common_initialize(FAR void *heapstart, size_t heapsize, uint8_t log2tile)
  *
  ****************************************************************************/
 
-int tile_initialize(FAR void *heapstart, size_t heapsize, uint8_t log2tile,
-                    uint8_t log2align)
+int tile_initialize(FAR void *heapstart, size_t heapsize, uint8_t log2tile)
 {
   g_tileinfo = tile_common_initialize(heapstart, heapsize, log2tile);
   if (!g_tileinfo)

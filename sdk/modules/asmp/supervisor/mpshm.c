@@ -517,8 +517,7 @@ void mpshm_initialize(void)
 {
   int ret;
 
-  ret = tile_initialize((void *)MM_TILE_BASE, MM_TILE_SIZE,
-                        MPSHM_TILE_ALIGN, MPSHM_TILE_ALIGN);
+  ret = tile_initialize((void *)MM_TILE_BASE, MM_TILE_SIZE, MPSHM_TILE_ALIGN);
   if (ret < 0)
     {
       mperr("Tile memory initialization failure.\n");
