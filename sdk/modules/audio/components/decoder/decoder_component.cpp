@@ -264,7 +264,9 @@ uint32_t DecoderComponent::init_apu(const InitDecCompParam& param,
   p_apu_cmd->init_dec_cmd.codec_type     = param.codec_type;
   p_apu_cmd->init_dec_cmd.channel_num    = param.channel_num;
   p_apu_cmd->init_dec_cmd.sampling_rate  = param.input_sampling_rate;
-  p_apu_cmd->init_dec_cmd.channel_config = AUD_PCM_CH_CONFIG_2_0;
+  p_apu_cmd->init_dec_cmd.channel_config =
+    (param.channel_num == MonoChannels) ?
+      AUD_PCM_CH_CONFIG_1_0 : AUD_PCM_CH_CONFIG_2_0;
 
   p_apu_cmd->init_dec_cmd.out_pcm_param.bit_length     = param.bit_width;
   p_apu_cmd->init_dec_cmd.out_pcm_param.channel_format = Aud2ChannelFormat;
