@@ -1972,10 +1972,10 @@ void AudioManager::setRecorder(AudioCommand &cmd)
 
   switch (cmd.set_recorder_status_param.input_device)
     {
-      case AS_SETRECDR_STS_INPUTDEVICE_MIC_A:
-      case AS_SETRECDR_STS_INPUTDEVICE_MIC_D:
+      case AS_SETRECDR_STS_INPUTDEVICE_MIC:
         break;
-      case AS_SETRECDR_STS_INPUTDEVICE_I2S_IN:
+
+      case AS_SETRECDR_STS_INPUTDEVICE_I2S:
         /* Enable I2S pin. */
 
         cxd56_audio_en_i2s_io();
