@@ -64,6 +64,7 @@ static MsgQueId s_effectMid  = MSGQID_UNUSED;
 static MsgQueId s_rcgMid     = MSGQID_UNUSED;
 
 static AudioAttentionCb s_attention_cb  = NULL;
+static obs_AudioAttentionCb s_obs_attention_cb  = NULL;
 
 static AudioManager *s_mng = NULL;
 
@@ -316,8 +317,6 @@ static bool recorder_done_callback(AsRecorderEvent event, uint32_t result, uint3
  * External Interface.
  */
 
-extern "C" {
-
 /*--------------------------------------------------------------------------*/
 int AS_SendAudioCommand(FAR AudioCommand *packet)
 {
@@ -469,7 +468,7 @@ static pid_t s_amng_pid = -1;
 /*--------------------------------------------------------------------------*/
 int AS_AudioManagerEntry(void)
 {
-  AudioManager::create(s_selfMid, s_plyMainMid, s_plySubMid, s_mixerMid, s_attention_cb);
+  AudioManager::create(s_selfMid, s_plyMainMid, s_plySubMid, s_mixerMid, s_attention_cb, s_obs_attention_cb);
   return 0;
 }
 
@@ -486,6 +485,40 @@ int AS_CreateAudioManager(AudioSubSystemIDs ids, AudioAttentionCb att_cb)
   s_rcgMid     = (MsgQueId)ids.recognizer;
 
   s_attention_cb = att_cb;
+
+  s_amng_pid = task_create("AMNG",
+                           AUDIO_TASK_PRIORITY,
+                           AUDIO_TASK_MANAGER_STACK_SIZE,
+                           (main_t)AS_AudioManagerEntry,
+                           0);
+  if (s_amng_pid < 0)
+    {
+      _err("ERROR AS_CreateAudioManager failed\n");
+      return AS_ERR_CODE_TASK_CREATE;
+    }
+
+  return AS_ERR_CODE_OK;
+}
+
+/*--------------------------------------------------------------------------*/
+/* This API is deprecated.
+ * When most of application were seems to be migrated to
+ * newer type of attention callback, delete this API.
+ *
+ */
+
+int AS_CreateAudioManager(AudioSubSystemIDs ids, obs_AudioAttentionCb obs_att_cb)
+{
+  s_selfMid    = (MsgQueId)ids.mng;
+  s_appMid     = (MsgQueId)ids.app;
+  s_plyMainMid = (MsgQueId)ids.player_main;
+  s_plySubMid  = (MsgQueId)ids.player_sub;
+  s_mixerMid   = (MsgQueId)ids.mixer;
+  s_rcdSubMid  = (MsgQueId)ids.recorder;
+  s_effectMid  = (MsgQueId)ids.effector;
+  s_rcgMid     = (MsgQueId)ids.recognizer;
+
+  s_obs_attention_cb = obs_att_cb;
 
   s_amng_pid = task_create("AMNG",
                            AUDIO_TASK_PRIORITY,
@@ -548,19 +581,17 @@ MsgQueId AS_GetSelfDtq(void)
   return s_selfMid;
 }
 
-} /* extern "C" */
-
-
 /*--------------------------------------------------------------------------*/
 void AudioManager::create(MsgQueId selfDtq,
                           MsgQueId playerDtq,
                           MsgQueId subplayerDtq,
                           MsgQueId outMixerDtq,
-                          AudioAttentionCb att_cb)
+                          AudioAttentionCb att_cb,
+                          obs_AudioAttentionCb obs_att_cb)
 {
   if (s_mng == NULL)
     {
-      s_mng = new AudioManager(selfDtq, playerDtq, subplayerDtq, outMixerDtq, att_cb);
+      s_mng = new AudioManager(selfDtq, playerDtq, subplayerDtq, outMixerDtq, att_cb, obs_att_cb);
       if (s_mng == NULL)
         {
           MANAGER_ERR(AS_ATTENTION_SUB_CODE_RESOURCE_ERROR);
@@ -1138,6 +1169,20 @@ void AudioManager::execAttentions(const ErrorAttentionParam& info)
   if (m_attentionCBFunc != NULL)
     {
       (m_attentionCBFunc)(&info);
+    }
+  else if (m_obs_attentionCBFunc != NULL)
+    {
+#ifndef ATTENTION_USE_FILENAME_LINE
+      (m_obs_attentionCBFunc)(info.module_id,
+                              info.error_code,
+                              info.error_att_sub_code);
+#else
+      (m_obs_attentionCBFunc)(info.module_id,
+                              info.error_code,
+                              info.error_att_sub_code,
+                              info.error_filename,
+                              info.line_number);
+#endif  /* ATTENTION_USE_FILENAME_LINE */
     }
 }
 

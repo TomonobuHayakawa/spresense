@@ -1637,12 +1637,6 @@ typedef struct {
      */
 
     ErrorResponseParam error_response_param;
-
-    /*! \brief [out] for ErrorAttention
-     * (header.result_code==#AUDRLT_ERRORRESPONSE)
-     */
-
-    ErrorAttentionParam error_attention_param;
   };
 
 #if !defined(__CC_ARM)
@@ -1656,6 +1650,18 @@ typedef struct {
  */
 
 typedef void (*AudioAttentionCb)(const ErrorAttentionParam *attparam);
+
+#ifndef ATTENTION_USE_FILENAME_LINE
+typedef void (*obs_AudioAttentionCb)(uint8_t module_id,
+                                     uint8_t error_code,
+                                     uint8_t sub_code);
+#else
+typedef void (*obs_AudioAttentionCb)(uint8_t module_id,
+                                     uint8_t error_code,
+                                     uint8_t sub_code,
+                                     FAR const char *file_name,
+                                     uint32_t line);
+#endif
 
 /* Error Code */
 /* [T.B.D]
@@ -1716,10 +1722,6 @@ typedef struct
  * Public Function Prototypes
  ****************************************************************************/
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 /**
  * @brief Send Audio Command
  *
@@ -1751,17 +1753,27 @@ int AS_ReceiveAudioResult(AudioResult* packet);
 int AS_CreateAudioManager(AudioSubSystemIDs ids, AudioAttentionCb att_cb);
 
 /**
+ * @brief Activate AudioSubSystem[Deprecated]
+ *        This API is to make it compatible with old application.
+ *        Will delete most application seems to migrate to new API.
+ *
+ * @param[in] ids: AudioSubSystemIDs* Message Queue ID of Audio Module
+ *
+ * @retval error code
+ */
+
+__attribute__((deprecated("\nDeprecated attention callback type is used. \
+                           \nPlease use \"AudioAttentionCb\" as callback type. \
+                           \n")))
+int AS_CreateAudioManager(AudioSubSystemIDs ids, obs_AudioAttentionCb obs_att_cb);
+
+/**
  * @brief Deactivate AudioSubSystem
  *
  * @retval error code
  */
 
 int AS_DeleteAudioManager(void);
-
-#ifdef __cplusplus
-}
-#endif
-
 
 /** @} */
 

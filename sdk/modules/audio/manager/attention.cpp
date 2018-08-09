@@ -38,10 +38,10 @@
 #include "attention.h"
 #include "common/audio_internal_message_types.h"
 
+extern MsgQueId AS_GetSelfDtq(void);
+
 extern "C"
 {
-
-extern MsgQueId AS_GetSelfDtq(void);
 
 #ifdef ATTENTION_USE_FILENAME_LINE
 
