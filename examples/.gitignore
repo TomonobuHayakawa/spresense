@@ -1,0 +1,5 @@
+/Kconfig
+.depend
+Make.dep
+/*.a
+*.o
