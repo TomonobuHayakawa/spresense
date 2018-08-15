@@ -1,0 +1,4 @@
+menuconfig LTE
+	bool "LTE"
+	help
+		LTE (Long Term Evolution) module

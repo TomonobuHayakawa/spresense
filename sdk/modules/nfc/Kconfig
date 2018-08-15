@@ -1,0 +1,4 @@
+menuconfig NFC
+	bool "NFC"
+	help
+		Near Field Communication module

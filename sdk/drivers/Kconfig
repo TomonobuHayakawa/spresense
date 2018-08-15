@@ -1,0 +1,12 @@
+
+menu "Drivers"
+
+menu "Sensors"
+source drivers/sensors/Kconfig
+endmenu
+
+menu "LCD"
+source drivers/lcd/Kconfig
+endmenu
+
+endmenu

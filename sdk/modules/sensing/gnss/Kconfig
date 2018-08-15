@@ -1,0 +1,8 @@
+
+menuconfig GNSS
+	bool "GNSS"
+	help
+		GNSS module
+
+if GNSS
+endif

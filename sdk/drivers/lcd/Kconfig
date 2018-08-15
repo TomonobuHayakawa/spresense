@@ -1,0 +1,14 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LCD_LPM013M091A
+	bool "JDI LPM013M091A LCD Driver"
+	default n
+#	select LCD_NOGETRUN
+	---help---
+		JDI LPM013M091A LCD Driver.
+		This driver doesn't support reading data.
+		Recommended to use DMA to transfer data or displayed image would be
+		broken.

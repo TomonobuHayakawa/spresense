@@ -1,0 +1,114 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config BMP180
+	bool "Bosch BMP180 Barometer Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for the Bosch BMP180 barometer sensor.
+
+config BMP280
+    bool "Bosch BMP280 Barometic Pressure Sensor"
+    default n
+    select I2C
+    ---help---
+        Enable driver for the Bosch BMP280 barometic pressure sensor.
+
+config AK09912
+    bool "Asahi AK09912 Compass Sensor"
+    default n
+    select I2C
+    ---help---
+        Enable driver for AK09912 Compass sensor.
+
+config APDS9930
+	bool "Avago APDS9930 Proximity and Ambient light Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for APDS9930 proximity and ambient light sensor.
+
+if APDS9930
+
+config APDS9930_PROXIMITY_INTERRUPT
+	bool "Use Proximity interrupt"
+	default y
+	---help---
+		Use Interrupt when the threshold is exceeded.
+		In this case, SCU sequencer is not used.
+
+endif
+
+config LT1PA01
+	bool "Murata LT1PA01 Proximity and Ambient light Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for LT1PA01 proximity and ambient light sensor.
+
+if LT1PA01
+
+config LT1PA01_PROXIMITY_INTERRUPT
+	bool "Use Proximity interrupt"
+	default y
+	---help---
+		Use Interrupt when the threshold is exceeded.
+		In this case, SCU sequencer is not used.
+
+endif
+
+config BH1721FVC
+	bool "Rohm BH1721FVC Ambient Light Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for the Rohm BH1721FVC light sensor.
+
+config KX022
+    bool "Kionix KX022 Acceleration Sensor"
+    default n
+    select I2C
+    ---help---
+        Enable driver for the Kionix KX0222 acceleration sensor.
+
+config BM1422GMV
+	bool "Rohm BM1422GMV Magnetic Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for BM1422GMV magnetic sensor.
+
+config BM1383GLV
+	bool "Rohm BM1383GLV Pressure Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for BM1383GLV pressure sensor.
+
+config BH1745NUC
+	bool "Rohm BH1745NUC Color Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for BH1745NUC color sensor.
+
+config RPR0521RS
+	bool "Rohm RPR0521RS Proximity and Ambient light Sensor"
+	default n
+	select I2C
+	---help---
+		Enable driver for RPR0521RS proximity and ambient light sensor.
+
+if RPR0521RS
+
+config RPR0521RS_PROXIMITY_INTERRUPT
+	bool "Use Proximity interrupt"
+	default y
+	---help---
+		Use Interrupt when the threshold is exceeded.
+		In this case, SCU sequencer is not used.
+
+endif

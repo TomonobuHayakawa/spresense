@@ -1,0 +1,274 @@
+############################################################################
+# arch/arm/src/cxd56xx/Make.defs
+#
+#   Copyright (C) 2012-2015 Gregory Nutt. All rights reserved.
+#   Author: Gregory Nutt <gnutt@nuttx.org>
+#
+#   Copyright (C) 2016-2017 Sony Corporation. All rights reserved.
+#   Author: Nobuto Kobayashi <Nobuto.Kobayashi@sony.com>
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name NuttX nor Sony nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+############################################################################
+
+HEAD_ASRC  =
+
+CMN_ASRCS  = up_saveusercontext.S up_fullcontextrestore.S up_switchcontext.S
+CMN_ASRCS += up_testset.S vfork.S
+ifeq ($(CONFIG_CXD56_HOT_SLEEP),y)
+CMN_ASRCS += up_cpu_context.S
+endif
+
+CMN_CSRCS  = up_assert.c up_blocktask.c up_copyfullstate.c
+CMN_CSRCS += up_createstack.c up_mdelay.c up_udelay.c up_exit.c
+CMN_CSRCS += up_initialize.c up_initialstate.c up_interruptcontext.c
+CMN_CSRCS += up_memfault.c up_modifyreg8.c up_modifyreg16.c up_modifyreg32.c
+CMN_CSRCS += up_releasepending.c up_releasestack.c up_reprioritizertr.c
+CMN_CSRCS += up_schedulesigaction.c up_sigdeliver.c up_stackframe.c
+CMN_CSRCS += up_unblocktask.c up_usestack.c up_doirq.c up_hardfault.c
+CMN_CSRCS += up_svcall.c up_vfork.c
+
+ifeq ($(CONFIG_ARMV7M_CMNVECTOR),y)
+ifeq ($(CONFIG_ARMV7M_LAZYFPU),y)
+CMN_ASRCS += up_lazyexception.S
+else
+CMN_ASRCS += up_exception.S
+endif
+CMN_CSRCS += up_vectors.c
+endif
+
+ifeq ($(CONFIG_ARCH_RAMVECTORS),y)
+CMN_CSRCS += up_ramvec_initialize.c up_ramvec_attach.c
+endif
+
+ifeq ($(CONFIG_ARCH_MEMCPY),y)
+CMN_ASRCS += up_memcpy.S
+endif
+
+ifeq ($(CONFIG_BUILD_PROTECTED),y)
+CMN_CSRCS += up_mpu.c up_task_start.c up_pthread_start.c
+ifneq ($(CONFIG_DISABLE_SIGNALS),y)
+CMN_CSRCS += up_signal_dispatch.c
+CMN_UASRCS += up_signal_handler.S
+endif
+endif
+
+ifeq ($(CONFIG_STACK_COLORATION),y)
+CMN_CSRCS += up_checkstack.c
+endif
+
+ifeq ($(CONFIG_ELF),y)
+CMN_CSRCS += up_elf.c
+else ifeq ($(CONFIG_MODULE),y)
+CMN_CSRCS += up_elf.c
+endif
+
+ifeq ($(CONFIG_ARCH_FPU),y)
+CMN_ASRCS += up_fpu.S
+ifneq ($(CONFIG_ARMV7M_CMNVECTOR),y)
+CMN_CSRCS += up_copyarmstate.c
+else ifeq ($(CONFIG_ARMV7M_LAZYFPU),y)
+CMN_CSRCS += up_copyarmstate.c
+endif
+endif
+
+CHIP_ASRCS  =
+CHIP_CSRCS = cxd56_allocateheap.c
+CHIP_CSRCS += cxd56_serial.c cxd56_uart.c cxd56_irq.c cxd56_clock.c
+CHIP_CSRCS += cxd56_uid.c
+CHIP_CSRCS += cxd56_start.c
+CHIP_CSRCS += cxd56_sysctl.c
+CHIP_CSRCS += cxd56_powermgr.c
+ifeq ($(CONFIG_CXD56_PM_PROCFS),y)
+CHIP_CSRCS += cxd56_powermgr_procfs.c
+endif
+ifeq ($(CONFIG_CXD56_HOT_SLEEP),y)
+CHIP_CSRCS += cxd56_cpu_context.c
+endif
+
+ifneq ($(CONFIG_SCHED_TICKLESS),y)
+CHIP_CSRCS += cxd56_timerisr.c
+else
+CHIP_CSRCS += cxd56_tickless_rit.c
+endif
+
+ifneq ($(CONFIG_ARCH_IDLE_CUSTOM),y)
+CHIP_CSRCS += cxd56_idle.c
+endif
+
+ifeq ($(CONFIG_DEBUG),y)
+CHIP_CSRCS += cxd56_debug.c
+endif
+
+ifeq ($(CONFIG_CXD56_RIT),y)
+CHIP_CSRCS += cxd56_rit.c
+endif
+
+ifeq ($(CONFIG_CXD56_SFC),y)
+CHIP_CSRCS += cxd56_sfc.c
+endif
+
+ifeq ($(CONFIG_CXD56_USBDEV),y)
+CHIP_CSRCS += cxd56_usbdev.c
+endif
+
+ifeq ($(CONFIG_CXD56_EMMC),y)
+CHIP_CSRCS += cxd56_emmc.c
+endif
+
+ifeq ($(CONFIG_CXD56_SDIO),y)
+CHIP_CSRCS += cxd56_sdhci.c
+endif
+
+ifeq ($(CONFIG_CXD56_I2C0),y)
+CHIP_CSRCS += cxd56_i2c.c
+else ifeq ($(CONFIG_CXD56_I2C1),y)
+CHIP_CSRCS += cxd56_i2c.c
+else ifeq ($(CONFIG_CXD56_I2C2),y)
+CHIP_CSRCS += cxd56_i2c.c
+endif
+
+ifeq ($(CONFIG_CXD56_SPI0),y)
+CHIP_CSRCS += cxd56_spi.c
+else ifeq ($(CONFIG_CXD56_SPI3),y)
+CHIP_CSRCS += cxd56_spi.c
+else ifeq ($(CONFIG_CXD56_SPI4),y)
+CHIP_CSRCS += cxd56_spi.c
+else ifeq ($(CONFIG_CXD56_SPI5),y)
+CHIP_CSRCS += cxd56_spi.c
+endif
+
+ifeq ($(CONFIG_CXD56_CPUFIFO),y)
+CHIP_CSRCS += cxd56_cpufifo.c
+endif
+
+ifeq ($(CONFIG_CXD56_ICC),y)
+CHIP_CSRCS += cxd56_icc.c
+endif
+
+ifeq ($(CONFIG_CXD56_SPH),y)
+CHIP_CSRCS += cxd56_sph.c
+endif
+
+ifeq ($(CONFIG_CXD56_REMOTEAPI),y)
+CHIP_CSRCS += cxd56_remoteapi.c
+EXTRAOBJS += chip$(DELIM)remoteapistub.po
+LDFLAGS += @chip$(DELIM)wrapsyms.cmd
+endif
+
+ifeq ($(CONFIG_CXD56_AUDIO),y)
+include cxd56xx/audio/Make.defs
+endif
+
+ifeq ($(CONFIG_CXD56_GNSS),y)
+CHIP_CSRCS += cxd56_gnss.c
+CHIP_CSRCS += cxd56_cpu1signal.c
+endif
+
+ifeq ($(CONFIG_CXD56_DMAC),y)
+CHIP_CSRCS += cxd56_dmac.c
+endif
+
+ifeq ($(CONFIG_CXD56_SCU),y)
+CHIP_CSRCS += cxd56_scu.c cxd56_scufifo.c
+ifeq ($(CONFIG_CXD56_ADC),y)
+CHIP_CSRCS += cxd56_adc.c
+endif
+endif
+
+ifeq ($(CONFIG_CXD56_UDMAC),y)
+CHIP_CSRCS += cxd56_udmac.c
+endif
+
+ifeq ($(CONFIG_CXD56_GEOFENCE),y)
+CHIP_CSRCS += cxd56_geofence.c
+endif
+
+CHIP_CSRCS += cxd56_gpio.c
+CHIP_CSRCS += cxd56_pinconfig.c
+
+ifeq ($(CONFIG_CXD56_GPIO_IRQ),y)
+CHIP_CSRCS += cxd56_gpioint.c
+endif
+
+ifeq ($(CONFIG_CXD56_RTC),y)
+CHIP_CSRCS += cxd56_rtc.c
+ifeq ($(CONFIG_RTC_DRIVER),y)
+CHIP_CSRCS += cxd56_rtc_lowerhalf.c
+endif
+endif
+
+ifeq ($(CONFIG_CXD56_WDT),y)
+CHIP_CSRCS += cxd56_wdt.c
+endif
+
+ifeq ($(CONFIG_TIMER),y)
+CHIP_CSRCS += cxd56_timer.c
+endif
+
+ifeq ($(CONFIG_PWM),y)
+CHIP_CSRCS += cxd56_pwm.c
+endif
+
+ifeq ($(CONFIG_CXD56_PMIC),y)
+CHIP_CSRCS += cxd56_pmic.c
+endif
+
+ifeq ($(CONFIG_LCD_LPM013M091A),y)
+CHIP_CSRCS += cxd56_lpm013m091a_base.c
+ifeq ($(CONFIG_BOARDCTL_GRAPHICS),y)
+CHIP_CSRCS += cxd56_lpm013m091a_fb.c
+endif
+endif
+
+ifeq ($(CONFIG_EINK_ET014TT1),y)
+CHIP_CSRCS += cxd56_et014tt1.c
+CHIP_CSRCS += cxd56_et014tt1_waveformdata.c
+endif
+
+ifeq ($(CONFIG_ARCH_DMA),y)
+CHIP_CSRCS += cxd56_dmacinit.c
+endif
+
+ifeq ($(CONFIG_CXD56_AUDIO),y)
+CHIP_CSRCS += cxd56_audio_baseband.c
+endif
+
+ifeq ($(CONFIG_CXD56_SECURE_ELEMENT),y)
+CHIP_CSRCS += cxd56_secure.c
+endif
+
+ifeq ($(CONFIG_CXD56_CISIF),y)
+CHIP_CSRCS += cxd56_cisif.c
+endif
+
+ifeq ($(CONFIG_LIBNFC),y)
+CHIP_CSRCS += cxd56_cxd224x.c
+else ifeq ($(CONFIG_NFC_SEQUENCER),y)
+CHIP_CSRCS += cxd56_cxd224x.c
+endif

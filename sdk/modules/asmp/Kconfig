@@ -1,0 +1,13 @@
+
+menuconfig ASMP
+	bool "ASMP"
+	help
+		A hybrid multi processor framework
+
+if ASMP
+	config ASMP_MEMSIZE
+	hex 0x30000
+	help
+		Memory size for shared memory area in ASMP Framework.
+
+endif

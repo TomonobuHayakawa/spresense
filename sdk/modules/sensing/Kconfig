@@ -1,0 +1,11 @@
+menu "Sensing"
+
+source modules/sensing/gnss/Kconfig
+source modules/sensing/arm_gesture/Kconfig
+source modules/sensing/barometer/Kconfig
+source modules/sensing/compass/Kconfig
+source modules/sensing/step_counter/Kconfig
+source modules/sensing/tap/Kconfig
+source modules/sensing/tram/Kconfig
+
+endmenu
