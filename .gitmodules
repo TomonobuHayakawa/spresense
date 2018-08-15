@@ -1,3 +1,6 @@
 [submodule "nuttx"]
 	path = nuttx
 	url = ../spresense-nuttx.git
+[submodule "proprietary"]
+	path = proprietary
+	url = ../proprietary.git
