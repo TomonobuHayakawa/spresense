@@ -141,10 +141,10 @@ using namespace MemMgrLite;
 /* Definition depending on player mode. */
 
 #ifdef PLAYER_MODE_HIRES
-#  define PLAYRE_MODE AS_CLKMODE_HIRES
+#  define PLAYER_MODE AS_CLKMODE_HIRES
 #  define FIFO_FRAME_NUM  4
 #else
-#  define PLAYRE_MODE AS_CLKMODE_NORMAL
+#  define PLAYER_MODE AS_CLKMODE_NORMAL
 #  define FIFO_FRAME_NUM  1
 #endif
 
@@ -407,7 +407,7 @@ static bool app_first_push_simple_fifo(int fd)
 
 static bool app_refill_simple_fifo(int fd)
 {
-  int32_t ret;
+  int32_t ret = FIFO_RESULT_OK;
   size_t  vacant_size;
 
   vacant_size = CMN_SimpleFifoGetVacantSize(&s_player_info.fifo.handle);
@@ -428,7 +428,7 @@ static bool app_refill_simple_fifo(int fd)
         }
     }
 
-  return (ret != FIFO_RESULT_ERR) ? true : false;
+  return (ret == FIFO_RESULT_OK) ? true : false;
 }
 
 static bool printAudCmdResult(uint8_t command_code, AudioResult& result)
@@ -662,14 +662,14 @@ static int app_play_player(void)
     return printAudCmdResult(command.header.command_code, result);
 }
 
-static bool app_stop_player(void)
+static bool app_stop_player(int mode)
 {
     AudioCommand command;
     command.header.packet_length = LENGTH_STOP_PLAYER;
     command.header.command_code  = AUDCMD_STOPPLAYER;
     command.header.sub_code      = 0x00;
     command.player.player_id            = AS_PLAYER_ID_0;
-    command.player.stop_param.stop_mode = AS_STOPPLAYER_NORMAL; // todo: comment
+    command.player.stop_param.stop_mode = mode;
     AS_SendAudioCommand(&command);
 
     AudioResult result;
@@ -683,7 +683,7 @@ static bool app_set_clkmode(void)
   command.header.packet_length = LENGTH_SETRENDERINGCLK;
   command.header.command_code  = AUDCMD_SETRENDERINGCLK;
   command.header.sub_code      = 0x00;
-  command.set_renderingclk_param.clk_mode = PLAYRE_MODE;
+  command.set_renderingclk_param.clk_mode = PLAYER_MODE;
   AS_SendAudioCommand(&command);
 
   AudioResult result;
@@ -885,7 +885,16 @@ static bool app_stop(void)
 {
   bool result = true;
 
-  if (!app_stop_player())
+  /* Set stop mode.
+   * If the end of the file is detected, play back until the data empty
+   * and then stop.(select AS_STOPPLAYER_ESEND)
+   * Otherwise, stop immediate reproduction.(select AS_STOPPLAYER_NORMAL)
+   */
+
+  int  stop_mode = (s_player_info.file.size != 0) ?
+                    AS_STOPPLAYER_NORMAL : AS_STOPPLAYER_ESEND;
+
+  if (!app_stop_player(stop_mode))
     {
       printf("Error: app_stop_player() failure.\n");
       result = false;
