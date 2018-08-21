@@ -34,5 +34,5 @@
 ############################################################################
 
 ifeq ($(CONFIG_EXAMPLES_FFT),y)
-CONFIGURED_APPS += fft
+CONFIGURED_APPS += examples/fft
 endif
