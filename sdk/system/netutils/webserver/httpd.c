@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/webserver/httpd.c
+ * system/netutils/webserver/httpd.c
  * httpd Web server
  *
  *   Copyright (C) 2007-2009, 2011-2012 Gregory Nutt. All rights reserved.

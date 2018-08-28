@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/netutils/esp8266.h
+ * system/include/netutils/esp8266.h
  *
  *   Copyright (C) 2015-2016 Pierre-Noel Bouteville. All rights reserved.
  *   Author: Pierre-Noel Bouteville <pnb990@gmail.com>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/thttpd/cgi-src/redirect.c
+ * system/netutils/thttpd/cgi-src/redirect.c
  * Simple redirection CGI program
  *
  *   Copyright (C) 2009, 2015 Gregory Nutt. All rights reserved.

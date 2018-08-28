@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/codecs/base64.c
+ * system/netutils/codecs/base64.c
  *
  * This file is part of the NuttX RTOS:
  *

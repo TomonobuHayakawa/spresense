@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/chat/Makefile
+# system/netutils/chat/Makefile
 #
 #   Copyright (C) 2016 Vladimir Komendantskiy. All rights reserved.
 #   Author: Vladimir Komendantskiy <vladimir@moixaenergy.com>

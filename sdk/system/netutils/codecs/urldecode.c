@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/codecs/urldecode.c
+ * system/netutils/codecs/urldecode.c
  *
  * This file is part of the NuttX RTOS:
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/netutils/ipmsfilter.h
+ * system/include/netutils/ipmsfilter.h
  * User interface to add/remove IP multicast address
  *
  *   Copyright (C) 2009, 2011, 2015 Gregory Nutt. All rights reserved.

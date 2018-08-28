@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/xmlrpc/xmlparser.c
+ * system/netutils/xmlrpc/xmlparser.c
  *
  *   Copyright (C) 2012 Max Holtzberg. All rights reserved.
  *   Author: Max Holtzberg <mh@uvc.de>

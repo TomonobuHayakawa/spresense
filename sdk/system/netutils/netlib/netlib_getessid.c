@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_getessid.c
+ * system/netutils/netlib/netlib_getessid.c
  *
  *   Copyright (C) 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

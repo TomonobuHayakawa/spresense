@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_setnodnodeaddr.c
+ * system/netutils/netlib/netlib_setnodnodeaddr.c
  *
  *   Copyright (C) 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

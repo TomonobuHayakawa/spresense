@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_parsehttpurl.c
+ * system/netutils/netlib/netlib_parsehttpurl.c
  *
  *   Copyright (C) 2009, 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/thttpd/thttpd.c
+ * system/netutils/thttpd/thttpd.c
  * Tiny HTTP Server
  *
  *   Copyright (C) 2009, 2011 Gregory Nutt. All rights reserved.

@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_autoconfig.c
+ * system/netutils/netlib/netlib_autoconfig.c
  *
  *   Copyright (C) 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/chat/chat.c
+ * system/netutils/chat/chat.c
  *
  *   Copyright (C) 2016 Vladimir Komendantskiy. All rights reserved.
  *   Author: Vladimir Komendantskiy <vladimir@moixaenergy.com>

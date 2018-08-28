@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/pppd/ahdlc.c
+ * system/netutils/pppd/ahdlc.c
  * Ahdlc receive and transmit processor for PPP engine.
  *
  *   Version: 0.1 Original Version Jan 11, 1998

@@ -1,5 +1,5 @@
 /****************************************************************************
- * netuils/tftp/tftpc_packets.c
+ * system/netuils/tftp/tftpc_packets.c
  *
  *   Copyright (C) 2008-2009, 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

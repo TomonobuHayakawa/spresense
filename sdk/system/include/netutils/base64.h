@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/netutils/base64.h
+ * system/include/netutils/base64.h
  *
  * This file is part of the NuttX RTOS:
  *

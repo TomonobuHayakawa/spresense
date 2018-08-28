@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/json/cJSON.c
+ * system/netutils/json/cJSON.c
  *
  * This file is a part of NuttX:
  *

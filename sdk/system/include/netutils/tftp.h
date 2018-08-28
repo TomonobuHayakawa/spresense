@@ -1,5 +1,5 @@
 /****************************************************************************
- *  apps/include/netutils/tftp.h
+ *  system/include/netutils/tftp.h
  *
  *   Copyright (C) 2008-2009, 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

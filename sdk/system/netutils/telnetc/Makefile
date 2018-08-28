@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/telnetc/Makefile
+# system/netutils/telnetc/Makefile
 #
 #   Copyright (C) 2017 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

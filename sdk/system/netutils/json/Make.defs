@@ -1,4 +1,4 @@
-# apps/netutils/json/Make.defs
+# system/netutils/json/Make.defs
 # Adds selected applications to apps/ build
 #
 #   Copyright (C) 2016 Gregory Nutt. All rights reserved.

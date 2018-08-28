@@ -1,4 +1,4 @@
-# apps/netutils/telnetc/Make.defs
+# system/netutils/telnetc/Make.defs
 # Adds selected applications to apps/ build
 #
 #   Copyright (C) 2017 Gregory Nutt. All rights reserved.

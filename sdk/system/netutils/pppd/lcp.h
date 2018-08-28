@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/pppd/lpc.h
+ * system/netutils/pppd/lpc.h
  * Link Configuration Protocol header file
  *
  *   Version: .1 Original Version June 3, 2000

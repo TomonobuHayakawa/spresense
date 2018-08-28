@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/webserver/Makefile
+# system/netutils/webserver/Makefile
 #
 #   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

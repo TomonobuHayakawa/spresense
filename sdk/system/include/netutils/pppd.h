@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/netutils/pppd.h
+ * system/include/netutils/pppd.h
  *
  *   Copyright (C) 2015 Brennan Ashton. All rights reserved.
  *   Author: Brennan Ashton <bashton@brennanashton.com>

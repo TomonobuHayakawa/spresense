@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/pppd/Makefile
+# system/netutils/pppd/Makefile
 #
 #   Copyright (C) 2015 Max Nekludov. All rights reserved.
 #   Author: Max Nekludov <macscomp@gmail.com>

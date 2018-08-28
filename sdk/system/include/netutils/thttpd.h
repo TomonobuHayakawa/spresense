@@ -1,5 +1,5 @@
 /****************************************************************************
- *  apps/include/netutils/thttpd.h
+ *  system/include/netutils/thttpd.h
  *
  *   Copyright (C) 2009, 2011, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

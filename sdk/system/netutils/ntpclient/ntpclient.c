@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/ntpclient/ntpclient.c
+ * system/netutils/ntpclient/ntpclient.c
  *
  *   Copyright (C) 2014, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

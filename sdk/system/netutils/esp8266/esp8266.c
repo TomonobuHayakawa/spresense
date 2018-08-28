@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/esp8266/esp8266.c
+ * system/netutils/esp8266/esp8266.c
  *
  * Derives from an application to demo an Arduino connected to the ESPRESSIF
  * ESP8266 with AT command firmware.

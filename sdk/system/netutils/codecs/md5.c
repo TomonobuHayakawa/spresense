@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/codecs/md5.c
+ * system/netutils/codecs/md5.c
  *
  * This file is part of the NuttX RTOS:
  *

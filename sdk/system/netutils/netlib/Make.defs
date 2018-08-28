@@ -1,4 +1,4 @@
-# apps/netutils/netlib/Make.defs
+# system/netutils/netlib/Make.defs
 # Adds selected applications to apps/ build
 #
 #   Copyright (C) 2016 Gregory Nutt. All rights reserved.

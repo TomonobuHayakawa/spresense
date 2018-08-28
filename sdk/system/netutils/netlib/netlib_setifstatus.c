@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_setifstatus.c
+ * system/netutils/netlib/netlib_setifstatus.c
  *
  *   Copyright (C) 2007-2009, 2011, 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

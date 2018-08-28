@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/n etutils/ftpd.c
+ * system/netutils/ftpd.c
  *
  *   Copyright (C) 2012, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

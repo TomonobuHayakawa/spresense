@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/thttpd/fdwatch.h
+ * system/netutils/thttpd/fdwatch.h
  *
  *   Copyright (C) 2009 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

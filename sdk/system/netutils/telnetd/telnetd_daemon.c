@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/telnetd/telnetd_daemon.c
+ * system/netutils/telnetd/telnetd_daemon.c
  *
  *   Copyright (C) 2012, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

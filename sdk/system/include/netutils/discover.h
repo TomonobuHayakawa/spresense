@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/netutils/discover.h
+ * system/include/netutils/discover.h
  *
  *   Copyright (C) 2012 Max Holtzberg. All rights reserved.
  *   Author: Max Holtzberg <mh@uvc.de>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_setipv6netmask.c
+ * system/netutils/netlib/netlib_setipv6netmask.c
  *
  *   Copyright (C) 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

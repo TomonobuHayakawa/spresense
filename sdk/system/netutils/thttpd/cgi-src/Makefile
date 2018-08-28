@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/cgi-src/Makefile
+# system/netutils/cgi-src/Makefile
 #
 #   Copyright (C) 2009, 2011-2012 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

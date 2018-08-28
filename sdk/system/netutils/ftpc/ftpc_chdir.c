@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/ftpc/ftpc_chdir.c
+ * system/netutils/ftpc/ftpc_chdir.c
  *
  *   Copyright (C) 2011, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

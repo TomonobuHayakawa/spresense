@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_nodeaddrconv.c
+ * system/netutils/netlib/netlib_nodeaddrconv.c
  *
  *   Copyright (C) 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

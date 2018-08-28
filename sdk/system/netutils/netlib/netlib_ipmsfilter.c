@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_setipmsfilter.c
+ * system/netutils/netlib/netlib_setipmsfilter.c
  *
  *   Copyright (C) 2010-2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

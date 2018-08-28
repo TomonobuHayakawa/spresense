@@ -1,4 +1,4 @@
-apps/netutils/discover README.txt
+system/netutils/discover README.txt
 =================================
 
 This daemon is useful for discovering devices in local networks, especially

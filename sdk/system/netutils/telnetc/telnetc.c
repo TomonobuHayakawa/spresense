@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/telnetc/telnetc.c
+ * system/netutils/telnetc/telnetc.c
  *
  * Leveraged from libtelnet, https://github.com/seanmiddleditch/libtelnet.
  * Modified and re-released under the BSD license:

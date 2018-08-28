@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/thttpd/timers.c
+ * system/netutils/thttpd/timers.c
  * Parse string dates into internal form, stripped-down version
  *
  *   Copyright (C) 2009 Gregory Nutt. All rights reserved.

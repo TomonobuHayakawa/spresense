@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/ping/Makefile
+# system/netutils/ping/Makefile
 #
 #   Copyright (C) 2015 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

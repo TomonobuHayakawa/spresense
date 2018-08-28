@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_getipv4addr.c
+ * system/netutils/netlib/netlib_getipv4addr.c
  *
  *   Copyright (C) 2007-2009, 2011, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

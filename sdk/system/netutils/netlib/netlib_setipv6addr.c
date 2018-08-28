@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_setipv6addr.c
+ * system/netutils/netlib/netlib_setipv6addr.c
  *
  *   Copyright (C) 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

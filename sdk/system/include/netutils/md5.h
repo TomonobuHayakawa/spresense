@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/netutils/md5.h
+ * system/include/netutils/md5.h
  *
  * This file is part of the NuttX RTOS:
  *

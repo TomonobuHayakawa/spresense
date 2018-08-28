@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/pppd/ahdlc.h
+ * system/netutils/pppd/ahdlc.h
  * ahdlc header file
  *
  * Version

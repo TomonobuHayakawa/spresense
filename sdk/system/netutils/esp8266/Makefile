@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/esp8266/Makefile
+# system/netutils/esp8266/Makefile
 #
 #   Copyright (C) 2016 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>

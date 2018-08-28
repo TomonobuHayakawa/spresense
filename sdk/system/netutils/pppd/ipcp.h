@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/pppd/ipcp.c
+ * system/netutils/pppd/ipcp.c
  * Internet Protocol Control Protocol header file
  *
  *   Version: 0.1 Original Version June 3, 2000

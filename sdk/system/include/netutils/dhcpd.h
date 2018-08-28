@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/netutils/dhcpd.h
+ * system/include/netutils/dhcpd.h
  *
  *   Copyright (C) 2007, 2009, 2011, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

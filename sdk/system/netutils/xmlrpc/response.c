@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/xmlrpc/response.c
+ * system/netutils/xmlrpc/response.c
  *
  *   Copyright (C) 2012 Max Holtzberg. All rights reserved.
  *   Author: Max Holtzberg <mh@uvc.de>

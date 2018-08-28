@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_getipv4netmask.c
+ * system/netutils/netlib/netlib_getipv4netmask.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

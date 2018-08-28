@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/netutils/httpd.h
+ * system/include/netutils/httpd.h
  *
  *   Copyright (C) 2007, 2009, 2011-2012, 2014 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

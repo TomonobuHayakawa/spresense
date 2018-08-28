@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/webserver/httpd_mmap.c
+ * system/netutils/webserver/httpd_mmap.c
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

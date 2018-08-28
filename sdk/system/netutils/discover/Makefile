@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/discover/Makefile
+# system/netutils/discover/Makefile
 #
 #   Copyright (C) 2012 Max Holtzberg. All rights reserved.
 #   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.

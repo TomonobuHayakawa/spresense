@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/ftpc/ftpc_listdir.c
+ * system/netutils/ftpc/ftpc_listdir.c
  *
  *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

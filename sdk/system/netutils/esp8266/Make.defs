@@ -1,4 +1,4 @@
-# apps/netutils/esp8266/Make.defs
+# system/netutils/esp8266/Make.defs
 # Adds selected applications to apps/ build
 #
 #   Copyright (C) 2016 Gregory Nutt. All rights reserved.

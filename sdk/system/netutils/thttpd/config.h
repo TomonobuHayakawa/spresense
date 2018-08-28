@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/thttpd/config.h
+ * system/netutils/thttpd/config.h
  *
  *   Copyright (C) 2009 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

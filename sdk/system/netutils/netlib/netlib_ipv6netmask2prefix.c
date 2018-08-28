@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/netlib/netlib_ipv6netmask2prefix.c
+ * system/netutils/netlib/netlib_ipv6netmask2prefix.c
  *
  *   Copyright (C) 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutitls/smtp/smtp.c
+ * system/netutitls/smtp/smtp.c
  * smtp SMTP E-mail sender
  *
  *   Copyright (C) 2007, 2009, 2011, 2015 Gregory Nutt. All rights reserved.

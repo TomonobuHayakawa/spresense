@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/netutils/smtp.h
+ * system/include/netutils/smtp.h
  * SMTP header file
  *
  *   Copyright (C) 2007, 2009, 2011, 2015 Gregory Nutt. All rights reserved.

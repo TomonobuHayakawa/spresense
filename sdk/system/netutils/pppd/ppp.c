@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/pppd/ppp.c
+ * system/netutils/pppd/ppp.c
  * PPP Processor/Handler
  *
  *   Version: 0.1 Original Version Jun 3, 2000

@@ -1,4 +1,4 @@
-# apps/netutils/pppd/Make.defs
+# system/netutils/pppd/Make.defs
 # Adds selected applications to apps/ build
 #
 #   Copyright (C) 2016 Gregory Nutt. All rights reserved.
