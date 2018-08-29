@@ -1348,7 +1348,7 @@ static void cxd56_sdio_sdhci_reset(FAR struct sdio_dev_s *dev)
 {
   FAR struct cxd56_sdiodev_s *priv = (FAR struct cxd56_sdiodev_s *)dev;
   uint32_t regval;
-  uint32_t timeout = 100;
+  int32_t timeout = 100;
 
   /* Disable all interrupts so that nothing interferes with the following. */
 
@@ -4497,7 +4497,7 @@ void cxd56_sdhci_mediachange(FAR struct sdio_dev_s *dev)
   sdio_statset_t cdstatus;
   irqstate_t flags;
   uint8_t mediachange = 0;
-  uint32_t timeout = SDHCI_CARDSTATETIMEOUT;
+  int32_t timeout = SDHCI_CARDSTATETIMEOUT;
 
   /* Update card status */
   if (getreg32(CXD56_SDHCI_PRSSTAT) & SDHCI_PRSSTAT_SDCD)
