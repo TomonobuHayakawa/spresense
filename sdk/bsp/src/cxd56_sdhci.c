@@ -128,7 +128,7 @@
 
 /* Timing */
 
-#define SDHCI_CARDSTATETIMEOUT   (50)
+#define SDHCI_CARDSTATETIMEOUT   (2000000)
 #define SDHCI_CMDTIMEOUT         (100000)
 #define SDHCI_LONGTIMEOUT        (1000000)
 
@@ -4508,8 +4508,8 @@ void cxd56_sdhci_mediachange(FAR struct sdio_dev_s *dev)
             {
               break;
             }
-          up_mdelay(100);
-          timeout -= 100;
+          usleep(100000);
+          timeout -= 100000;
         }
     }
 
