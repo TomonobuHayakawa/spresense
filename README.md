@@ -1,9 +1,25 @@
-# Welcome to SPRITZER project
+# Welcome to SPRESENSE project
 
-Clone this repository and update submodules.
+Clone this repository and update submodules. You can choose from 2 ways in below.
+
+## Shallow clone (Faster, for SDK developers)
 
 ```
-$ git clone --recursive git@code.sonymobile.net:spritzer-sdk/spritzer.git
+$ git clone git@code.sonymobile.net:spritzer-sdk/spresense.git
+$ cd spresense
+$ git submodule update --init -- nuttx
+$ git submodule update --init --depth 1 -- proprietary
+$ git submodule foreach git checkout master
+```
+
+In this way, `proprietary` repository would be cloned as 'shallow copy'.
+Shallow copied repository can be update with `origin/master` only, but can't
+refer to other remote branches and old logs.
+
+## Clone completely (Slower)
+
+```
+$ git clone --recursive git@code.sonymobile.net:spritzer-sdk/spresense.git
 ```
 
 After repositories cloned, each submodules are in 'Detached HEAD'.
@@ -18,10 +34,8 @@ $ git submodule foreach git checkout master
 
 ```
 - sdk         - SPRITZER SDK sources and any PC tools
-- examples    - SPRITZER SDK examples
 - proprietary - Sony proprietary binaries
 - nuttx       - NuttX original kernel + port of SPRITZER architecture
-- apps        - NuttX original apps
 ```
 
 # Build
