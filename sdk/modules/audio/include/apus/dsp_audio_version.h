@@ -53,7 +53,7 @@
 #define DSP_AACDEC_VERSION    0x010303    /* 01.03.03 */
 #define DSP_MP3DEC_VERSION    0x010303    /* 01.03.03 */
 #define DSP_OPUSDEC_VERSION   0x010304    /* 01.03.04 */
-#define DSP_WAVDEC_VERSION    0x010303    /* 01.03.03 */
+#define DSP_WAVDEC_VERSION    0x010401    /* 01.04.01 */
 
 /* Encoder Version. */
 
@@ -65,6 +65,7 @@
 #define DSP_MFESRC_VERSION    0x010203    /* 01.02.03 */
 #define DSP_SRC_VERSION       0x020102    /* 02.01.02 */
 #define DSP_MPPEAX_VERSION    0x010203    /* 01.02.03 */
+#define DSP_SLAVE_SRC_VERSION 0x010101    /* 01.01.01 */
 
 /* Postfilter Version. */
 
@@ -75,6 +76,14 @@
 #define DSP_FREQDET_VERSION   0x010202    /* 01.02.02 */
 #define DSP_MEASURE_VERSION   0x010202    /* 01.02.02 */
 #define DSP_VADWUW_VERSION    0x010203    /* 01.02.03 */
+
+/* Version and cpu-id Mask. */
+
+#define DSP_VERSION_MASK      0x00FFFFFF  /* 24bits [23-0]  */
+#define DSP_CPU_ID_MASK       0xFF000000  /*  8bits [31-24] */
+
+#define DSP_VERSION_GET_VER(data)    ((data) & 0x00FFFFFF)
+#define DSP_VERSION_GET_CPU_ID(data) (((data) & 0xFF000000) >> 24)
 
 /****************************************************************************
  * Public Types

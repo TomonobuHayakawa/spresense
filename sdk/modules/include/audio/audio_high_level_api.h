@@ -403,14 +403,21 @@
  */
 
 #define AS_ATTENTION_SUB_CODE_DSP_ASSETION_FAIL     0x1F
-  
+
 /*! \brief DSP Send Fail
  *  \details Inter CPU commucation with DSP is failed.
  */
 
 #define AS_ATTENTION_SUB_CODE_DSP_SEND_ERROR        0x20
 
-#define AS_ATTENTION_SUB_CODE_NUM   AS_ATTENTION_SUB_CODE_DSP_SEND_ERROR
+/*! \brief Allocate memory of heap area
+ *  \details Notify that allocated from the heap area
+ *           without using the memory pool that uses shared memory.
+ */
+
+#define AS_ATTENTION_SUB_CODE_ALLOC_HEAP_MEMORY     0x21
+
+#define AS_ATTENTION_SUB_CODE_NUM   AS_ATTENTION_SUB_CODE_ALLOC_HEAP_MEMORY
 
 /** @} */
 

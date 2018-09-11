@@ -170,6 +170,10 @@
                                               fmt, \
                                               ##__VA_ARGS__)
 
+#define DECODER_VDBG(fmt, ...) AUDIO_LOG_DETAIL(AS_MODULE_ID_DECODER_CMP, \
+                                                fmt, \
+                                                ##__VA_ARGS__)
+
 #define ENCODER_FATAL(code)   DBG_LOGF_FATAL(AS_MODULE_ID_ENCODER_CMP, \
                                              code)
 #define ENCODER_ERR(code)     DBG_LOGF_ERROR(AS_MODULE_ID_ENCODER_CMP, \
