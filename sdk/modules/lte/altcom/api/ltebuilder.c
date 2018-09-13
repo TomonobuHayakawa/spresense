@@ -535,7 +535,9 @@ static CODE int32_t lte_buildmain(FAR void *arg)
       goto errout_with_halspi;
     }
 
+#ifdef CONFIG_NET
   stubsock_initialize();
+#endif
 
   return 0;
 
@@ -576,7 +578,9 @@ static CODE int32_t lte_destroy(void)
 
   (void)modem_powerctrl(false);
 
+#ifdef CONFIG_NET
   stubsock_finalize();
+#endif
 
   ret = apicmdgw_uninitialize();
   if (ret < 0)
