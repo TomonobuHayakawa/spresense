@@ -8,3 +8,4 @@ source modules/audio/Kconfig
 source modules/memutils/Kconfig
 source modules/asmp/Kconfig
 source modules/fwuputils/Kconfig
+source modules/video/Kconfig

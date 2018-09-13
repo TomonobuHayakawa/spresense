@@ -1,8 +1,7 @@
 ############################################################################
-# drivers/video/Make.defs
+# sdk/modules/video/LibTargets.mk
 #
-#   Copyright (C) 2016 Gregory Nutt. All rights reserved.
-#   Author: Gregory Nutt <gnutt@nuttx.org>
+#   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -14,9 +13,10 @@
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-# 3. Neither the name NuttX nor the names of its contributors may be
-#    used to endorse or promote products derived from this software
-#    without specific prior written permission.
+# 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+#    the names of its contributors may be used to endorse or promote
+#    products derived from this software without specific prior written
+#    permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -32,17 +32,27 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
+#
+# This Makefile included from Makefile in the top of SDK directory.
+# SDK build system uses below variables to control build.
+#
+# SDKLIBS      - Library files to be linked.
+# SDKMODDIRS   - Module directories.
+# SDKCLEANDIRS - Clean directories. It must be added whenever configured or not.
+# CONTEXTDIRS  - Directories for target in context build stage. This variable can be omitted.
+#                If you want to do prepare for build, add it and write context target in the Makefile.
+# 
 
-# These video drivers depend on I2C support
-
-ifeq ($(CONFIG_I2C),y)
-
-ifeq ($(CONFIG_VIDEO_ISX012),y)
-CSRCS += isx012.c 
+ifeq ($(CONFIG_VIDEO),y)
+SDKLIBS += lib$(DELIM)libvideo$(LIBEXT)
+SDKMODDIRS += modules$(DELIM)video
 endif
+SDKCLEANDIRS += modules$(DELIM)video
 
-DEPPATH += --dep-path video
-VPATH += :video
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(TOPDIR)$(DELIM)drivers$(DELIM)video}
+# Below 2 rules are mandatory, replace all of 'video' to your library name or directory.
 
-endif
+modules$(DELIM)video$(DELIM)libvideo$(LIBEXT): context
+	$(Q) $(MAKE) -C modules$(DELIM)video TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libvideo$(LIBEXT)
+
+lib$(DELIM)libvideo$(LIBEXT): modules$(DELIM)video$(DELIM)libvideo$(LIBEXT)
+	$(Q) install $< $@

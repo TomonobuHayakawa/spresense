@@ -1,8 +1,8 @@
 ############################################################################
-# drivers/video/Make.defs
+# sdk/modules/video/Makefile
 #
-#   Copyright (C) 2016 Gregory Nutt. All rights reserved.
-#   Author: Gregory Nutt <gnutt@nuttx.org>
+#   Copyright (C) 2016 Sony Corporation. All rights reserved.
+#   Author: Yuchi.Wen <Yuchi.Wen@sony.com>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -14,8 +14,8 @@
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-# 3. Neither the name NuttX nor the names of its contributors may be
-#    used to endorse or promote products derived from this software
+# 3. Neither the name NuttX nor Sony nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
 #    without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -33,16 +33,77 @@
 #
 ############################################################################
 
-# These video drivers depend on I2C support
+# Do not change
 
-ifeq ($(CONFIG_I2C),y)
+-include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
+DELIM ?= $(strip /)
+CXXEXT ?= .cpp
 
-ifeq ($(CONFIG_VIDEO_ISX012),y)
-CSRCS += isx012.c 
+ifeq ($(WINTOOL),y)
+INCDIROPT = -w
 endif
 
-DEPPATH += --dep-path video
-VPATH += :video
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(TOPDIR)$(DELIM)drivers$(DELIM)video}
+# INCLUDES
+ifeq ($(WINTOOL),y)
+INCLUDES := -I"${shell cygpath -w $(APPDIR)/include}"
+else
+INCLUDES := -I$(APPDIR)/include
+endif # ($(WINTOOL),y)
 
-endif
+# CFLAGS
+CFLAGS += $(INCLUDES)
+
+# C_SRCS
+ASRCS =
+CSRCS = video.c
+
+AOBJS = $(ASRCS:.S=$(OBJEXT))
+COBJS = $(CSRCS:.c=$(OBJEXT))
+
+SRCS = $(ASRCS) $(CSRCS)
+OBJS = $(AOBJS) $(COBJS)
+
+BIN = libvideo.a
+
+DEPPATH = --dep-path .
+
+# Common build
+
+VPATH = $(BT_IF) $(BT_MGR)
+
+all: $(BIN)
+.PHONY: context depend clean distclean
+
+$(AOBJS): %$(OBJEXT): %.S
+	$(call ASSEMBLE, $<, $@)
+
+$(COBJS) $(MAINOBJ): %$(OBJEXT): %.c
+	$(call COMPILE, $<, $@)
+
+$(BIN): $(OBJS)
+	$(call ARCHIVE, $@, $(OBJS))
+
+install:
+
+context:
+
+# Create dependencies
+
+.depend: Makefile $(SRCS)
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) touch $@
+
+depend: .depend
+
+clean:
+	$(call CLEAN)
+	rm -rf *$(OBJEXT)
+
+distclean: clean
+	$(call DELFILE, Make.dep)
+	$(call DELFILE, .depend)
+
+-include Make.dep
+.PHONY: preconfig
+preconfig:
