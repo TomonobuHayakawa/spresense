@@ -67,23 +67,19 @@
  * no data
  */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_getapnsetdata_s
+begin_packed_struct struct apicmd_cmddat_getapnsetdata_s
 {
-  PACK_STRUCT_FIELD(uint8_t session_id);
-  PACK_STRUCT_FIELD(uint8_t apn[APICMD_GETAPNSET_APN_LEN]);
-  PACK_STRUCT_FIELD(uint8_t ip_type);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t session_id;
+  uint8_t apn[APICMD_GETAPNSET_APN_LEN];
+  uint8_t ip_type;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_getapnsetres_s
+begin_packed_struct struct apicmd_cmddat_getapnsetres_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-  PACK_STRUCT_FIELD(uint8_t listnum);
-  PACK_STRUCT_FIELD(struct apicmd_cmddat_getapnsetdata_s
-    apnlist[APICMD_GETAPNSET_RES_LIST_MAX_NUM]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+  uint8_t listnum;
+  struct apicmd_cmddat_getapnsetdata_s
+    apnlist[APICMD_GETAPNSET_RES_LIST_MAX_NUM];
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETAPNSET_H */

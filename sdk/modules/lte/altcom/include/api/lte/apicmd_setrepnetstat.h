@@ -56,18 +56,15 @@
  ****************************************************************************/
 
 /* This structure discribes the data structure of the API command */
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setrepnetstat_s
-{
-  PACK_STRUCT_FIELD(uint8_t enability);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setrepnetstatres_s
+begin_packed_struct struct apicmd_cmddat_setrepnetstat_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t enability;
+} end_packed_struct;
+
+begin_packed_struct struct apicmd_cmddat_setrepnetstatres_s
+{
+  uint8_t result;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_SETREP_NETSTAT_H */

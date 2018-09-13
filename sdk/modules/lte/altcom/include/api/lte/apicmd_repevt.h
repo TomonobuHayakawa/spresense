@@ -71,47 +71,35 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setrepevt_s
+begin_packed_struct struct apicmd_cmddat_setrepevt_s
 {
-  PACK_STRUCT_FIELD(uint8_t event);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t event;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setrepevtres_s
+begin_packed_struct struct apicmd_cmddat_setrepevtres_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_repevt_simd_s
+begin_packed_struct struct apicmd_cmddat_repevt_simd_s
 {
-  PACK_STRUCT_FIELD(uint8_t status);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t status;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_repevt_simstate_s
+begin_packed_struct struct apicmd_cmddat_repevt_simstate_s
 {
-  PACK_STRUCT_FIELD(uint8_t state);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t state;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_repevt_s
+begin_packed_struct struct apicmd_cmddat_repevt_s
 {
-  PACK_STRUCT_FIELD(uint8_t type);
-  PACK_STRUCT_BEGIN
-  union
+  uint8_t type;
+  begin_packed_struct union
   {
-    PACK_STRUCT_FIELD(struct apicmd_cmddat_ltime_s           ltime);
-    PACK_STRUCT_FIELD(struct apicmd_cmddat_repevt_simd_s     simd);
-    PACK_STRUCT_FIELD(struct apicmd_cmddat_repevt_simstate_s simstate);
-  } PACK_STRUCT_STRUCT u;
-  PACK_STRUCT_END
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+    struct apicmd_cmddat_ltime_s           ltime;
+    struct apicmd_cmddat_repevt_simd_s     simd;
+    struct apicmd_cmddat_repevt_simstate_s simstate;
+  } end_packed_struct u;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_REPEVT_H */

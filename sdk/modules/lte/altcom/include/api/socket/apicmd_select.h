@@ -64,30 +64,26 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_select_s
+begin_packed_struct struct apicmd_select_s
 {
-  PACK_STRUCT_FIELD(int32_t request);
-  PACK_STRUCT_FIELD(int32_t id);
-  PACK_STRUCT_FIELD(int32_t maxfds);
-  PACK_STRUCT_FIELD(uint16_t used_setbit);
-  PACK_STRUCT_FIELD(altcom_fd_set readset);
-  PACK_STRUCT_FIELD(altcom_fd_set writeset);
-  PACK_STRUCT_FIELD(altcom_fd_set exceptset);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t request;
+  int32_t id;
+  int32_t maxfds;
+  uint16_t used_setbit;
+  altcom_fd_set readset;
+  altcom_fd_set writeset;
+  altcom_fd_set exceptset;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_selectres_s
+begin_packed_struct struct apicmd_selectres_s
 {
-  PACK_STRUCT_FIELD(int32_t ret_code);
-  PACK_STRUCT_FIELD(int32_t err_code);
-  PACK_STRUCT_FIELD(int32_t id);
-  PACK_STRUCT_FIELD(uint16_t used_setbit);
-  PACK_STRUCT_FIELD(altcom_fd_set readset);
-  PACK_STRUCT_FIELD(altcom_fd_set writeset);
-  PACK_STRUCT_FIELD(altcom_fd_set exceptset);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t ret_code;
+  int32_t err_code;
+  int32_t id;
+  uint16_t used_setbit;
+  altcom_fd_set readset;
+  altcom_fd_set writeset;
+  altcom_fd_set exceptset;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_SOCKET_APICMD_SELECT_H */

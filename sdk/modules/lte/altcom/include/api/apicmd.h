@@ -151,18 +151,16 @@
  *         ----------------------------------------------
  ****************************************************************************/
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmdhdr_s
+begin_packed_struct struct apicmd_cmdhdr_s
 {
-  PACK_STRUCT_FIELD(uint32_t magic);
-  PACK_STRUCT_FIELD(uint8_t  ver);
-  PACK_STRUCT_FIELD(uint8_t  seqid);
-  PACK_STRUCT_FIELD(uint16_t cmdid);
-  PACK_STRUCT_FIELD(uint16_t transid);
-  PACK_STRUCT_FIELD(uint16_t dtlen);
-  PACK_STRUCT_FIELD(uint16_t chksum);
-  PACK_STRUCT_FIELD(uint16_t reserve);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint32_t magic;
+  uint8_t  ver;
+  uint8_t  seqid;
+  uint16_t cmdid;
+  uint16_t transid;
+  uint16_t dtlen;
+  uint16_t chksum;
+  uint16_t reserve;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_APICMD_H */

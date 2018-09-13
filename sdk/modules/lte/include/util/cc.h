@@ -42,24 +42,4 @@
 
 #include "cc_opt.h"
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#ifndef PACK_STRUCT_BEGIN
-#  define PACK_STRUCT_BEGIN
-#endif
-
-#ifndef PACK_STRUCT_STRUCT
-#  define PACK_STRUCT_STRUCT
-#endif
-
-#ifndef PACK_STRUCT_END
-#  define PACK_STRUCT_END
-#endif
-
-#ifndef PACK_STRUCT_FIELD
-#  define PACK_STRUCT_FIELD(x) x
-#endif
-
 #endif /* __MODULES_LTE_INCLUDE_UTIL_CC_H */

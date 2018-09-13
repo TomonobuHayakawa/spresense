@@ -100,23 +100,19 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_setsockopt_s
+begin_packed_struct struct apicmd_setsockopt_s
 {
-  PACK_STRUCT_FIELD(int32_t sockfd);
-  PACK_STRUCT_FIELD(int32_t level);
-  PACK_STRUCT_FIELD(int32_t optname);
-  PACK_STRUCT_FIELD(int32_t optlen);
-  PACK_STRUCT_FIELD(int8_t optval[APICMD_SETSOCKOPT_OPTVAL_LENGTH]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t sockfd;
+  int32_t level;
+  int32_t optname;
+  int32_t optlen;
+  int8_t optval[APICMD_SETSOCKOPT_OPTVAL_LENGTH];
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_setsockoptres_s
+begin_packed_struct struct apicmd_setsockoptres_s
 {
-  PACK_STRUCT_FIELD(int32_t ret_code);
-  PACK_STRUCT_FIELD(int32_t err_code);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t ret_code;
+  int32_t err_code;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_SOCKET_APICMD_SETSOCKOPT_H */

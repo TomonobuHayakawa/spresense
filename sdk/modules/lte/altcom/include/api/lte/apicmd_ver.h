@@ -63,13 +63,11 @@
 
 /* APICMDID_GET_VERSION_RES */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_getverres_s
+begin_packed_struct struct apicmd_cmddat_getverres_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-  PACK_STRUCT_FIELD(uint8_t bb_product[APICMD_VERSION_RES_BB_PRODUCT_LEN]);
-  PACK_STRUCT_FIELD(uint8_t np_package[APICMD_VERSION_RES_NP_PACKAGE_LEN]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+  uint8_t bb_product[APICMD_VERSION_RES_BB_PRODUCT_LEN];
+  uint8_t np_package[APICMD_VERSION_RES_NP_PACKAGE_LEN];
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_VER_H */

@@ -64,21 +64,17 @@
  * no data
  */
 
-PACK_STRUCT_BEGIN
-struct getdatastat_s
+begin_packed_struct struct getdatastat_s
 {
-  PACK_STRUCT_FIELD(uint8_t session_id);
-  PACK_STRUCT_FIELD(uint8_t state);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t session_id;
+  uint8_t state;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_getdatastatres_s
+begin_packed_struct struct apicmd_cmddat_getdatastatres_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-  PACK_STRUCT_FIELD(uint8_t listnum);
-  PACK_STRUCT_FIELD(struct getdatastat_s datastat[APICMD_GETDATASTAT_SESSIOID_MAX]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+  uint8_t listnum;
+  struct getdatastat_s datastat[APICMD_GETDATASTAT_SESSIOID_MAX];
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETDATASTAT_H */

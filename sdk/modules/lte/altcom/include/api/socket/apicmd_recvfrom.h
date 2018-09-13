@@ -63,25 +63,21 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_recvfrom_s
+begin_packed_struct struct apicmd_recvfrom_s
 {
-  PACK_STRUCT_FIELD(int32_t sockfd);
-  PACK_STRUCT_FIELD(int32_t recvlen);
-  PACK_STRUCT_FIELD(int32_t flags);
-  PACK_STRUCT_FIELD(uint32_t fromlen);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t sockfd;
+  int32_t recvlen;
+  int32_t flags;
+  uint32_t fromlen;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_recvfromres_s
+begin_packed_struct struct apicmd_recvfromres_s
 {
-  PACK_STRUCT_FIELD(int32_t ret_code);
-  PACK_STRUCT_FIELD(int32_t err_code);
-  PACK_STRUCT_FIELD(uint32_t fromlen);
-  PACK_STRUCT_FIELD(struct altcom_sockaddr_storage from);
-  PACK_STRUCT_FIELD(int8_t recvdata[APICMD_RECVFROM_RES_RECVDATA_LENGTH]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t ret_code;
+  int32_t err_code;
+  uint32_t fromlen;
+  struct altcom_sockaddr_storage from;
+  int8_t recvdata[APICMD_RECVFROM_RES_RECVDATA_LENGTH];
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_SOCKET_APICMD_RECVFROM_H */

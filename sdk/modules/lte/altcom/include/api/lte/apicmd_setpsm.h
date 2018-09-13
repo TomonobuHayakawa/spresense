@@ -79,30 +79,24 @@
 
 /* APICMDID_GET_PSM */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setpsm_timeval_s
+begin_packed_struct struct apicmd_cmddat_setpsm_timeval_s
 {
-  PACK_STRUCT_FIELD(uint8_t unit);
-  PACK_STRUCT_FIELD(uint8_t time_val);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t unit;
+  uint8_t time_val;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setpsm_s
+begin_packed_struct struct apicmd_cmddat_setpsm_s
 {
-  PACK_STRUCT_FIELD(uint8_t enable);
-  PACK_STRUCT_FIELD(struct apicmd_cmddat_setpsm_timeval_s rat_val);
-  PACK_STRUCT_FIELD(struct apicmd_cmddat_setpsm_timeval_s tau_val);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t enable;
+  struct apicmd_cmddat_setpsm_timeval_s rat_val;
+  struct apicmd_cmddat_setpsm_timeval_s tau_val;
+} end_packed_struct;
 
 /* APICMDID_GET_PSM_RES */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setpsmres_s
+begin_packed_struct struct apicmd_cmddat_setpsmres_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_SETPSM_H */

@@ -90,45 +90,36 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_getaddrinfo_ai_s
+begin_packed_struct struct apicmd_getaddrinfo_ai_s
 {
-  PACK_STRUCT_FIELD(int32_t ai_flags);
-  PACK_STRUCT_FIELD(int32_t ai_family);
-  PACK_STRUCT_FIELD(int32_t ai_socktype);
-  PACK_STRUCT_FIELD(int32_t ai_protocol);
-  PACK_STRUCT_FIELD(altcom_socklen_t ai_addrlen);
-  PACK_STRUCT_FIELD(struct altcom_sockaddr_storage ai_addr);
-  PACK_STRUCT_FIELD(uint32_t ai_cnamelen);
-  PACK_STRUCT_FIELD(
-    int8_t ai_canonname[APICMD_GETADDRINFO_AI_CANONNAME_LENGTH]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t ai_flags;
+  int32_t ai_family;
+  int32_t ai_socktype;
+  int32_t ai_protocol;
+  altcom_socklen_t ai_addrlen;
+  struct altcom_sockaddr_storage ai_addr;
+  uint32_t ai_cnamelen;
+  int8_t ai_canonname[APICMD_GETADDRINFO_AI_CANONNAME_LENGTH];
+} end_packed_struct;
 
-
-PACK_STRUCT_BEGIN
-struct apicmd_getaddrinfo_s
+begin_packed_struct struct apicmd_getaddrinfo_s
 {
-  PACK_STRUCT_FIELD(uint32_t nodenamelen);
-  PACK_STRUCT_FIELD(int8_t nodename[APICMD_GETADDRINFO_NODENAME_MAX_LENGTH]);
-  PACK_STRUCT_FIELD(uint32_t servnamelen);
-  PACK_STRUCT_FIELD(int8_t servname[APICMD_GETADDRINFO_SERVNAME_MAX_LENGTH]);
-  PACK_STRUCT_FIELD(int32_t hints_flag);
-  PACK_STRUCT_FIELD(int32_t ai_flags);
-  PACK_STRUCT_FIELD(int32_t ai_family);
-  PACK_STRUCT_FIELD(int32_t ai_socktype);
-  PACK_STRUCT_FIELD(int32_t ai_protocol);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint32_t nodenamelen;
+  int8_t nodename[APICMD_GETADDRINFO_NODENAME_MAX_LENGTH];
+  uint32_t servnamelen;
+  int8_t servname[APICMD_GETADDRINFO_SERVNAME_MAX_LENGTH];
+  int32_t hints_flag;
+  int32_t ai_flags;
+  int32_t ai_family;
+  int32_t ai_socktype;
+  int32_t ai_protocol;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_getaddrinfores_s
+begin_packed_struct struct apicmd_getaddrinfores_s
 {
-  PACK_STRUCT_FIELD(int32_t ret_code);
-  PACK_STRUCT_FIELD(uint32_t ai_num);
-  PACK_STRUCT_FIELD(
-    struct apicmd_getaddrinfo_ai_s ai[APICMD_GETADDRINFO_RES_AI_COUNT]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t ret_code;
+  uint32_t ai_num;
+  struct apicmd_getaddrinfo_ai_s ai[APICMD_GETADDRINFO_RES_AI_COUNT];
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_SOCKET_APICMD_GETADDRINFO_H */

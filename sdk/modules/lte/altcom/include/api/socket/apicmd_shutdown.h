@@ -60,20 +60,16 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_shutdown_s
+begin_packed_struct struct apicmd_shutdown_s
 {
-  PACK_STRUCT_FIELD(int32_t sockfd);
-  PACK_STRUCT_FIELD(int32_t how);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t sockfd;
+  int32_t how;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_shutdownres_s
+begin_packed_struct struct apicmd_shutdownres_s
 {
-  PACK_STRUCT_FIELD(int32_t ret_code);
-  PACK_STRUCT_FIELD(int32_t err_code);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t ret_code;
+  int32_t err_code;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_SOCKET_APICMD_SHUTDOWN_H */

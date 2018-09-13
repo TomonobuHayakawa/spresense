@@ -60,20 +60,17 @@
  ****************************************************************************/
 
 /* This structure discribes the data structure of the API command */
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setdataconfig_s
-{
-  PACK_STRUCT_FIELD(uint8_t type);
-  PACK_STRUCT_FIELD(uint8_t general);
-  PACK_STRUCT_FIELD(uint8_t roaming);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setdataconfigres_s
+begin_packed_struct struct apicmd_cmddat_setdataconfig_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t type;
+  uint8_t general;
+  uint8_t roaming;
+} end_packed_struct;
+
+begin_packed_struct struct apicmd_cmddat_setdataconfigres_s
+{
+  uint8_t result;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETDATACONFIG_H */

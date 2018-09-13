@@ -64,13 +64,11 @@
  * no data
  */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_phonenores_s
+begin_packed_struct struct apicmd_cmddat_phonenores_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-  PACK_STRUCT_FIELD(uint8_t errcause);
-  PACK_STRUCT_FIELD(uint8_t phoneno[APICMD_PHONENO_LEN]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+  uint8_t errcause;
+  uint8_t phoneno[APICMD_PHONENO_LEN];
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_PHONENO_H */

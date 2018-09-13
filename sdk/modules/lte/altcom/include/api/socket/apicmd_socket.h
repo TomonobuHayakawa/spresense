@@ -73,21 +73,17 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_socket_s
+begin_packed_struct struct apicmd_socket_s
 {
-  PACK_STRUCT_FIELD(int32_t domain);
-  PACK_STRUCT_FIELD(int32_t type);
-  PACK_STRUCT_FIELD(int32_t protocol);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t domain;
+  int32_t type;
+  int32_t protocol;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_socketres_s
+begin_packed_struct struct apicmd_socketres_s
 {
-  PACK_STRUCT_FIELD(int32_t ret_code);
-  PACK_STRUCT_FIELD(int32_t err_code);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t ret_code;
+  int32_t err_code;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_SOCKET_APICMD_SOCKET_H */

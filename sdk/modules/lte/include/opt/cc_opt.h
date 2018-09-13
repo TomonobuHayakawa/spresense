@@ -42,13 +42,4 @@
 
 #include <nuttx/compiler.h>
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define PACK_STRUCT_BEGIN    begin_packed_struct
-#define PACK_STRUCT_STRUCT   end_packed_struct
-#define PACK_STRUCT_END
-#define PACK_STRUCT_FIELD(x) x
-
 #endif /* __MODULES_LTE_INCLUDE_OPT_CC_OPT_H */

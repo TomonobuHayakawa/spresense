@@ -69,30 +69,24 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setrepquality_s
+begin_packed_struct struct apicmd_cmddat_setrepquality_s
 {
-  PACK_STRUCT_FIELD(uint8_t enability);
-  PACK_STRUCT_FIELD(uint32_t interval);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t enability;
+  uint32_t interval;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setrepquality_res_s
+begin_packed_struct struct apicmd_cmddat_setrepquality_res_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_repquality_s
+begin_packed_struct struct apicmd_cmddat_repquality_s
 {
-  PACK_STRUCT_FIELD(uint8_t enability);
-  PACK_STRUCT_FIELD(int16_t rsrp);
-  PACK_STRUCT_FIELD(int16_t rsrq);
-  PACK_STRUCT_FIELD(int16_t sinr);
-  PACK_STRUCT_FIELD(int16_t rssi);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t enability;
+  int16_t rsrp;
+  int16_t rsrq;
+  int16_t sinr;
+  int16_t rssi;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_REPQUALITY_H */

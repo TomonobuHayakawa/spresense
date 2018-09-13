@@ -72,31 +72,25 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setrepcellinfo_s
+begin_packed_struct struct apicmd_cmddat_setrepcellinfo_s
 {
-  PACK_STRUCT_FIELD(uint8_t enability);
-  PACK_STRUCT_FIELD(uint32_t interval);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t enability;
+  uint32_t interval;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setrepcellinfo_res_s
+begin_packed_struct struct apicmd_cmddat_setrepcellinfo_res_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_repcellinfo_s
+begin_packed_struct struct apicmd_cmddat_repcellinfo_s
 {
-  PACK_STRUCT_FIELD(uint8_t  enability);
-  PACK_STRUCT_FIELD(uint32_t cell_id);
-  PACK_STRUCT_FIELD(uint32_t earfcn);
-  PACK_STRUCT_FIELD(uint8_t  mcc[APICMD_SET_REPCELLINFO_MCC_DIGIT]);
-  PACK_STRUCT_FIELD(uint8_t  mnc_digit);
-  PACK_STRUCT_FIELD(uint8_t  mnc[APICMD_SET_REPCELLINFO_MNC_DIGIT_MAX]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t  enability;
+  uint32_t cell_id;
+  uint32_t earfcn;
+  uint8_t  mcc[APICMD_SET_REPCELLINFO_MCC_DIGIT];
+  uint8_t  mnc_digit;
+  uint8_t  mnc[APICMD_SET_REPCELLINFO_MNC_DIGIT_MAX];
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_REPCELLINFO_H */

@@ -70,23 +70,19 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setapn_s
+begin_packed_struct struct apicmd_cmddat_setapn_s
 {
-  PACK_STRUCT_FIELD(uint8_t session_id);
-  PACK_STRUCT_FIELD(uint8_t apn[APICMD_SETAPN_APN_LEN]);
-  PACK_STRUCT_FIELD(uint8_t ip_type);
-  PACK_STRUCT_FIELD(uint8_t auth_type);
-  PACK_STRUCT_FIELD(uint8_t user_name[APICMD_SETAPN_USERNAME_LEN]);
-  PACK_STRUCT_FIELD(uint8_t password[APICMD_SETAPN_PASS_LEN]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t session_id;
+  uint8_t apn[APICMD_SETAPN_APN_LEN];
+  uint8_t ip_type;
+  uint8_t auth_type;
+  uint8_t user_name[APICMD_SETAPN_USERNAME_LEN];
+  uint8_t password[APICMD_SETAPN_PASS_LEN];
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setapnres_s
+begin_packed_struct struct apicmd_cmddat_setapnres_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_SETAPN_H */

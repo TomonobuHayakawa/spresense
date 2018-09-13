@@ -94,23 +94,19 @@
 
 /* APICMDID_SET_EDRX */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setedrx_s
+begin_packed_struct struct apicmd_cmddat_setedrx_s
 {
-  PACK_STRUCT_FIELD(uint8_t acttype);
-  PACK_STRUCT_FIELD(uint8_t enable);
-  PACK_STRUCT_FIELD(uint8_t edrx_cycle);
-  PACK_STRUCT_FIELD(uint8_t ptw_val);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t acttype;
+  uint8_t enable;
+  uint8_t edrx_cycle;
+  uint8_t ptw_val;
+} end_packed_struct;
 
 /* APICMDID_SET_EDRX_RES */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setedrxres_s
+begin_packed_struct struct apicmd_cmddat_setedrxres_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_SETEDRX_H */

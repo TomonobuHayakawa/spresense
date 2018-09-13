@@ -55,30 +55,25 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_ltime_s
+begin_packed_struct struct apicmd_cmddat_ltime_s
 {
-  PACK_STRUCT_FIELD(uint8_t year);
-  PACK_STRUCT_FIELD(uint8_t month);
-  PACK_STRUCT_FIELD(uint8_t day);
-  PACK_STRUCT_FIELD(uint8_t hour);
-  PACK_STRUCT_FIELD(uint8_t minutes);
-  PACK_STRUCT_FIELD(uint8_t seconds);
-  PACK_STRUCT_FIELD(int32_t timezone);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
-
+  uint8_t year;
+  uint8_t month;
+  uint8_t day;
+  uint8_t hour;
+  uint8_t minutes;
+  uint8_t seconds;
+  int32_t timezone;
+} end_packed_struct;
 
 /* APICMDID_GET_LTIME
  * no data
  */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_getltimeres_s
+begin_packed_struct struct apicmd_cmddat_getltimeres_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-  PACK_STRUCT_FIELD(struct apicmd_cmddat_ltime_s ltime);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+  struct apicmd_cmddat_ltime_s ltime;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_LTIME_H */

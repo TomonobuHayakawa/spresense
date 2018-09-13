@@ -79,17 +79,15 @@
  * no data
  */
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_getpinsetres_s
+begin_packed_struct struct apicmd_cmddat_getpinsetres_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-  PACK_STRUCT_FIELD(uint8_t active);
-  PACK_STRUCT_FIELD(uint8_t status);
-  PACK_STRUCT_FIELD(uint8_t pin_attemptsleft);
-  PACK_STRUCT_FIELD(uint8_t puk_attemptsleft);
-  PACK_STRUCT_FIELD(uint8_t pin2_attemptsleft);
-  PACK_STRUCT_FIELD(uint8_t puk2_attemptsleft);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t result;
+  uint8_t active;
+  uint8_t status;
+  uint8_t pin_attemptsleft;
+  uint8_t puk_attemptsleft;
+  uint8_t pin2_attemptsleft;
+  uint8_t puk2_attemptsleft;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETPINSET_H */

@@ -64,26 +64,22 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_gethostbynamer_s
+begin_packed_struct struct apicmd_gethostbynamer_s
 {
-  PACK_STRUCT_FIELD(uint32_t namelen);
-  PACK_STRUCT_FIELD(int8_t name[APICMD_GETHOSTBYNAMER_NAME_MAX_LENGTH]);
-  PACK_STRUCT_FIELD(int32_t buflen);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint32_t namelen;
+  int8_t name[APICMD_GETHOSTBYNAMER_NAME_MAX_LENGTH];
+  int32_t buflen;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_gethostbynamer_res_s
+begin_packed_struct struct apicmd_gethostbynamer_res_s
 {
-  PACK_STRUCT_FIELD(int32_t ret_code);
-  PACK_STRUCT_FIELD(int32_t err_code);
-  PACK_STRUCT_FIELD(int8_t h_name[APICMD_GETHOSTBYNAMER_NAME_MAX_LENGTH]);
-  PACK_STRUCT_FIELD(int8_t h_aliases[APICMD_GETHOSTBYNAMER_RES_H_ALIASES_LENGTH]);
-  PACK_STRUCT_FIELD(int32_t h_addrtype);
-  PACK_STRUCT_FIELD(int32_t h_length);
-  PACK_STRUCT_FIELD(int8_t h_addr_list[APICMD_GETHOSTBYNAMER_RES_H_ADDR_LENGTH]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t ret_code;
+  int32_t err_code;
+  int8_t h_name[APICMD_GETHOSTBYNAMER_NAME_MAX_LENGTH];
+  int8_t h_aliases[APICMD_GETHOSTBYNAMER_RES_H_ALIASES_LENGTH];
+  int32_t h_addrtype;
+  int32_t h_length;
+  int8_t h_addr_list[APICMD_GETHOSTBYNAMER_RES_H_ADDR_LENGTH];
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_SOCKET_APICMD_GETHOSTBYNAMER_H */

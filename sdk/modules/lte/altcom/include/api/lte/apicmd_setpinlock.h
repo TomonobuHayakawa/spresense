@@ -59,20 +59,17 @@
  ****************************************************************************/
 
 /* This structure discribes the data structure of the API command */
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setpinlock_s
-{
-  PACK_STRUCT_FIELD(uint8_t mode);
-  PACK_STRUCT_FIELD(uint8_t pincode[APICMD_SETPINLOCK_PINCODE_LEN]);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
 
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_setpinlockres_s
+begin_packed_struct struct apicmd_cmddat_setpinlock_s
 {
-  PACK_STRUCT_FIELD(uint8_t result);
-  PACK_STRUCT_FIELD(uint8_t attemptsleft);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t mode;
+  uint8_t pincode[APICMD_SETPINLOCK_PINCODE_LEN];
+} end_packed_struct;
+
+begin_packed_struct struct apicmd_cmddat_setpinlockres_s
+{
+  uint8_t result;
+  uint8_t attemptsleft;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_SETPINLOK_H */

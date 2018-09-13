@@ -57,11 +57,11 @@
  ****************************************************************************/
 
 /* This structure discribes the data structure of the API command */
-PACK_STRUCT_BEGIN
-struct apicmd_cmddat_repnetstat_s
+
+begin_packed_struct struct apicmd_cmddat_repnetstat_s
 {
-  PACK_STRUCT_FIELD(uint8_t stat);
-  PACK_STRUCT_FIELD(uint8_t sessionid);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  uint8_t stat;
+  uint8_t sessionid;
+} end_packed_struct;
+
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_REP_NETSTAT_H */

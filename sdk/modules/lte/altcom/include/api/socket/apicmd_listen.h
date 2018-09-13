@@ -55,20 +55,16 @@
 
 /* This structure discribes the data structure of the API command */
 
-PACK_STRUCT_BEGIN
-struct apicmd_listen_s
+begin_packed_struct struct apicmd_listen_s
 {
-  PACK_STRUCT_FIELD(int32_t sockfd);
-  PACK_STRUCT_FIELD(int32_t backlog);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t sockfd;
+  int32_t backlog;
+} end_packed_struct;
 
-PACK_STRUCT_BEGIN
-struct apicmd_listenres_s
+begin_packed_struct struct apicmd_listenres_s
 {
-  PACK_STRUCT_FIELD(int32_t ret_code);
-  PACK_STRUCT_FIELD(int32_t err_code);
-} PACK_STRUCT_STRUCT;
-PACK_STRUCT_END
+  int32_t ret_code;
+  int32_t err_code;
+} end_packed_struct;
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_SOCKET_APICMD_LISTEN_H */
