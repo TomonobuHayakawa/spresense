@@ -78,7 +78,7 @@ static void getver_job(FAR void *arg)
   FAR lte_version_t                     *version = NULL;
   get_ver_cb_t                          callback;
 
-  APIUTIL_GET_AND_CLR_CALLBACK(ret, g_getver_callback, callback);
+  ALTCOM_GET_AND_CLR_CALLBACK(ret, g_getver_callback, callback);
 
   if ((ret == 0) && (callback))
     {
@@ -110,7 +110,7 @@ static void getver_job(FAR void *arg)
    * bring a pointer to the receive buffer to the worker thread.
    * Therefore, the receive buffer needs to be released here. */
 
-  APIUTIL_FREE_CMD((FAR void *)arg);
+  altcom_free_cmd((FAR void *)arg);
 }
 
 /****************************************************************************

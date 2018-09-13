@@ -80,55 +80,7 @@
 #define APICMDGW_GET_DATA_LEN(hdr_ptr) \
   (ntohs(((FAR struct apicmd_cmdhdr_s *)hdr_ptr)->dtlen))
 
-#define APICMDGW_MUTEX_LOCK(mtx) \
-  do \
-    { \
-      const int32_t lockret = sys_lock_mutex(&(mtx)); \
-      DBGIF_ASSERT(0 == lockret, "sys_lock_mutex().\n"); \
-    } \
-  while (0)
-
-#define APICMDGW_BLKINFOTBL_LOCK() \
-  do \
-    { \
-      if (!g_blkinfotbl) \
-        { \
-          const int32_t creret = \
-            sys_create_mutex(&g_blkinfotbl_mtx, &g_mtxparam); \
-          DBGIF_ASSERT(0 == creret, "sys_create_mutex().\n"); \
-        } \
-      APICMDGW_MUTEX_LOCK(g_blkinfotbl_mtx); \
-    } \
-  while (0)
-
-#define APICMDGW_MUTEX_UNLOCK(mtx) \
-  do \
-    { \
-      const int32_t unlockret = sys_unlock_mutex(&(mtx)); \
-      DBGIF_ASSERT(0 == unlockret, "sys_unlock_mutex().\n"); \
-    } \
-  while (0)
-
-#define APICMDGW_BLKINFOTBL_UNLOCK() \
-  do \
-    { \
-      APICMDGW_MUTEX_UNLOCK(g_blkinfotbl_mtx); \
-      if (!g_blkinfotbl) \
-        { \
-          const int32_t delret = sys_delete_mutex(&g_blkinfotbl_mtx); \
-          DBGIF_ASSERT(0 == delret, "sys_delete_mutex().\n"); \
-        } \
-    } \
-  while (0)
-
-#define APICMDGW_CONDSIGNAL(sem) \
-  do \
-    { \
-      const int32_t postret = sys_post_semaphore(&(sem)); \
-      DBGIF_ASSERT(0 == postret, "sys_post_semaphore()\n"); \
-    } \
-  while (0)
-
+#define APICMDGW_CONDSIGNAL(sem) (sys_post_semaphore(&(sem)))
 #define APICMDGW_CONDWAIT(sem, timeout) (sys_wait_semaphore(&(sem), timeout))
 
 #define APICMDGW_GET_RESCMDID(cmdid) (cmdid | 0x01 << 15)
@@ -162,6 +114,43 @@ static sys_sem_t                      g_delwaitsem;
 static FAR struct hal_if_s            *g_hal_if       = NULL;
 static FAR struct evtdisp_s           *g_evtdisp      = NULL;
 static sys_cremtx_s                   g_mtxparam;
+
+/****************************************************************************
+ * Inline functions
+ ****************************************************************************/
+
+static inline void apicmdgw_mutex_lock(sys_mutex_t mtx)
+{
+  int32_t lockret = sys_lock_mutex(&mtx);
+  DBGIF_ASSERT(0 == lockret, "sys_lock_mutex().\n");
+}
+
+static inline void apicmdgw_blkinfotbl_lock(void)
+{
+  int32_t creret;
+  if (!g_blkinfotbl)
+    {
+      creret = sys_create_mutex(&g_blkinfotbl_mtx, &g_mtxparam);
+      DBGIF_ASSERT(0 == creret, "sys_create_mutex().\n");
+    }
+  apicmdgw_mutex_lock(g_blkinfotbl_mtx);
+}
+
+static inline void apicmdgw_mutex_unlock(sys_mutex_t mtx)
+{
+  int32_t unlockret = sys_unlock_mutex(&mtx);
+  DBGIF_ASSERT(0 == unlockret, "sys_unlock_mutex().\n");
+}
+
+static inline void apicmdgw_blkinfotbl_unlock(void)
+{
+  apicmdgw_mutex_unlock(g_blkinfotbl_mtx);
+  if (!g_blkinfotbl)
+    {
+      int32_t delret = sys_delete_mutex(&g_blkinfotbl_mtx);
+      DBGIF_ASSERT(0 == delret, "sys_delete_mutex().\n");
+    }
+}
 
 /****************************************************************************
  * Private Functions
@@ -353,7 +342,7 @@ void apicmdgw_errhandle(FAR struct apicmd_cmdhdr_s *evthdr)
 
 static void apicmdgw_addtable(FAR struct apicmdgw_blockinf_s *tbl)
 {
-  APICMDGW_BLKINFOTBL_LOCK();
+  apicmdgw_blkinfotbl_lock();
 
   if (!g_blkinfotbl)
     {
@@ -365,7 +354,7 @@ static void apicmdgw_addtable(FAR struct apicmdgw_blockinf_s *tbl)
       g_blkinfotbl = tbl;
     }
 
-  APICMDGW_BLKINFOTBL_UNLOCK();
+  apicmdgw_blkinfotbl_unlock();
 }
 
 /****************************************************************************
@@ -388,7 +377,7 @@ static void apicmdgw_remtable(FAR struct apicmdgw_blockinf_s *tbl)
 
   DBGIF_ASSERT(g_blkinfotbl, "table list is null.\n");
 
-  APICMDGW_BLKINFOTBL_LOCK();
+  apicmdgw_blkinfotbl_lock();
 
   tmptbl = g_blkinfotbl;
   if (tmptbl == tbl)
@@ -414,7 +403,7 @@ static void apicmdgw_remtable(FAR struct apicmdgw_blockinf_s *tbl)
   sys_delete_semaphore(&tmptbl->waitsem);
   BUFFPOOL_FREE(tmptbl);
 
-  APICMDGW_BLKINFOTBL_UNLOCK();
+  apicmdgw_blkinfotbl_unlock();
 }
 
 /****************************************************************************
@@ -438,10 +427,11 @@ static void apicmdgw_remtable(FAR struct apicmdgw_blockinf_s *tbl)
 static bool apicmdgw_writetable(uint16_t cmdid,
   uint16_t transid, FAR uint8_t *data, uint16_t datalen)
 {
+  int32_t                        ret;
   bool                           result = false;
   FAR struct apicmdgw_blockinf_s *tbl   = NULL;
 
-  APICMDGW_BLKINFOTBL_LOCK();
+  apicmdgw_blkinfotbl_lock();
 
   tbl = g_blkinfotbl;
   while(tbl)
@@ -469,10 +459,11 @@ static bool apicmdgw_writetable(uint16_t cmdid,
           DBGIF_LOG2_ERROR("Unexpected length. datalen: %d, bufflen: %d\n", datalen, tbl->bufflen);
         }
 
-      APICMDGW_CONDSIGNAL(tbl->waitsem);
+      ret = APICMDGW_CONDSIGNAL(tbl->waitsem);
+      DBGIF_ASSERT(0 == ret, "sys_delete_mutex().\n");
     }
 
-  APICMDGW_BLKINFOTBL_UNLOCK();
+  apicmdgw_blkinfotbl_unlock();
 
   return result;
 }
@@ -493,18 +484,21 @@ static bool apicmdgw_writetable(uint16_t cmdid,
 
 static void apicmdgw_postsemall(void)
 {
+  int32_t ret;
   FAR struct apicmdgw_blockinf_s *tmptbl;
 
-  APICMDGW_BLKINFOTBL_LOCK();
+  apicmdgw_blkinfotbl_lock();
 
   tmptbl = g_blkinfotbl;
   while(tmptbl)
     {
-      APICMDGW_CONDSIGNAL(tmptbl->waitsem);
+      ret = APICMDGW_CONDSIGNAL(tmptbl->waitsem);
+      DBGIF_ASSERT(0 == ret, "sys_delete_mutex().\n");
+
       tmptbl = tmptbl->next;
     }
 
-  APICMDGW_BLKINFOTBL_UNLOCK();
+  apicmdgw_blkinfotbl_unlock();
 }
 
 /****************************************************************************
@@ -698,7 +692,8 @@ static void apicmdgw_recvtask(void *arg)
       g_hal_if->freebuff(g_hal_if, (void *)rcvbuff);
     }
 
-  APICMDGW_CONDSIGNAL(g_delwaitsem);
+  ret = APICMDGW_CONDSIGNAL(g_delwaitsem);
+  DBGIF_ASSERT(0 == ret, "sys_delete_mutex().\n");
 
   ret = sys_delete_task(SYS_OWN_TASK);
   DBGIF_ASSERT(0 == ret, "sys_delete_task()\n");

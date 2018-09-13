@@ -92,7 +92,7 @@ static void power_callback_job(FAR void *arg)
   int32_t            ret;
   power_control_cb_t callback = NULL;
 
-  APIUTIL_GET_AND_CLR_CALLBACK(ret, g_lte_power_callback, callback);
+  ALTCOM_GET_AND_CLR_CALLBACK(ret, g_lte_power_callback, callback);
 
   if ((0 == ret) && (callback))
     {
@@ -190,17 +190,15 @@ int32_t modem_powerctrl(bool on)
 int32_t lte_power_control(bool on, power_control_cb_t callback)
 {
   int32_t     ret;
-  bool        is_init;
   FAR uint8_t *cmdbuff;
 
   /* Return error if callback is NULL */
 
-  APIUTIL_IS_ARG_NULL(callback);
+  ALTCOM_IS_ARG_NULL(callback);
 
   /* Check if the library is initialized */
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       ret = -EPERM;
@@ -209,7 +207,7 @@ int32_t lte_power_control(bool on, power_control_cb_t callback)
     {
       /* Register API callback */
 
-      APIUTIL_REG_CALLBACK(ret, g_lte_power_callback, callback);
+      ALTCOM_REG_CALLBACK(ret, g_lte_power_callback, callback);
       if (0 > ret)
         {
           DBGIF_LOG_ERROR("Currently API is busy.\n");
@@ -231,7 +229,7 @@ int32_t lte_power_control(bool on, power_control_cb_t callback)
         {
           /* Clear registered callback */
 
-          APIUTIL_CLR_CALLBACK(g_lte_power_callback);
+          ALTCOM_CLR_CALLBACK(g_lte_power_callback);
           return ret;
         }
 
@@ -250,7 +248,7 @@ int32_t lte_power_control(bool on, power_control_cb_t callback)
             {
               /* Send API command to modem */
 
-              ret = APIUTIL_SEND_AND_FREE(cmdbuff);
+              ret = altcom_send_and_free(cmdbuff);
             }
 
           /* If fail, there is no opportunity to execute the callback,
@@ -260,7 +258,7 @@ int32_t lte_power_control(bool on, power_control_cb_t callback)
             {
               /* Clear registered callback */
 
-              APIUTIL_CLR_CALLBACK(g_lte_power_callback);
+              ALTCOM_CLR_CALLBACK(g_lte_power_callback);
 
               (void)modem_powerctrl(false);
             }
@@ -273,7 +271,7 @@ int32_t lte_power_control(bool on, power_control_cb_t callback)
         {
           /* Call the API callback function in the context of worker thread */
 
-          ret = apiutil_runjob(WRKRID_API_CALLBACK_THREAD,
+          ret = altcom_runjob(WRKRID_API_CALLBACK_THREAD,
                                power_callback_job, NULL);
           DBGIF_ASSERT(0 == ret, "Failed to job to worker\n");
         }

@@ -78,7 +78,7 @@ int32_t lte_initialize(void)
 
   /* Set initialized status */
 
-  APIUTIL_CHECK_INITIALIZED_AND_SET(ret);
+  ret = altcom_check_initialized_and_set();
   if (ret < 0)
     {
       DBGIF_LOG_ERROR("Already initialized.\n");
@@ -89,7 +89,7 @@ int32_t lte_initialize(void)
       if (ret < 0)
         {
           DBGIF_LOG1_ERROR("director_construct() error.", ret);
-          APIUTIL_SET_FINALIZED();
+          altcom_set_finalized();
         }
       else
         {

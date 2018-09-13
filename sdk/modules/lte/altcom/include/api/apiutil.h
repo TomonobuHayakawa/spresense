@@ -54,123 +54,65 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define apiutil_lock()            do { sys_disable_dispatch(); } while(0)
-#define apiutil_unlock()          do { sys_enable_dispatch(); } while(0)
+#define altcom_lock()            do { sys_disable_dispatch(); } while(0)
+#define altcom_unlock()          do { sys_enable_dispatch(); } while(0)
 
-#define APIUTIL_CHECK_INITIALIZED_AND_SET(ret) \
-  { \
-    apiutil_lock(); \
-    if (g_lte_initialized) \
-      { \
-        ret = -EBUSY; \
-      } \
-    else \
-      { \
-        g_lte_initialized = true; \
-        apiutil_callback_createlock(); \
-        ret = 0; \
-      } \
-    apiutil_unlock(); \
-  }
-
-#define APIUTIL_SET_INITIALIZED() \
-  { \
-    apiutil_lock(); \
-    g_lte_initialized = true; \
-    apiutil_callback_createlock(); \
-    apiutil_unlock(); \
-  }
-
-#define APIUTIL_CHECK_FINALIZED_AND_SET(ret) \
-  { \
-    apiutil_lock(); \
-    if (!g_lte_initialized) \
-      { \
-        ret = -EPERM; \
-      } \
-    else \
-      { \
-        g_lte_initialized = false; \
-        apiutil_callback_deletelock(); \
-        ret = 0; \
-      } \
-    apiutil_unlock(); \
-  }
-
-#define APIUTIL_SET_FINALIZED() \
-  { \
-    apiutil_lock(); \
-    g_lte_initialized = false; \
-    apiutil_callback_deletelock(); \
-    apiutil_unlock(); \
-  }
-
-#define APIUTIL_ISINIT(is_init) \
-  { \
-    apiutil_lock(); \
-    is_init = g_lte_initialized; \
-    apiutil_unlock(); \
-  }
-
-#define APIUTIL_REG_CALLBACK(ret, tgt_callback, new_callback) \
-  { \
-    apiutil_callback_lock(); \
-    if (tgt_callback) \
-      { \
-        ret = -EBUSY; \
-      } \
-    else \
-      { \
-        tgt_callback = new_callback; \
-        ret = 0; \
-      } \
-    apiutil_callback_unlock(); \
-  }
-
-#define APIUTIL_GET_AND_CLR_CALLBACK(ret, tgt_callback, old_callback) \
-  { \
-    apiutil_callback_lock(); \
-    if (!tgt_callback) \
-      { \
-        ret = -EPERM; \
-      } \
-    else \
-      { \
-        old_callback = tgt_callback; \
-        tgt_callback = NULL; \
-        ret = 0; \
-      } \
-    apiutil_callback_unlock(); \
-  }
-
-#define APIUTIL_CLR_CALLBACK(tgt_callback) \
-  { \
-    apiutil_callback_lock(); \
-    tgt_callback = NULL; \
-    apiutil_callback_unlock(); \
-  }
-
-#define APIUTIL_IS_ARG_NULL(arg) \
-  { \
-    if (!arg) \
-      { \
-        DBGIF_LOG_ERROR("Input argument is NULL.\n"); \
-        return -EINVAL; \
-      } \
-  }
-
-#define APIUTIL_FREE_CMD(dat) \
+#define ALTCOM_REG_CALLBACK(ret, tgt_callback, new_callback) \
   do \
     { \
-      const int32_t freeret = apicmdgw_freebuff(dat); \
-      if (freeret < 0) \
+      altcom_callback_lock(); \
+      if (tgt_callback) \
         { \
-          DBGIF_LOG1_ERROR("apicmdgw_freebuff() failure. ret:%d\n", freeret); \
+          ret = -EBUSY; \
+        } \
+      else \
+        { \
+          tgt_callback = new_callback; \
+          ret = 0; \
+        } \
+      altcom_callback_unlock(); \
+    } \
+  while (0)
+
+#define ALTCOM_GET_AND_CLR_CALLBACK(ret, tgt_callback, old_callback) \
+  do \
+    { \
+      altcom_callback_lock(); \
+      if (!tgt_callback) \
+        { \
+          ret = -EPERM; \
+        } \
+      else \
+        { \
+          old_callback = tgt_callback; \
+          tgt_callback = NULL; \
+          ret = 0; \
+        } \
+      altcom_callback_unlock(); \
+    } \
+  while (0)
+
+#define ALTCOM_CLR_CALLBACK(tgt_callback) \
+  do \
+    { \
+      altcom_callback_lock(); \
+      tgt_callback = NULL; \
+      altcom_callback_unlock(); \
+    } \
+  while (0)
+
+#define ALTCOM_IS_ARG_NULL(arg) \
+  do \
+    { \
+      if (!arg) \
+        { \
+          DBGIF_LOG_ERROR("Input argument is NULL.\n"); \
+          return -EINVAL; \
         } \
     } \
   while (0)
 
-#define APIUTIL_CHK_AND_LOCK_PROC(flg) \
+#define ALTCOM_CHK_AND_LOCK_PROC(flg) \
   do \
     { \
       if (flg) \
@@ -181,49 +123,30 @@
     } \
   while (0)
 
-#define APIUTIL_UNLOCK_PROC(flg) \
+#define ALTCOM_UNLOCK_PROC(flg) do { flg = false; } while (0)
+
+#define ALTCOM_SOCK_ALLOC_CMDBUFF(buff, id ,len) \
+  ((buff = altcom_alloc_cmdbuff(id, len)) != NULL)
+
+#define ALTCOM_SOCK_ALLOC_RESBUFF(buff, len) \
+  ((buff = altcom_alloc_resbuff(len)) != NULL)
+
+#define ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(buff, id, bufflen, res, reslen) \
   do \
     { \
-      flg = false; \
+      if (!ALTCOM_SOCK_ALLOC_CMDBUFF(buff, id, bufflen)) \
+        { \
+          altcom_seterrno((int32_t)ALTCOM_ENOMEM); \
+          return -1; \
+        } \
+      if (!ALTCOM_SOCK_ALLOC_RESBUFF(res, reslen)) \
+        { \
+          altcom_free_cmd((FAR uint8_t *)buff); \
+          altcom_seterrno((int32_t)ALTCOM_ENOMEM); \
+          return -1; \
+        } \
     } \
   while (0)
-
-#define APIUTIL_SOCK_ALLOC_CMDBUFF(buff, id ,len) \
-  ((buff = apiutil_alloc_cmdbuff(id, len)) != NULL)
-
-#define APIUTIL_SOCK_ALLOC_RESBUFF(buff, len) \
-  ((buff = apiutil_alloc_resbuff(len)) != NULL)
-
-#define APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(buff, id, bufflen, res, reslen) \
-  do \
-    { \
-      if (!APIUTIL_SOCK_ALLOC_CMDBUFF(buff, id, bufflen)) \
-        { \
-          altcom_seterrno((int32_t)ALTCOM_ENOMEM); \
-          return -1; \
-        } \
-      if (!APIUTIL_SOCK_ALLOC_RESBUFF(res, reslen)) \
-        { \
-          APIUTIL_FREE_CMD((FAR uint8_t *)buff); \
-          altcom_seterrno((int32_t)ALTCOM_ENOMEM); \
-          return -1; \
-        } \
-    } \
-  while (0) \
-
-#define APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmdbuff, resbuff) \
-  do \
-    { \
-      if (cmdbuff) \
-        { \
-          APIUTIL_FREE_CMD((FAR uint8_t *)cmdbuff); \
-        }  \
-      if (resbuff) \
-        { \
-          (void)BUFFPOOL_FREE(resbuff); \
-        } \
-    } \
-  while (0) \
 
 /****************************************************************************
  * Public Data
@@ -236,7 +159,16 @@ extern sys_mutex_t g_lte_apicallback_mtx;
  * Inline functions
  ****************************************************************************/
 
-static inline int32_t APIUTIL_SEND_AND_FREE(FAR uint8_t *dat)
+static inline void altcom_free_cmd(FAR uint8_t *dat)
+{
+  int32_t freeret = apicmdgw_freebuff(dat);
+  if (freeret < 0)
+    {
+      DBGIF_LOG1_ERROR("apicmdgw_freebuff() failure. ret:%d\n", freeret);
+    }
+}
+
+static inline int32_t altcom_send_and_free(FAR uint8_t *dat)
 {
   int32_t ret = APICMDGW_SEND_ONLY(dat);
   if (ret < 0)
@@ -244,12 +176,12 @@ static inline int32_t APIUTIL_SEND_AND_FREE(FAR uint8_t *dat)
       DBGIF_LOG1_ERROR("Failed to send API command. err=[%d]\n", ret);
     }
 
-  APIUTIL_FREE_CMD(dat);
+  altcom_free_cmd(dat);
 
   return ret;
 }
 
-FAR static inline void *apiutil_alloc_cmdbuff(int32_t cmdid, uint16_t len)
+static inline FAR void *altcom_alloc_cmdbuff(int32_t cmdid, uint16_t len)
 {
   FAR void *buff = NULL;
 
@@ -261,7 +193,7 @@ FAR static inline void *apiutil_alloc_cmdbuff(int32_t cmdid, uint16_t len)
   return buff;
 }
 
-FAR static inline void *apiutil_alloc_resbuff(uint16_t len)
+static inline FAR void *altcom_alloc_resbuff(uint16_t len)
 {
   FAR void *res = NULL;
 
@@ -276,7 +208,7 @@ FAR static inline void *apiutil_alloc_resbuff(uint16_t len)
 }
 
 /****************************************************************************
- * Name: apiutil_callback_createlock
+ * Name: altcom_callback_createlock
  *
  * Description:
  *   Create the lock for access to the API callback.
@@ -289,7 +221,7 @@ FAR static inline void *apiutil_alloc_resbuff(uint16_t len)
  *
  ****************************************************************************/
 
-static inline void apiutil_callback_createlock(void)
+static inline void altcom_callback_createlock(void)
 {
   int32_t      ret;
   sys_cremtx_s param = {0};
@@ -302,7 +234,7 @@ static inline void apiutil_callback_createlock(void)
 }
 
 /****************************************************************************
- * Name: apiutil_callback_deletelock
+ * Name: altcom_callback_deletelock
  *
  * Description:
  *   Delete the lock for access to the API callback.
@@ -315,7 +247,7 @@ static inline void apiutil_callback_createlock(void)
  *
  ****************************************************************************/
 
-static inline void apiutil_callback_deletelock(void)
+static inline void altcom_callback_deletelock(void)
 {
   int32_t      ret;
 
@@ -327,7 +259,7 @@ static inline void apiutil_callback_deletelock(void)
 }
 
 /****************************************************************************
- * Name: apiutil_callback_lock
+ * Name: altcom_callback_lock
  *
  * Description:
  *   Lock access to the API callback.
@@ -340,13 +272,13 @@ static inline void apiutil_callback_deletelock(void)
  *
  ****************************************************************************/
 
-static inline void apiutil_callback_lock(void)
+static inline void altcom_callback_lock(void)
 {
   sys_lock_mutex(&g_lte_apicallback_mtx);
 }
 
 /****************************************************************************
- * Name: apiutil_callback_unlock
+ * Name: altcom_callback_unlock
  *
  * Description:
  *   Unock access to the API callback.
@@ -359,9 +291,89 @@ static inline void apiutil_callback_lock(void)
  *
  ****************************************************************************/
 
-static inline void apiutil_callback_unlock(void)
+static inline void altcom_callback_unlock(void)
 {
   sys_unlock_mutex(&g_lte_apicallback_mtx);
+}
+
+static inline int32_t altcom_check_initialized_and_set(void)
+{
+  int32_t ret;
+
+  altcom_lock();
+  if (g_lte_initialized)
+    {
+      ret = -EBUSY;
+    }
+  else
+    {
+      g_lte_initialized = true;
+      altcom_callback_createlock();
+      ret = 0;
+    }
+  altcom_unlock();
+
+  return ret;
+}
+
+static inline void altcom_set_initialized(void)
+{
+  altcom_lock();
+  g_lte_initialized = true;
+  altcom_callback_createlock();
+  altcom_unlock();
+}
+
+static inline int32_t altcom_check_finalized_and_set(void)
+{
+  int32_t ret;
+
+  altcom_lock();
+  if (!g_lte_initialized)
+    {
+      ret = -EPERM;
+    }
+  else
+    {
+      g_lte_initialized = false;
+      altcom_callback_deletelock();
+      ret = 0;
+    }
+  altcom_unlock();
+
+  return ret;
+}
+
+static inline void altcom_set_finalized(void)
+{
+  altcom_lock();
+  g_lte_initialized = false;
+  altcom_callback_deletelock();
+  altcom_unlock();
+}
+
+static inline bool altcom_isinit(void)
+{
+  bool is_init;
+
+  altcom_lock();
+  is_init = g_lte_initialized;
+  altcom_unlock();
+
+  return is_init;
+}
+
+static inline void altcom_sock_free_cmdandresbuff(
+  FAR void *cmdbuff, FAR void *resbuff)
+{
+  if (cmdbuff)
+    {
+      altcom_free_cmd((FAR uint8_t *)cmdbuff);
+    }
+  if (resbuff)
+    {
+      (void)BUFFPOOL_FREE(resbuff);
+    }
 }
 
 /****************************************************************************
@@ -369,7 +381,7 @@ static inline void apiutil_callback_unlock(void)
  ****************************************************************************/
 
 /****************************************************************************
- * Name: apiutil_runjob
+ * Name: altcom_runjob
  *
  * Description:
  *  run job to the worker.
@@ -385,7 +397,7 @@ static inline void apiutil_callback_unlock(void)
  *
  ****************************************************************************/
 
-int32_t apiutil_runjob(
-  int8_t id,  CODE thrdpool_jobif_t job, FAR void *arg);
+int32_t altcom_runjob(
+  int8_t id, CODE thrdpool_jobif_t job, FAR void *arg);
 
 #endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_APIUTIL_H */

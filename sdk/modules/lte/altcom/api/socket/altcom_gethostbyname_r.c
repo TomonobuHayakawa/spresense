@@ -95,7 +95,7 @@ static int32_t gethostbynamer_request(FAR const char *name, int32_t namelen,
   FAR struct apicmd_gethostbynamer_res_s *res   = NULL;
   FAR struct gethostbyname_r_helper      *h     = NULL;
 
-  APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETHOSTBYNAMER,
+  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETHOSTBYNAMER,
                                    GETHOSTBYNAMER_REQ_DATALEN, res,
                                    GETHOSTBYNAMER_RES_DATALEN);
   cmd->namelen = htonl(namelen);
@@ -156,11 +156,11 @@ static int32_t gethostbynamer_request(FAR const char *name, int32_t namelen,
     }
 
   *result = ret;
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
   return GETHOSTBYNAMER_REQ_SUCCESS;
 
 errout_with_cmdfree:
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
   if (h_errnop)
     {
       *h_errnop = err;
@@ -210,11 +210,9 @@ int altcom_gethostbyname_r(const char *name, struct altcom_hostent *ret,
                            char *buf, size_t buflen,
                            struct altcom_hostent **result, int *h_errnop)
 {
-  bool    is_init;
   int32_t namelen = 0;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return -1;

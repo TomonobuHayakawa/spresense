@@ -62,7 +62,7 @@ static void poweron_job(FAR void *arg)
       (FAR struct apicmd_cmddat_poweronres_s *)arg;
   power_control_cb_t                    callback;
 
-  APIUTIL_GET_AND_CLR_CALLBACK(ret, g_lte_power_callback, callback);
+  ALTCOM_GET_AND_CLR_CALLBACK(ret, g_lte_power_callback, callback);
 
   if ((ret == 0) && (callback))
     {
@@ -79,7 +79,7 @@ static void poweron_job(FAR void *arg)
    * bring a pointer to the receive buffer to the worker thread.
    * Therefore, the receive buffer needs to be released here. */
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)arg);
+  altcom_free_cmd((FAR uint8_t *)arg);
 }
 
 /****************************************************************************

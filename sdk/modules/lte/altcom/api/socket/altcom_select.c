@@ -104,7 +104,7 @@ static int32_t select_request(FAR struct select_req_s *req)
     {
       /* Allocate send command buffer only */
 
-      if (!APIUTIL_SOCK_ALLOC_CMDBUFF(cmd, APICMDID_SOCK_SELECT,
+      if (!ALTCOM_SOCK_ALLOC_CMDBUFF(cmd, APICMDID_SOCK_SELECT,
                                       SELECT_REQ_DATALEN))
         {
           err = ALTCOM_ENOMEM;
@@ -115,7 +115,7 @@ static int32_t select_request(FAR struct select_req_s *req)
     {
       /* Allocate send and response command buffer */
 
-      APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SELECT,
+      ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SELECT,
                                        SELECT_REQ_DATALEN, res,
                                        SELECT_RES_DATALEN);
     }
@@ -232,12 +232,12 @@ static int32_t select_request(FAR struct select_req_s *req)
       ret = select_id;
     }
 
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
 
   return ret;
 
 errout_with_cmdfree:
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
 
 errout:
   altcom_seterrno(err);
@@ -272,11 +272,9 @@ int altcom_select_request_asyncsend(int maxfdp1, altcom_fd_set *readset,
                                     altcom_fd_set *exceptset)
 {
   int32_t             result;
-  bool                is_init;
   struct select_req_s req;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       altcom_seterrno(ALTCOM_ENETDOWN);
@@ -319,11 +317,9 @@ int altcom_select_request_asyncsend(int maxfdp1, altcom_fd_set *readset,
 int altcom_select_cancel_request_send(int id)
 {
   int32_t             result;
-  bool                is_init;
   struct select_req_s req;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       altcom_seterrno(ALTCOM_ENETDOWN);
@@ -374,11 +370,9 @@ int altcom_select_nonblock(int maxfdp1, altcom_fd_set *readset,
                            altcom_fd_set *exceptset)
 {
   int32_t             result;
-  bool                is_init;
   struct select_req_s req;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       altcom_seterrno(ALTCOM_ENETDOWN);
@@ -430,11 +424,9 @@ int altcom_select_block(int maxfdp1, altcom_fd_set *readset,
                         struct altcom_timeval *timeout)
 {
   int32_t             result;
-  bool                is_init;
   struct select_req_s req;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       altcom_seterrno(ALTCOM_ENETDOWN);

@@ -71,7 +71,7 @@ int32_t lte_finalize(void)
 
   /* Set not initialized status */
 
-  APIUTIL_CHECK_FINALIZED_AND_SET(ret);
+  ret = altcom_check_finalized_and_set();
   if (ret < 0)
     {
       DBGIF_LOG_ERROR("Already finalized.\n");
@@ -82,7 +82,7 @@ int32_t lte_finalize(void)
       if (ret < 0)
         {
           DBGIF_LOG1_ERROR("director_destruct() error.", ret);
-          APIUTIL_SET_INITIALIZED();
+          altcom_set_initialized();
         }
       else
         {

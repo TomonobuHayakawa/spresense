@@ -80,7 +80,7 @@ static void errindication_job(FAR void *arg)
    * bring a pointer to the receive buffer to the worker thread.
    * Therefore, the receive buffer needs to be released here. */
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)data);
+  altcom_free_cmd((FAR uint8_t *)data);
 }
 
 /****************************************************************************

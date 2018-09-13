@@ -101,7 +101,6 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
   int32_t                           optlen;
   int32_t                           set_mode = 0;
   FAR int32_t                       *pint32_val;
-  bool                              is_init;
   uint16_t                          reslen = 0;
   FAR struct apicmd_getsockopt_s    *cmd = NULL;
   FAR struct apicmd_getsockoptres_s *res = NULL;
@@ -109,8 +108,7 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
   FAR struct altcom_linger          *plinger;
   FAR struct altcom_in_addr         *pinaddr;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       altcom_seterrno(ALTCOM_ENETDOWN);
@@ -300,7 +298,7 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
 
   /* Allocate send and response command buffer */
 
-  APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETSOCKOPT,
+  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETSOCKOPT,
                                    GETSOCKOPT_REQ_DATALEN, res,
                                    GETSOCKOPT_RES_DATALEN);
 
@@ -408,7 +406,7 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
       ret = -1;
     }
 
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
 
   return ret;
 }

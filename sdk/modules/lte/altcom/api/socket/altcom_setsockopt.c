@@ -98,7 +98,6 @@ int altcom_setsockopt(int sockfd, int level, int option, const void *value,
 {
   int32_t                           ret;
   int32_t                           err;
-  bool                              is_init;
   FAR struct altcom_socket_s        *fsock;
   int32_t                           set_mode = 0;
   uint8_t                           optval[APICMD_SETSOCKOPT_OPTVAL_LENGTH];
@@ -106,8 +105,7 @@ int altcom_setsockopt(int sockfd, int level, int option, const void *value,
   FAR struct apicmd_setsockopt_s    *cmd = NULL;
   FAR struct apicmd_setsockoptres_s *res = NULL;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       altcom_seterrno(ALTCOM_ENETDOWN);
@@ -331,7 +329,7 @@ int altcom_setsockopt(int sockfd, int level, int option, const void *value,
 
   /* Allocate send and response command buffer */
 
-  APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SETSOCKOPT,
+  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SETSOCKOPT,
                                    SETSOCKOPT_REQ_DATALEN, res,
                                    SETSOCKOPT_RES_DATALEN);
 
@@ -365,7 +363,7 @@ int altcom_setsockopt(int sockfd, int level, int option, const void *value,
       ret = -1;
     }
 
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
 
   return 0;
 }

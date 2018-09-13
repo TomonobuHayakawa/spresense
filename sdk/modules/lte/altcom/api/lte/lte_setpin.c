@@ -96,19 +96,17 @@ int32_t lte_set_pinenable(bool enable,
                           set_pinenable_cb_t callback)
 {
   int32_t                               ret;
-  bool                                  is_init;
   FAR struct apicmd_cmddat_setpinlock_s *cmddat = NULL;
   uint8_t                               pinlen  = 0;
 
   /* Return error if argument is NULL */
 
-  APIUTIL_IS_ARG_NULL(pincode);
-  APIUTIL_IS_ARG_NULL(callback);
+  ALTCOM_IS_ARG_NULL(pincode);
+  ALTCOM_IS_ARG_NULL(callback);
 
   /* Check if the library is initialized */
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return -EPERM;
@@ -123,7 +121,7 @@ int32_t lte_set_pinenable(bool enable,
 
       /* Register API callback */
 
-      APIUTIL_REG_CALLBACK(ret, g_pinenable_callback, callback);
+      ALTCOM_REG_CALLBACK(ret, g_pinenable_callback, callback);
       if (0 > ret)
         {
           DBGIF_LOG_ERROR("Currently API is busy.\n");
@@ -150,7 +148,7 @@ int32_t lte_set_pinenable(bool enable,
 
       /* Send API command to modem */
 
-      ret = APIUTIL_SEND_AND_FREE((FAR uint8_t *)cmddat);
+      ret = altcom_send_and_free((FAR uint8_t *)cmddat);
     }
 
   /* If fail, there is no opportunity to execute the callback,
@@ -160,7 +158,7 @@ int32_t lte_set_pinenable(bool enable,
     {
       /* Clear registered callback */
 
-      APIUTIL_CLR_CALLBACK(g_pinenable_callback);
+      ALTCOM_CLR_CALLBACK(g_pinenable_callback);
     }
   else
     {
@@ -195,20 +193,18 @@ int32_t lte_change_pin(int8_t target_pin, int8_t *pincode,
                        int8_t *new_pincode, change_pin_cb_t callback)
 {
   int32_t                               ret;
-  bool                                  is_init;
   FAR struct apicmd_cmddat_setpincode_s *cmddat = NULL;
   uint8_t                               pinlen  = 0;
 
   /* Return error if argument is NULL */
 
-  APIUTIL_IS_ARG_NULL(pincode);
-  APIUTIL_IS_ARG_NULL(new_pincode);
-  APIUTIL_IS_ARG_NULL(callback);
+  ALTCOM_IS_ARG_NULL(pincode);
+  ALTCOM_IS_ARG_NULL(new_pincode);
+  ALTCOM_IS_ARG_NULL(callback);
 
   /* Check if the library is initialized */
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return -EPERM;
@@ -234,7 +230,7 @@ int32_t lte_change_pin(int8_t target_pin, int8_t *pincode,
 
       /* Register API callback */
 
-      APIUTIL_REG_CALLBACK(ret, g_changepin_callback, callback);
+      ALTCOM_REG_CALLBACK(ret, g_changepin_callback, callback);
       if (0 > ret)
         {
           DBGIF_LOG_ERROR("Currently API is busy.\n");
@@ -271,7 +267,7 @@ int32_t lte_change_pin(int8_t target_pin, int8_t *pincode,
 
       /* Send API command to modem */
 
-      ret = APIUTIL_SEND_AND_FREE((FAR uint8_t *)cmddat);
+      ret = altcom_send_and_free((FAR uint8_t *)cmddat);
     }
 
   /* If fail, there is no opportunity to execute the callback,
@@ -281,7 +277,7 @@ int32_t lte_change_pin(int8_t target_pin, int8_t *pincode,
     {
       /* Clear registered callback */
 
-      APIUTIL_CLR_CALLBACK(g_changepin_callback);
+      ALTCOM_CLR_CALLBACK(g_changepin_callback);
     }
   else
     {

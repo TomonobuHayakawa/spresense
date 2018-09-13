@@ -76,7 +76,7 @@ static inline enum evthdlrc_e APICMDHDLRBS_DO_RUNJOB(FAR uint8_t *evt,
   if (0 > evthdlbs_runjob(WRKRID_API_CALLBACK_THREAD,
     (CODE thrdpool_jobif_t)job, (FAR void*)evt))
     {
-      APIUTIL_FREE_CMD((FAR uint8_t *)evt);
+      altcom_free_cmd((FAR uint8_t *)evt);
       return EVTHDLRC_INTERNALERROR;
     }
 

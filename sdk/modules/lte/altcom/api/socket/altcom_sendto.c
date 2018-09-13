@@ -100,7 +100,7 @@ static int32_t sendto_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SENDTO, sendlen, res,
+  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SENDTO, sendlen, res,
                                    SENDTO_RES_DATALEN);
 
   /* Fill the data */
@@ -152,12 +152,12 @@ static int32_t sendto_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
 
   return ret;
 
 errout_with_cmdfree:
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
   altcom_seterrno(err);
   return SENDTO_REQ_FAILURE;
 }
@@ -194,14 +194,12 @@ int altcom_sendto(int sockfd, const void *buf, size_t len, int flags,
 {
   int32_t                     ret;
   int32_t                     result;
-  bool                        is_init;
   struct altcom_fd_set_s      writeset;
   FAR struct altcom_socket_s  *fsock;
   struct sendto_req_s         req;
   FAR struct altcom_timeval   *sendtimeo;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       altcom_seterrno(ALTCOM_ENETDOWN);

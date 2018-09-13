@@ -98,7 +98,7 @@ static int32_t getaddrinfo_request(FAR struct getaddrinfo_req_s* req)
 
   /* Allocate send and response command buffer */
 
-  APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETADDRINFO,
+  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETADDRINFO,
                                    GETADDRINFO_REQ_DATALEN, res,
                                    GETADDRINFO_RES_DATALEN);
 
@@ -248,12 +248,12 @@ static int32_t getaddrinfo_request(FAR struct getaddrinfo_req_s* req)
     }
 
 
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
 
   return ret;
 
 errout_with_cmdfree:
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
   return err;
 }
 
@@ -296,12 +296,10 @@ int altcom_getaddrinfo(const char *nodename, const char *servname,
                        const struct altcom_addrinfo *hints,
                        struct altcom_addrinfo **res)
 {
-  bool    is_init;
   int32_t result;
   struct getaddrinfo_req_s req;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return ALTCOM_EAI_FAIL;

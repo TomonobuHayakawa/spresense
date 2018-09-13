@@ -54,7 +54,7 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: apiutil_runjob
+ * Name: altcom_runjob
  *
  * Description:
  *  run job to the worker.
@@ -70,7 +70,7 @@
  *
  ****************************************************************************/
 
-int32_t apiutil_runjob(
+int32_t altcom_runjob(
   int8_t id,  CODE thrdpool_jobif_t job, FAR void *arg)
 {
   int32_t               ret;

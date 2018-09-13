@@ -82,18 +82,16 @@ extern set_ce_cb_t g_setce_callback;
 int32_t lte_set_ce(lte_ce_setting_t *settings, set_ce_cb_t callback)
 {
   int32_t                        ret;
-  bool                           is_init;
   struct apicmd_cmddat_setce_s *cmddat;
 
   /* Return error if callback is NULL */
 
-  APIUTIL_IS_ARG_NULL(settings);
-  APIUTIL_IS_ARG_NULL(callback);
+  ALTCOM_IS_ARG_NULL(settings);
+  ALTCOM_IS_ARG_NULL(callback);
 
   /* Check if the library is initialized */
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return -EPERM;
@@ -101,7 +99,7 @@ int32_t lte_set_ce(lte_ce_setting_t *settings, set_ce_cb_t callback)
 
   /* Register API callback */
 
-  APIUTIL_REG_CALLBACK(ret, g_setce_callback, callback);
+  ALTCOM_REG_CALLBACK(ret, g_setce_callback, callback);
   if (ret < 0)
     {
       DBGIF_LOG_ERROR("Currently API is busy.\n");
@@ -130,7 +128,7 @@ int32_t lte_set_ce(lte_ce_setting_t *settings, set_ce_cb_t callback)
 
           /* Send API command to modem */
 
-          ret = APIUTIL_SEND_AND_FREE((FAR uint8_t *)cmddat);
+          ret = altcom_send_and_free((FAR uint8_t *)cmddat);
         }
 
       /* If fail, there is no opportunity to execute the callback,
@@ -140,7 +138,7 @@ int32_t lte_set_ce(lte_ce_setting_t *settings, set_ce_cb_t callback)
         {
           /* Clear registered callback */
 
-          APIUTIL_CLR_CALLBACK(g_setce_callback);
+          ALTCOM_CLR_CALLBACK(g_setce_callback);
         }
       else
         {

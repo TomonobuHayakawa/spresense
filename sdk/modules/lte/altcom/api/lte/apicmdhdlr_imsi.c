@@ -78,7 +78,7 @@ static void getimsi_job(FAR void *arg)
 
   data = (FAR struct apicmd_cmddat_getimsires_s *)arg;
 
-  APIUTIL_GET_AND_CLR_CALLBACK(ret, g_getimsi_callback, callback);
+  ALTCOM_GET_AND_CLR_CALLBACK(ret, g_getimsi_callback, callback);
 
   if ((ret == 0) && (callback))
     {
@@ -95,7 +95,7 @@ static void getimsi_job(FAR void *arg)
    * bring a pointer to the receive buffer to the worker thread.
    * Therefore, the receive buffer needs to be released here. */
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)arg);
+  altcom_free_cmd((FAR uint8_t *)arg);
 }
 
 /****************************************************************************

@@ -41,25 +41,22 @@
 #include "altcom_errno.h"
 
 /****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define ALTCOM_ERRNO_CHKNO(errno) \
-  do \
-    { \
-      if (ALTCOM_ERRNO_MIN > errno || ALTCOM_ERRNO_MAX < errno) \
-        { \
-          DBGIF_ASSERT(NULL, "seterrno invalid param. \n"); \
-        } \
-    } \
-  while (0) \
-
-/****************************************************************************
  * Private Data
  ****************************************************************************/
 
 static int32_t g_altcom_errno;
 
+/****************************************************************************
+ * Inline functions
+ ****************************************************************************/
+
+static inline void altcom_errno_chkno(int32_t errno)
+{
+  if (ALTCOM_ERRNO_MIN > errno || ALTCOM_ERRNO_MAX < errno)
+    {
+      DBGIF_ASSERT(NULL, "seterrno invalid param. \n");
+    }
+}
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -99,7 +96,7 @@ int32_t altcom_errno(void)
 
 void altcom_seterrno(int32_t err_no)
 {
-  ALTCOM_ERRNO_CHKNO(err_no);
+  altcom_errno_chkno(err_no);
   g_altcom_errno = err_no;
   return;
 }

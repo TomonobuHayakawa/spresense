@@ -84,7 +84,7 @@ static void setpin_lock_job(FAR void *arg)
       DBGIF_ASSERT(NULL, "Invalid response.\n");
     }
 
-  APIUTIL_GET_AND_CLR_CALLBACK(
+  ALTCOM_GET_AND_CLR_CALLBACK(
     ret, g_pinenable_callback, pinenable_callback);
 
   if (0 == ret && pinenable_callback)
@@ -96,7 +96,7 @@ static void setpin_lock_job(FAR void *arg)
       DBGIF_LOG_ERROR("Unexpected!! callback is NULL.\n");
     }
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)arg);
+  altcom_free_cmd((FAR uint8_t *)arg);
 }
 
 /****************************************************************************
@@ -126,7 +126,7 @@ static void setpin_code_job(FAR void *arg)
       DBGIF_ASSERT(NULL, "Invalid response.\n");
     }
 
-  APIUTIL_GET_AND_CLR_CALLBACK(
+  ALTCOM_GET_AND_CLR_CALLBACK(
     ret, g_changepin_callback, changepin_callback);
   if (0 == ret && changepin_callback)
     {
@@ -137,7 +137,7 @@ static void setpin_code_job(FAR void *arg)
       DBGIF_LOG_ERROR("Unexpected!! callback is NULL.\n");
     }
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)arg);
+  altcom_free_cmd((FAR uint8_t *)arg);
 }
 
 /****************************************************************************

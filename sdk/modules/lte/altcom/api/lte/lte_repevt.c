@@ -92,7 +92,6 @@ extern localtime_report_cb_t g_localtime_report_callback;
 int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
 {
   int32_t                                 ret        = 0;
-  bool                                    is_init    = false;
   FAR struct apicmd_cmddat_setrepevt_s    *cmdbuff   = NULL;
   FAR struct apicmd_cmddat_setrepevtres_s *resbuff   = NULL;
   uint16_t                                resbufflen = REPSETRES_DATA_LEN;
@@ -100,8 +99,7 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
 
   /* Check if the library is initialized */
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return -EPERM;
@@ -109,7 +107,7 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
 
   /* Check this process runnning. */
 
-  APIUTIL_CHK_AND_LOCK_PROC(g_lte_setrepsimstat_isproc);
+  ALTCOM_CHK_AND_LOCK_PROC(g_lte_setrepsimstat_isproc);
 
   /* Allocate API command buffer to send */
 
@@ -118,7 +116,7 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
   if (!cmdbuff)
     {
       DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-      APIUTIL_UNLOCK_PROC(g_lte_setrepsimstat_isproc);
+      ALTCOM_UNLOCK_PROC(g_lte_setrepsimstat_isproc);
       return -ENOMEM;
     }
   else
@@ -130,8 +128,8 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
       if (!resbuff)
         {
           DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-          APIUTIL_FREE_CMD((FAR uint8_t *)cmdbuff);
-          APIUTIL_UNLOCK_PROC(g_lte_setrepsimstat_isproc);
+          altcom_free_cmd((FAR uint8_t *)cmdbuff);
+          ALTCOM_UNLOCK_PROC(g_lte_setrepsimstat_isproc);
           return -ENOMEM;
         }
 
@@ -160,10 +158,10 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
         {
           /* Register API callback */
 
-          APIUTIL_CLR_CALLBACK(g_simstat_report_callback);
+          ALTCOM_CLR_CALLBACK(g_simstat_report_callback);
           if (simstat_callback)
             {
-              APIUTIL_REG_CALLBACK(
+              ALTCOM_REG_CALLBACK(
                 ret, g_simstat_report_callback, simstat_callback);
             }
         }
@@ -179,9 +177,9 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
       ret = 0;
     }
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)cmdbuff);
+  altcom_free_cmd((FAR uint8_t *)cmdbuff);
   (void)BUFFPOOL_FREE(resbuff);
-  APIUTIL_UNLOCK_PROC(g_lte_setrepsimstat_isproc);
+  ALTCOM_UNLOCK_PROC(g_lte_setrepsimstat_isproc);
 
   return ret;
 }
@@ -206,7 +204,6 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
 int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
 {
   int32_t                                 ret        = 0;
-  bool                                    is_init    = false;
   FAR struct apicmd_cmddat_setrepevt_s    *cmdbuff   = NULL;
   FAR struct apicmd_cmddat_setrepevtres_s *resbuff   = NULL;
   uint16_t                                resbufflen = REPSETRES_DATA_LEN;
@@ -214,8 +211,7 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
 
   /* Check if the library is initialized */
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return -EPERM;
@@ -223,7 +219,7 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
 
   /* Check this process runnning. */
 
-  APIUTIL_CHK_AND_LOCK_PROC(g_lte_setrepltime_isproc);
+  ALTCOM_CHK_AND_LOCK_PROC(g_lte_setrepltime_isproc);
 
     /* Allocate API command buffer to send */
 
@@ -232,7 +228,7 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
     if (!cmdbuff)
       {
         DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-        APIUTIL_UNLOCK_PROC(g_lte_setrepltime_isproc);
+        ALTCOM_UNLOCK_PROC(g_lte_setrepltime_isproc);
         return -ENOSPC;
       }
     else
@@ -242,8 +238,8 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
         if (!resbuff)
           {
             DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-            APIUTIL_FREE_CMD((FAR uint8_t *)cmdbuff);
-            APIUTIL_UNLOCK_PROC(g_lte_setrepltime_isproc);
+            altcom_free_cmd((FAR uint8_t *)cmdbuff);
+            ALTCOM_UNLOCK_PROC(g_lte_setrepltime_isproc);
             return -ENOSPC;
           }
         
@@ -272,10 +268,10 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
         {
           /* Register API callback */
 
-          APIUTIL_CLR_CALLBACK(g_localtime_report_callback);
+          ALTCOM_CLR_CALLBACK(g_localtime_report_callback);
           if (localtime_callback)
             {
-              APIUTIL_REG_CALLBACK(
+              ALTCOM_REG_CALLBACK(
                 ret, g_localtime_report_callback, localtime_callback);
             }
         }
@@ -291,9 +287,9 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
       ret = 0;
     }
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)cmdbuff);
+  altcom_free_cmd((FAR uint8_t *)cmdbuff);
   (void)BUFFPOOL_FREE(resbuff);
-  APIUTIL_UNLOCK_PROC(g_lte_setrepltime_isproc);
+  ALTCOM_UNLOCK_PROC(g_lte_setrepltime_isproc);
 
   return ret;
 }

@@ -93,7 +93,7 @@ static int32_t bind_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_BIND,
+  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_BIND,
                                    BIND_REQ_DATALEN, res,
                                    BIND_RES_DATALEN);
 
@@ -141,12 +141,12 @@ static int32_t bind_request(FAR struct altcom_socket_s *fsock,
       result = BIND_REQ_SUCCESS;
     }
 
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
 
   return result;
 
 errout_with_cmdfree:
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
   altcom_seterrno(err);
   return BIND_REQ_FAILURE;
 }
@@ -178,12 +178,10 @@ int altcom_bind(int sockfd, const struct altcom_sockaddr *addr,
                 altcom_socklen_t addrlen)
 {
   int32_t                    result;
-  bool                       is_init;
   FAR struct altcom_socket_s *fsock;
   struct bind_req_s          req;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       altcom_seterrno(ALTCOM_ENETDOWN);

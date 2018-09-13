@@ -91,7 +91,7 @@ static int32_t shutdown_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SHUTDOWN,
+  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SHUTDOWN,
                                    SHUTDOWN_REQ_DATALEN, res,
                                    SHUTDOWN_RES_DATALEN);
 
@@ -133,12 +133,12 @@ static int32_t shutdown_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
 
   return SHUTDOWN_REQ_SUCCESS;
 
 errout_with_cmdfree:
-  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+  altcom_sock_free_cmdandresbuff(cmd, res);
   altcom_seterrno(err);
   return SHUTDOWN_REQ_FAILURE;
 }
@@ -175,12 +175,10 @@ errout_with_cmdfree:
 int altcom_shutdown(int sockfd, int how)
 {
   int32_t                    result;
-  bool                       is_init;
   FAR struct altcom_socket_s *fsock;
   struct shutdown_req_s      req;
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       altcom_seterrno(ALTCOM_ENETDOWN);

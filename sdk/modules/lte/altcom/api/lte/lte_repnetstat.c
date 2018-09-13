@@ -89,7 +89,6 @@ extern netstat_report_cb_t g_netstat_report_callback;
 int32_t lte_set_report_netstat(netstat_report_cb_t netstat_callback)
 {
   int32_t                                     ret        = 0;
-  bool                                        is_init    = false;
   FAR struct apicmd_cmddat_setrepnetstat_s    *cmdbuff   = NULL;
   FAR struct apicmd_cmddat_setrepnetstatres_s *resbuff   = NULL;
   uint16_t                                    resbufflen =
@@ -98,8 +97,7 @@ int32_t lte_set_report_netstat(netstat_report_cb_t netstat_callback)
 
   /* Check if the library is initialized */
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return -EPERM;
@@ -107,7 +105,7 @@ int32_t lte_set_report_netstat(netstat_report_cb_t netstat_callback)
 
   /* Check this process runnning. */
 
-  APIUTIL_CHK_AND_LOCK_PROC(g_lte_setnetstat_isproc);
+  ALTCOM_CHK_AND_LOCK_PROC(g_lte_setnetstat_isproc);
 
   /* Accept the API */
   /* Allocate API command buffer to send */
@@ -118,7 +116,7 @@ int32_t lte_set_report_netstat(netstat_report_cb_t netstat_callback)
   if (!cmdbuff)
     {
       DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-      APIUTIL_UNLOCK_PROC(g_lte_setnetstat_isproc);
+      ALTCOM_UNLOCK_PROC(g_lte_setnetstat_isproc);
       return -ENOMEM;
     }
   else
@@ -128,8 +126,8 @@ int32_t lte_set_report_netstat(netstat_report_cb_t netstat_callback)
       if (!resbuff)
         {
           DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-          APIUTIL_FREE_CMD((FAR uint8_t *)cmdbuff);
-          APIUTIL_UNLOCK_PROC(g_lte_setnetstat_isproc);
+          altcom_free_cmd((FAR uint8_t *)cmdbuff);
+          ALTCOM_UNLOCK_PROC(g_lte_setnetstat_isproc);
           return -ENOMEM;
         }
       
@@ -150,10 +148,10 @@ int32_t lte_set_report_netstat(netstat_report_cb_t netstat_callback)
 
       if (APICMD_SETREP_NETSTAT_RES_OK == resbuff->result)
         {
-          APIUTIL_CLR_CALLBACK(g_netstat_report_callback);
+          ALTCOM_CLR_CALLBACK(g_netstat_report_callback);
           if (netstat_callback)
             {
-              APIUTIL_REG_CALLBACK(
+              ALTCOM_REG_CALLBACK(
                 ret, g_netstat_report_callback, netstat_callback);
             }
         }
@@ -169,9 +167,9 @@ int32_t lte_set_report_netstat(netstat_report_cb_t netstat_callback)
       ret = 0;
     }
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)cmdbuff);
+  altcom_free_cmd((FAR uint8_t *)cmdbuff);
   (void)BUFFPOOL_FREE(resbuff);
-  APIUTIL_UNLOCK_PROC(g_lte_setnetstat_isproc);
+  ALTCOM_UNLOCK_PROC(g_lte_setnetstat_isproc);
 
   return ret;
 }

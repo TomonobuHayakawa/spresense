@@ -84,7 +84,7 @@ static void getce_job(FAR void *arg)
   get_ce_cb_t                         callback;
 
   data = (FAR struct apicmd_cmddat_getceres_s *)arg;
-  APIUTIL_GET_AND_CLR_CALLBACK(ret, g_getce_callback, callback);
+  ALTCOM_GET_AND_CLR_CALLBACK(ret, g_getce_callback, callback);
 
   if ((ret == 0) && (callback))
     {
@@ -142,7 +142,7 @@ static void getce_job(FAR void *arg)
    * bring a pointer to the receive buffer to the worker thread.
    * Therefore, the receive buffer needs to be released here. */
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)arg);
+  altcom_free_cmd((FAR uint8_t *)arg);
 }
 
 /****************************************************************************

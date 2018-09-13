@@ -95,7 +95,6 @@ int32_t lte_set_report_quality(quality_report_cb_t quality_callback,
                                uint32_t period)
 {
   int32_t                                      ret        = 0;
-  bool                                         is_init    = false;
   FAR struct apicmd_cmddat_setrepquality_s     *cmdbuff   = NULL;
   FAR struct apicmd_cmddat_setrepquality_res_s *resbuff   = NULL;
   uint16_t                                     resbufflen =
@@ -104,8 +103,7 @@ int32_t lte_set_report_quality(quality_report_cb_t quality_callback,
 
   /* Check if the library is initialized */
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return -EPERM;
@@ -120,7 +118,7 @@ int32_t lte_set_report_quality(quality_report_cb_t quality_callback,
         }
     }
 
-  APIUTIL_CHK_AND_LOCK_PROC(g_lte_setrepquality_isproc);
+  ALTCOM_CHK_AND_LOCK_PROC(g_lte_setrepquality_isproc);
 
   /* Accept the API */
   /* Allocate API command buffer to send */
@@ -130,7 +128,7 @@ int32_t lte_set_report_quality(quality_report_cb_t quality_callback,
   if (!cmdbuff)
     {
       DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-      APIUTIL_UNLOCK_PROC(g_lte_setrepquality_isproc);
+      ALTCOM_UNLOCK_PROC(g_lte_setrepquality_isproc);
       return -ENOSPC;
     }
   else
@@ -140,8 +138,8 @@ int32_t lte_set_report_quality(quality_report_cb_t quality_callback,
       if (!resbuff)
         {
           DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-          APIUTIL_FREE_CMD((FAR uint8_t *)cmdbuff);
-          APIUTIL_UNLOCK_PROC(g_lte_setrepquality_isproc);
+          altcom_free_cmd((FAR uint8_t *)cmdbuff);
+          ALTCOM_UNLOCK_PROC(g_lte_setrepquality_isproc);
           return -ENOSPC;
         }
 
@@ -162,10 +160,10 @@ int32_t lte_set_report_quality(quality_report_cb_t quality_callback,
         {
           /* Register API callback */
 
-          APIUTIL_CLR_CALLBACK(g_quality_callback);
+          ALTCOM_CLR_CALLBACK(g_quality_callback);
           if (quality_callback)
             {
-              APIUTIL_REG_CALLBACK(
+              ALTCOM_REG_CALLBACK(
                 ret, g_quality_callback, quality_callback);
             }
         }
@@ -181,9 +179,9 @@ int32_t lte_set_report_quality(quality_report_cb_t quality_callback,
       ret = 0;
     }
 
-  APIUTIL_FREE_CMD((FAR uint8_t *)cmdbuff);
+  altcom_free_cmd((FAR uint8_t *)cmdbuff);
   (void)BUFFPOOL_FREE(resbuff);
-  APIUTIL_UNLOCK_PROC(g_lte_setrepquality_isproc);
+  ALTCOM_UNLOCK_PROC(g_lte_setrepquality_isproc);
 
   return ret;
 }

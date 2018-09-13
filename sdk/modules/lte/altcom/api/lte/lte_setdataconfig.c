@@ -102,17 +102,15 @@ int32_t lte_set_dataconfig(uint32_t data_type, bool general, bool roaming,
                            set_dataconfig_cb_t callback)
 {
   int32_t                                  ret;
-  bool                                     is_init;
   FAR struct apicmd_cmddat_setdataconfig_s *cmdbuff = NULL;
 
   /* Return error if callback is NULL */
 
-  APIUTIL_IS_ARG_NULL(callback);
+  ALTCOM_IS_ARG_NULL(callback);
 
   /* Check if the library is initialized */
 
-  APIUTIL_ISINIT(is_init);
-  if (!is_init)
+  if (!altcom_isinit())
     {
       DBGIF_LOG_ERROR("Not intialized\n");
       return -EPERM;
@@ -126,7 +124,7 @@ int32_t lte_set_dataconfig(uint32_t data_type, bool general, bool roaming,
     {
       /* Register API callback */
 
-      APIUTIL_REG_CALLBACK(ret, g_setdataconfig_callback, callback);
+      ALTCOM_REG_CALLBACK(ret, g_setdataconfig_callback, callback);
       if (0 > ret)
         {
           DBGIF_LOG_ERROR("Currently API is busy.\n");
@@ -157,7 +155,7 @@ int32_t lte_set_dataconfig(uint32_t data_type, bool general, bool roaming,
 
       /* Send API command to modem */
 
-      ret = APIUTIL_SEND_AND_FREE((FAR uint8_t *)cmdbuff);
+      ret = altcom_send_and_free((FAR uint8_t *)cmdbuff);
     }
 
   /* If fail, there is no opportunity to execute the callback,
@@ -167,7 +165,7 @@ int32_t lte_set_dataconfig(uint32_t data_type, bool general, bool roaming,
     {
       /* Clear registered callback */
 
-      APIUTIL_CLR_CALLBACK(g_setdataconfig_callback);
+      ALTCOM_CLR_CALLBACK(g_setdataconfig_callback);
     }
   else
     {
