@@ -44,7 +44,6 @@
 #include "evthdlbs.h"
 #include "apicmdhdlrbs.h"
 #include "altcom_select_ext.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -79,10 +78,10 @@ static void select_job(FAR void *arg)
 
   data = (FAR struct apicmd_selectres_s *)arg;
 
-  ret_code    = bswap32(data->ret_code);
-  err_code    = bswap32(data->err_code);
-  select_id   = bswap32(data->id);
-  used_setbit = bswap16(data->used_setbit);
+  ret_code    = ntohl(data->ret_code);
+  err_code    = ntohl(data->err_code);
+  select_id   = ntohl(data->id);
+  used_setbit = ntohs(data->used_setbit);
 
   if (used_setbit & APICMD_SELECT_USED_BIT_READSET)
     {

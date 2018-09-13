@@ -43,7 +43,6 @@
 #include "buffpoolwrapper.h"
 #include "apicmd_repquality.h"
 #include "evthdlbs.h"
-#include "bswap.h"
 #include "apicmdhdlrbs.h"
 
 /****************************************************************************
@@ -94,10 +93,10 @@ static void repquality_job(FAR void *arg)
                            LTE_VALID : LTE_INVALID;
       if (repdat->valid)
         {
-          repdat->rsrp  = bswap16(data->rsrp);
-          repdat->rsrq  = bswap16(data->rsrq);
-          repdat->sinr  = bswap16(data->sinr);
-          repdat->rssi  = bswap16(data->rssi);
+          repdat->rsrp  = ntohs(data->rsrp);
+          repdat->rsrq  = ntohs(data->rsrq);
+          repdat->sinr  = ntohs(data->sinr);
+          repdat->rssi  = ntohs(data->rssi);
           if (repdat->rsrp < APICMD_REP_QUALITY_RSRP_MIN ||
             APICMD_REP_QUALITY_RSRP_MAX < repdat->rsrp)
             {

@@ -43,7 +43,6 @@
 #include "buffpoolwrapper.h"
 #include "apicmd_repcellinfo.h"
 #include "evthdlbs.h"
-#include "bswap.h"
 #include "apicmdhdlrbs.h"
 
 /****************************************************************************
@@ -125,8 +124,8 @@ static void repcellinfo_job(FAR void *arg)
                            LTE_VALID : LTE_INVALID;
       if (repdat->valid)
         {
-          repdat->phycell_id = bswap32(data->cell_id);
-          repdat->earfcn     = bswap32(data->earfcn);
+          repdat->phycell_id = ntohl(data->cell_id);
+          repdat->earfcn     = ntohl(data->earfcn);
           memcpy(repdat->mcc, data->mcc, APICMD_SET_REPCELLINFO_MCC_DIGIT);
           repdat->mnc_digit  = data->mnc_digit;
           memcpy(repdat->mnc, data->mnc, data->mnc_digit);

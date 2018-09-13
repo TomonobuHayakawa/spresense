@@ -43,7 +43,6 @@
 #include "lte/lte_api.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "apicmd_repcellinfo.h"
 
 /****************************************************************************
@@ -151,7 +150,7 @@ int32_t lte_set_report_cellinfo(cellinfo_report_cb_t cellinfo_callback,
       cmdbuff->enability = !cellinfo_callback ?
         APICMD_SET_REPCELLINFO_DISABLE :
         APICMD_SET_REPCELLINFO_ENABLE;
-      cmdbuff->interval = bswap32(period);
+      cmdbuff->interval = htonl(period);
 
       ret = apicmdgw_send((FAR uint8_t *)cmdbuff, (FAR uint8_t *)resbuff,
         resbufflen, &reslen, SYS_TIMEO_FEVR);

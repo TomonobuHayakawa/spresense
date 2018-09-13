@@ -47,7 +47,6 @@
 #include "apicmd_socket.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -97,9 +96,9 @@ static int32_t socket_request(FAR struct socket_req_s *req)
 
   /* Fill the data */
 
-  cmd->domain   = bswap32(req->domain);
-  cmd->type     = bswap32(req->type);
-  cmd->protocol = bswap32(req->protocol);
+  cmd->domain   = htonl(req->domain);
+  cmd->type     = htonl(req->type);
+  cmd->protocol = htonl(req->protocol);
 
   DBGIF_LOG3_DEBUG("[socket-req]domain: %d, type: %d, protocol: %d\n", req->domain, req->type, req->protocol);
 
@@ -122,8 +121,8 @@ static int32_t socket_request(FAR struct socket_req_s *req)
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[socket-res]ret: %d, err: %d\n", ret, err);
 

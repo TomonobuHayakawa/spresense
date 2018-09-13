@@ -39,7 +39,7 @@
 
 #include "dbg_if.h"
 #include "altcom_inet.h"
-#include "bswap.h"
+#include "osal.h"
 
 /****************************************************************************
  * Public Functions
@@ -61,5 +61,5 @@
 
 uint32_t altcom_htonl(uint32_t x)
 {
-  return bswap32(x);
+  return htonl(x);
 }

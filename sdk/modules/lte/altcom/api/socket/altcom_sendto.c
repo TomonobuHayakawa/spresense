@@ -48,7 +48,6 @@
 #include "apicmd_sendto.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -106,18 +105,18 @@ static int32_t sendto_request(FAR struct altcom_socket_s *fsock,
 
   /* Fill the data */
 
-  cmd->sockfd  = bswap32(req->sockfd);
-  cmd->flags   = bswap32(req->flags);
-  cmd->datalen = bswap32(req->len);
+  cmd->sockfd  = htonl(req->sockfd);
+  cmd->flags   = htonl(req->flags);
+  cmd->datalen = htonl(req->len);
   memcpy(&cmd->senddata, req->buf, req->len);
   if (req->to)
     {
       altcom_sockaddr_to_sockstorage(req->to, &cmd->to);
-      cmd->tolen = bswap32(req->tolen);
+      cmd->tolen = htonl(req->tolen);
     }
   else
     {
-      cmd->tolen = bswap32(0);
+      cmd->tolen = htonl(0);
     }
 
   DBGIF_LOG3_DEBUG("[sendto-req]sockfd: %d, flags: %d, len: %d\n", req->sockfd, req->flags, req->len);
@@ -142,8 +141,8 @@ static int32_t sendto_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[sendto-res]ret: %d, err: %d\n", ret, err);
 

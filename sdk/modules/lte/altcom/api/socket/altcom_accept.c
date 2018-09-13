@@ -48,7 +48,6 @@
 #include "apicmd_accept.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -102,14 +101,14 @@ static int32_t accept_request(FAR struct altcom_socket_s *fsock,
 
   /* Fill the data */
 
-  cmd->sockfd  = bswap32(req->sockfd);
+  cmd->sockfd  = htonl(req->sockfd);
   if (req->addrlen)
     {
-      cmd->addrlen = bswap32(*req->addrlen);
+      cmd->addrlen = htonl(*req->addrlen);
     }
   else
     {
-      cmd->addrlen = bswap32(0);
+      cmd->addrlen = htonl(0);
     }
 
   DBGIF_LOG2_DEBUG("[accept-req]sockfd: %d, addrlen: %d\n", req->sockfd, *req->addrlen);
@@ -133,8 +132,8 @@ static int32_t accept_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[accept-res]ret: %d, err: %d\n", ret, err);
 
@@ -145,15 +144,15 @@ static int32_t accept_request(FAR struct altcom_socket_s *fsock,
     }
   else
     {
-      DBGIF_LOG1_DEBUG("[accept-res]addrlen: %d\n", bswap32(res->addrlen));
+      DBGIF_LOG1_DEBUG("[accept-res]addrlen: %d\n", ntohl(res->addrlen));
 
       if (req->addr)
         {
           if (req->addrlen)
             {
-              if (*req->addrlen < bswap32(res->addrlen))
+              if (*req->addrlen < ntohl(res->addrlen))
                 {
-                  DBGIF_LOG2_INFO("Input addrlen: %d, Output addrlen: %d\n", *req->addrlen, bswap32(res->addrlen));
+                  DBGIF_LOG2_INFO("Input addrlen: %d, Output addrlen: %d\n", *req->addrlen, ntohl(res->addrlen));
                 }
               memcpy(req->addr, &res->address, *req->addrlen);
             }
@@ -164,7 +163,7 @@ static int32_t accept_request(FAR struct altcom_socket_s *fsock,
         }
       if (req->addrlen)
         {
-          *req->addrlen = bswap32(res->addrlen);
+          *req->addrlen = ntohl(res->addrlen);
         }
       result = ret;
     }

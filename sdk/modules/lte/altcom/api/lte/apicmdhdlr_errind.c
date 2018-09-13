@@ -43,7 +43,6 @@
 #include "buffpoolwrapper.h"
 #include "apicmd_errind.h"
 #include "evthdlbs.h"
-#include "bswap.h"
 #include "apicmdhdlrbs.h"
 
 /****************************************************************************
@@ -73,9 +72,9 @@ static void errindication_job(FAR void *arg)
   DBGIF_LOG_ERROR("Receive err indication.\n");
   DBGIF_LOG1_ERROR("version       :%02x\n", data->ver);
   DBGIF_LOG1_ERROR("sequence id   :%02x\n", data->seqid);
-  DBGIF_LOG1_ERROR("command id    :%04x\n", bswap16(data->cmdid));
-  DBGIF_LOG1_ERROR("transaction id:%04x\n", bswap16(data->transid));
-  DBGIF_LOG1_ERROR("data length   :%04x\n", bswap16(data->dtlen));
+  DBGIF_LOG1_ERROR("command id    :%04x\n", ntohs(data->cmdid));
+  DBGIF_LOG1_ERROR("transaction id:%04x\n", ntohs(data->transid));
+  DBGIF_LOG1_ERROR("data length   :%04x\n", ntohs(data->dtlen));
 
   /* In order to reduce the number of copies of the receive buffer,
    * bring a pointer to the receive buffer to the worker thread.

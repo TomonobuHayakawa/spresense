@@ -49,7 +49,6 @@
 #include "apicmd_setsockopt.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -301,26 +300,26 @@ int altcom_setsockopt(int sockfd, int level, int option, const void *value,
         break;
 
       case SET_MODE_32BIT:
-        *((FAR int32_t*)optval) = bswap32(*(FAR int32_t*)value);
+        *((FAR int32_t*)optval) = htonl(*(FAR int32_t*)value);
         break;
 
       case SET_MODE_LINGER:
         ((FAR struct altcom_linger*)optval)->l_onoff =
-          bswap32(((FAR struct altcom_linger*)value)->l_onoff);
+          htonl(((FAR struct altcom_linger*)value)->l_onoff);
         ((FAR struct altcom_linger*)optval)->l_linger =
-          bswap32(((FAR struct altcom_linger*)value)->l_linger);
+          htonl(((FAR struct altcom_linger*)value)->l_linger);
         break;
 
       case SET_MODE_INADDR:
         ((FAR struct altcom_in_addr*)optval)->s_addr =
-          bswap32(((FAR struct altcom_in_addr*)value)->s_addr);
+          htonl(((FAR struct altcom_in_addr*)value)->s_addr);
         break;
 
       case SET_MODE_IPMREQ:
         ((FAR struct altcom_ip_mreq*)optval)->imr_multiaddr.s_addr =
-          bswap32(((FAR struct altcom_ip_mreq*)value)->imr_multiaddr.s_addr);
+          htonl(((FAR struct altcom_ip_mreq*)value)->imr_multiaddr.s_addr);
         ((FAR struct altcom_ip_mreq*)optval)->imr_interface.s_addr =
-          bswap32(((FAR struct altcom_ip_mreq*)value)->imr_interface.s_addr);
+          htonl(((FAR struct altcom_ip_mreq*)value)->imr_interface.s_addr);
         break;
 
       default:
@@ -338,10 +337,10 @@ int altcom_setsockopt(int sockfd, int level, int option, const void *value,
 
   /* Fill the data */
 
-  cmd->sockfd  = bswap32(sockfd);
-  cmd->level   = bswap32(level);
-  cmd->optname = bswap32(option);
-  cmd->optlen  = bswap32(value_len);
+  cmd->sockfd  = htonl(sockfd);
+  cmd->level   = htonl(level);
+  cmd->optname = htonl(option);
+  cmd->optlen  = htonl(value_len);
   memcpy(cmd->optval, optval, value_len);
 
   /* Send command and block until receive a response */
@@ -351,8 +350,8 @@ int altcom_setsockopt(int sockfd, int level, int option, const void *value,
                       &reslen, SYS_TIMEO_FEVR);
   if (0 <= ret)
     {
-      ret = bswap32(res->ret_code);
-      err = bswap32(res->err_code);
+      ret = ntohl(res->ret_code);
+      err = ntohl(res->err_code);
 
       if (APICMD_SETSOCKOPT_RES_RET_CODE_ERR == ret)
         {

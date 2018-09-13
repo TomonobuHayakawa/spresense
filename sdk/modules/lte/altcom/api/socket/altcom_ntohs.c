@@ -39,7 +39,7 @@
 
 #include "dbg_if.h"
 #include "altcom_inet.h"
-#include "bswap.h"
+#include "osal.h"
 
 /****************************************************************************
  * Public Functions
@@ -61,5 +61,5 @@
 
 uint16_t altcom_ntohs(uint16_t x)
 {
-  return bswap16(x);
+  return ntohs(x);
 }

@@ -42,7 +42,6 @@
 #include "lte/lte_api.h"
 #include "buffpoolwrapper.h"
 #include "apicmd_ltime.h"
-#include "bswap.h"
 #include "apicmdhdlrbs.h"
 
 /****************************************************************************
@@ -90,7 +89,7 @@ static void getltime_job(FAR void *arg)
       ltime.hour   = data->ltime.hour;
       ltime.min    = data->ltime.minutes;
       ltime.sec    = data->ltime.seconds;
-      ltime.tz_sec = bswap32(data->ltime.timezone);
+      ltime.tz_sec = ntohl(data->ltime.timezone);
       callback(result, &ltime);
     }
   else

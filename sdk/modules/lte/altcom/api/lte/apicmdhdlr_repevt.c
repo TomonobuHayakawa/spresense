@@ -43,7 +43,6 @@
 #include "buffpoolwrapper.h"
 #include "apicmd_repevt.h"
 #include "evthdlbs.h"
-#include "bswap.h"
 #include "apicmdhdlrbs.h"
 
 /****************************************************************************
@@ -87,7 +86,7 @@ static void repevt_ltime_report(FAR struct apicmd_cmddat_ltime_s *ltime)
   result.hour   = ltime->hour;
   result.min    = ltime->minutes;
   result.sec    = ltime->seconds;
-  result.tz_sec = bswap32(ltime->timezone);
+  result.tz_sec = ntohl(ltime->timezone);
 
   g_localtime_report_callback(&result);
 }

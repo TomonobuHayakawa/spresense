@@ -42,7 +42,6 @@
 
 #include "dbg_if.h"
 #include "buffpoolwrapper.h"
-#include "bswap.h"
 #include "altcom_netdb.h"
 #include "apiutil.h"
 #include "apicmd_getaddrinfo.h"
@@ -111,7 +110,7 @@ static int32_t getaddrinfo_request(FAR struct getaddrinfo_req_s* req)
     {
       nodenamelen = strnlen(req->nodename,
                             APICMD_GETADDRINFO_NODENAME_MAX_LENGTH);
-      cmd->nodenamelen = bswap32(nodenamelen);
+      cmd->nodenamelen = htonl(nodenamelen);
       memcpy(cmd->nodename, req->nodename, nodenamelen);
     }
 
@@ -120,20 +119,20 @@ static int32_t getaddrinfo_request(FAR struct getaddrinfo_req_s* req)
       servnamelen = strnlen(req->servname,
                             APICMD_GETADDRINFO_SERVNAME_MAX_LENGTH);
       memcpy(cmd->servname, req->servname, servnamelen);
-      cmd->servnamelen = bswap32(servnamelen);
+      cmd->servnamelen = htonl(servnamelen);
     }
 
   if (req->hints)
     {
-      cmd->hints_flag  = bswap32(APICMD_GETADDRINFO_HINTS_FLAG_ENABLE);
-      cmd->ai_flags    = bswap32(req->hints->ai_flags);
-      cmd->ai_family   = bswap32(req->hints->ai_family);
-      cmd->ai_socktype = bswap32(req->hints->ai_socktype);
-      cmd->ai_protocol = bswap32(req->hints->ai_protocol);
+      cmd->hints_flag  = htonl(APICMD_GETADDRINFO_HINTS_FLAG_ENABLE);
+      cmd->ai_flags    = htonl(req->hints->ai_flags);
+      cmd->ai_family   = htonl(req->hints->ai_family);
+      cmd->ai_socktype = htonl(req->hints->ai_socktype);
+      cmd->ai_protocol = htonl(req->hints->ai_protocol);
     }
   else
     {
-      cmd->hints_flag = bswap32(APICMD_GETADDRINFO_HINTS_FLAG_DISABLE);
+      cmd->hints_flag = htonl(APICMD_GETADDRINFO_HINTS_FLAG_DISABLE);
     }
 
   ret = apicmdgw_send((FAR uint8_t *)cmd, (FAR uint8_t *)res,
@@ -155,7 +154,7 @@ static int32_t getaddrinfo_request(FAR struct getaddrinfo_req_s* req)
 
   /* Check api command response */
 
-  ret = bswap32(res->ret_code);
+  ret = ntohl(res->ret_code);
 
   if (APICMD_GETADDRINFO_RES_RET_CODE_OK != ret)
     {
@@ -166,15 +165,15 @@ static int32_t getaddrinfo_request(FAR struct getaddrinfo_req_s* req)
 
   /* Fill result */
 
-  if (bswap32(res->ai_num) > APICMD_GETADDRINFO_RES_AI_COUNT)
+  if (ntohl(res->ai_num) > APICMD_GETADDRINFO_RES_AI_COUNT)
     {
-      DBGIF_LOG1_ERROR("Invalid ai_num: %d\n", bswap32(res->ai_num));
+      DBGIF_LOG1_ERROR("Invalid ai_num: %d\n", ntohl(res->ai_num));
       res->ai_num = 0;
     }
 
-  for (i = 0; i < bswap32(res->ai_num); i++)
+  for (i = 0; i < ntohl(res->ai_num); i++)
     {
-      cname_len = bswap32(res->ai[i].ai_cnamelen);
+      cname_len = ntohl(res->ai[i].ai_cnamelen);
       if (cname_len > APICMD_GETADDRINFO_AI_CANONNAME_LENGTH)
         {
           DBGIF_LOG1_ERROR("Invalid cname_len: %d\n", cname_len);
@@ -195,11 +194,11 @@ static int32_t getaddrinfo_request(FAR struct getaddrinfo_req_s* req)
         }
      else
        {
-         ai->ai_flags    = bswap32(res->ai[i].ai_flags);
-         ai->ai_family   = bswap32(res->ai[i].ai_family);
-         ai->ai_socktype = bswap32(res->ai[i].ai_socktype);
-         ai->ai_protocol = bswap32(res->ai[i].ai_protocol);
-         ai->ai_addrlen  = bswap32(res->ai[i].ai_addrlen);
+         ai->ai_flags    = ntohl(res->ai[i].ai_flags);
+         ai->ai_family   = ntohl(res->ai[i].ai_family);
+         ai->ai_socktype = ntohl(res->ai[i].ai_socktype);
+         ai->ai_protocol = ntohl(res->ai[i].ai_protocol);
+         ai->ai_addrlen  = ntohl(res->ai[i].ai_addrlen);
 
          /* Fill the ai_addr area */
 

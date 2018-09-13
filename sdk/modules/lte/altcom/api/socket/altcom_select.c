@@ -47,7 +47,6 @@
 #include "apicmd_select.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -125,9 +124,9 @@ static int32_t select_request(FAR struct select_req_s *req)
 
   select_id = ++g_select_id;
   memset(cmd, 0, sizeof(struct apicmd_select_s));
-  cmd->request = bswap32(req->request);
-  cmd->id      = bswap32(select_id);
-  cmd->maxfds  = bswap32(req->maxfdp1);
+  cmd->request = htonl(req->request);
+  cmd->id      = htonl(select_id);
+  cmd->maxfds  = htonl(req->maxfdp1);
   if (req->readset)
     {
       memcpy(&cmd->readset, req->readset,
@@ -146,10 +145,10 @@ static int32_t select_request(FAR struct select_req_s *req)
              sizeof(altcom_fd_set));
       cmd->used_setbit |= APICMD_SELECT_USED_BIT_EXCEPTSET;
     }
-  cmd->used_setbit = bswap16(cmd->used_setbit);
+  cmd->used_setbit = htons(cmd->used_setbit);
 
   DBGIF_LOG3_DEBUG("[select-req]request: %d, id: %d, maxfdp1: %d\n", APICMD_SELECT_REQUEST_BLOCK, select_id, req->maxfdp1);
-  DBGIF_LOG1_DEBUG("[select-req]used_setbit: %x\n", bswap16(cmd->used_setbit));
+  DBGIF_LOG1_DEBUG("[select-req]used_setbit: %x\n", ntohs(cmd->used_setbit));
   if (req->readset)
     {
       DBGIF_LOG2_DEBUG("[select-req]readset: %x,%x\n", req->readset->fd_bits[0], req->readset->fd_bits[1]);
@@ -176,8 +175,8 @@ static int32_t select_request(FAR struct select_req_s *req)
       if (ret == -ETIMEDOUT)
         {
           memset(cmd, 0, sizeof(struct apicmd_select_s));
-          cmd->request = bswap32(APICMD_SELECT_REQUEST_BLOCKCANCEL);
-          cmd->id      = bswap32(select_id);
+          cmd->request = htonl(APICMD_SELECT_REQUEST_BLOCKCANCEL);
+          cmd->id      = htonl(select_id);
 
           DBGIF_LOG2_DEBUG("[select-req]request: %d, id: %d\n", APICMD_SELECT_REQUEST_BLOCK, select_id);
 
@@ -204,8 +203,8 @@ static int32_t select_request(FAR struct select_req_s *req)
           goto errout_with_cmdfree;
         }
 
-      ret = bswap32(res->ret_code);
-      err = bswap32(res->err_code);
+      ret = ntohl(res->ret_code);
+      err = ntohl(res->err_code);
 
       DBGIF_LOG2_DEBUG("[select-res]ret: %d, err: %d\n", ret, err);
 

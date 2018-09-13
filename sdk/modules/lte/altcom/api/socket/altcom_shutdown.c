@@ -46,7 +46,6 @@
 #include "apicmd_shutdown.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -98,8 +97,8 @@ static int32_t shutdown_request(FAR struct altcom_socket_s *fsock,
 
   /* Fill the data */
 
-  cmd->sockfd = bswap32(req->sockfd);
-  cmd->how    = bswap32(req->how);
+  cmd->sockfd = htonl(req->sockfd);
+  cmd->how    = htonl(req->how);
 
   DBGIF_LOG2_DEBUG("[shutdown-req]sockfd: %d, how: %d\n", req->sockfd, req->how);
 
@@ -123,8 +122,8 @@ static int32_t shutdown_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[shutdown-res]ret: %d, err: %d\n", ret, err);
 

@@ -42,7 +42,6 @@
 
 #include "dbg_if.h"
 #include "altcom_netdb.h"
-#include "bswap.h"
 #include "apiutil.h"
 #include "altcom_inet.h"
 #include "altcom_netdb.h"
@@ -99,9 +98,9 @@ static int32_t gethostbynamer_request(FAR const char *name, int32_t namelen,
   APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETHOSTBYNAMER,
                                    GETHOSTBYNAMER_REQ_DATALEN, res,
                                    GETHOSTBYNAMER_RES_DATALEN);
-  cmd->namelen = bswap32(namelen);
+  cmd->namelen = htonl(namelen);
   memcpy(cmd->name, name, namelen);
-  cmd->buflen  = bswap32(buflen);
+  cmd->buflen  = htonl(buflen);
   cmdret = apicmdgw_send((FAR uint8_t *)cmd, (FAR uint8_t *)res,
                          GETHOSTBYNAMER_RES_DATALEN,
                          &reslen, SYS_TIMEO_FEVR);
@@ -119,8 +118,8 @@ static int32_t gethostbynamer_request(FAR const char *name, int32_t namelen,
       goto errout_with_cmdfree;
     }
 
-  cmdret = bswap32(res->ret_code);
-  err    = bswap32(res->err_code);
+  cmdret = ntohl(res->ret_code);
+  err    = ntohl(res->err_code);
 
   if (APICMD_GETHOSTBYNAMER_RES_RET_CODE_OK != cmdret)
     {
@@ -145,7 +144,7 @@ static int32_t gethostbynamer_request(FAR const char *name, int32_t namelen,
       strncpy(ret->h_aliases[0], (FAR const char *)res->h_aliases, alslen);
     }
 
-  ret->h_addrtype = bswap32(res->h_addrtype);
+  ret->h_addrtype = ntohl(res->h_addrtype);
   ret->h_length = ALTCOM_AF_INET == ret->h_addrtype ?
     sizeof(struct altcom_in_addr) : sizeof(struct altcom_in6_addr);
   if (res->h_addr_list)

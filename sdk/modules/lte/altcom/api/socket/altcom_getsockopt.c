@@ -48,7 +48,6 @@
 #include "apicmd_getsockopt.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -307,10 +306,10 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
 
   /* Fill the data */
 
-  cmd->sockfd  = bswap32(sockfd);
-  cmd->level   = bswap32(level);
-  cmd->optname = bswap32(option);
-  cmd->optlen  = bswap32(*value_len);
+  cmd->sockfd  = htonl(sockfd);
+  cmd->level   = htonl(level);
+  cmd->optname = htonl(option);
+  cmd->optlen  = htonl(*value_len);
 
   /* Send command and block until receive a response */
 
@@ -319,9 +318,9 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
                       &reslen, SYS_TIMEO_FEVR);
   if (0 <= ret)
     {
-      ret    = bswap32(res->ret_code);
-      err    = bswap32(res->err_code);
-      optlen = bswap32(res->optlen);
+      ret    = ntohl(res->ret_code);
+      err    = ntohl(res->err_code);
+      optlen = ntohl(res->optlen);
 
       if (APICMD_GETSOCKOPT_RES_RET_CODE_ERR == ret)
         {
@@ -350,7 +349,7 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
                 if (optlen == sizeof(int32_t))
                   {
                     pint32_val = (FAR int32_t*)&res->optval[0];
-                    *(FAR int32_t*)value = bswap32(*pint32_val);
+                    *(FAR int32_t*)value = ntohl(*pint32_val);
                     ret = 0;
                   }
                 else
@@ -366,9 +365,9 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
                   {
                     plinger = (FAR struct altcom_linger*)&res->optval[0];
                     ((FAR struct altcom_linger*)value)->l_onoff =
-                      bswap32(plinger->l_onoff);
+                      ntohl(plinger->l_onoff);
                     ((FAR struct altcom_linger*)value)->l_linger =
-                      bswap32(plinger->l_linger);
+                      ntohl(plinger->l_linger);
                     ret = 0;
                   }
                 else
@@ -384,7 +383,7 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
                   {
                     pinaddr = (FAR struct altcom_in_addr*)&res->optval[0];
                     ((FAR struct altcom_in_addr*)value)->s_addr =
-                      bswap32(pinaddr->s_addr);
+                      ntohl(pinaddr->s_addr);
                     ret = 0;
                   }
                 else

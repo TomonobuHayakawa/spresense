@@ -48,7 +48,6 @@
 #include "apicmd_send.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -104,9 +103,9 @@ static int32_t send_request(FAR struct altcom_socket_s *fsock,
 
   /* Fill the data */
 
-  cmd->sockfd  = bswap32(req->sockfd);
-  cmd->flags   = bswap32(req->flags);
-  cmd->datalen = bswap32(req->len);
+  cmd->sockfd  = htonl(req->sockfd);
+  cmd->flags   = htonl(req->flags);
+  cmd->datalen = htonl(req->len);
   memcpy(&cmd->senddata, req->buf, req->len);
 
   DBGIF_LOG3_DEBUG("[send-req]sockfd: %d, flags: %d, len: %d\n", req->sockfd, req->flags, req->len);
@@ -130,8 +129,8 @@ static int32_t send_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[send-res]ret: %d, err: %d\n", ret, err);
 

@@ -42,7 +42,6 @@
 
 #include "dbg_if.h"
 #include "buffpoolwrapper.h"
-#include "bswap.h"
 #include "apiutil.h"
 #include "altcom_netdb.h"
 #include "altcom_inet.h"
@@ -98,7 +97,7 @@ static int32_t gethostbyname_request(FAR const char *name, int32_t namelen,
   APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETHOSTBYNAME,
                                    GETHOSTBYNAME_REQ_DATALEN, res,
                                    GETHOSTBYNAME_RES_DATALEN);
-  cmd->namelen = bswap32(namelen);
+  cmd->namelen = htonl(namelen);
   memcpy(cmd->name, name, namelen);
   ret = apicmdgw_send((FAR uint8_t *)cmd, (FAR uint8_t *)res,
                      GETHOSTBYNAME_RES_DATALEN, &reslen,
@@ -118,7 +117,7 @@ static int32_t gethostbyname_request(FAR const char *name, int32_t namelen,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
+  ret = ntohl(res->ret_code);
   if (APICMD_GETHOSTBYNAME_RES_RET_CODE_OK != ret)
     {
       altcom_h_errno = ret;
@@ -129,7 +128,7 @@ static int32_t gethostbyname_request(FAR const char *name, int32_t namelen,
 
   /* Fill command result */
 
-  result->h_addrtype = bswap32(res->h_addrtype);
+  result->h_addrtype = ntohl(res->h_addrtype);
   l_namelen = strlen((FAR char *)res->h_name);
   if (0 < l_namelen)
     {

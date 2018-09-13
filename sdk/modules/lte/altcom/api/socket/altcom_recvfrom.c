@@ -48,7 +48,6 @@
 #include "apicmd_recvfrom.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -108,16 +107,16 @@ static int32_t recvfrom_request(FAR struct altcom_socket_s *fsock,
 
   /* Fill the data */
 
-  cmd->sockfd  = bswap32(req->sockfd);
-  cmd->flags   = bswap32(req->flags);
-  cmd->recvlen = bswap32(req->len);
+  cmd->sockfd  = htonl(req->sockfd);
+  cmd->flags   = htonl(req->flags);
+  cmd->recvlen = htonl(req->len);
   if (req->fromlen)
     {
-      cmd->fromlen = bswap32(*req->fromlen);
+      cmd->fromlen = htonl(*req->fromlen);
     }
   else
     {
-      cmd->fromlen = bswap32(0);
+      cmd->fromlen = htonl(0);
     }
 
   DBGIF_LOG3_DEBUG("[recvfrom-req]sockfd: %d, flags: %d, recvlen: %d\n", req->sockfd, req->flags, req->len);
@@ -145,8 +144,8 @@ static int32_t recvfrom_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[recvfrom-res]ret: %d, err: %d\n", ret, err);
 
@@ -165,15 +164,15 @@ static int32_t recvfrom_request(FAR struct altcom_socket_s *fsock,
         }
       memcpy(req->buf, res->recvdata, ret);
 
-      DBGIF_LOG1_DEBUG("[recvfrom-res]fromlen: %d\n", bswap32(res->fromlen));
+      DBGIF_LOG1_DEBUG("[recvfrom-res]fromlen: %d\n", ntohl(res->fromlen));
 
       if (req->from)
         {
           if (req->fromlen)
             {
-              if (*req->fromlen < bswap32(res->fromlen))
+              if (*req->fromlen < ntohl(res->fromlen))
                 {
-                  DBGIF_LOG2_INFO("Input fromlen: %d, Output fromlen: %d\n", *req->fromlen, bswap32(res->fromlen));
+                  DBGIF_LOG2_INFO("Input fromlen: %d, Output fromlen: %d\n", *req->fromlen, ntohl(res->fromlen));
                 }
               memcpy(req->from, &res->from, *req->fromlen);
             }
@@ -184,7 +183,7 @@ static int32_t recvfrom_request(FAR struct altcom_socket_s *fsock,
         }
       if (req->fromlen)
         {
-          *req->fromlen = bswap32(res->fromlen);
+          *req->fromlen = ntohl(res->fromlen);
         }
     }
 

@@ -46,7 +46,6 @@
 #include "apicmd_close.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -97,7 +96,7 @@ static int32_t close_request(FAR struct altcom_socket_s *fsock,
 
   /* Fill the data */
 
-  cmd->sockfd   = bswap32(req->sockfd);
+  cmd->sockfd   = htonl(req->sockfd);
 
   DBGIF_LOG1_DEBUG("[close-req]sockfd: %d\n", req->sockfd);
 
@@ -121,8 +120,8 @@ static int32_t close_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[close-res]ret: %d, err: %d\n", ret, err);
 

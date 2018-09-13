@@ -47,7 +47,6 @@
 #include "apicmd_connect.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -104,8 +103,8 @@ static int32_t connect_request(FAR struct altcom_socket_s *fsock,
 
   altcom_sockaddr_to_sockstorage(req->addr, &cmd->name);
 
-  cmd->sockfd  = bswap32(req->sockfd);
-  cmd->namelen = bswap32(req->addrlen);
+  cmd->sockfd  = htonl(req->sockfd);
+  cmd->namelen = htonl(req->addrlen);
 
   DBGIF_LOG2_DEBUG("[connect-req]sockfd: %d, namelen: %d\n", req->sockfd, req->addrlen);
   DBGIF_LOG3_DEBUG("[connect-req]s2_len: %d, ss_family: %d, port: %d\n", cmd->name.s2_len, cmd->name.ss_family, *(FAR int16_t*)(cmd->name.s2_data1));
@@ -129,8 +128,8 @@ static int32_t connect_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[connect-res]ret: %d, err: %d\n", ret, err);
 

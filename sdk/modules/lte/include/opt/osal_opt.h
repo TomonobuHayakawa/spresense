@@ -45,6 +45,7 @@
 #include <mqueue.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 
 /****************************************************************************
  * Pre-processor Definitions

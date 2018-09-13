@@ -48,7 +48,6 @@
 #include "apicmd_getsockname.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -102,8 +101,8 @@ static int32_t getsockname_request(FAR struct altcom_socket_s *fsock,
 
   /* Fill the data */
 
-  cmd->sockfd  = bswap32(req->sockfd);
-  cmd->namelen = bswap32(*req->addrlen);
+  cmd->sockfd  = htonl(req->sockfd);
+  cmd->namelen = htonl(*req->addrlen);
 
   DBGIF_LOG2_DEBUG("[getsockname-req]sockfd: %d, addrlen: %d\n", req->sockfd, *req->addrlen);
 
@@ -126,8 +125,8 @@ static int32_t getsockname_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[getsockname-res]ret: %d, err: %d\n", ret, err);
 
@@ -138,14 +137,14 @@ static int32_t getsockname_request(FAR struct altcom_socket_s *fsock,
     }
   else
     {
-      DBGIF_LOG1_DEBUG("[getsockname-res]addrlen: %d\n", bswap32(res->namelen));
+      DBGIF_LOG1_DEBUG("[getsockname-res]addrlen: %d\n", ntohl(res->namelen));
 
-      if (*req->addrlen < bswap32(res->namelen))
+      if (*req->addrlen < ntohl(res->namelen))
         {
-          DBGIF_LOG2_INFO("Input addrlen: %d, Output addrlen: %d\n", *req->addrlen, bswap32(res->namelen));
+          DBGIF_LOG2_INFO("Input addrlen: %d, Output addrlen: %d\n", *req->addrlen, ntohl(res->namelen));
         }
       memcpy(req->addr, &res->name, *req->addrlen);
-      *req->addrlen = bswap32(res->namelen);
+      *req->addrlen = ntohl(res->namelen);
       result = GETSOCKNAME_REQ_SUCCESS;
     }
 

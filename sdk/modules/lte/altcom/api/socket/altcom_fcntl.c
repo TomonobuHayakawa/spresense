@@ -47,7 +47,6 @@
 #include "altcom_errno.h"
 #include "buffpoolwrapper.h"
 #include "apiutil.h"
-#include "bswap.h"
 #include "cc.h"
 
 /****************************************************************************
@@ -100,9 +99,9 @@ static int32_t fcntl_request(FAR struct altcom_socket_s *fsock,
 
   /* Fill the data */
 
-  cmd->sockfd = bswap32(req->sockfd);
-  cmd->cmd    = bswap32(req->cmd);
-  cmd->val    = bswap32(req->val);
+  cmd->sockfd = htonl(req->sockfd);
+  cmd->cmd    = htonl(req->cmd);
+  cmd->val    = htonl(req->val);
 
   DBGIF_LOG3_DEBUG("[fcntl-req]sockfd: %d, cmd:%d, val: %d\n", req->sockfd, req->cmd, req->val);
 
@@ -126,8 +125,8 @@ static int32_t fcntl_request(FAR struct altcom_socket_s *fsock,
       goto errout_with_cmdfree;
     }
 
-  ret = bswap32(res->ret_code);
-  err = bswap32(res->err_code);
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
 
   DBGIF_LOG2_DEBUG("[fcntl-res]ret: %d, err: %d\n", ret, err);
 

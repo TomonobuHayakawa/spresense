@@ -44,7 +44,6 @@
 #include "apicmd.h"
 #include "buffpoolwrapper.h"
 #include "apicmdgw.h"
-#include "bswap.h"
 #include "apicmd_errind.h"
 
 /****************************************************************************
@@ -71,15 +70,15 @@
 
 #define APICMDGW_GET_SEQID              (++g_seqid_counter)
 #define APICMDGW_GET_CMDID(hdr_ptr) \
-  (bswap16(((FAR struct apicmd_cmdhdr_s *)hdr_ptr)->cmdid))
+  (ntohs(((FAR struct apicmd_cmdhdr_s *)hdr_ptr)->cmdid))
 #define APICMDGW_GET_DATA_PTR(hdr_ptr) \
   (((FAR uint8_t *)(hdr_ptr) + APICMDGW_APICMDHDR_LEN))
 #define APICMDGW_GET_HDR_PTR(data_ptr) \
   (((FAR uint8_t *)(data_ptr) - APICMDGW_APICMDHDR_LEN))
 #define APICMDGW_GET_TRANSID(hdr_ptr) \
-  (bswap16(((FAR struct apicmd_cmdhdr_s *)hdr_ptr)->transid))
+  (ntohs(((FAR struct apicmd_cmdhdr_s *)hdr_ptr)->transid))
 #define APICMDGW_GET_DATA_LEN(hdr_ptr) \
-  (bswap16(((FAR struct apicmd_cmdhdr_s *)hdr_ptr)->dtlen))
+  (ntohs(((FAR struct apicmd_cmdhdr_s *)hdr_ptr)->dtlen))
 
 #define APICMDGW_MUTEX_LOCK(mtx) \
   do \
@@ -218,7 +217,7 @@ static uint16_t apicmdgw_createchksum(FAR uint8_t *hdr)
   for (i = 0; i < APICMDGW_CHKSUM_LENGTH; i += sizeof(uint16_t))
     {
       calctmp = *((uint16_t *)(hdr + i));
-      ret += bswap16(calctmp);
+      ret += ntohs(calctmp);
     }
 
   ret = ~((ret & 0xFFFF) + (ret >> 16));
@@ -263,14 +262,14 @@ static int32_t apicmdgw_checkheader(FAR uint8_t *evt)
 
   chksum = apicmdgw_createchksum((FAR uint8_t *)hdr);
 
-  if (chksum != bswap16(hdr->chksum))
+  if (chksum != ntohs(hdr->chksum))
     {
       DBGIF_LOG2_ERROR("checksum error [header:0x%04x, calculation:0x%04x]\n",
-        bswap16(hdr->chksum), chksum);
+        ntohs(hdr->chksum), chksum);
       return APICMDGW_HDR_ERR_CHKSUM;
     }
 
-  DBGIF_LOG2_INFO("Receive header[cmd_id:0x%04x, data len:0x%04x]\n",bswap16(hdr->cmdid), bswap16(hdr->dtlen));
+  DBGIF_LOG2_INFO("Receive header[cmd_id:0x%04x, data len:0x%04x]\n",ntohs(hdr->cmdid), ntohs(hdr->dtlen));
 
   return 0;
 }
@@ -301,10 +300,10 @@ void apicmdgw_errind(FAR struct apicmd_cmdhdr_s *evthdr)
 
   errind->ver     = evthdr->ver;
   errind->seqid   = evthdr->seqid;
-  errind->cmdid   = bswap16(evthdr->cmdid);
-  errind->transid = bswap16(evthdr->transid);
-  errind->dtlen   = bswap16(evthdr->dtlen);
-  errind->chksum  = bswap16(evthdr->chksum);
+  errind->cmdid   = htons(evthdr->cmdid);
+  errind->transid = htons(evthdr->transid);
+  errind->dtlen   = htons(evthdr->dtlen);
+  errind->chksum  = htons(evthdr->chksum);
 
   DBGIF_ASSERT(0 <= APICMDGW_SEND_ONLY((uint8_t *)errind),
     "APICMDGW_SEND()\n");
@@ -332,10 +331,10 @@ void apicmdgw_errhandle(FAR struct apicmd_cmdhdr_s *evthdr)
   DBGIF_LOG_ERROR("dispatch error\n");
   DBGIF_LOG1_ERROR("version:0x%x\n", evthdr->ver);
   DBGIF_LOG1_ERROR("sequence ID:0x%x\n", evthdr->seqid);
-  DBGIF_LOG1_ERROR("command ID:0x%x\n", bswap16(evthdr->cmdid));
-  DBGIF_LOG1_ERROR("transaction ID:0x%x\n", bswap16(evthdr->transid));
-  DBGIF_LOG1_ERROR("data length:0x%x\n", bswap16(evthdr->dtlen));
-  DBGIF_LOG1_ERROR("check sum:0x%x\n", bswap16(evthdr->chksum));
+  DBGIF_LOG1_ERROR("command ID:0x%x\n", ntohs(evthdr->cmdid));
+  DBGIF_LOG1_ERROR("transaction ID:0x%x\n", ntohs(evthdr->transid));
+  DBGIF_LOG1_ERROR("data length:0x%x\n", ntohs(evthdr->dtlen));
+  DBGIF_LOG1_ERROR("check sum:0x%x\n", ntohs(evthdr->chksum));
 }
 
 /****************************************************************************
@@ -600,7 +599,7 @@ static void apicmdgw_recvtask(void *arg)
                         {
                           memcpy(&magicnum, &rcvbuff[i],
                             APICMDGW_MAGICNUMBER_LENGTH);
-                          if (APICMD_MAGICNUMBER == bswap32(magicnum))
+                          if (APICMD_MAGICNUMBER == ntohl(magicnum))
                             {
                               memmove(rcvbuff, &rcvbuff[i],
                                 APICMDGW_MAGICNUMBER_LENGTH);
@@ -877,7 +876,7 @@ int32_t apicmdgw_send(FAR uint8_t *cmd, FAR uint8_t *respbuff,
       apicmdgw_addtable(blocktbl);
     }
 
-  sendlen = bswap16(hdr_ptr->dtlen) + APICMDGW_APICMDHDR_LEN;
+  sendlen = ntohs(hdr_ptr->dtlen) + APICMDGW_APICMDHDR_LEN;
   g_hal_if->lock(g_hal_if);
   ret = g_hal_if->send(g_hal_if,
     (FAR uint8_t *)hdr_ptr, sendlen);
@@ -922,7 +921,7 @@ int32_t apicmdgw_send(FAR uint8_t *cmd, FAR uint8_t *respbuff,
 
   if (0 <= ret)
     {
-      ret = bswap16(hdr_ptr->dtlen);
+      ret = ntohs(hdr_ptr->dtlen);
     }
 
   return ret;
@@ -972,13 +971,13 @@ FAR uint8_t *apicmdgw_cmd_allocbuff(uint16_t cmdid, uint16_t len)
 
   /* Make header. */
 
-  buff->magic   = bswap32(APICMD_MAGICNUMBER);
+  buff->magic   = htonl(APICMD_MAGICNUMBER);
   buff->ver     = APICMD_VER;
   buff->seqid   = APICMDGW_GET_SEQID;
-  buff->cmdid   = bswap16(cmdid);
-  buff->transid = bswap16(apicmdgw_createtransid());
-  buff->dtlen   = bswap16(len);
-  buff->chksum  = bswap16(apicmdgw_createchksum((FAR uint8_t *)buff));
+  buff->cmdid   = htons(cmdid);
+  buff->transid = htons(apicmdgw_createtransid());
+  buff->dtlen   = htons(len);
+  buff->chksum  = htons(apicmdgw_createchksum((FAR uint8_t *)buff));
 
   return APICMDGW_GET_DATA_PTR(buff);
 }
@@ -1035,14 +1034,14 @@ FAR uint8_t *apicmdgw_reply_allocbuff(FAR const uint8_t *cmd, uint16_t len)
   /* Make reply header. */
 
   evthdr = (FAR struct apicmd_cmdhdr_s *)APICMDGW_GET_HDR_PTR(cmd);
-  buff->magic   = bswap32(APICMD_MAGICNUMBER);
+  buff->magic   = htonl(APICMD_MAGICNUMBER);
   buff->ver     = APICMD_VER;
   buff->seqid   = APICMDGW_GET_SEQID;
-  buff->cmdid   = bswap16(
+  buff->cmdid   = htons(
     APICMDGW_GET_RESCMDID(APICMDGW_GET_CMDID(evthdr)));
   buff->transid = evthdr->transid;
-  buff->dtlen   = bswap16(len);
-  buff->chksum  = bswap16(apicmdgw_createchksum((FAR uint8_t *)buff));
+  buff->dtlen   = htons(len);
+  buff->chksum  = htons(apicmdgw_createchksum((FAR uint8_t *)buff));
 
   return APICMDGW_GET_DATA_PTR(buff);
 }
