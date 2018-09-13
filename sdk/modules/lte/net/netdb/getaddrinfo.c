@@ -55,9 +55,9 @@
 #include <nuttx/net/net.h>
 
 #include "socket/socket.h"
-#include "farapi_socket.h"
-#include "farapi_netdb.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_netdb.h"
+#include "altcom_errno.h"
 #include "stubsock.h"
 #include "dbg_if.h"
 
@@ -100,10 +100,10 @@ int getaddrinfo(const char *nodename, const char *servname,
                 const struct addrinfo *hints, struct addrinfo **res)
 {
   int                             ret;
-  struct farapi_addrinfo         *ai;
-  struct farapi_sockaddr_storage  ss;
-  struct farapi_addrinfo          hint;
-  FAR struct farapi_addrinfo     *phints = NULL;
+  struct altcom_addrinfo         *ai;
+  struct altcom_sockaddr_storage  ss;
+  struct altcom_addrinfo          hint;
+  FAR struct altcom_addrinfo     *phints = NULL;
 
   if (hints)
     {
@@ -115,11 +115,11 @@ int getaddrinfo(const char *nodename, const char *servname,
       phints = &hint;
     }
 
-  ret = farapi_getaddrinfo(nodename, servname, phints,
-                           (struct farapi_addrinfo**)res);
+  ret = altcom_getaddrinfo(nodename, servname, phints,
+                           (struct altcom_addrinfo**)res);
   if (ret == 0)
     {
-      ai = (struct farapi_addrinfo*)(*res);
+      ai = (struct altcom_addrinfo*)(*res);
 
       while(ai)
         {
@@ -133,14 +133,14 @@ int getaddrinfo(const char *nodename, const char *servname,
           DBGIF_ASSERT(ai->ai_protocol != -EPROTONOSUPPORT, "Invalid ai_protocol\n");
 
 
-          if (ai->ai_addrlen <= sizeof(struct farapi_sockaddr_storage))
+          if (ai->ai_addrlen <= sizeof(struct altcom_sockaddr_storage))
             {
               /* temporarily evacuate to the working memory */
 
               memcpy(&ss, ai->ai_addr,
-                     sizeof(struct farapi_sockaddr_storage));
+                     sizeof(struct altcom_sockaddr_storage));
 
-              stubsock_convstorage_local((FAR struct farapi_sockaddr_storage*)ai->ai_addr,
+              stubsock_convstorage_local((FAR struct altcom_sockaddr_storage*)ai->ai_addr,
                                          (FAR struct sockaddr*)&ss, ai->ai_addrlen);
 
               memcpy(ai->ai_addr, &ss, ai->ai_addrlen);
@@ -163,19 +163,19 @@ int getaddrinfo(const char *nodename, const char *servname,
 
       switch(ret)
         {
-          case FARAPI_EAI_NONAME:
+          case ALTCOM_EAI_NONAME:
             ret = EAI_NONAME;
             break;
-          case FARAPI_EAI_SERVICE:
+          case ALTCOM_EAI_SERVICE:
             ret = EAI_SERVICE;
             break;
-          case FARAPI_EAI_FAIL:
+          case ALTCOM_EAI_FAIL:
             ret = EAI_SYSTEM;
             break;
-          case FARAPI_EAI_MEMORY:
+          case ALTCOM_EAI_MEMORY:
             ret = EAI_MEMORY;
             break;
-          case FARAPI_EAI_FAMILY:
+          case ALTCOM_EAI_FAMILY:
             ret = EAI_FAMILY;
             break;
           default:

@@ -55,9 +55,9 @@
 #include <nuttx/net/net.h>
 
 #include "socket/socket.h"
-#include "farapi_socket.h"
-#include "farapi_inet.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_inet.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -83,20 +83,20 @@
 #ifdef CONFIG_CAN_PASS_STRUCTS
 char *inet_ntoa(struct in_addr addr)
 {
-  struct farapi_in_addr inaddr;
+  struct altcom_in_addr inaddr;
 
-  memcpy(&inaddr, &addr, sizeof(struct farapi_in_addr));
+  memcpy(&inaddr, &addr, sizeof(struct altcom_in_addr));
 
-  return farapi_inet_ntoa(inaddr);
+  return altcom_inet_ntoa(inaddr);
 }
 #else
 char *inet_ntoa(in_addr_t addr)
 {
-  struct farapi_in_addr inaddr;
+  struct altcom_in_addr inaddr;
 
   inaddr.s_addr = addr;
 
-  return farapi_inet_ntoa(inaddr);
+  return altcom_inet_ntoa(inaddr);
 }
 #endif
 

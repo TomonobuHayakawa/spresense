@@ -55,9 +55,9 @@
 #include <nuttx/net/net.h>
 
 #include "socket/socket.h"
-#include "farapi_socket.h"
-#include "farapi_inet.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_inet.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -82,7 +82,7 @@
 
 in_addr_t inet_addr(const char *cp)
 {
-  return (in_addr_t)farapi_inet_addr(cp);
+  return (in_addr_t)altcom_inet_addr(cp);
 }
 
 #endif /* CONFIG_NET && CONFIG_LTE_INET_ADDR */

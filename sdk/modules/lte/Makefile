@@ -68,19 +68,19 @@ LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
 
 LTESRCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)lte
 LTEINCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)lte$(DELIM)include
-LTEFARAPIINCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)lte$(DELIM)farapi$(DELIM)include
+LTEALTCOMINCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)lte$(DELIM)altcom$(DELIM)include
 
 ifeq ($(WINTOOL),y)
   CFLAGS += -I "${shell cygpath -w $(LTEINCDIR)$(DELIM)net}"
   CFLAGS += -I "${shell cygpath -w $(LTEINCDIR)$(DELIM)opt}"
   CFLAGS += -I "${shell cygpath -w $(LTEINCDIR)$(DELIM)osal}"
   CFLAGS += -I "${shell cygpath -w $(LTEINCDIR)$(DELIM)util}"
-  CFLAGS += -I "${shell cygpath -w $(LTEFARAPIINCDIR)}"
-  CFLAGS += -I "${shell cygpath -w $(LTEFARAPIINCDIR)$(DELIM)api}"
-  CFLAGS += -I "${shell cygpath -w $(LTEFARAPIINCDIR)$(DELIM)api$(DELIM)lte}"
-  CFLAGS += -I "${shell cygpath -w $(LTEFARAPIINCDIR)$(DELIM)api$(DELIM)socket}"
-  CFLAGS += -I "${shell cygpath -w $(LTEFARAPIINCDIR)$(DELIM)evtdisp}"
-  CFLAGS += -I "${shell cygpath -w $(LTEFARAPIINCDIR)$(DELIM)gw}"
+  CFLAGS += -I "${shell cygpath -w $(LTEALTCOMINCDIR)}"
+  CFLAGS += -I "${shell cygpath -w $(LTEALTCOMINCDIR)$(DELIM)api}"
+  CFLAGS += -I "${shell cygpath -w $(LTEALTCOMINCDIR)$(DELIM)api$(DELIM)lte}"
+  CFLAGS += -I "${shell cygpath -w $(LTEALTCOMINCDIR)$(DELIM)api$(DELIM)socket}"
+  CFLAGS += -I "${shell cygpath -w $(LTEALTCOMINCDIR)$(DELIM)evtdisp}"
+  CFLAGS += -I "${shell cygpath -w $(LTEALTCOMINCDIR)$(DELIM)gw}"
   CFLAGS += -I "${shell cygpath -w $(LTESRCDIR)$(DELIM)net$(DELIM)stubsock$(DELIM)include}"
 ifeq ($(CONFIG_NET),y)
     CFLAGS += -I "${shell cygpath -w $(TOPDIR)$(DELIM)net}"
@@ -90,12 +90,12 @@ else
   CFLAGS += -I$(LTEINCDIR)$(DELIM)opt
   CFLAGS += -I$(LTEINCDIR)$(DELIM)osal
   CFLAGS += -I$(LTEINCDIR)$(DELIM)util
-  CFLAGS += -I$(LTEFARAPIINCDIR)
-  CFLAGS += -I$(LTEFARAPIINCDIR)$(DELIM)api
-  CFLAGS += -I$(LTEFARAPIINCDIR)$(DELIM)api$(DELIM)lte
-  CFLAGS += -I$(LTEFARAPIINCDIR)$(DELIM)api$(DELIM)socket
-  CFLAGS += -I$(LTEFARAPIINCDIR)$(DELIM)evtdisp
-  CFLAGS += -I$(LTEFARAPIINCDIR)$(DELIM)gw
+  CFLAGS += -I$(LTEALTCOMINCDIR)
+  CFLAGS += -I$(LTEALTCOMINCDIR)$(DELIM)api
+  CFLAGS += -I$(LTEALTCOMINCDIR)$(DELIM)api$(DELIM)lte
+  CFLAGS += -I$(LTEALTCOMINCDIR)$(DELIM)api$(DELIM)socket
+  CFLAGS += -I$(LTEALTCOMINCDIR)$(DELIM)evtdisp
+  CFLAGS += -I$(LTEALTCOMINCDIR)$(DELIM)gw
   CFLAGS += -I$(LTESRCDIR)$(DELIM)net$(DELIM)stubsock$(DELIM)include
 ifeq ($(CONFIG_NET),y)
     CFLAGS += -I$(TOPDIR)$(DELIM)net

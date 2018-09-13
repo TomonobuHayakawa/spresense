@@ -55,9 +55,9 @@
 #include <nuttx/net/net.h>
 
 #include "socket/socket.h"
-#include "farapi_socket.h"
-#include "farapi_netdb.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_netdb.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -81,7 +81,7 @@
 
 void freeaddrinfo(struct addrinfo *res)
 {
-  farapi_freeaddrinfo((struct farapi_addrinfo*)res);
+  altcom_freeaddrinfo((struct altcom_addrinfo*)res);
 }
 
 #endif /* CONFIG_NET && CONFIG_LTE_NETDB */

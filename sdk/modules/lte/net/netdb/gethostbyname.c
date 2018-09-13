@@ -55,9 +55,9 @@
 #include <nuttx/net/net.h>
 
 #include "socket/socket.h"
-#include "farapi_socket.h"
-#include "farapi_netdb.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_netdb.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -100,12 +100,12 @@ int h_errno;
 
 struct hostent *gethostbyname(const char *name)
 {
-  FAR struct farapi_hostent* h;
+  FAR struct altcom_hostent* h;
 
-  h = farapi_gethostbyname(name);
+  h = altcom_gethostbyname(name);
   if (!h)
     {
-      h_errno = farapi_h_errno;
+      h_errno = altcom_h_errno;
       return NULL;
     }
 

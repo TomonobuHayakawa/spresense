@@ -55,9 +55,9 @@
 #include <nuttx/net/net.h>
 
 #include "socket/socket.h"
-#include "farapi_socket.h"
-#include "farapi_inet.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_inet.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -117,7 +117,7 @@
 
 int inet_pton(int af, const char *src, void *dst)
 {
-  return farapi_inet_pton(af, src, dst);
+  return altcom_inet_pton(af, src, dst);
 }
 
 #endif /* CONFIG_NET && CONFIG_LTE_INET_PTON */

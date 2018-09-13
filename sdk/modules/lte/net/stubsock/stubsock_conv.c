@@ -56,8 +56,8 @@
 
 #include "socket/socket.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_in.h"
+#include "altcom_socket.h"
+#include "altcom_in.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -79,15 +79,15 @@ int stubsock_convdomain_remote(int domain)
   switch(domain)
     {
       case PF_UNSPEC:
-        ret = FARAPI_PF_UNSPEC;
+        ret = ALTCOM_PF_UNSPEC;
         break;
 
       case PF_INET:
-        ret = FARAPI_PF_INET;
+        ret = ALTCOM_PF_INET;
         break;
 
       case PF_INET6:
-        ret = FARAPI_PF_INET6;
+        ret = ALTCOM_PF_INET6;
         break;
 
       default:
@@ -112,15 +112,15 @@ int stubsock_convdomain_local(int domain)
 
   switch(domain)
     {
-      case FARAPI_PF_UNSPEC:
+      case ALTCOM_PF_UNSPEC:
         ret = PF_UNSPEC;
         break;
 
-      case FARAPI_PF_INET:
+      case ALTCOM_PF_INET:
         ret = PF_INET;
         break;
 
-      case FARAPI_PF_INET6:
+      case ALTCOM_PF_INET6:
         ret = PF_INET6;
         break;
 
@@ -147,15 +147,15 @@ int stubsock_convtype_remote(int type)
   switch(type)
     {
       case SOCK_STREAM:
-        ret = FARAPI_SOCK_STREAM;
+        ret = ALTCOM_SOCK_STREAM;
         break;
 
       case SOCK_DGRAM:
-        ret = FARAPI_SOCK_DGRAM;
+        ret = ALTCOM_SOCK_DGRAM;
         break;
 
       case SOCK_RAW:
-        ret = FARAPI_SOCK_RAW;
+        ret = ALTCOM_SOCK_RAW;
         break;
 
       default:
@@ -180,15 +180,15 @@ int stubsock_convtype_local(int type)
 
   switch(type)
     {
-      case FARAPI_SOCK_STREAM:
+      case ALTCOM_SOCK_STREAM:
         ret = SOCK_STREAM;
         break;
 
-      case FARAPI_SOCK_DGRAM:
+      case ALTCOM_SOCK_DGRAM:
         ret = SOCK_DGRAM;
         break;
 
-      case FARAPI_SOCK_RAW:
+      case ALTCOM_SOCK_RAW:
         ret = SOCK_RAW;
         break;
 
@@ -215,35 +215,35 @@ int stubsock_convproto_remote(int protocol)
   switch(protocol)
     {
       case IPPROTO_IP:
-        ret = FARAPI_IPPROTO_IP;
+        ret = ALTCOM_IPPROTO_IP;
         break;
 
       case IPPROTO_ICMP:
-        ret = FARAPI_IPPROTO_ICMP;
+        ret = ALTCOM_IPPROTO_ICMP;
         break;
 
       case IPPROTO_TCP:
-        ret = FARAPI_IPPROTO_TCP;
+        ret = ALTCOM_IPPROTO_TCP;
         break;
 
       case IPPROTO_UDP:
-        ret = FARAPI_IPPROTO_UDP;
+        ret = ALTCOM_IPPROTO_UDP;
         break;
 
       case IPPROTO_IPV6:
-        ret = FARAPI_IPPROTO_IPV6;
+        ret = ALTCOM_IPPROTO_IPV6;
         break;
 
       case IPPROTO_ICMPV6:
-        ret = FARAPI_IPPROTO_ICMPV6;
+        ret = ALTCOM_IPPROTO_ICMPV6;
         break;
 
       case IPPROTO_UDPLITE:
-        ret = FARAPI_IPPROTO_UDPLITE;
+        ret = ALTCOM_IPPROTO_UDPLITE;
         break;
 
       case IPPROTO_RAW:
-        ret = FARAPI_IPPROTO_RAW;
+        ret = ALTCOM_IPPROTO_RAW;
         break;
 
       default:
@@ -268,35 +268,35 @@ int stubsock_convproto_local(int protocol)
 
   switch(protocol)
     {
-      case FARAPI_IPPROTO_IP:
+      case ALTCOM_IPPROTO_IP:
         ret = IPPROTO_IP;
         break;
 
-      case FARAPI_IPPROTO_ICMP:
+      case ALTCOM_IPPROTO_ICMP:
         ret = IPPROTO_ICMP;
         break;
 
-      case FARAPI_IPPROTO_TCP:
+      case ALTCOM_IPPROTO_TCP:
         ret = IPPROTO_TCP;
         break;
 
-      case FARAPI_IPPROTO_UDP:
+      case ALTCOM_IPPROTO_UDP:
         ret = IPPROTO_UDP;
         break;
 
-      case FARAPI_IPPROTO_IPV6:
+      case ALTCOM_IPPROTO_IPV6:
         ret = IPPROTO_IPV6;
         break;
 
-      case FARAPI_IPPROTO_ICMPV6:
+      case ALTCOM_IPPROTO_ICMPV6:
         ret = IPPROTO_ICMPV6;
         break;
 
-      case FARAPI_IPPROTO_UDPLITE:
+      case ALTCOM_IPPROTO_UDPLITE:
         ret = IPPROTO_UDPLITE;
         break;
 
-      case FARAPI_IPPROTO_RAW:
+      case ALTCOM_IPPROTO_RAW:
         ret = IPPROTO_RAW;
         break;
 
@@ -322,27 +322,27 @@ int stubsock_convflags_remote(int flags)
 
   if (flags & MSG_PEEK)
     {
-      ret |= FARAPI_MSG_PEEK;
+      ret |= ALTCOM_MSG_PEEK;
     }
 
   if (flags & MSG_WAITALL)
     {
-      ret |= FARAPI_MSG_WAITALL;
+      ret |= ALTCOM_MSG_WAITALL;
     }
 
   if (flags & MSG_OOB)
     {
-      ret |= FARAPI_MSG_OOB;
+      ret |= ALTCOM_MSG_OOB;
     }
 
   if (flags & MSG_DONTWAIT)
     {
-      ret |= FARAPI_MSG_DONTWAIT;
+      ret |= ALTCOM_MSG_DONTWAIT;
     }
 
   if (flags & MSG_MORE)
     {
-      ret |= FARAPI_MSG_MORE;
+      ret |= ALTCOM_MSG_MORE;
     }
 
   return ret;
@@ -360,27 +360,27 @@ int stubsock_convflags_local(int flags)
 {
   int ret = 0;
 
-  if (flags & FARAPI_MSG_PEEK)
+  if (flags & ALTCOM_MSG_PEEK)
     {
       ret |= MSG_PEEK;
     }
 
-  if (flags & FARAPI_MSG_WAITALL)
+  if (flags & ALTCOM_MSG_WAITALL)
     {
       ret |= MSG_WAITALL;
     }
 
-  if (flags & FARAPI_MSG_OOB)
+  if (flags & ALTCOM_MSG_OOB)
     {
       ret |= MSG_OOB;
     }
 
-  if (flags & FARAPI_MSG_DONTWAIT)
+  if (flags & ALTCOM_MSG_DONTWAIT)
     {
       ret |= MSG_DONTWAIT;
     }
 
-  if (flags & FARAPI_MSG_MORE)
+  if (flags & ALTCOM_MSG_MORE)
     {
       ret |= MSG_MORE;
     }
@@ -403,37 +403,37 @@ int stubsock_convaiflags_remote(int ai_flags)
 
   if (ai_flags & AI_PASSIVE)
     {
-      ret |= FARAPI_AI_PASSIVE;
+      ret |= ALTCOM_AI_PASSIVE;
     }
 
   if (ai_flags & AI_CANONNAME)
     {
-      ret |= FARAPI_AI_CANONNAME;
+      ret |= ALTCOM_AI_CANONNAME;
     }
 
   if (ai_flags & AI_NUMERICHOST)
     {
-      ret |= FARAPI_AI_NUMERICHOST;
+      ret |= ALTCOM_AI_NUMERICHOST;
     }
 
   if (ai_flags & AI_NUMERICSERV)
     {
-      ret |= FARAPI_AI_NUMERICSERV;
+      ret |= ALTCOM_AI_NUMERICSERV;
     }
 
   if (ai_flags & AI_V4MAPPED)
     {
-      ret |= FARAPI_AI_V4MAPPED;
+      ret |= ALTCOM_AI_V4MAPPED;
     }
 
   if (ai_flags & AI_ALL)
     {
-      ret |= FARAPI_AI_ALL;
+      ret |= ALTCOM_AI_ALL;
     }
 
   if (ai_flags & AI_ADDRCONFIG)
     {
-      ret |= FARAPI_AI_ADDRCONFIG;
+      ret |= ALTCOM_AI_ADDRCONFIG;
     }
 
   return ret;
@@ -448,34 +448,34 @@ int stubsock_convaiflags_remote(int ai_flags)
  ****************************************************************************/
 
 void stubsock_convsockaddr_remote(FAR const struct sockaddr *from,
-                                  FAR struct farapi_sockaddr_storage *to)
+                                  FAR struct altcom_sockaddr_storage *to)
 {
   FAR struct sockaddr_in         *inaddr_from;
   FAR struct sockaddr_in6        *in6addr_from;
-  FAR struct farapi_sockaddr_in  *inaddr_to;
-  FAR struct farapi_sockaddr_in6 *in6addr_to;
+  FAR struct altcom_sockaddr_in  *inaddr_to;
+  FAR struct altcom_sockaddr_in6 *in6addr_to;
 
   if (from->sa_family == AF_INET)
     {
       inaddr_from = (FAR struct sockaddr_in*)from;
-      inaddr_to   = (FAR struct farapi_sockaddr_in*)to;
+      inaddr_to   = (FAR struct altcom_sockaddr_in*)to;
 
-      inaddr_to->sin_len    = sizeof(struct farapi_sockaddr_in);
-      inaddr_to->sin_family = FARAPI_AF_INET;
+      inaddr_to->sin_len    = sizeof(struct altcom_sockaddr_in);
+      inaddr_to->sin_family = ALTCOM_AF_INET;
       inaddr_to->sin_port   = inaddr_from->sin_port;
       memcpy(&inaddr_to->sin_addr, &inaddr_from->sin_addr,
-             sizeof(struct farapi_in_addr));
+             sizeof(struct altcom_in_addr));
     }
   else if (from->sa_family == AF_INET6)
     {
       in6addr_from = (FAR struct sockaddr_in6*)from;
-      in6addr_to   = (FAR struct farapi_sockaddr_in6*)to;
+      in6addr_to   = (FAR struct altcom_sockaddr_in6*)to;
 
-      in6addr_to->sin6_len    = sizeof(struct farapi_sockaddr_in6);
-      in6addr_to->sin6_family = FARAPI_AF_INET6;
+      in6addr_to->sin6_len    = sizeof(struct altcom_sockaddr_in6);
+      in6addr_to->sin6_family = ALTCOM_AF_INET6;
       in6addr_to->sin6_port   = in6addr_from->sin6_port;
       memcpy(&in6addr_to->sin6_addr, &in6addr_from->sin6_addr,
-             sizeof(struct farapi_in6_addr));
+             sizeof(struct altcom_in6_addr));
     }
 }
 
@@ -487,15 +487,15 @@ void stubsock_convsockaddr_remote(FAR const struct sockaddr *from,
  *
  ****************************************************************************/
 
-void stubsock_convstorage_local(FAR const struct farapi_sockaddr_storage *from,
+void stubsock_convstorage_local(FAR const struct altcom_sockaddr_storage *from,
                                 FAR struct sockaddr *to, socklen_t len)
 {
-  FAR struct farapi_sockaddr_in  *inaddr_from;
-  FAR struct farapi_sockaddr_in6 *in6addr_from;
+  FAR struct altcom_sockaddr_in  *inaddr_from;
+  FAR struct altcom_sockaddr_in6 *in6addr_from;
   FAR struct sockaddr_in         *inaddr_to;
   FAR struct sockaddr_in6        *in6addr_to;
 
-  if (from->ss_family == FARAPI_AF_INET)
+  if (from->ss_family == ALTCOM_AF_INET)
     {
       if (len < sizeof(struct sockaddr_in))
         {
@@ -503,7 +503,7 @@ void stubsock_convstorage_local(FAR const struct farapi_sockaddr_storage *from,
           return;
         }
 
-      inaddr_from = (FAR struct farapi_sockaddr_in*)from;
+      inaddr_from = (FAR struct altcom_sockaddr_in*)from;
       inaddr_to   = (FAR struct sockaddr_in*)to;
 
       inaddr_to->sin_family = AF_INET;
@@ -511,7 +511,7 @@ void stubsock_convstorage_local(FAR const struct farapi_sockaddr_storage *from,
       memcpy(&inaddr_to->sin_addr, &inaddr_from->sin_addr,
              sizeof(struct in_addr));
     }
-  else if (from->ss_family == FARAPI_AF_INET6)
+  else if (from->ss_family == ALTCOM_AF_INET6)
     {
       if (len < sizeof(struct sockaddr_in6))
         {
@@ -519,7 +519,7 @@ void stubsock_convstorage_local(FAR const struct farapi_sockaddr_storage *from,
           return;
         }
 
-      in6addr_from = (FAR struct farapi_sockaddr_in6*)from;
+      in6addr_from = (FAR struct altcom_sockaddr_in6*)from;
       in6addr_to   = (FAR struct sockaddr_in6*)to;
 
       in6addr_to->sin6_family = AF_INET6;

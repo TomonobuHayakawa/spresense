@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/farapi/evtdisp/director.c
+ * modules/lte/altcom/evtdisp/director.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

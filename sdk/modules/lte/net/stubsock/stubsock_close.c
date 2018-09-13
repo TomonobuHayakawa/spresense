@@ -54,8 +54,8 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -84,7 +84,7 @@ int stubsock_close(FAR struct socket *psock)
   int                            ret;
   int                            err;
 
-  ret = farapi_close(conn->stubsockid);
+  ret = altcom_close(conn->stubsockid);
 
   /* Free the connection structure */
 
@@ -94,9 +94,9 @@ int stubsock_close(FAR struct socket *psock)
     {
       /* Return with error code, but free resources. */
 
-      DBGIF_LOG1_ERROR("farapi_close failed: %d\n", ret);
+      DBGIF_LOG1_ERROR("altcom_close failed: %d\n", ret);
 
-      err = farapi_errno();
+      err = altcom_errno();
       return -err;
     }
 

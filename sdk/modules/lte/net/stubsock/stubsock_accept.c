@@ -56,8 +56,8 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -117,9 +117,9 @@ int stubsock_accept(FAR struct socket *psock, FAR struct sockaddr *addr,
   int                             sockfd;
   int                             newsockfd;
   socklen_t                       addr_len = 0;
-  FAR farapi_socklen_t           *paddrlen = NULL;
-  FAR struct farapi_sockaddr     *paddr = NULL;
-  struct farapi_sockaddr_storage  storage;
+  FAR altcom_socklen_t           *paddrlen = NULL;
+  FAR struct altcom_sockaddr     *paddr = NULL;
+  struct altcom_sockaddr_storage  storage;
 
   DBGIF_ASSERT(conn, "conn == NULL\n");
 
@@ -135,21 +135,21 @@ int stubsock_accept(FAR struct socket *psock, FAR struct sockaddr *addr,
     }
   if (addr)
     {
-      memset(&storage, 0, sizeof(struct farapi_sockaddr_storage));
-      paddr = (FAR struct farapi_sockaddr*)&storage;
+      memset(&storage, 0, sizeof(struct altcom_sockaddr_storage));
+      paddr = (FAR struct altcom_sockaddr*)&storage;
     }
 
   sockfd = conn->stubsockid;
 
-  newsockfd = farapi_accept(sockfd, paddr, paddrlen);
+  newsockfd = altcom_accept(sockfd, paddr, paddrlen);
   if (newsockfd < 0)
     {
-      ret = farapi_errno();
+      ret = altcom_errno();
       ret = -ret;
     }
   else if (paddr)
     {
-      stubsock_convstorage_local((FAR struct farapi_sockaddr_storage*)paddr,
+      stubsock_convstorage_local((FAR struct altcom_sockaddr_storage*)paddr,
                                  addr, addr_len);
     }
 
@@ -162,7 +162,7 @@ int stubsock_accept(FAR struct socket *psock, FAR struct sockaddr *addr,
       newconn = stubsock_alloc();
       if (!newconn)
         {
-          farapi_close(newsockfd);
+          altcom_close(newsockfd);
 
           /* Failed to reserve a connection structure */
 

@@ -57,9 +57,9 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_in.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_in.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -95,9 +95,9 @@ ssize_t stubsock_sendto(FAR struct socket *psock, FAR const void *buf,
   int                             sockfd;
   int                             ret;
   int                             val = 0;
-  farapi_socklen_t                addr_len = 0;
-  FAR struct farapi_sockaddr     *pto = NULL;
-  struct farapi_sockaddr_storage  storage;
+  altcom_socklen_t                addr_len = 0;
+  FAR struct altcom_sockaddr     *pto = NULL;
+  struct altcom_sockaddr_storage  storage;
 #ifdef CONFIG_NET_SOCKOPTS
   struct timeval                  tv_val;
 #endif
@@ -124,7 +124,7 @@ ssize_t stubsock_sendto(FAR struct socket *psock, FAR const void *buf,
               /* Adjust the length. Because the size of the structure is
                * different between local and remote. */
 
-              addr_len = sizeof(struct farapi_sockaddr_in);
+              addr_len = sizeof(struct altcom_sockaddr_in);
             }
         }
       else if (to->sa_family == AF_INET6)
@@ -138,7 +138,7 @@ ssize_t stubsock_sendto(FAR struct socket *psock, FAR const void *buf,
               /* Adjust the length. Because the size of the structure is
                * different between local and remote. */
 
-              addr_len = sizeof(struct farapi_sockaddr_in6);
+              addr_len = sizeof(struct altcom_sockaddr_in6);
             }
         }
       else
@@ -146,38 +146,38 @@ ssize_t stubsock_sendto(FAR struct socket *psock, FAR const void *buf,
           return -EINVAL;
         }
 
-      /* Convert to farapi's sockaddr structure */
+      /* Convert to altcom's sockaddr structure */
 
-      memset(&storage, 0, sizeof(struct farapi_sockaddr_storage));
+      memset(&storage, 0, sizeof(struct altcom_sockaddr_storage));
       stubsock_convsockaddr_remote(to, &storage);
-      pto = (FAR struct farapi_sockaddr*)&storage;
+      pto = (FAR struct altcom_sockaddr*)&storage;
     }
 
   sockfd = conn->stubsockid;
 
   if (_SS_ISNONBLOCK(psock->s_flags))
     {
-      val |= FARAPI_O_NONBLOCK;
+      val |= ALTCOM_O_NONBLOCK;
     }
 
   /* Whether it is blocking or not,
    * change the behavior of sokcet with fcntl */
 
-  farapi_fcntl(sockfd, FARAPI_SETFL, val);
+  altcom_fcntl(sockfd, ALTCOM_SETFL, val);
 
 #ifdef CONFIG_NET_SOCKOPTS
   tv_val.tv_sec = psock->s_sndtimeo / DSEC_PER_SEC;
   tv_val.tv_usec = (psock->s_sndtimeo % DSEC_PER_SEC) * USEC_PER_DSEC;
 
-  farapi_setsockopt(sockfd, FARAPI_SOL_SOCKET, FARAPI_SO_SNDTIMEO, &tv_val,
+  altcom_setsockopt(sockfd, ALTCOM_SOL_SOCKET, ALTCOM_SO_SNDTIMEO, &tv_val,
                     sizeof(tv_val));
 #endif
 
-  ret = farapi_sendto(sockfd, buf, len, stubsock_convflags_remote(flags),
-                      pto, (farapi_socklen_t)addr_len);
+  ret = altcom_sendto(sockfd, buf, len, stubsock_convflags_remote(flags),
+                      pto, (altcom_socklen_t)addr_len);
   if (ret < 0)
     {
-      ret = farapi_errno();
+      ret = altcom_errno();
       ret = -ret;
     }
 

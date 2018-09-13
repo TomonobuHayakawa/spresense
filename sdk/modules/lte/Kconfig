@@ -13,7 +13,7 @@ config LTE
 
 if LTE
 
-source "modules/lte/farapi/Kconfig"
+source "modules/lte/altcom/Kconfig"
 source "modules/lte/net/Kconfig"
 endif
 

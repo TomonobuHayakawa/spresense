@@ -55,9 +55,9 @@
 #include <nuttx/net/net.h>
 
 #include "socket/socket.h"
-#include "farapi_socket.h"
-#include "farapi_inet.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_inet.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -84,7 +84,7 @@
 
 int inet_aton(const char *cp, struct in_addr *inp)
 {
-  return farapi_inet_aton(cp, (FAR struct farapi_in_addr*)inp);
+  return altcom_inet_aton(cp, (FAR struct altcom_in_addr*)inp);
 }
 
 #endif /* CONFIG_NET && CONFIG_LTE_INET_ATON */

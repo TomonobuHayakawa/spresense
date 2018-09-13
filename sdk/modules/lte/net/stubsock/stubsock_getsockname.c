@@ -56,8 +56,8 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -95,9 +95,9 @@ int stubsock_getsockname(FAR struct socket *psock,
   int                             sockfd;
   int                             ret;
   socklen_t                       addr_len = 0;
-  FAR farapi_socklen_t           *paddrlen = NULL;
-  FAR struct farapi_sockaddr     *paddr = NULL;
-  struct farapi_sockaddr_storage  storage;
+  FAR altcom_socklen_t           *paddrlen = NULL;
+  FAR struct altcom_sockaddr     *paddr = NULL;
+  struct altcom_sockaddr_storage  storage;
 
   DBGIF_ASSERT(conn, "conn == NULL\n");
 
@@ -113,21 +113,21 @@ int stubsock_getsockname(FAR struct socket *psock,
     }
   if (addr)
     {
-      memset(&storage, 0, sizeof(struct farapi_sockaddr_storage));
-      paddr = (FAR struct farapi_sockaddr*)&storage;
+      memset(&storage, 0, sizeof(struct altcom_sockaddr_storage));
+      paddr = (FAR struct altcom_sockaddr*)&storage;
     }
 
   sockfd = conn->stubsockid;
 
-  ret = farapi_getsockname(sockfd, paddr, paddrlen);
+  ret = altcom_getsockname(sockfd, paddr, paddrlen);
   if (ret < 0)
     {
-      ret = farapi_errno();
+      ret = altcom_errno();
       ret = -ret;
     }
   else if (paddr)
     {
-      stubsock_convstorage_local((FAR struct farapi_sockaddr_storage*)paddr,
+      stubsock_convstorage_local((FAR struct altcom_sockaddr_storage*)paddr,
                                   addr, addr_len);
     }
 

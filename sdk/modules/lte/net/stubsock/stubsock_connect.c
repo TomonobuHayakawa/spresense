@@ -57,9 +57,9 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_in.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_in.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -91,8 +91,8 @@ int stubsock_connect(FAR struct socket *psock,
   FAR struct devspecsock_conn_s  *ds_conn =
     (FAR struct devspecsock_conn_s*)psock->s_conn;
   FAR struct stubsock_conn_s     *conn = ds_conn->devspec_conn;
-  struct farapi_sockaddr_storage  storage;
-  farapi_socklen_t                addr_len;
+  struct altcom_sockaddr_storage  storage;
+  altcom_socklen_t                addr_len;
   int                             sockfd;
   int                             ret;
   int                             val = 0;
@@ -114,7 +114,7 @@ int stubsock_connect(FAR struct socket *psock,
           /* Adjust the length. Because the size of the structure is
            * different between local and remote. */
 
-          addr_len = sizeof(struct farapi_sockaddr_in);
+          addr_len = sizeof(struct altcom_sockaddr_in);
         }
     }
   else if (addr->sa_family == AF_INET6)
@@ -128,7 +128,7 @@ int stubsock_connect(FAR struct socket *psock,
           /* Adjust the length. Because the size of the structure is
            * different between local and remote. */
 
-          addr_len = sizeof(struct farapi_sockaddr_in6);
+          addr_len = sizeof(struct altcom_sockaddr_in6);
         }
     }
   else
@@ -138,24 +138,24 @@ int stubsock_connect(FAR struct socket *psock,
 
   if (_SS_ISNONBLOCK(psock->s_flags))
     {
-      val |= FARAPI_O_NONBLOCK;
+      val |= ALTCOM_O_NONBLOCK;
     }
 
   /* Whether it is blocking or not,
    * change the behavior of sokcet with fcntl */
 
-  farapi_fcntl(sockfd, FARAPI_SETFL, val);
+  altcom_fcntl(sockfd, ALTCOM_SETFL, val);
 
-  /* Convert to farapi's sockaddr structure */
+  /* Convert to altcom's sockaddr structure */
 
-  memset(&storage, 0, sizeof(struct farapi_sockaddr_storage));
+  memset(&storage, 0, sizeof(struct altcom_sockaddr_storage));
   stubsock_convsockaddr_remote(addr, &storage);
 
-  ret = farapi_connect(sockfd, (FAR const struct farapi_sockaddr*)&storage,
+  ret = altcom_connect(sockfd, (FAR const struct altcom_sockaddr*)&storage,
                        addr_len);
   if (ret < 0)
     {
-      ret = farapi_errno();
+      ret = altcom_errno();
       ret = -ret;
     }
 

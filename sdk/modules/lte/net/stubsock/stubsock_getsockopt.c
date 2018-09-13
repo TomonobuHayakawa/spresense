@@ -54,8 +54,8 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -106,36 +106,36 @@ int stubsock_getsockopt(FAR struct socket *psock, int level, int option,
   switch(level)
     {
       case SOL_SOCKET:
-        lev = FARAPI_SOL_SOCKET;
+        lev = ALTCOM_SOL_SOCKET;
 
         switch(option)
           {
             case SO_ACCEPTCONN:
-              opt = FARAPI_SO_ACCEPTCONN;
+              opt = ALTCOM_SO_ACCEPTCONN;
               break;
             case SO_ERROR:
-              opt = FARAPI_SO_ERROR;
+              opt = ALTCOM_SO_ERROR;
               break;
             case SO_BROADCAST:
-              opt = FARAPI_SO_BROADCAST;
+              opt = ALTCOM_SO_BROADCAST;
               break;
             case SO_KEEPALIVE:
-              opt = FARAPI_SO_KEEPALIVE;
+              opt = ALTCOM_SO_KEEPALIVE;
               break;
             case SO_REUSEADDR:
-              opt = FARAPI_SO_REUSEADDR;
+              opt = ALTCOM_SO_REUSEADDR;
               break;
             case SO_TYPE:
-              opt = FARAPI_SO_TYPE;
+              opt = ALTCOM_SO_TYPE;
               break;
             case SO_RCVBUF:
-              opt = FARAPI_SO_RCVBUF;
+              opt = ALTCOM_SO_RCVBUF;
               break;
 
 
 #ifdef CONFIG_NET_SOLINGER
             case SO_LINGER:
-              opt = FARAPI_SO_LINGER;
+              opt = ALTCOM_SO_LINGER;
               /* linger structure is same as remote */
 
               break;
@@ -168,11 +168,11 @@ int stubsock_getsockopt(FAR struct socket *psock, int level, int option,
 
   if (ret >= 0)
     {
-      ret = farapi_getsockopt(sockfd, lev, opt, value,
-                              (FAR farapi_socklen_t*)value_len);
+      ret = altcom_getsockopt(sockfd, lev, opt, value,
+                              (FAR altcom_socklen_t*)value_len);
       if (ret < 0)
         {
-          ret = farapi_errno();
+          ret = altcom_errno();
           ret = -ret;
         }
     }

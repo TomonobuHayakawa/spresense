@@ -55,8 +55,8 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -97,26 +97,26 @@ ssize_t stubsock_send(FAR struct socket *psock, FAR const void *buf,
 
   if (_SS_ISNONBLOCK(psock->s_flags))
     {
-      val |= FARAPI_O_NONBLOCK;
+      val |= ALTCOM_O_NONBLOCK;
     }
 
   /* Whether it is blocking or not,
    * change the behavior of sokcet with fcntl */
 
-  farapi_fcntl(sockfd, FARAPI_SETFL, val);
+  altcom_fcntl(sockfd, ALTCOM_SETFL, val);
 
 #ifdef CONFIG_NET_SOCKOPTS
   tv_val.tv_sec = psock->s_sndtimeo / DSEC_PER_SEC;
   tv_val.tv_usec = (psock->s_sndtimeo % DSEC_PER_SEC) * USEC_PER_DSEC;
 
-  farapi_setsockopt(sockfd, FARAPI_SOL_SOCKET, FARAPI_SO_SNDTIMEO, &tv_val,
+  altcom_setsockopt(sockfd, ALTCOM_SOL_SOCKET, ALTCOM_SO_SNDTIMEO, &tv_val,
                     sizeof(tv_val));
 #endif
 
-  ret = farapi_send(sockfd, buf, len, stubsock_convflags_remote(flags));
+  ret = altcom_send(sockfd, buf, len, stubsock_convflags_remote(flags));
   if (ret < 0)
     {
-      ret = farapi_errno();
+      ret = altcom_errno();
       ret = -ret;
     }
 

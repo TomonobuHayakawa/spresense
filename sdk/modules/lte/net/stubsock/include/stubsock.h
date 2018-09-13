@@ -48,8 +48,8 @@
 #include <netdb.h>
 #include "socket/socket.h"
 #include "stubsock_mem.h"
-#include "farapi_socket.h"
-#include "farapi_netdb.h"
+#include "altcom_socket.h"
+#include "altcom_netdb.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -63,7 +63,7 @@
 
 struct stubsock_conn_s
 {
-  int32_t  stubsockid; /* Used for farapi socket */
+  int32_t  stubsockid; /* Used for altcom socket */
   uint16_t flags;      /* Socket state flags */
 };
 
@@ -222,7 +222,7 @@ int stubsock_convaiflags_remote(int ai_flags);
  ****************************************************************************/
 
 void stubsock_convsockaddr_remote(FAR const struct sockaddr *from,
-                                  FAR struct farapi_sockaddr_storage *to);
+                                  FAR struct altcom_sockaddr_storage *to);
 
 /****************************************************************************
  * Name: stubsock_convstorage_local()
@@ -232,7 +232,7 @@ void stubsock_convsockaddr_remote(FAR const struct sockaddr *from,
  *
  ****************************************************************************/
 
-void stubsock_convstorage_local(FAR const struct farapi_sockaddr_storage *from,
+void stubsock_convstorage_local(FAR const struct altcom_sockaddr_storage *from,
                                 FAR struct sockaddr *to, socklen_t len);
 
 

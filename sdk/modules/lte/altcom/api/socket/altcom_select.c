@@ -1,0 +1,501 @@
+/****************************************************************************
+ * modules/lte/altcom/api/socket/altcom_select.c
+ *
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+ *    the names of its contributors may be used to endorse or promote
+ *    products derived from this software without specific prior written
+ *    permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ ****************************************************************************/
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+
+#include <stdbool.h>
+
+#include "dbg_if.h"
+#include "altcom_sock.h"
+#include "altcom_socket.h"
+#include "altcom_select.h"
+#include "altcom_seterrno.h"
+#include "apicmd_select.h"
+#include "buffpoolwrapper.h"
+#include "apiutil.h"
+#include "bswap.h"
+#include "cc.h"
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#define SELECT_REQ_DATALEN (sizeof(struct apicmd_select_s))
+#define SELECT_RES_DATALEN (sizeof(struct apicmd_selectres_s))
+
+#define SELECT_REQ_FAILURE -1
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+struct select_req_s
+{
+  int               maxfdp1;
+  uint32_t          request;
+  FAR altcom_fd_set *readset;
+  FAR altcom_fd_set *writeset;
+  FAR altcom_fd_set *exceptset;
+  int32_t           timeout;
+  bool              is_async;
+};
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static uint32_t g_select_id;
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: select_request
+ *
+ * Description:
+ *   Send ALTCOM_SELECT_REQ.
+ *
+ ****************************************************************************/
+
+static int32_t select_request(FAR struct select_req_s *req)
+{
+  int32_t                       ret;
+  int32_t                       err;
+  uint32_t                      select_id;
+  uint16_t                      reslen = 0;
+  FAR struct apicmd_select_s    *cmd = NULL;
+  FAR struct apicmd_selectres_s *res = NULL;
+
+  if (req->is_async)
+    {
+      /* Allocate send command buffer only */
+
+      if (!APIUTIL_SOCK_ALLOC_CMDBUFF(cmd, APICMDID_SOCK_SELECT,
+                                      SELECT_REQ_DATALEN))
+        {
+          err = ALTCOM_ENOMEM;
+          goto errout;
+        }
+    }
+  else
+    {
+      /* Allocate send and response command buffer */
+
+      APIUTIL_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SELECT,
+                                       SELECT_REQ_DATALEN, res,
+                                       SELECT_RES_DATALEN);
+    }
+
+  /* Fill the data */
+
+  select_id = ++g_select_id;
+  memset(cmd, 0, sizeof(struct apicmd_select_s));
+  cmd->request = bswap32(req->request);
+  cmd->id      = bswap32(select_id);
+  cmd->maxfds  = bswap32(req->maxfdp1);
+  if (req->readset)
+    {
+      memcpy(&cmd->readset, req->readset,
+             sizeof(altcom_fd_set));
+      cmd->used_setbit |= APICMD_SELECT_USED_BIT_READSET;
+    }
+  if (req->writeset)
+    {
+      memcpy(&cmd->writeset, req->writeset,
+             sizeof(altcom_fd_set));
+      cmd->used_setbit |= APICMD_SELECT_USED_BIT_WRITESET;
+    }
+  if (req->exceptset)
+    {
+      memcpy(&cmd->exceptset, req->exceptset,
+             sizeof(altcom_fd_set));
+      cmd->used_setbit |= APICMD_SELECT_USED_BIT_EXCEPTSET;
+    }
+  cmd->used_setbit = bswap16(cmd->used_setbit);
+
+  DBGIF_LOG3_DEBUG("[select-req]request: %d, id: %d, maxfdp1: %d\n", APICMD_SELECT_REQUEST_BLOCK, select_id, req->maxfdp1);
+  DBGIF_LOG1_DEBUG("[select-req]used_setbit: %x\n", bswap16(cmd->used_setbit));
+  if (req->readset)
+    {
+      DBGIF_LOG2_DEBUG("[select-req]readset: %x,%x\n", req->readset->fd_bits[0], req->readset->fd_bits[1]);
+    }
+  if (req->writeset)
+    {
+      DBGIF_LOG2_DEBUG("[select-req]writeset: %x,%x\n", req->writeset->fd_bits[0], req->writeset->fd_bits[1]);
+    }
+  if (req->exceptset)
+    {
+      DBGIF_LOG2_DEBUG("[select-req]exceptset: %x,%x\n", req->exceptset->fd_bits[0], req->exceptset->fd_bits[1]);
+    }
+
+  /* Send command and block until receive a response or timeout */
+
+  ret = apicmdgw_send((FAR uint8_t *)cmd, (FAR uint8_t *)res,
+                       SELECT_RES_DATALEN,
+                       &reslen, req->timeout);
+
+  if (ret < 0)
+    {
+      DBGIF_LOG1_ERROR("apicmdgw_send error: %d\n", ret);
+
+      if (ret == -ETIMEDOUT)
+        {
+          memset(cmd, 0, sizeof(struct apicmd_select_s));
+          cmd->request = bswap32(APICMD_SELECT_REQUEST_BLOCKCANCEL);
+          cmd->id      = bswap32(select_id);
+
+          DBGIF_LOG2_DEBUG("[select-req]request: %d, id: %d\n", APICMD_SELECT_REQUEST_BLOCK, select_id);
+
+          /* Send command */
+
+          apicmdgw_send((FAR uint8_t *)cmd, NULL, 0, NULL, 0);
+
+          err = ALTCOM_ETIMEDOUT;
+          goto errout_with_cmdfree;
+        }
+      else
+        {
+          err = -ret;
+          goto errout_with_cmdfree;
+        }
+    }
+
+  if (!req->is_async)
+    {
+      if (reslen != SELECT_RES_DATALEN)
+        {
+          DBGIF_LOG1_ERROR("Unexpected response data length: %d\n", reslen);
+          err = ALTCOM_EFAULT;
+          goto errout_with_cmdfree;
+        }
+
+      ret = bswap32(res->ret_code);
+      err = bswap32(res->err_code);
+
+      DBGIF_LOG2_DEBUG("[select-res]ret: %d, err: %d\n", ret, err);
+
+      if (APICMD_SELECT_RES_RET_CODE_ERR == ret)
+        {
+          DBGIF_LOG1_ERROR("API command response is err :%d.\n", err);
+          goto errout_with_cmdfree;
+        }
+
+      if (req->readset)
+        {
+          memcpy(req->readset, &res->readset, sizeof(altcom_fd_set));
+        }
+      if (req->writeset)
+        {
+          memcpy(req->writeset, &res->writeset, sizeof(altcom_fd_set));
+        }
+      if (req->exceptset)
+        {
+          memcpy(req->exceptset, &res->exceptset, sizeof(altcom_fd_set));
+        }
+    }
+  else
+    {
+      ret = select_id;
+    }
+
+  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+
+  return ret;
+
+errout_with_cmdfree:
+  APIUTIL_SOCK_FREE_CMDANDRESBUFF(cmd, res);
+
+errout:
+  altcom_seterrno(err);
+  return SELECT_REQ_FAILURE;
+}
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: altcom_select_request_asyncsend
+ *
+ * Description:
+ *   Send select request.
+ *
+ * Input parameters:
+ *   maxfdp1 - the maximum socket file descriptor number (+1) of any
+ *             descriptor in any of the three sets.
+ *   readset - the set of descriptions to monitor for read-ready events
+ *   writeset - the set of descriptions to monitor for write-ready events
+ *   exceptset - the set of descriptions to monitor for error events
+ *
+ *  Return:
+ *  >0: The select id use select cancel request
+ *  -1: An error occurred (errno will be set appropriately)
+ *
+ ****************************************************************************/
+
+int altcom_select_request_asyncsend(int maxfdp1, altcom_fd_set *readset,
+                                    altcom_fd_set *writeset,
+                                    altcom_fd_set *exceptset)
+{
+  int32_t             result;
+  bool                is_init;
+  struct select_req_s req;
+
+  APIUTIL_ISINIT(is_init);
+  if (!is_init)
+    {
+      DBGIF_LOG_ERROR("Not intialized\n");
+      altcom_seterrno(ALTCOM_ENETDOWN);
+      return -1;
+    }
+
+  req.maxfdp1   = maxfdp1;
+  req.request   = APICMD_SELECT_REQUEST_BLOCK;
+  req.readset   = readset;
+  req.writeset  = writeset;
+  req.exceptset = exceptset;
+  req.timeout   = SYS_TIMEO_FEVR; /* ignore when is_async is true */
+  req.is_async  = true;
+
+  result = select_request(&req);
+
+  if (result == SELECT_REQ_FAILURE)
+    {
+      return -1;
+    }
+
+  return result;
+}
+
+/****************************************************************************
+ * Name: altcom_select_cancel_request_send
+ *
+ * Description:
+ *   Send select cancel request.
+ *
+ * Input parameters:
+ *   id - returned by altcom_select_request_asyncsend
+ *
+ *  Return:
+ *   0: Send succeded
+ *  -1: An error occurred (errno will be set appropriately)
+ *
+ ****************************************************************************/
+
+int altcom_select_cancel_request_send(int id)
+{
+  int32_t             result;
+  bool                is_init;
+  struct select_req_s req;
+
+  APIUTIL_ISINIT(is_init);
+  if (!is_init)
+    {
+      DBGIF_LOG_ERROR("Not intialized\n");
+      altcom_seterrno(ALTCOM_ENETDOWN);
+      return -1;
+    }
+
+  req.maxfdp1   = 0;
+  req.request   = APICMD_SELECT_REQUEST_BLOCKCANCEL;
+  req.readset   = NULL;
+  req.writeset  = NULL;
+  req.exceptset = NULL;
+  req.timeout   = SYS_TIMEO_FEVR; /* ignore when is_async is true */
+  req.is_async  = true;
+
+  result = select_request(&req);
+
+  if (result == SELECT_REQ_FAILURE)
+    {
+      return -1;
+    }
+
+  return result;
+}
+
+/****************************************************************************
+ * Name: altcom_select_nonblock
+ *
+ * Description:
+ *   altcom_select_nonblock() is the same as altcom_select(),
+ *   but set command parameter to nonblock.
+ *
+ * Input parameters:
+ *   maxfdp1 - the maximum socket file descriptor number (+1) of any
+ *             descriptor in any of the three sets.
+ *   readset - the set of descriptions to monitor for read-ready events
+ *   writeset - the set of descriptions to monitor for write-ready events
+ *   exceptset - the set of descriptions to monitor for error events
+ *
+ *  Return:
+ *   0: All descriptors in the three sets are not ready
+ *  >0: The number of bits set in the three sets of descriptors
+ *  -1: An error occurred (errno will be set appropriately)
+ *
+ ****************************************************************************/
+
+int altcom_select_nonblock(int maxfdp1, altcom_fd_set *readset,
+                           altcom_fd_set *writeset,
+                           altcom_fd_set *exceptset)
+{
+  int32_t             result;
+  bool                is_init;
+  struct select_req_s req;
+
+  APIUTIL_ISINIT(is_init);
+  if (!is_init)
+    {
+      DBGIF_LOG_ERROR("Not intialized\n");
+      altcom_seterrno(ALTCOM_ENETDOWN);
+      return -1;
+    }
+
+  req.maxfdp1   = maxfdp1;
+  req.request   = APICMD_SELECT_REQUEST_NONBLOCK;
+  req.readset   = readset;
+  req.writeset  = writeset;
+  req.exceptset = exceptset;
+  req.timeout   = SYS_TIMEO_FEVR;
+  req.is_async  = false;
+
+  result = select_request(&req);
+
+  if (result == SELECT_REQ_FAILURE)
+    {
+      return -1;
+    }
+
+  return result;
+}
+
+/****************************************************************************
+ * Name: altcom_select_block
+ *
+ * Description:
+ *   altcom_select_nonblock() is the same as altcom_select(),
+ *   but set command parameter to block.
+ *
+ * Input parameters:
+ *   maxfdp1 - the maximum socket file descriptor number (+1) of any
+ *             descriptor in any of the three sets.
+ *   readset - the set of descriptions to monitor for read-ready events
+ *   writeset - the set of descriptions to monitor for write-ready events
+ *   exceptset - the set of descriptions to monitor for error events
+ *   timeout - Return at this time if none of these events of interest
+ *             occur.
+ *
+ *  Return:
+ *  >0: The number of bits set in the three sets of descriptors
+ *  -1: An error occurred (errno will be set appropriately)
+ *
+ ****************************************************************************/
+
+int altcom_select_block(int maxfdp1, altcom_fd_set *readset,
+                        altcom_fd_set *writeset, altcom_fd_set *exceptset,
+                        struct altcom_timeval *timeout)
+{
+  int32_t             result;
+  bool                is_init;
+  struct select_req_s req;
+
+  APIUTIL_ISINIT(is_init);
+  if (!is_init)
+    {
+      DBGIF_LOG_ERROR("Not intialized\n");
+      altcom_seterrno(ALTCOM_ENETDOWN);
+      return -1;
+    }
+
+  req.maxfdp1   = maxfdp1;
+  req.request   = APICMD_SELECT_REQUEST_BLOCK;
+  req.readset   = readset;
+  req.writeset  = writeset;
+  req.exceptset = exceptset;
+  req.is_async  = false;
+  if (timeout)
+    {
+      req.timeout = ALTCOM_SOCK_TIMEVAL2MS(timeout);
+    }
+  else
+    {
+      req.timeout = SYS_TIMEO_FEVR;
+    }
+
+  result = select_request(&req);
+
+  if (result == SELECT_REQ_FAILURE)
+    {
+      return -1;
+    }
+
+  return result;
+}
+
+/****************************************************************************
+ * Name: altcom_select
+ *
+ * Description:
+ *   altcom_select() allows a program to monitor multiple file descriptors,
+ *   waiting until one or more of the file descriptors become "ready" for
+ *   some class of I/O operation (e.g., input possible).  A file descriptor
+ *   is considered  ready if it is possible to perform the corresponding I/O
+ *   operation (e.g., altcom_recv()) without blocking.
+ *
+ * Input parameters:
+ *   maxfdp1 - the maximum socket file descriptor number (+1) of any
+ *             descriptor in any of the three sets.
+ *   readset - the set of descriptions to monitor for read-ready events
+ *   writeset - the set of descriptions to monitor for write-ready events
+ *   exceptset - the set of descriptions to monitor for error events
+ *   timeout - Return at this time if none of these events of interest
+ *             occur.
+ *
+ *  Return:
+ *   0: Timer expired
+ *  >0: The number of bits set in the three sets of descriptors
+ *  -1: An error occurred (errno will be set appropriately)
+ *
+ ****************************************************************************/
+
+int altcom_select(int maxfdp1, altcom_fd_set *readset,
+                  altcom_fd_set *writeset, altcom_fd_set *exceptset,
+                  struct altcom_timeval *timeout)
+{
+  return altcom_select_block(maxfdp1, readset, writeset, exceptset, timeout);
+}

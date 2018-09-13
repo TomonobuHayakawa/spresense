@@ -55,8 +55,8 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -101,10 +101,10 @@ int stubsock_listen(FAR struct socket *psock, int backlog)
 
   sockfd = conn->stubsockid;
 
-  ret = farapi_listen(sockfd, backlog);
+  ret = altcom_listen(sockfd, backlog);
   if (ret < 0)
     {
-      ret = farapi_errno();
+      ret = altcom_errno();
       ret = -ret;
     }
 

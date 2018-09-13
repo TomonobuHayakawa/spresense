@@ -56,8 +56,8 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -97,9 +97,9 @@ ssize_t stubsock_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
   int                             ret;
   int                             val = 0;
   socklen_t                       addrlen = 0;
-  FAR farapi_socklen_t           *pfromlen = NULL;
-  FAR struct farapi_sockaddr     *pfrom = NULL;
-  struct farapi_sockaddr_storage  storage;
+  FAR altcom_socklen_t           *pfromlen = NULL;
+  FAR struct altcom_sockaddr     *pfrom = NULL;
+  struct altcom_sockaddr_storage  storage;
 #ifdef CONFIG_NET_SOCKOPTS
   struct timeval                  tv_val;
 #endif
@@ -119,40 +119,40 @@ ssize_t stubsock_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
     }
   if (from)
     {
-      memset(&storage, 0, sizeof(struct farapi_sockaddr_storage));
-      pfrom = (FAR struct farapi_sockaddr*)&storage;
+      memset(&storage, 0, sizeof(struct altcom_sockaddr_storage));
+      pfrom = (FAR struct altcom_sockaddr*)&storage;
     }
 
   sockfd = conn->stubsockid;
 
   if (_SS_ISNONBLOCK(psock->s_flags))
     {
-      val |= FARAPI_O_NONBLOCK;
+      val |= ALTCOM_O_NONBLOCK;
     }
 
   /* Whether it is blocking or not,
    * change the behavior of sokcet with fcntl */
 
-  farapi_fcntl(sockfd, FARAPI_SETFL, val);
+  altcom_fcntl(sockfd, ALTCOM_SETFL, val);
 
 #ifdef CONFIG_NET_SOCKOPTS
   tv_val.tv_sec = psock->s_rcvtimeo / DSEC_PER_SEC;
   tv_val.tv_usec = (psock->s_rcvtimeo % DSEC_PER_SEC) * USEC_PER_DSEC;
 
-  farapi_setsockopt(sockfd, FARAPI_SOL_SOCKET, FARAPI_SO_RCVTIMEO, &tv_val,
+  altcom_setsockopt(sockfd, ALTCOM_SOL_SOCKET, ALTCOM_SO_RCVTIMEO, &tv_val,
                     sizeof(tv_val));
 #endif
 
-  ret = farapi_recvfrom(sockfd, buf, len, stubsock_convflags_remote(flags),
+  ret = altcom_recvfrom(sockfd, buf, len, stubsock_convflags_remote(flags),
                         pfrom, pfromlen);
   if (ret < 0)
     {
-      ret = farapi_errno();
+      ret = altcom_errno();
       ret = -ret;
     }
   else if (pfrom)
     {
-      stubsock_convstorage_local((struct farapi_sockaddr_storage*)pfrom,
+      stubsock_convstorage_local((struct altcom_sockaddr_storage*)pfrom,
                                  from, addrlen);
     }
 

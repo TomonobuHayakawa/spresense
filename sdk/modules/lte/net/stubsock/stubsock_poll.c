@@ -56,10 +56,10 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_sock.h"
-#include "farapi_socket.h"
-#include "farapi_select_ext.h"
-#include "farapi_errno.h"
+#include "altcom_sock.h"
+#include "altcom_socket.h"
+#include "altcom_select_ext.h"
+#include "altcom_errno.h"
 #include "stubsock_mem.h"
 #include "dbg_if.h"
 
@@ -79,9 +79,9 @@ struct stubsock_poll_s
  ****************************************************************************/
 
 static void select_async_callback(int32_t ret_code, int32_t err_code,
-                                  int32_t id, FAR farapi_fd_set *readset,
-                                  FAR farapi_fd_set *writeset,
-                                  FAR farapi_fd_set *exceptset, FAR void* priv)
+                                  int32_t id, FAR altcom_fd_set *readset,
+                                  FAR altcom_fd_set *writeset,
+                                  FAR altcom_fd_set *exceptset, FAR void* priv)
 {
   FAR struct stubsock_poll_s    *info;
   FAR struct devspecsock_conn_s *ds_conn;
@@ -120,7 +120,7 @@ static void select_async_callback(int32_t ret_code, int32_t err_code,
   if (readset)
     {
       if ((info->fds->events & POLLIN) &&
-          FARAPI_FD_ISSET(conn->stubsockid, readset))
+          ALTCOM_FD_ISSET(conn->stubsockid, readset))
         {
           info->fds->revents |= POLLIN;
         }
@@ -129,7 +129,7 @@ static void select_async_callback(int32_t ret_code, int32_t err_code,
   if (writeset)
     {
       if ((info->fds->events & POLLOUT) &&
-           FARAPI_FD_ISSET(conn->stubsockid, writeset))
+           ALTCOM_FD_ISSET(conn->stubsockid, writeset))
         {
           info->fds->revents |= POLLOUT;
         }
@@ -162,10 +162,10 @@ static int stubsock_pollsetup(FAR struct socket *psock, FAR struct pollfd *fds)
     (FAR struct devspecsock_conn_s*)psock->s_conn;
   FAR struct stubsock_conn_s    *conn = ds_conn->devspec_conn;
   FAR struct stubsock_poll_s    *info;
-  farapi_fd_set                  readset;
-  FAR farapi_fd_set             *preadset = NULL;
-  farapi_fd_set                  writeset;
-  FAR farapi_fd_set             *pwriteset = NULL;
+  altcom_fd_set                  readset;
+  FAR altcom_fd_set             *preadset = NULL;
+  altcom_fd_set                  writeset;
+  FAR altcom_fd_set             *pwriteset = NULL;
   int32_t                        ret;
 
   if (!conn || !fds)
@@ -185,27 +185,27 @@ static int stubsock_pollsetup(FAR struct socket *psock, FAR struct pollfd *fds)
 
   if (fds->events & POLLIN)
     {
-      FARAPI_FD_ZERO(&readset);
-      FARAPI_FD_SET(conn->stubsockid, &readset);
+      ALTCOM_FD_ZERO(&readset);
+      ALTCOM_FD_SET(conn->stubsockid, &readset);
 
       preadset = &readset;
     }
 
   if (fds->events & POLLOUT)
     {
-      FARAPI_FD_ZERO(&writeset);
-      FARAPI_FD_SET(conn->stubsockid, &writeset);
+      ALTCOM_FD_ZERO(&writeset);
+      ALTCOM_FD_SET(conn->stubsockid, &writeset);
 
       pwriteset = &writeset;
     }
 
   /* Check if any requested events are already in effect */
 
-  ret = farapi_select_nonblock((conn->stubsockid + 1),
+  ret = altcom_select_nonblock((conn->stubsockid + 1),
                                preadset, pwriteset, NULL);
   if (ret < 0)
     {
-      ret = farapi_errno();
+      ret = altcom_errno();
       return -ret;
     }
   else if (ret > 0)
@@ -213,13 +213,13 @@ static int stubsock_pollsetup(FAR struct socket *psock, FAR struct pollfd *fds)
       /* Yes.. then signal the poll logic */
 
       if ((fds->events & POLLIN) &&
-           FARAPI_FD_ISSET(conn->stubsockid, preadset))
+           ALTCOM_FD_ISSET(conn->stubsockid, preadset))
         {
           fds->revents |= POLLIN;
         }
 
       if ((fds->events & POLLOUT) &&
-           FARAPI_FD_ISSET(conn->stubsockid, pwriteset))
+           ALTCOM_FD_ISSET(conn->stubsockid, pwriteset))
         {
           fds->revents |= POLLOUT;
         }
@@ -233,16 +233,16 @@ static int stubsock_pollsetup(FAR struct socket *psock, FAR struct pollfd *fds)
 
   if (fds->events & POLLIN)
     {
-      FARAPI_FD_ZERO(&readset);
-      FARAPI_FD_SET(conn->stubsockid, &readset);
+      ALTCOM_FD_ZERO(&readset);
+      ALTCOM_FD_SET(conn->stubsockid, &readset);
 
       preadset = &readset;
     }
 
   if (fds->events & POLLOUT)
     {
-      FARAPI_FD_ZERO(&writeset);
-      FARAPI_FD_SET(conn->stubsockid, &writeset);
+      ALTCOM_FD_ZERO(&writeset);
+      ALTCOM_FD_SET(conn->stubsockid, &writeset);
 
       pwriteset = &writeset;
     }
@@ -259,14 +259,14 @@ static int stubsock_pollsetup(FAR struct socket *psock, FAR struct pollfd *fds)
   info->fds = fds;
   fds->priv = (FAR void*)info;
 
-  ret = farapi_select_async((conn->stubsockid + 1),
+  ret = altcom_select_async((conn->stubsockid + 1),
                             preadset, pwriteset, NULL,
                             select_async_callback, (void*)info);
   if (ret < 0)
     {
       stubsock_mem_free(info);
       fds->priv = NULL;
-      ret = farapi_errno();
+      ret = altcom_errno();
       return -ret;
     }
 
@@ -324,7 +324,7 @@ static int stubsock_pollteardown(FAR struct socket *psock,
 
           /* Select async canceling */
 
-          farapi_select_async_cancel(select_id);
+          altcom_select_async_cancel(select_id);
         }
       else
         {

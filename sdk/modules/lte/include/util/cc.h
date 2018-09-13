@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/farapi/include/evtdisp/evtext_if.h
+ * modules/lte/altcom/include/evtdisp/evtext_if.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

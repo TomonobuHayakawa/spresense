@@ -54,8 +54,8 @@
 #include "socket/socket.h"
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
-#include "farapi_socket.h"
-#include "farapi_errno.h"
+#include "altcom_socket.h"
+#include "altcom_errno.h"
 #include "dbg_if.h"
 
 /****************************************************************************
@@ -111,7 +111,7 @@ int stubsock_socket(int domain, int type, int protocol,
   int                            conv_proto;
   int                            err;
 
-  /* Convert domain to farapi definition */
+  /* Convert domain to altcom definition */
 
   conv_domain = stubsock_convdomain_remote(domain);
   if (conv_domain < 0)
@@ -121,7 +121,7 @@ int stubsock_socket(int domain, int type, int protocol,
       goto errout;
     }
 
-  /* Convert type to farapi definition */
+  /* Convert type to altcom definition */
 
   conv_type = stubsock_convtype_remote(type);
   if (conv_type < 0)
@@ -131,7 +131,7 @@ int stubsock_socket(int domain, int type, int protocol,
       goto errout;
     }
 
-  /* Convert protocol to farapi definition */
+  /* Convert protocol to altcom definition */
 
   conv_proto = stubsock_convproto_remote(protocol);
   if (conv_proto < 0)
@@ -153,10 +153,10 @@ int stubsock_socket(int domain, int type, int protocol,
       return -ENOMEM;
     }
 
-  sockfd = farapi_socket(conv_domain, conv_type, conv_proto);
+  sockfd = altcom_socket(conv_domain, conv_type, conv_proto);
   if (sockfd < 0)
     {
-      err = farapi_errno();
+      err = altcom_errno();
       err = -err;
       goto errout_free_conn;
     }
