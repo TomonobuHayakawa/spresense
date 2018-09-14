@@ -59,6 +59,7 @@ CFLAGS += $(INCLUDES)
 
 # C_SRCS
 BT_C_SRCS_APP  =  bluetooth_a2dp.c
+BT_C_SRCS_APP +=  bluetooth_avrcp.c
 BT_C_SRCS_APP +=  bluetooth_common.c
 
 ASRCS =
