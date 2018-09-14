@@ -1,0 +1,58 @@
+examples/dnnrt_lenet
+^^^^^^^^^^^^^^^^^^^^
+
+  This is a simple example of LeNet-5 network inference based on DNNRT
+  (Deep Neural Networks RunTime). Available as nsh built-in command.
+  This example loads an input sample image (pgm file) and an .nnb file
+  from sdcard to memory and do neural network forward pass on sample 
+  image by using the network topology and weight data defined by .nnb 
+  file. Then it output probabilities on digits 0 to 9 as recognition result.
+
+  This application depends on DNNRT and sdcard configuration.
+
+  Configuration Pre-requisites:
+
+    CONFIG_DNN_RT - DNN runtime library
+    CONFIG_CXD56_SDIO - SDIO SD Card
+
+  Example Configuration:
+
+    CONFIG_EXAMPLES_DNNRT - Enable DNNRT LeNet-5 example
+    CONFIG_EXAMPLES_DNNRT_PROGNAME - Program name.
+    CONFIG_EXAMPLES_DNNRT_PRIORITY - Example priority. Default: 100
+    CONFIG_EXAMPLES_DNNRT_STACKSIZE - Example stack size. Default: 2048
+
+  Operation:
+
+    Bafore lunch this example, sample images and .nnb must be transfered
+    to sdcard on PC first.
+
+      cp -r spresense.git/examples/dnnrt_lenet/lenet-5 <sdcard_root>
+
+    The example app accept two arguments from command line. If no argument
+    is given the default values will be used.
+    
+      nsh> dnnrt_lenet <nnb file path> <pgm image path>
+      default value: /mnt/sd0/lenet-5/model/lenet-5.nnb
+                     /mnt/sd0/lenet-5/data/00000.pgm
+
+    For example:
+    
+      nsh> dnnrt_test /mnt/sd0/lenet-5/model/lenet-5.nnb /mnt/sd0/lenet-5/data/00000.pgm
+      load pnm image: /mnt/sd0/lenet-5/data/00000.pgm
+      load nnb file: /mnt/sd0/lenet-5/model/lenet-5.nnb
+      start dnn forward
+      output[0]=0.000000
+      output[1]=0.000000
+      output[2]=0.000000
+      output[3]=0.000000
+      output[4]=0.000000
+      output[5]=0.000000
+      output[6]=0.000000
+      output[7]=0.999999
+      output[8]=0.000000
+      output[9]=0.000001
+      The output[7] has the highest probability, so the input image is digit '7'.
+
+    Note:
+      The pgm filename does not corresponds to the digit number of the image.
