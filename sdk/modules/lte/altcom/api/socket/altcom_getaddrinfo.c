@@ -98,9 +98,12 @@ static int32_t getaddrinfo_request(FAR struct getaddrinfo_req_s* req)
 
   /* Allocate send and response command buffer */
 
-  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETADDRINFO,
+  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_GETADDRINFO,
                                    GETADDRINFO_REQ_DATALEN, res,
-                                   GETADDRINFO_RES_DATALEN);
+                                   GETADDRINFO_RES_DATALEN))
+    {
+      return ALTCOM_EAI_MEMORY;
+    }
 
   memset(cmd, 0, sizeof(struct apicmd_getaddrinfo_s));
 

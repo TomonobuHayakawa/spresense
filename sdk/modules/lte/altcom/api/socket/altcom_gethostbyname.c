@@ -94,9 +94,13 @@ static int32_t gethostbyname_request(FAR const char *name, int32_t namelen,
   int32_t                              l_namelen;
   int32_t                              aliaslen;
 
-  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETHOSTBYNAME,
+  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_GETHOSTBYNAME,
                                    GETHOSTBYNAME_REQ_DATALEN, res,
-                                   GETHOSTBYNAME_RES_DATALEN);
+                                   GETHOSTBYNAME_RES_DATALEN))
+    {
+      return GETHOSTBYNAME_REQ_FAILURE;
+    }
+
   cmd->namelen = htonl(namelen);
   memcpy(cmd->name, name, namelen);
   ret = apicmdgw_send((FAR uint8_t *)cmd, (FAR uint8_t *)res,

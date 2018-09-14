@@ -144,14 +144,21 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
             case ALTCOM_SO_TYPE:
             case ALTCOM_SO_RCVBUF:
             case ALTCOM_SO_NO_CHECK:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len, int32_t);
+              if (*(FAR int32_t*)value_len < sizeof(int32_t))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               set_mode = SET_MODE_32BIT;
               break;
 
 
             case ALTCOM_SO_SNDTIMEO:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len,
-                                    struct altcom_timeval);
+              if (*(FAR int32_t*)value_len < sizeof(struct altcom_timeval))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               memcpy(value, &fsock->sendtimeo,
                      sizeof(struct altcom_timeval));
               *value_len = sizeof(struct altcom_timeval);
@@ -159,8 +166,11 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
               break;
 
             case ALTCOM_SO_RCVTIMEO:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len,
-                                    struct altcom_timeval);
+              if (*(FAR int32_t*)value_len < sizeof(struct altcom_timeval))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               memcpy(value, &fsock->recvtimeo,
                      sizeof(struct altcom_timeval));
               *value_len = sizeof(struct altcom_timeval);
@@ -168,8 +178,11 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
               break;
 
             case ALTCOM_SO_LINGER:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len,
-                                    struct altcom_linger);
+              if (*(FAR int32_t*)value_len < sizeof(struct altcom_linger))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               set_mode = SET_MODE_LINGER;
               break;
 
@@ -188,19 +201,30 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
           {
             case ALTCOM_IP_TTL:
             case ALTCOM_IP_TOS:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len, int32_t);
+              if (*(FAR int32_t*)value_len < sizeof(int32_t))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               set_mode = SET_MODE_32BIT;
               break;
 
             case ALTCOM_IP_MULTICAST_TTL:
             case ALTCOM_IP_MULTICAST_LOOP:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len, uint8_t);
+              if (*(FAR int32_t*)value_len < sizeof(uint8_t))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               set_mode = SET_MODE_8BIT;
               break;
 
             case ALTCOM_IP_MULTICAST_IF:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len,
-                                    struct altcom_in_addr);
+              if (*(FAR int32_t*)value_len < sizeof(struct altcom_in_addr))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               set_mode = SET_MODE_INADDR;
               break;
 
@@ -222,7 +246,11 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
             case ALTCOM_TCP_KEEPIDLE:
             case ALTCOM_TCP_KEEPINTVL:
             case ALTCOM_TCP_KEEPCNT:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len, int32_t);
+              if (*(FAR int32_t*)value_len < sizeof(int32_t))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               set_mode = SET_MODE_32BIT;
               break;
 
@@ -240,7 +268,11 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
         switch(option)
           {
             case ALTCOM_IPV6_V6ONLY:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len, int32_t);
+              if (*(FAR int32_t*)value_len < sizeof(int32_t))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               set_mode = SET_MODE_32BIT;
               break;
 
@@ -259,7 +291,11 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
           {
             case ALTCOM_UDPLITE_SEND_CSCOV:
             case ALTCOM_UDPLITE_RECV_CSCOV:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len, int32_t);
+              if (*(FAR int32_t*)value_len < sizeof(int32_t))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               set_mode = SET_MODE_32BIT;
               break;
 
@@ -277,7 +313,11 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
         switch(option)
           {
             case ALTCOM_IPV6_CHECKSUM:
-              ALTCOM_CHECK_VALUELEN(*(FAR int32_t*)value_len, int32_t);
+              if (*(FAR int32_t*)value_len < sizeof(int32_t))
+                {
+                  altcom_seterrno(ALTCOM_EINVAL);
+                  return -1;
+                }
               set_mode = SET_MODE_32BIT;
               break;
 
@@ -298,9 +338,12 @@ int altcom_getsockopt(int sockfd, int level, int option, void *value,
 
   /* Allocate send and response command buffer */
 
-  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_GETSOCKOPT,
+  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_GETSOCKOPT,
                                    GETSOCKOPT_REQ_DATALEN, res,
-                                   GETSOCKOPT_RES_DATALEN);
+                                   GETSOCKOPT_RES_DATALEN))
+    {
+      return -1;
+    }
 
   /* Fill the data */
 

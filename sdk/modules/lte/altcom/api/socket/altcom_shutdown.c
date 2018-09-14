@@ -91,9 +91,12 @@ static int32_t shutdown_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SHUTDOWN,
+  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_SHUTDOWN,
                                    SHUTDOWN_REQ_DATALEN, res,
-                                   SHUTDOWN_RES_DATALEN);
+                                   SHUTDOWN_RES_DATALEN))
+    {
+      return SHUTDOWN_REQ_FAILURE;
+    }
 
   /* Fill the data */
 

@@ -86,8 +86,11 @@ int32_t lte_set_ce(lte_ce_setting_t *settings, set_ce_cb_t callback)
 
   /* Return error if callback is NULL */
 
-  ALTCOM_IS_ARG_NULL(settings);
-  ALTCOM_IS_ARG_NULL(callback);
+  if (!settings || !callback)
+    {
+      DBGIF_LOG_ERROR("Input argument is NULL.\n");
+      return -EINVAL;
+    }
 
   /* Check if the library is initialized */
 

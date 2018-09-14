@@ -104,10 +104,11 @@ int32_t lte_set_apn(uint8_t session_id, int8_t *apn, uint8_t ip_type,
 
   /* Return error if callback is NULL */
 
-  ALTCOM_IS_ARG_NULL(apn);
-  ALTCOM_IS_ARG_NULL(user_name);
-  ALTCOM_IS_ARG_NULL(password);
-  ALTCOM_IS_ARG_NULL(callback);
+  if (!apn || !user_name || !password || !callback)
+    {
+      DBGIF_LOG_ERROR("Input argument is NULL.\n");
+      return -EINVAL;
+    }
 
   /* Check if the library is initialized */
 

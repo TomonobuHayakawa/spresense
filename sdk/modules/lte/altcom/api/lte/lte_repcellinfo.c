@@ -118,7 +118,12 @@ int32_t lte_set_report_cellinfo(cellinfo_report_cb_t cellinfo_callback,
 
   /* Check this process runnning. */
 
-  ALTCOM_CHK_AND_LOCK_PROC(g_lte_setrepcellinfo_isproc);
+  if (g_lte_setrepcellinfo_isproc)
+    {
+      return -EBUSY;
+    }
+
+  g_lte_setrepcellinfo_isproc = true;
 
   /* Accept the API */
   /* Allocate API command buffer to send */
@@ -128,7 +133,7 @@ int32_t lte_set_report_cellinfo(cellinfo_report_cb_t cellinfo_callback,
   if (!cmdbuff)
     {
       DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-      ALTCOM_UNLOCK_PROC(g_lte_setrepcellinfo_isproc);
+      g_lte_setrepcellinfo_isproc = false;
       return -ENOMEM;
     }
   else
@@ -139,7 +144,7 @@ int32_t lte_set_report_cellinfo(cellinfo_report_cb_t cellinfo_callback,
         {
           DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
           altcom_free_cmd((FAR uint8_t *)cmdbuff);
-          ALTCOM_UNLOCK_PROC(g_lte_setrepcellinfo_isproc);
+          g_lte_setrepcellinfo_isproc = false;
           return -ENOMEM;
         }
 
@@ -181,7 +186,7 @@ int32_t lte_set_report_cellinfo(cellinfo_report_cb_t cellinfo_callback,
 
   altcom_free_cmd((FAR uint8_t *)cmdbuff);
   (void)BUFFPOOL_FREE(resbuff);
-  ALTCOM_UNLOCK_PROC(g_lte_setrepcellinfo_isproc);
+  g_lte_setrepcellinfo_isproc = false;
 
   return ret;
 }

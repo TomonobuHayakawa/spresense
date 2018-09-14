@@ -93,9 +93,12 @@ static int32_t fcntl_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_FCNTL,
+  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_FCNTL,
                                    FCNTL_REQ_DATALEN, res,
-                                   FCNTL_RES_DATALEN);
+                                   FCNTL_RES_DATALEN))
+    {
+      return FCNTL_REQ_FAILURE;
+    }
 
   /* Fill the data */
 

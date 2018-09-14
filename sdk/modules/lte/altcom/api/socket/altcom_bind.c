@@ -93,9 +93,12 @@ static int32_t bind_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_BIND,
+  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_BIND,
                                    BIND_REQ_DATALEN, res,
-                                   BIND_RES_DATALEN);
+                                   BIND_RES_DATALEN))
+    {
+      return BIND_REQ_FAILURE;
+    }
 
   /* Fill the data */
 

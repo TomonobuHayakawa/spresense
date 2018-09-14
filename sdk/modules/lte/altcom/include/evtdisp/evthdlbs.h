@@ -45,21 +45,6 @@
 #include "thrdfctry.h"
 
 /****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define EVTHDLBS_EVENT_PARAM_NULL_CHECK(evt) \
-  do \
-    { \
-      if (!evt) \
-        { \
-          DBGIF_LOG_ERROR("NULL parameter"); \
-          return EVTHDLRC_INTERNALERROR; \
-        } \
-    } \
-  while (0)
-
-/****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 

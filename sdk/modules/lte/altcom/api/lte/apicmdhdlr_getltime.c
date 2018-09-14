@@ -128,6 +128,6 @@ static void getltime_job(FAR void *arg)
 
 enum evthdlrc_e apicmdhdlr_getltime(FAR uint8_t *evt, uint32_t evlen)
 {
-  return APICMDHDLRBS_DO_RUNJOB(evt, APICMDID_CONVERT_RES(APICMDID_GET_LTIME),
+  return apicmdhdlrbs_do_runjob(evt, APICMDID_CONVERT_RES(APICMDID_GET_LTIME),
     getltime_job);
 }

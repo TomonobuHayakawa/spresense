@@ -93,8 +93,11 @@ int32_t lte_enter_pin(int8_t *pincode, int8_t *new_pincode,
 
   /* Return error if argument is NULL */
 
-  ALTCOM_IS_ARG_NULL(pincode);
-  ALTCOM_IS_ARG_NULL(callback);
+  if (!pincode || !callback)
+    {
+      DBGIF_LOG_ERROR("Input argument is NULL.\n");
+      return -EINVAL;
+    }
 
   /* Check if the library is initialized */
 

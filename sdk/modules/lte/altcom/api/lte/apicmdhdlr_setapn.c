@@ -122,6 +122,6 @@ static void setapn_job(FAR void *arg)
 
 enum evthdlrc_e apicmdhdlr_setapn(FAR uint8_t *evt, uint32_t evlen)
 {
-  return APICMDHDLRBS_DO_RUNJOB(evt,
+  return apicmdhdlrbs_do_runjob(evt,
     APICMDID_CONVERT_RES(APICMDID_SET_APN), setapn_job);
 }

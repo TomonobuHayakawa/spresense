@@ -115,9 +115,12 @@ static int32_t select_request(FAR struct select_req_s *req)
     {
       /* Allocate send and response command buffer */
 
-      ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SELECT,
+      if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_SELECT,
                                        SELECT_REQ_DATALEN, res,
-                                       SELECT_RES_DATALEN);
+                                       SELECT_RES_DATALEN))
+        {
+          return SELECT_REQ_FAILURE;
+        }
     }
 
   /* Fill the data */

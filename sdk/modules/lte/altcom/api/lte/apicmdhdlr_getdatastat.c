@@ -143,6 +143,6 @@ static void getdatastat_job(FAR void *arg)
 
 enum evthdlrc_e apicmdhdlr_getdatastat(FAR uint8_t *evt, uint32_t evlen)
 {
-  return APICMDHDLRBS_DO_RUNJOB(evt,
+  return apicmdhdlrbs_do_runjob(evt,
     APICMDID_CONVERT_RES(APICMDID_GET_DATASTAT), getdatastat_job);
 }

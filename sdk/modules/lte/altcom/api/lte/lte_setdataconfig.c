@@ -106,7 +106,11 @@ int32_t lte_set_dataconfig(uint32_t data_type, bool general, bool roaming,
 
   /* Return error if callback is NULL */
 
-  ALTCOM_IS_ARG_NULL(callback);
+  if (!callback)
+    {
+      DBGIF_LOG_ERROR("Input argument is NULL.\n");
+      return -EINVAL;
+    }
 
   /* Check if the library is initialized */
 

@@ -90,9 +90,12 @@ static int32_t socket_request(FAR struct socket_req_s *req)
 
   /* Allocate send and response command buffer */
 
-  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_SOCKET,
+  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_SOCKET,
                                    SOCKET_REQ_DATALEN, res,
-                                   SOCKET_RES_DATALEN);
+                                   SOCKET_RES_DATALEN))
+    {
+      return SOKCET_REQ_FAILURE;
+    }
 
   /* Fill the data */
 

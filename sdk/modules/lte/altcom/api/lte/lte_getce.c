@@ -86,7 +86,11 @@ int32_t lte_get_ce(get_ce_cb_t callback)
 
   /* Return error if callback is NULL */
 
-  ALTCOM_IS_ARG_NULL(callback);
+  if (!callback)
+    {
+      DBGIF_LOG_ERROR("Input argument is NULL.\n");
+      return -EINVAL;
+    }
 
   /* Check if the library is initialized */
 

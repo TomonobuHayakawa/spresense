@@ -182,6 +182,6 @@ static void getedrx_job(FAR void *arg)
 
 enum evthdlrc_e apicmdhdlr_getedrx(FAR uint8_t *evt, uint32_t evlen)
 {
-  return APICMDHDLRBS_DO_RUNJOB(evt, APICMDID_CONVERT_RES(APICMDID_GET_EDRX),
+  return apicmdhdlrbs_do_runjob(evt, APICMDID_CONVERT_RES(APICMDID_GET_EDRX),
     getedrx_job);
 }

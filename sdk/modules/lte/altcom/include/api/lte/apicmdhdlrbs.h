@@ -64,10 +64,16 @@ typedef void (*apicmdhdlrbs_cb_job)(FAR void *arg);
  * Inline functions
  ****************************************************************************/
 
-static inline enum evthdlrc_e APICMDHDLRBS_DO_RUNJOB(FAR uint8_t *evt,
+static inline enum evthdlrc_e apicmdhdlrbs_do_runjob(FAR uint8_t *evt,
   uint16_t cmdid, FAR apicmdhdlrbs_cb_job job)
 {
-  EVTHDLBS_EVENT_PARAM_NULL_CHECK(evt);
+
+  if (!evt)
+    {
+      DBGIF_LOG_ERROR("NULL parameter");
+      return EVTHDLRC_INTERNALERROR;
+    }
+
   if (!apicmdgw_cmdid_compare(evt, cmdid))
     {
       return EVTHDLRC_UNSUPPORTEDEVENT;

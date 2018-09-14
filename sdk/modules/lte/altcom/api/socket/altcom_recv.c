@@ -99,8 +99,11 @@ static int32_t recv_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(cmd, APICMDID_SOCK_RECV,
-                                   RECV_REQ_DATALEN, res, resplen);
+  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_RECV,
+                                   RECV_REQ_DATALEN, res, resplen))
+    {
+      return RECV_REQ_FAILURE;
+    }
 
   /* Fill the data */
 

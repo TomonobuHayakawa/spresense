@@ -50,15 +50,6 @@
 #define ALTCOM_SOCK_TIMEVAL2MS(ptv) \
   ((ptv->tv_sec * 1000L) + (ptv->tv_usec / 1000L))
 
-#define ALTCOM_CHECK_VALUELEN(len, type) \
-  do { \
-    if ((len) < sizeof(type)) \
-      { \
-        altcom_seterrno(ALTCOM_EINVAL); \
-        return -1; \
-      } \
-  } while(0)
-
 /****************************************************************************
  * Public Types
  ****************************************************************************/

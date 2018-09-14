@@ -90,8 +90,11 @@ int32_t lte_set_edrx(lte_edrx_setting_t *settings, set_edrx_cb_t callback)
 
   /* Return error if callback is NULL */
 
-  ALTCOM_IS_ARG_NULL(settings);
-  ALTCOM_IS_ARG_NULL(callback);
+  if (!settings || !callback)
+    {
+      DBGIF_LOG_ERROR("Input argument is NULL.\n");
+      return -EINVAL;
+    }
 
   /* Check if the library is initialized */
 

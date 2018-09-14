@@ -166,11 +166,11 @@ enum evthdlrc_e apicmdhdlr_setpin(FAR uint8_t *evt, uint32_t evlen)
 {
   enum evthdlrc_e ret;
 
-  ret = APICMDHDLRBS_DO_RUNJOB(
+  ret = apicmdhdlrbs_do_runjob(
     evt, APICMDID_CONVERT_RES(APICMDID_SET_PIN_LOCK), setpin_lock_job);
   if (EVTHDLRC_UNSUPPORTEDEVENT == ret)
     {
-      ret = APICMDHDLRBS_DO_RUNJOB(
+      ret = apicmdhdlrbs_do_runjob(
         evt, APICMDID_CONVERT_RES(APICMDID_SET_PIN_CODE), setpin_code_job);
     }
 

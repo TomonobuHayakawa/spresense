@@ -101,52 +101,11 @@
     } \
   while (0)
 
-#define ALTCOM_IS_ARG_NULL(arg) \
-  do \
-    { \
-      if (!arg) \
-        { \
-          DBGIF_LOG_ERROR("Input argument is NULL.\n"); \
-          return -EINVAL; \
-        } \
-    } \
-  while (0)
-
-#define ALTCOM_CHK_AND_LOCK_PROC(flg) \
-  do \
-    { \
-      if (flg) \
-        { \
-          return -EBUSY; \
-        } \
-      flg = true; \
-    } \
-  while (0)
-
-#define ALTCOM_UNLOCK_PROC(flg) do { flg = false; } while (0)
-
 #define ALTCOM_SOCK_ALLOC_CMDBUFF(buff, id ,len) \
   ((buff = altcom_alloc_cmdbuff(id, len)) != NULL)
 
 #define ALTCOM_SOCK_ALLOC_RESBUFF(buff, len) \
   ((buff = altcom_alloc_resbuff(len)) != NULL)
-
-#define ALTCOM_SOCK_ALLOC_CMDANDRESBUFF(buff, id, bufflen, res, reslen) \
-  do \
-    { \
-      if (!ALTCOM_SOCK_ALLOC_CMDBUFF(buff, id, bufflen)) \
-        { \
-          altcom_seterrno((int32_t)ALTCOM_ENOMEM); \
-          return -1; \
-        } \
-      if (!ALTCOM_SOCK_ALLOC_RESBUFF(res, reslen)) \
-        { \
-          altcom_free_cmd((FAR uint8_t *)buff); \
-          altcom_seterrno((int32_t)ALTCOM_ENOMEM); \
-          return -1; \
-        } \
-    } \
-  while (0)
 
 /****************************************************************************
  * Public Data
@@ -374,6 +333,26 @@ static inline void altcom_sock_free_cmdandresbuff(
     {
       (void)BUFFPOOL_FREE(resbuff);
     }
+}
+
+static inline bool altcom_sock_alloc_cmdandresbuff(
+  FAR void *buff, int32_t id, uint16_t bufflen,
+  FAR void *res, uint16_t reslen)
+{
+  if (!ALTCOM_SOCK_ALLOC_CMDBUFF(buff, id, bufflen))
+    {
+      altcom_seterrno((int32_t)ALTCOM_ENOMEM);
+      return false;
+    }
+
+  if (!ALTCOM_SOCK_ALLOC_RESBUFF(res, reslen))
+    {
+      altcom_free_cmd((FAR uint8_t *)buff);
+      altcom_seterrno((int32_t)ALTCOM_ENOMEM);
+      return false;
+    }
+
+  return true;
 }
 
 /****************************************************************************

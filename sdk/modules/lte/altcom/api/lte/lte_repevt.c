@@ -107,7 +107,12 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
 
   /* Check this process runnning. */
 
-  ALTCOM_CHK_AND_LOCK_PROC(g_lte_setrepsimstat_isproc);
+  if (g_lte_setrepsimstat_isproc)
+    {
+      return -EBUSY;
+    }
+
+  g_lte_setrepsimstat_isproc = true;
 
   /* Allocate API command buffer to send */
 
@@ -116,7 +121,7 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
   if (!cmdbuff)
     {
       DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-      ALTCOM_UNLOCK_PROC(g_lte_setrepsimstat_isproc);
+      g_lte_setrepsimstat_isproc = false;
       return -ENOMEM;
     }
   else
@@ -129,7 +134,7 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
         {
           DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
           altcom_free_cmd((FAR uint8_t *)cmdbuff);
-          ALTCOM_UNLOCK_PROC(g_lte_setrepsimstat_isproc);
+          g_lte_setrepsimstat_isproc = false;
           return -ENOMEM;
         }
 
@@ -179,7 +184,7 @@ int32_t lte_set_report_simstat(simstat_report_cb_t simstat_callback)
 
   altcom_free_cmd((FAR uint8_t *)cmdbuff);
   (void)BUFFPOOL_FREE(resbuff);
-  ALTCOM_UNLOCK_PROC(g_lte_setrepsimstat_isproc);
+  g_lte_setrepsimstat_isproc = false;
 
   return ret;
 }
@@ -219,7 +224,12 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
 
   /* Check this process runnning. */
 
-  ALTCOM_CHK_AND_LOCK_PROC(g_lte_setrepltime_isproc);
+  if (g_lte_setrepltime_isproc)
+    {
+      return -EBUSY;
+    }
+
+  g_lte_setrepltime_isproc = true;
 
     /* Allocate API command buffer to send */
 
@@ -228,7 +238,7 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
     if (!cmdbuff)
       {
         DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
-        ALTCOM_UNLOCK_PROC(g_lte_setrepltime_isproc);
+        g_lte_setrepltime_isproc = false;
         return -ENOSPC;
       }
     else
@@ -239,7 +249,7 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
           {
             DBGIF_LOG_ERROR("Failed to allocate command buffer.\n");
             altcom_free_cmd((FAR uint8_t *)cmdbuff);
-            ALTCOM_UNLOCK_PROC(g_lte_setrepltime_isproc);
+            g_lte_setrepltime_isproc = false;
             return -ENOSPC;
           }
         
@@ -289,7 +299,7 @@ int32_t lte_set_report_localtime(localtime_report_cb_t localtime_callback)
 
   altcom_free_cmd((FAR uint8_t *)cmdbuff);
   (void)BUFFPOOL_FREE(resbuff);
-  ALTCOM_UNLOCK_PROC(g_lte_setrepltime_isproc);
+  g_lte_setrepltime_isproc = false;
 
   return ret;
 }

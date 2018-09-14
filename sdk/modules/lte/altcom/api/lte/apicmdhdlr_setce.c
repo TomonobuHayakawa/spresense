@@ -128,6 +128,6 @@ static void setce_job(FAR void *arg)
 
 enum evthdlrc_e apicmdhdlr_setce(FAR uint8_t *evt, uint32_t evlen)
 {
-  return APICMDHDLRBS_DO_RUNJOB(evt, APICMDID_CONVERT_RES(APICMDID_SET_CE),
+  return apicmdhdlrbs_do_runjob(evt, APICMDID_CONVERT_RES(APICMDID_SET_CE),
     setce_job);
 }
