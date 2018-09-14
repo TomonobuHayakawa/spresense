@@ -39,6 +39,7 @@
 DELIM ?= $(strip /)
 RUNTIME_EXTERN_DIR := $(SDKDIR)/../externals/nnabla-c-runtime
 
+
 RUNTIME_EXTERN_SRCDIR := $(RUNTIME_EXTERN_DIR)/src
 
 INCLUDES := -I$(RUNTIME_EXTERN_DIR)/include
@@ -49,18 +50,8 @@ INCLUDES += -Isrc
 CSRCS +=  runtime_nnabla.c
 CSRCS +=  affine.c
 CSRCS +=  convolution.c
-CSRCS +=  arm_q7_to_q15_reordered_no_shift.c
-CSRCS +=  arm_nn_CHW_mat_mult_kernel_q7_q15.c
-CSRCS +=  arm_convolve_CHW_q7_basic_nonsquare.c
-CSRCS +=  arm_convolve_CHW_q15_basic_nonsquare.c
-CSRCS +=  arm_convolve_CHW_f32_basic_nonsquare.c
-CSRCS +=  arm_fully_connected_q15.c
-CSRCS +=  arm_fully_connected_q7.c
 CSRC_PATH += src/functions
 CSRC_PATH += src/runtime
-CSRC_PATH += $(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/NN/Source/NNSupportFunctions
-CSRC_PATH += $(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions
-CSRC_PATH += $(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/NN/Source/FullyConnectedFunctions
 
 VPATH += $(CSRC_PATH)
 ROOTDEPPATH =$(foreach dir,$(CSRC_PATH), --dep-path $(dir))
@@ -79,18 +70,10 @@ CFLAGS := $(patsubst -O%,-O3,$(CFLAGS)) # don't follow the -O. option in CFLAGS
 CMSIS_CFLAGS =  -I "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/Core/Include" \
 				-I "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/DSP/Include" \
 				-I "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/NN/Include" \
-				-D__FPU_PRESENT=1
-
-ifeq ($(CONFIG_ARCH_ARM),y)
-CMSIS_CFLAGS += -DARM_MATH_CM4
-endif #($(CONFIG_ARCH_ARM),y)
-
-ifeq ($(CONFIG_ARCH_SIM),y)
-CMSIS_CFLAGS += -DARM_MATH_CM0
-endif #($(CONFIG_ARCH_SIM),y)
+				-D__FPU_PRESENT=1U \
+				-DARM_MATH_CM4
 
 CFLAGS += $(CMSIS_CFLAGS)
-CXXFLAGS += $(CMSIS_CFLAGS)
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -180,4 +163,3 @@ preconfig:
 dnnrt-auto-format:
 	@find src/runtime/ -type f -name "*.[ch]" |xargs -n1 clang-format -i
 	@find src/functions/ -type f -name "*.[ch]" |xargs -n1 clang-format -i
-	@find src/tests/ -type f -name "*.[ch]" |xargs -n1 clang-format -i
