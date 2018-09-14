@@ -17,10 +17,10 @@ examples/dnnrt_lenet
 
   Example Configuration:
 
-    CONFIG_EXAMPLES_DNNRT - Enable DNNRT LeNet-5 example
-    CONFIG_EXAMPLES_DNNRT_PROGNAME - Program name.
-    CONFIG_EXAMPLES_DNNRT_PRIORITY - Example priority. Default: 100
-    CONFIG_EXAMPLES_DNNRT_STACKSIZE - Example stack size. Default: 2048
+    CONFIG_EXAMPLES_DNNRT_LENET - Enable DNNRT LeNet-5 example
+    CONFIG_EXAMPLES_DNNRT_LENET_PROGNAME - Program name.
+    CONFIG_EXAMPLES_DNNRT_LENET_PRIORITY - Example priority. Default: 100
+    CONFIG_EXAMPLES_DNNRT_LENET_STACKSIZE - Example stack size. Default: 2048
 
   Operation:
 

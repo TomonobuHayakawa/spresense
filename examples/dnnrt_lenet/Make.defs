@@ -32,6 +32,6 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_EXAMPLES_DNNRT),y)
+ifeq ($(CONFIG_EXAMPLES_DNNRT_LENET),y)
 CONFIGURED_APPS += dnnrt_lenet
 endif

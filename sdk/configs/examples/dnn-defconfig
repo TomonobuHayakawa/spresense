@@ -1,2 +1,2 @@
 # dnnrt example of LeNet-5
-CONFIG_EXAMPLES_DNNRT=y
+CONFIG_EXAMPLES_DNNRT_LENET=y
