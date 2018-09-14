@@ -58,6 +58,7 @@ endif # ($(WINTOOL),y)
 CFLAGS += $(INCLUDES)
 
 # C_SRCS
+BT_C_SRCS_APP  =  bluetooth_common.c
 
 ASRCS =
 CSRCS = $(BT_C_SRCS_APP)
