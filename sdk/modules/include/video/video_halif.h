@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/src/cxd56_cisif.h
+ * modules/include/video/video_halif.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,83 +33,71 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_INCLUDE_ARCH_CHIP_CISIF_H
-#define __BSP_INCLUDE_ARCH_CHIP_CISIF_H
+#ifndef __MODULES_INCLUDE_VIDEO_VIDEO_HALIF_H
+#define __MODULES_INCLUDE_VIDEO_VIDEO_HALIF_H
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+#include <video/video.h>
 
 /****************************************************************************
  * Public Types
  ****************************************************************************/
 
-typedef void (*notify_callback_t)(uint8_t code, uint32_t size, uint32_t addr);
-typedef void (*comp_callback_t)(uint8_t code,
-                                uint32_t size, uint32_t addr,
-                                uint32_t *next_size, uint32_t *next_addr);
-
-struct cisif_init_yuv_param_s
+struct video_ops_s
 {
-  uint16_t          hsize;
-  uint16_t          vsize;
-  uint32_t          notify_size;
-  notify_callback_t notify_func;
+  CODE int (*open)(FAR void *video_priv);
+  CODE int (*close)(void);
+  
+  CODE int (*do_halfpush)(bool enable);
+  CODE int (*start_getimage)(enum v4l2_buf_type type,
+                             uint32_t buffer,
+                             uint32_t size,
+                             uint8_t interval);
+  CODE int (*stop_getimage)(enum v4l2_buf_type type, bool halfpush);
+  CODE int (*get_range_of_fmt)(FAR struct v4l2_fmtdesc *format);
+  CODE int (*get_range_of_framesize)(FAR struct v4l2_frmsizeenum *frmsize);
+  CODE int (*try_format)(FAR struct v4l2_format *format);
+  CODE int (*set_format)(FAR struct v4l2_format *format);
+  CODE int (*get_range_of_frameinterval)
+           (FAR struct v4l2_frmivalenum *frmival);
+  CODE int (*set_frameinterval)(FAR struct v4l2_streamparm *parm);
+  CODE int (*get_range_of_ctrlvalue)(FAR struct v4l2_query_ext_ctrl *range);
+  CODE int (*get_menu_of_ctrlvalue)(FAR struct v4l2_querymenu *menu);
+  CODE int (*get_ctrlvalue)(uint16_t ctrl_class,
+                            FAR struct v4l2_ext_control *control);
+  CODE int (*set_ctrlvalue)(uint16_t ctrl_class,
+                            FAR struct v4l2_ext_control *control);
+  CODE int (*refresh)(void);
 };
 
-typedef struct cisif_init_yuv_param_s cisif_init_yuv_param_t;
 
-struct cisif_init_jpeg_param_s
-{
-  uint32_t notify_size;
-  notify_callback_t notify_func;
-};
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
-typedef struct cisif_init_jpeg_param_s cisif_init_jpeg_param_t;
-
-struct cisif_sarea_s
-{
-  uint8_t *strg_addr;
-  uint32_t strg_size;
-};
-
-typedef struct cisif_sarea_s cisif_sarea_t;
-
-struct cisif_param_s
-{
-  uint32_t                format;
-  uint32_t                 interval;
-  cisif_init_yuv_param_t  yuv_param;
-  cisif_init_jpeg_param_t jpg_param;
-  cisif_sarea_t           sarea;
-  comp_callback_t         comp_func;
-};
-
-typedef struct cisif_param_s cisif_param_t;
-
-#ifndef __ASSEMBLY__
-
-#undef EXTERN
-#if defined(__cplusplus)
+#ifdef __cplusplus
 #define EXTERN extern "C"
-extern "C"
+extern "C" 
 {
 #else
 #define EXTERN extern
 #endif
 
 /****************************************************************************
- * Public Function Prototypes
+ * Public Functions
  ****************************************************************************/
-
-int cxd56_cisifinit(void);
-int cxd56_cisiffinalize(void);
-int cxd56_cisifstartcapture(
-  cisif_param_t *param,
-  cisif_sarea_t *sarea);
-int cxd56_cisifstopcapture(void);
+int video_common_get_nextbuffer(uint32_t buf_type,
+                                uint32_t datasize,
+                                uint32_t data, 
+                                FAR uint32_t *nextbuf_size,
+                                FAR uint32_t *nextbuf,
+                                FAR void *priv);
 
 #undef EXTERN
-#if defined(__cplusplus)
+#ifdef __cplusplus
 }
 #endif
 
-#endif /* __ASSEMBLY__ */
-
-#endif /* __BSP_INCLUDE_ARCH_CHIP_CISIF_H */
+#endif /* __MODULES_INCLUDE_VIDEO_VIDEO_HALIF_H */
