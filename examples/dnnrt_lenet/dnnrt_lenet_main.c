@@ -56,13 +56,8 @@ typedef struct
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-#ifdef CONFIG_ARCH_SIM
-#define DNN_PNM_PATH    "lenet-5/data/00000.pgm"
-#define DNN_NNB_PATH    "lenet-5/model/lenet-5.nnb"
-#else
-#define DNN_PNM_PATH    "/mnt/sd0/lenet-5/data/00000.pgm"
+#define DNN_PNM_PATH    "/mnt/sd0/lenet-5/data/0.pgm"
 #define DNN_NNB_PATH    "/mnt/sd0/lenet-5/model/lenet-5.nnb"
-#endif /* CONFIG_ARCH_SIM */
 #define MNIST_SIZE_PX (28*28)
 
 /****************************************************************************

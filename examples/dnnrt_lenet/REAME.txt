@@ -34,12 +34,12 @@ examples/dnnrt_lenet
     
       nsh> dnnrt_lenet <nnb file path> <pgm image path>
       default value: /mnt/sd0/lenet-5/model/lenet-5.nnb
-                     /mnt/sd0/lenet-5/data/00000.pgm
+                     /mnt/sd0/lenet-5/data/0.pgm
 
     For example:
     
-      nsh> dnnrt_test /mnt/sd0/lenet-5/model/lenet-5.nnb /mnt/sd0/lenet-5/data/00000.pgm
-      load pnm image: /mnt/sd0/lenet-5/data/00000.pgm
+      nsh> dnnrt_test /mnt/sd0/lenet-5/model/lenet-5.nnb /mnt/sd0/lenet-5/data/0.pgm
+      load pnm image: /mnt/sd0/lenet-5/data/0.pgm
       load nnb file: /mnt/sd0/lenet-5/model/lenet-5.nnb
       start dnn forward
       output[0]=0.000000

@@ -43,11 +43,7 @@ static int
 get_nnb_size (const char *nnb_path, uint32_t * size_ptr)
 {
   int ret;
-#ifdef CONFIG_ARCH_SIM
-  struct nuttx_stat_s nnb_stat;
-#else
   struct stat nnb_stat;
-#endif
 
   if (nnb_path == NULL || size_ptr == NULL)
     {

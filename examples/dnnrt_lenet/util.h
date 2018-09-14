@@ -36,15 +36,6 @@
 #define _UTIL_H_
 #include <string.h>
 
-#ifdef CONFIG_ARCH_SIM
-#define __SIM__ 1
-#include <nuttx/fs/hostfs.h>
-#define my_open host_open
-#define my_close host_close
-#define my_read host_read
-#define my_write host_write
-#define my_stat host_stat
-#else
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -53,7 +44,6 @@
 #define my_read read
 #define my_write write
 #define my_stat stat
-#endif
 
 int my_fgetc (int file);
 char *my_fgets (char *out, int size, int file);
