@@ -20,4 +20,11 @@ config EXTERNALS_CMSIS_DSP
 	---help---
 		Enable CMSIS-DSP: Fast implementation of digital signal processing.
 
+config EXTERNALS_CMSIS_NN
+	bool "CMSIS NN"
+	default y
+	depends on EXTERNALS_CMSIS_DSP
+	---help---
+		Enable CMSIS-NN: Efficient neural network kernels.
+
 endif

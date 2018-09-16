@@ -1,5 +1,5 @@
 ############################################################################
-# externals/cmsis/LibTarget.mk
+# externals/cmsis/nn/Makefile
 #
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
@@ -31,35 +31,75 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-############################################################################
+###########################################################################
 
-# CMSIS DSP
-CMSIS_DSP := libarm_cortexM4lf_math$(LIBEXT)
-CMSIS_DSP_DIR := $(EXTERNAL_DIR)$(DELIM)cmsis$(DELIM)dsp
-
-ifeq ($(CONFIG_EXTERNALS_CMSIS_DSP),y)
-EXTLIBS += lib$(DELIM)$(CMSIS_DSP)
-SDKCLEANDIRS += $(CMSIS_DSP_DIR)
-endif
-
-$(CMSIS_DSP_DIR)$(DELIM)$(CMSIS_DSP): context
-	$(Q) $(MAKE) -C $(dir $@) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" $(notdir $@)
-
-lib$(DELIM)$(CMSIS_DSP): $(CMSIS_DSP_DIR)$(DELIM)$(CMSIS_DSP)
-	$(Q) install $< $@
+-include $(TOPDIR)/.config
+-include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
 
 # CMSIS NN
-CMSIS_NN := libcmsis_nn$(LIBEXT)
-CMSIS_NN_DIR := $(EXTERNAL_DIR)$(DELIM)cmsis$(DELIM)nn
 
-ifeq ($(CONFIG_EXTERNALS_CMSIS_NN),y)
-EXTLIBS += lib$(DELIM)$(CMSIS_NN)
-SDKCLEANDIRS += $(CMSIS_NN_DIR)
-endif
+CMSIS_NN = libcmsis_nn$(LIBEXT)
+BIN = $(CMSIS_NN)
 
-$(CMSIS_NN_DIR)$(DELIM)$(CMSIS_NN): context
-	$(Q) $(MAKE) -C $(dir $@) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" $(notdir $@)
+CMSIS_ROOT = ../CMSIS_5/CMSIS
 
-lib$(DELIM)$(CMSIS_NN): $(CMSIS_NN_DIR)$(DELIM)$(CMSIS_NN)
-	$(Q) install $< $@
+CFLAGS += -I$(CMSIS_ROOT)/Core/Include
+CFLAGS += -I$(CMSIS_ROOT)/DSP/Include
+CFLAGS += -I$(CMSIS_ROOT)/NN/Include
 
+CFLAGS += -DARM_MATH_CM4
+CFLAGS += -D__FPU_PRESENT=1U
+
+SUBDIRS := $(dir $(wildcard $(CMSIS_ROOT)/NN/Source/*/))
+
+VPATH   := $(SUBDIRS)
+DEPPATH := $(foreach dir,$(SUBDIRS), --dep-path $(dir))
+
+CSRCS := $(notdir $(foreach dir,$(SUBDIRS), $(wildcard $(dir)/*.c)))
+ASRCS := $(notdir $(foreach dir,$(SUBDIRS), $(wildcard $(dir)/*.S)))
+CXXSRCS :=
+
+AOBJS = $(ASRCS:.S=$(OBJEXT))
+COBJS = $(CSRCS:.c=$(OBJEXT))
+CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
+
+SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS)
+LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
+
+all: $(BIN)
+.PHONY: context depend preconfig clean distclean
+
+$(AOBJS): %$(OBJEXT): %.S
+	$(call ASSEMBLE, $<, $@)
+
+$(COBJS): %$(OBJEXT): %.c
+	$(call COMPILE, $<, $@)
+
+$(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
+	$(call COMPILE, $<, $@)
+
+$(BIN): $(LIB_OBJS)
+	$(call ARCHIVE, $@, $(LIB_OBJS))
+
+.depend: Makefile $(SRCS)
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(ASRCS) $(CSRCS) >Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CXXFLAGS) -- $(CXXSRCS) >>Make.dep
+	$(Q) touch $@
+
+depend: .depend
+
+context:
+
+clean_context:
+
+clean:
+	$(call DELFILE, $(BIN))
+	$(call CLEAN)
+
+distclean: clean clean_context
+	$(call DELFILE, .context)
+	$(call DELFILE, Make.dep)
+	$(call DELFILE, .depend)
+
+-include Make.dep
