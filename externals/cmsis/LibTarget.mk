@@ -1,5 +1,5 @@
 ############################################################################
-# externals/LibTarget.mk
+# externals/cmsis/LibTarget.mk
 #
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
@@ -33,6 +33,17 @@
 #
 ############################################################################
 
-EXTERNAL_DIR := $(SDKDIR)$(DELIM)..$(DELIM)externals
+CMSIS_DSP := libarm_cortexM4lf_math$(LIBEXT)
+CMSIS_DSP_DIR := $(EXTERNAL_DIR)$(DELIM)cmsis$(DELIM)dsp
 
-include $(wildcard $(EXTERNAL_DIR)/*/LibTarget.mk)
+ifeq ($(CONFIG_EXTERNALS_CMSIS_DSP),y)
+EXTLIBS += lib$(DELIM)$(CMSIS_DSP)
+SDKCLEANDIRS += $(CMSIS_DSP_DIR)
+endif
+
+$(CMSIS_DSP_DIR)$(DELIM)$(CMSIS_DSP): context
+	$(Q) $(MAKE) -C $(dir $@) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" $(notdir $@)
+
+lib$(DELIM)$(CMSIS_DSP): $(CMSIS_DSP_DIR)$(DELIM)$(CMSIS_DSP)
+	$(Q) install $< $@
+

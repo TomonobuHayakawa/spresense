@@ -1,5 +1,5 @@
 ############################################################################
-# externals/LibTarget.mk
+# externals/cmsis/Makefile
 #
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
@@ -33,6 +33,26 @@
 #
 ############################################################################
 
-EXTERNAL_DIR := $(SDKDIR)$(DELIM)..$(DELIM)externals
+-include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
 
-include $(wildcard $(EXTERNAL_DIR)/*/LibTarget.mk)
+all:
+.PHONY: context depend clean distclean preconfig
+
+install:
+
+context:
+
+depend:
+
+clean:
+	$(call DELFILE, .built)
+	$(call CLEAN)
+
+distclean: clean
+	$(call DELFILE, Make.dep)
+	$(call DELFILE, .depend)
+
+preconfig:
+
+-include Make.dep
