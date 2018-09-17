@@ -1,8 +1,7 @@
 ############################################################################
-# sdk/modules/video/Makefile
+# modules/video/Makefile
 #
-#   Copyright (C) 2016 Sony Corporation. All rights reserved.
-#   Author: Yuchi.Wen <Yuchi.Wen@sony.com>
+#   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -14,9 +13,10 @@
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-# 3. Neither the name NuttX nor Sony nor the names of its contributors
-#    may be used to endorse or promote products derived from this software
-#    without specific prior written permission.
+# 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+#    the names of its contributors may be used to endorse or promote
+#    products derived from this software without specific prior written
+#    permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -40,20 +40,6 @@
 DELIM ?= $(strip /)
 CXXEXT ?= .cpp
 
-ifeq ($(WINTOOL),y)
-INCDIROPT = -w
-endif
-
-# INCLUDES
-ifeq ($(WINTOOL),y)
-INCLUDES := -I"${shell cygpath -w $(APPDIR)/include}"
-else
-INCLUDES := -I$(APPDIR)/include
-endif # ($(WINTOOL),y)
-
-# CFLAGS
-CFLAGS += $(INCLUDES)
-
 # C_SRCS
 ASRCS =
 CSRCS = video.c
@@ -70,7 +56,7 @@ DEPPATH = --dep-path .
 
 # Common build
 
-VPATH = $(BT_IF) $(BT_MGR)
+VPATH =
 
 all: $(BIN)
 .PHONY: context depend clean distclean
@@ -78,15 +64,11 @@ all: $(BIN)
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
 
-$(COBJS) $(MAINOBJ): %$(OBJEXT): %.c
+$(COBJS): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
 $(BIN): $(OBJS)
 	$(call ARCHIVE, $@, $(OBJS))
-
-install:
-
-context:
 
 # Create dependencies
 
@@ -96,11 +78,20 @@ context:
 
 depend: .depend
 
+# context target proceeds before depend. User can be used this rule
+# to prerequisite process (e.g. generate header file).
+
+.context:
+	$(Q) touch $@
+
+context:
+
 clean:
+	$(call DELFILE, $(BIN))
 	$(call CLEAN)
-	rm -rf *$(OBJEXT)
 
 distclean: clean
+	$(call DELFILE, .context)
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
 
