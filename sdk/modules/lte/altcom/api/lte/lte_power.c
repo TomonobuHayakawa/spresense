@@ -54,8 +54,14 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define DEV_PATH         CONFIG_MODEM_DEVICE_PATH
-#define POWERON_DATA_LEN (0)
+#ifdef CONFIG_MODEM_DEVICE_PATH
+#  define DEV_PATH CONFIG_MODEM_DEVICE_PATH
+#else
+#  warning "CONFIG_MODEM_DEVICE_PATH not defined"
+#  define DEV_PATH "/dev/altmdm"
+#endif
+
+#define POWERON_DATA_LEN     (0)
 
 /****************************************************************************
  * Private Data

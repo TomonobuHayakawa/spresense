@@ -57,7 +57,12 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define DEV_PATH CONFIG_MODEM_DEVICE_PATH
+#ifdef CONFIG_MODEM_DEVICE_PATH
+#  define DEV_PATH CONFIG_MODEM_DEVICE_PATH
+#else
+#  warning "CONFIG_MODEM_DEVICE_PATH not defined"
+#  define DEV_PATH "/dev/altmdm"
+#endif
 
 #if defined(CONFIG_MODEM_ALTMDM_MAX_PACKET_SIZE)
 #  define HAL_ALTMDM_SPI_BUFFER_SIZE_MAX \

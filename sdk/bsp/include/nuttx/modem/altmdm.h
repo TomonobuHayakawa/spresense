@@ -46,8 +46,6 @@
 #include <queue.h>
 #include <sdk/debug.h>
 
-#if defined(CONFIG_MODEM_ALTMDM)
-
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -147,5 +145,4 @@ void altmdm_unregister(FAR void *handle);
 }
 #endif
 
-#endif
 #endif /* __INCLUDE_NUTTX_MODEM_ALTMDM_H */
