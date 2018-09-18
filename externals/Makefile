@@ -1,8 +1,7 @@
 ############################################################################
-# drivers/video/Make.defs
+# Makefile
 #
-#   Copyright (C) 2016 Gregory Nutt. All rights reserved.
-#   Author: Gregory Nutt <gnutt@nuttx.org>
+#   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -14,9 +13,10 @@
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-# 3. Neither the name NuttX nor the names of its contributors may be
-#    used to endorse or promote products derived from this software
-#    without specific prior written permission.
+# 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+#    the names of its contributors may be used to endorse or promote
+#    products derived from this software without specific prior written
+#    permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -33,16 +33,8 @@
 #
 ############################################################################
 
-# These video drivers depend on I2C support
+MENUDESC = "Externals"
 
-ifeq ($(CONFIG_I2C),y)
+BIN = libexternals$(LIBEXT)
 
-ifeq ($(CONFIG_VIDEO_ISX012),y)
-CSRCS += isx012.c 
-endif
-
-DEPPATH += --dep-path video
-VPATH += :video
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(TOPDIR)$(DELIM)drivers$(DELIM)video}
-
-endif
+include $(SDKDIR)/Makefile.ext
