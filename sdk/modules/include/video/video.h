@@ -140,7 +140,7 @@
 #define VIDIOC_DQBUF                  _VIDIOC(0x0009)
 
 /**
- * Activate video device
+ * Start streaming
  *
  * @param[in] arg
  * Address pointing to enum #v4l2_buf_type 
@@ -148,6 +148,14 @@
 
 #define VIDIOC_STREAMON               _VIDIOC(0x000A)
 
+/**
+ * Stop streaming
+ *
+ * @param[in] arg
+ * Address pointing to enum #v4l2_buf_type
+ */
+
+#define VIDIOC_STREAMOFF              _VIDIOC(0x000B)
 
 /**
  * Do halfpush
@@ -156,7 +164,7 @@
  * Address pointing to bool 
  */
 
-#define VIDIOC_DO_HALFPUSH            _VIDIOC(0x000B)
+#define VIDIOC_DO_HALFPUSH            _VIDIOC(0x000C)
 
 /**
  * Start taking picture
@@ -165,7 +173,7 @@
  * Address pointing to uint32_t
  */
 
-#define VIDIOC_TAKEPICT_START         _VIDIOC(0x000C)
+#define VIDIOC_TAKEPICT_START         _VIDIOC(0x000D)
 
 
 /**
@@ -175,7 +183,7 @@
  * Address pointing to bool
  */
 
-#define VIDIOC_TAKEPICT_STOP          _VIDIOC(0x000D)
+#define VIDIOC_TAKEPICT_STOP          _VIDIOC(0x000E)
 
 /**
  * Query control
@@ -184,7 +192,7 @@
  * Address pointing to struct #v4l2_queryctrl
  */
 
-#define VIDIOC_QUERYCTRL              _VIDIOC(0x000E)
+#define VIDIOC_QUERYCTRL              _VIDIOC(0x000F)
 
 /**
  * Query control
@@ -193,7 +201,7 @@
  * Address pointing to struct #v4l2_query_ext_ctrl
  */
 
-#define VIDIOC_QUERY_EXT_CTRL         _VIDIOC(0x000F)
+#define VIDIOC_QUERY_EXT_CTRL         _VIDIOC(0x0010)
 
 /** Query menu
  *
@@ -201,7 +209,7 @@
  * Address pointing to struct #v4l2_querymenu
  */
 
-#define VIDIOC_QUERYMENU              _VIDIOC(0x0010)
+#define VIDIOC_QUERYMENU              _VIDIOC(0x0011)
 
 /** Get current control value.
  *  This request is a special case of VIDIOC_G_EXT_CTRLS.
@@ -209,7 +217,7 @@
  *  Address pointing to struct #v4l2_control
  */
 
-#define VIDIOC_G_CTRL                 _VIDIOC(0x0011)
+#define VIDIOC_G_CTRL                 _VIDIOC(0x0012)
 
 /** Set control value.
  *  This request is a special case of VIDIOC_S_EXT_CTRLS.
@@ -217,7 +225,7 @@
  *  Address pointing to struct #v4l2_control
  */
 
-#define VIDIOC_S_CTRL                 _VIDIOC(0x0012)
+#define VIDIOC_S_CTRL                 _VIDIOC(0x0013)
 
 
 /** Get current control value
@@ -225,14 +233,14 @@
  *  Address pointing to struct #v4l2_ext_controls
  */
 
-#define VIDIOC_G_EXT_CTRLS            _VIDIOC(0x0013)
+#define VIDIOC_G_EXT_CTRLS            _VIDIOC(0x0014)
 
 /** Set control value
  *  @param[in] arg
  *  Address pointing to struct #v4l2_ext_controls
  */
 
-#define VIDIOC_S_EXT_CTRLS            _VIDIOC(0x0014)
+#define VIDIOC_S_EXT_CTRLS            _VIDIOC(0x0015)
 
 /** @} video_ioctl */
 
