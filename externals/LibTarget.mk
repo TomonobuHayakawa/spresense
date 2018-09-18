@@ -1,5 +1,5 @@
 ############################################################################
-# LibTarget.mk
+# externals/LibTarget.mk
 #
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
@@ -33,10 +33,6 @@
 #
 ############################################################################
 
-$(SDKDIR)$(DELIM)..$(DELIM)externals$(DELIM)libexternals$(LIBEXT): context
-	$(Q) $(MAKE) -C $(dir $@) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" $(notdir $@)
+EXTERNAL_DIR := $(SDKDIR)$(DELIM)..$(DELIM)externals
 
-lib$(DELIM)libexternals$(LIBEXT): $(SDKDIR)$(DELIM)..$(DELIM)externals$(DELIM)libexternals$(LIBEXT)
-	$(Q) install $< $@
-
-EXTLIBS += lib$(DELIM)libexternals$(LIBEXT)
+include $(wildcard $(EXTERNAL_DIR)/*/LibTarget.mk)
