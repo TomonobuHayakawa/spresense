@@ -101,9 +101,9 @@ static int32_t recvfrom_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_RECVFROM,
-                                   RECVFROM_REQ_DATALEN,
-                                   res, resplen))
+  if (!altcom_sock_alloc_cmdandresbuff(
+    (FAR void **)&cmd, APICMDID_SOCK_RECVFROM, RECVFROM_REQ_DATALEN,
+    (FAR void **)&res, resplen))
     {
       return RECVFROM_REQ_FAILURE;
     }

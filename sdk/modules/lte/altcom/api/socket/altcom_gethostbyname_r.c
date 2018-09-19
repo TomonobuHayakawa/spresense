@@ -95,9 +95,10 @@ static int32_t gethostbynamer_request(FAR const char *name, int32_t namelen,
   FAR struct apicmd_gethostbynamer_res_s *res   = NULL;
   FAR struct gethostbyname_r_helper      *h     = NULL;
 
-  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_GETHOSTBYNAMER,
-                                   GETHOSTBYNAMER_REQ_DATALEN, res,
-                                   GETHOSTBYNAMER_RES_DATALEN))
+  if (!altcom_sock_alloc_cmdandresbuff(
+    (FAR void **)&cmd, APICMDID_SOCK_GETHOSTBYNAMER,
+    GETHOSTBYNAMER_REQ_DATALEN,
+    (FAR void **)&res, GETHOSTBYNAMER_RES_DATALEN))
     {
       return GETHOSTBYNAMER_REQ_FAILURE;
     }

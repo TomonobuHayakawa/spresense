@@ -102,7 +102,7 @@
   while (0)
 
 #define ALTCOM_SOCK_ALLOC_CMDBUFF(buff, id ,len) \
-  ((buff = altcom_alloc_cmdbuff(id, len)) != NULL)
+  (((buff) = altcom_alloc_cmdbuff(id, len)) != NULL)
 
 #define ALTCOM_SOCK_ALLOC_RESBUFF(buff, len) \
   ((buff = altcom_alloc_resbuff(len)) != NULL)
@@ -336,18 +336,18 @@ static inline void altcom_sock_free_cmdandresbuff(
 }
 
 static inline bool altcom_sock_alloc_cmdandresbuff(
-  FAR void *buff, int32_t id, uint16_t bufflen,
-  FAR void *res, uint16_t reslen)
+  FAR void **buff, int32_t id, uint16_t bufflen,
+  FAR void **res, uint16_t reslen)
 {
-  if (!ALTCOM_SOCK_ALLOC_CMDBUFF(buff, id, bufflen))
+  if (!ALTCOM_SOCK_ALLOC_CMDBUFF(*buff, id, bufflen))
     {
       altcom_seterrno((int32_t)ALTCOM_ENOMEM);
       return false;
     }
 
-  if (!ALTCOM_SOCK_ALLOC_RESBUFF(res, reslen))
+  if (!ALTCOM_SOCK_ALLOC_RESBUFF(*res, reslen))
     {
-      altcom_free_cmd((FAR uint8_t *)buff);
+      altcom_free_cmd((FAR uint8_t *)*buff);
       altcom_seterrno((int32_t)ALTCOM_ENOMEM);
       return false;
     }

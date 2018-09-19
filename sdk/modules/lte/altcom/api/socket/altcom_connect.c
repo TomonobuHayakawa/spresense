@@ -95,9 +95,9 @@ static int32_t connect_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_CONNECT,
-                                   CONNECT_REQ_DATALEN, res,
-                                   CONNECT_RES_DATALEN))
+  if (!altcom_sock_alloc_cmdandresbuff(
+    (FAR void **)&cmd, APICMDID_SOCK_CONNECT, CONNECT_REQ_DATALEN,
+    (FAR void **)&res, CONNECT_RES_DATALEN))
     {
       return CONNECT_REQ_FAILURE;
     }

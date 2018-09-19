@@ -95,9 +95,9 @@ static int32_t accept_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_ACCEPT,
-                                   ACCEPT_REQ_DATALEN, res,
-                                   ACCEPT_RES_DATALEN))
+  if (!altcom_sock_alloc_cmdandresbuff(
+    (FAR void **)&cmd, APICMDID_SOCK_ACCEPT, ACCEPT_REQ_DATALEN,
+    (FAR void **)&res, ACCEPT_RES_DATALEN))
     {
       return ACCEPT_REQ_FAILURE;
     }

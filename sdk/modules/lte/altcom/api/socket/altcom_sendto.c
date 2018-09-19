@@ -101,7 +101,8 @@ static int32_t sendto_request(FAR struct altcom_socket_s *fsock,
   /* Allocate send and response command buffer */
 
   if (!altcom_sock_alloc_cmdandresbuff(
-    cmd, APICMDID_SOCK_SENDTO, sendlen, res, SENDTO_RES_DATALEN))
+    (FAR void **)&cmd, APICMDID_SOCK_SENDTO, sendlen,
+    (FAR void **)&res, SENDTO_RES_DATALEN))
     {
       return SENDTO_REQ_FAILURE;
     }

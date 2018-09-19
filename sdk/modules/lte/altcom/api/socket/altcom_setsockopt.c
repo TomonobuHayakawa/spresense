@@ -377,9 +377,9 @@ int altcom_setsockopt(int sockfd, int level, int option, const void *value,
 
   /* Allocate send and response command buffer */
 
-  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_SETSOCKOPT,
-                                   SETSOCKOPT_REQ_DATALEN, res,
-                                   SETSOCKOPT_RES_DATALEN))
+  if (!altcom_sock_alloc_cmdandresbuff(
+    (FAR void **)&cmd, APICMDID_SOCK_SETSOCKOPT, SETSOCKOPT_REQ_DATALEN,
+    (FAR void **)&res, SETSOCKOPT_RES_DATALEN))
     {
       return -1;
     }

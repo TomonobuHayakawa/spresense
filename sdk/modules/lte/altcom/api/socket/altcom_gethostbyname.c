@@ -94,9 +94,10 @@ static int32_t gethostbyname_request(FAR const char *name, int32_t namelen,
   int32_t                              l_namelen;
   int32_t                              aliaslen;
 
-  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_GETHOSTBYNAME,
-                                   GETHOSTBYNAME_REQ_DATALEN, res,
-                                   GETHOSTBYNAME_RES_DATALEN))
+  if (!altcom_sock_alloc_cmdandresbuff(
+    (FAR void **)&cmd, APICMDID_SOCK_GETHOSTBYNAME,
+    GETHOSTBYNAME_REQ_DATALEN,
+    (FAR void **)&res, GETHOSTBYNAME_RES_DATALEN))
     {
       return GETHOSTBYNAME_REQ_FAILURE;
     }
