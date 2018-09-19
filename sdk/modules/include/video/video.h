@@ -40,6 +40,7 @@
  * Included Files
  ****************************************************************************/
 #include <stdint.h>
+#include <sys/ioctl.h>
 #include <video/video_controls.h>
 
 #ifdef __cplusplus
