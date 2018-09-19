@@ -66,6 +66,18 @@
  * Private Types
  ****************************************************************************/
 
+#ifdef CONFIG_BLUETOOTH_A2DP_USE_THREAD
+/** Bluetooth A2DP application callbacks
+ */
+struct bt_a2dp_media_thread_s
+{
+  struct sched_param param;
+  pthread_mutex_t mutex;
+  pthread_attr_t attr;
+  pthread_t thread;
+};
+#endif /* CONFIG_BLUETOOTH_A2DP_USE_THREAD */
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -74,6 +86,10 @@ static struct bt_a2dp_state_s g_bt_a2dp_state =
 {
   .bt_a2dp_connection = BT_DISCONNECTED
 };
+
+#ifdef CONFIG_BLUETOOTH_A2DP_USE_THREAD
+static struct bt_a2dp_media_thread_s g_bt_a2dp_media_thread;
+#endif /* CONFIG_BLUETOOTH_A2DP_USE_THREAD */
 
 /****************************************************************************
  * Private Functions
@@ -162,7 +178,23 @@ static int event_recv_data(struct bt_a2dp_event_recv_t *event_recv)
 {
   int ret = BT_SUCCESS;
 
+#ifdef CONFIG_BLUETOOTH_A2DP_USE_THREAD
+  if (!g_bt_a2dp_media_thread.mutex.pid)
+    {
+      pthread_mutex_init(&g_bt_a2dp_media_thread.mutex, NULL);
+      sched_getparam(0, &g_bt_a2dp_media_thread.param);
+      pthread_attr_init(&g_bt_a2dp_media_thread.attr);
+      pthread_attr_setschedpolicy(&g_bt_a2dp_media_thread.attr,
+                                  BT_A2DP_SCHED_EXEC_MEDIA_DATA);
+      pthread_attr_setschedparam(&g_bt_a2dp_media_thread.attr,
+                                 &g_bt_a2dp_media_thread.param);
+    }
+  pthread_create(&g_bt_a2dp_media_thread.thread, &g_bt_a2dp_media_thread.attr,
+                 receive_thread, (pthread_addr_t)event_recv);
+  pthread_setname_np(g_bt_a2dp_media_thread.thread, BT_A2DP_SCHED_THREAD_NAME);
+#else
   receive_thread((pthread_addr_t) event_recv);
+#endif /* CONFIG_BLUETOOTH_A2DP_USE_THREAD */
 
   return ret;
 }

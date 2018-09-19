@@ -13,4 +13,11 @@ config BLUETOOTH
 		if you use bluetooth function, please enable HAL configuration what you
 		want to use.
 
+if BLUETOOTH
+config BLUETOOTH_A2DP_USE_THREAD
+	bool "Bluetooth A2DP use thread for handle media packet"
+	default y
+	---help---
+		This option is for use thread while transfering media packet to application.
+endif
 endmenu
