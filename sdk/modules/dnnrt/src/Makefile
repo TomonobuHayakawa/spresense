@@ -117,6 +117,10 @@ $(LIB): $(OBJS)
 install:
 
 context:
+	# make apps refer to the same version of network.h
+	$(Q) install -m 0664 \
+		$(RUNTIME_EXTERN_DIR)/include/nnablart/network.h \
+		$(SDKDIR)/modules/include/dnnrt/nnablart/network.h
 
 #Compile NNABLA_C_RUNTIME
 $(NNABLA_C_RUNTIME_MAKEFILE):$(NNABLA_CMAKE_TXT)
@@ -156,6 +160,7 @@ clean:
 distclean: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
+	$(call DELFILE, $(SDKDIR)/modules/include/dnnrt/nnablart/network.h)
 
 -include Make.dep
 preconfig:
