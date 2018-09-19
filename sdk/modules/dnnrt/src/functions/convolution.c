@@ -222,27 +222,27 @@ static rt_function_error_t dnnrt_exec_convolution_float(rt_function_t * f)
               int b_pos[] = { g, 0 };
               var_setpos(b_var, b_pos, _S(b_pos));
               bias = (float *)b_var->v->data + b_var->offset;
-
-              int o_pos[] = { b, g, 0 };
-              var_setpos(out_var, o_pos, _S(o_pos));
-              float *Im_out = (float *)out_var->v->data + out_var->offset;
-
-              arm_convolve_CHW_f32_basic_nonsquare(Im_in,
-                                                   in_var->shape.data[W],
-                                                   in_var->shape.data[H],
-                                                   in_var->shape.data[I], wt,
-                                                   p->out_var.shape.data[I],
-                                                   w_var->shape.data[W],
-                                                   w_var->shape.data[H],
-                                                   c->pad.data[1],
-                                                   c->pad.data[0],
-                                                   c->stride.data[1],
-                                                   c->stride.data[0], bias,
-                                                   Im_out,
-                                                   out_var->shape.data[W],
-                                                   out_var->shape.data[H],
-                                                   bufferA, 0);
             }
+
+          int o_pos[] = { b, g, 0 };
+          var_setpos(out_var, o_pos, _S(o_pos));
+          float *Im_out = (float *)out_var->v->data + out_var->offset;
+
+          arm_convolve_CHW_f32_basic_nonsquare(Im_in,
+                                               in_var->shape.data[W],
+                                               in_var->shape.data[H],
+                                               in_var->shape.data[I], wt,
+                                               p->out_var.shape.data[I],
+                                               w_var->shape.data[W],
+                                               w_var->shape.data[H],
+                                               c->pad.data[1],
+                                               c->pad.data[0],
+                                               c->stride.data[1],
+                                               c->stride.data[0], bias,
+                                               Im_out,
+                                               out_var->shape.data[W],
+                                               out_var->shape.data[H],
+                                               bufferA, 0);
         }
     }
 
@@ -322,7 +322,7 @@ static inline int validate_params(rt_function_t * f, int *scratch_buf_bsize)
   if (cond2)
     {
       *scratch_buf_bsize = sizeof(fixed16_t) * p->kernel_shape.data[0] *
-        p->kernel_shape.data[1] * p->in_var.shape.data[I];
+        p->kernel_shape.data[1] * p->in_var.shape.data[I] * 2;
     }
 
   int cond3;
