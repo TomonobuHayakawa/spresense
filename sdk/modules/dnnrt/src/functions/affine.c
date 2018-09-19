@@ -187,7 +187,7 @@ static rt_function_error_t dnnrt_exec_affine_float(rt_function_t * f)
         {
           float sum1 = 0;
 
-          for (j = 0; j < input_loop_size_bulk4; j++)
+          for (j = 0; j < input_loop_size_bulk4;)
             {
               sum1 += weight[j] * x[j];
               ++j;
