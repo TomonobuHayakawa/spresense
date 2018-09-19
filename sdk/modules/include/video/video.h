@@ -42,6 +42,10 @@
 #include <stdint.h>
 #include <video/video_controls.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @defgroup video Video driver
  * @{ */
@@ -749,4 +753,7 @@ int video_uninitialize(void);
 
 /** @} video */
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __MODULES_INCLUDE_VIDEO_VIDEO_H */
