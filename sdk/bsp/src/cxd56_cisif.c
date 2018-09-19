@@ -125,7 +125,7 @@ typedef void (*intc_func_table)(uint8_t code);
  ****************************************************************************/
 
 static state_t g_state = STATE_STANDBY;
-static uint32_t g_storage_addr = NULL;
+static uint32_t g_storage_addr = 0;
 
 notify_callback_t g_jpg_notify_callback_func;
 notify_callback_t g_ycc_notify_callback_func;
