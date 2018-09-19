@@ -33,21 +33,21 @@
  ****************************************************************************/
 
 #ifndef RUNTIME_COMMON_H
-#define RUNTIME_COMMON_H
+#  define RUNTIME_COMMON_H
 
-#include <sdk/config.h>
-#include <errno.h>
-#include <nnablart/functions.h>
-#include <nnablart/runtime.h>
+#  include <sdk/config.h>
+#  include <errno.h>
+#  include <nnablart/functions.h>
+#  include <nnablart/runtime.h>
 
-#ifdef __cplusplus
+#  ifdef __cplusplus
 extern "C"
 {
-#endif
+#  endif
 
-#define DNN_PRINT(...) printf(__VA_ARGS__)
+#  define DNN_PRINT(...) printf(__VA_ARGS__)
 
-#define DNN_CHECK_NULL(b)                                                      \
+#  define DNN_CHECK_NULL(b)                                                      \
   do {                                                                         \
     if ((b) == NULL) {                                                         \
       DNN_PRINT("Null-check failed. %s()@%s:L%d\n", __FUNCTION__, __FILE__,    \
@@ -55,7 +55,7 @@ extern "C"
       return;                                                                  \
     }                                                                          \
   } while (0)
-#define DNN_CHECK_NULL_RET(b, r)                                               \
+#  define DNN_CHECK_NULL_RET(b, r)                                               \
   do {                                                                         \
     if ((b) == NULL) {                                                         \
       DNN_PRINT("Null-check failed. %s()@%s:L%d\n", __FUNCTION__, __FILE__,    \
@@ -63,7 +63,7 @@ extern "C"
       return r;                                                                \
     }                                                                          \
   } while (0)
-#define DNN_CHECK_NULL_GOTO(b, go)                                             \
+#  define DNN_CHECK_NULL_GOTO(b, go)                                             \
   do {                                                                         \
     if ((b) == NULL) {                                                         \
       DNN_PRINT("Null-check failed. %s()@%s:L%d\n", __FUNCTION__, __FILE__,    \
@@ -71,7 +71,7 @@ extern "C"
       goto go;                                                                 \
     }                                                                          \
   } while (0)
-#define DNN_CHECK_FUNC_RET(f)                                                  \
+#  define DNN_CHECK_FUNC_RET(f)                                                  \
   do {                                                                         \
     int err = -EPERM;                                                          \
     if ((err = (f)) != 0) {                                                    \
@@ -80,7 +80,7 @@ extern "C"
       return err;                                                              \
     }                                                                          \
   } while (0)
-#define DNN_CHECK_FUNC(f)                                                      \
+#  define DNN_CHECK_FUNC(f)                                                      \
   do {                                                                         \
     if ((f) != 0) {                                                            \
       DNN_PRINT("Function-check failed. %s()@%s:L%d\n", __FUNCTION__,          \
@@ -88,7 +88,7 @@ extern "C"
       return;                                                                  \
     }                                                                          \
   } while (0)
-#define DNN_CHECK_FUNC_GOTO(f, go)                                             \
+#  define DNN_CHECK_FUNC_GOTO(f, go)                                             \
   do {                                                                         \
     int err = -EPERM;                                                          \
     if ((err = (f)) != 0) {                                                    \
@@ -97,7 +97,7 @@ extern "C"
       goto go;                                                                 \
     }                                                                          \
   } while (0)
-#define CHECK_FUNC_RET_VAL(f, val)                                             \
+#  define CHECK_FUNC_RET_VAL(f, val)                                             \
   do {                                                                         \
     int err = -EPERM;                                                          \
     if ((err = (f)) != 0) {                                                    \
@@ -106,7 +106,7 @@ extern "C"
       return val;                                                              \
     }                                                                          \
   } while (0)
-#define CHECK_FUNC_ERR_RET(f)                                                  \
+#  define CHECK_FUNC_ERR_RET(f)                                                  \
   do {                                                                         \
     int err = 0;                                                               \
     if ((err = (f)) < 0) {                                                     \
@@ -117,25 +117,25 @@ extern "C"
   } while (0)
 
   typedef struct dnn_global_context
-  {
-    int rt_count;
-    int req_scratch_buf_bsize;
-    int scratch_buf_bsize;
-    void *scratch_buf;
-  } dnn_global_context;
+    {
+      int rt_count;
+      int req_scratch_buf_bsize;
+      int scratch_buf_bsize;
+      void *scratch_buf;
+    } dnn_global_context;
 
-  rt_function_error_t dnnrt_exec_convolution (rt_function_t * f);
-  rt_function_error_t dnnrt_exec_affine (rt_function_t * f);
-  rt_return_value_t dnnrt_affine_alloc (nn_network_t * net,
-					void *function_context);
-  rt_return_value_t dnnrt_convolution_alloc (nn_network_t * net,
-					     void *function_context);
+  rt_function_error_t dnnrt_exec_convolution(rt_function_t * f);
+  rt_function_error_t dnnrt_exec_affine(rt_function_t * f);
+  rt_return_value_t dnnrt_affine_alloc(nn_network_t * net,
+                                       void *function_context);
+  rt_return_value_t dnnrt_convolution_alloc(nn_network_t * net,
+                                            void *function_context);
 
-  void dnn_req_scratch_buf (int size);
-  void *dnn_scratch_buf (void);
+  void dnn_req_scratch_buf(int size);
+  void *dnn_scratch_buf(void);
 
-#ifdef __cplusplus
+#  ifdef __cplusplus
 }
-#endif
+#  endif
 
-#endif				/* RUNTIME_COMMON_H */
+#endif                          /* RUNTIME_COMMON_H */

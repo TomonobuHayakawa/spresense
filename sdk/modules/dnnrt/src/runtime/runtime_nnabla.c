@@ -47,41 +47,37 @@
 
 static struct dnn_global_context s_dnn_gctx;
 
-int
-dnn_initialize (void* reserved)
+int dnn_initialize(void *reserved)
 {
   return reserved == NULL ? RT_RET_NOERROR : -EINVAL;
 }
 
-int
-dnn_finalize (void)
+int dnn_finalize(void)
 {
   return RT_RET_NOERROR;
 }
 
-int
-dnn_runtime_initialize (dnn_runtime_t * rt, const nn_network_t * network)
+int dnn_runtime_initialize(dnn_runtime_t * rt, const nn_network_t * network)
 {
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
-  DNN_CHECK_NULL_RET (network, -EINVAL);
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
+  DNN_CHECK_NULL_RET(network, -EINVAL);
   void *tmp_buf;
 
   /* register dnnrt's callback with rt_context */
   int err;
-  err = (int) rt_allocate_context ((rt_context_pointer *) & (rt->impl_ctx));
+  err = (int)rt_allocate_context((rt_context_pointer *) & (rt->impl_ctx));
   if (err != RT_RET_NOERROR)
     {
       goto alloc_error;
     }
   rt_context_pointer ctx = (rt_context_pointer) (rt->impl_ctx);
   err =
-    (int) rt_add_callback (ctx, NN_FUNCTION_CONVOLUTION,
-			   dnnrt_convolution_alloc);
+    (int)rt_add_callback(ctx, NN_FUNCTION_CONVOLUTION, dnnrt_convolution_alloc);
   if (err != RT_RET_NOERROR)
     {
       goto error;
     }
-  err = (int) rt_add_callback (ctx, NN_FUNCTION_AFFINE, dnnrt_affine_alloc);
+  err = (int)rt_add_callback(ctx, NN_FUNCTION_AFFINE, dnnrt_affine_alloc);
   if (err != RT_RET_NOERROR)
     {
       goto error;
@@ -89,8 +85,8 @@ dnn_runtime_initialize (dnn_runtime_t * rt, const nn_network_t * network)
 
   /* initialize rt_context and count up required minimum size of scratch_buf */
   s_dnn_gctx.req_scratch_buf_bsize = 0;
-  /* remove const to use the as-is rt_initialize_context()  */
-  err = (int) rt_initialize_context (ctx, (nn_network_t *) network);
+  /* remove const to use the as-is rt_initialize_context() */
+  err = (int)rt_initialize_context(ctx, (nn_network_t *) network);
   if (err != RT_RET_NOERROR)
     {
       goto error;
@@ -100,12 +96,12 @@ dnn_runtime_initialize (dnn_runtime_t * rt, const nn_network_t * network)
   if (s_dnn_gctx.req_scratch_buf_bsize > s_dnn_gctx.scratch_buf_bsize)
     {
       tmp_buf =
-	realloc (s_dnn_gctx.scratch_buf, s_dnn_gctx.req_scratch_buf_bsize);
+        realloc(s_dnn_gctx.scratch_buf, s_dnn_gctx.req_scratch_buf_bsize);
       if (!tmp_buf)
-	{
-	  err = -ENOMEM;
-	  goto error;
-	}
+        {
+          err = -ENOMEM;
+          goto error;
+        }
       s_dnn_gctx.scratch_buf = tmp_buf;
       s_dnn_gctx.scratch_buf_bsize = s_dnn_gctx.req_scratch_buf_bsize;
     }
@@ -114,139 +110,127 @@ dnn_runtime_initialize (dnn_runtime_t * rt, const nn_network_t * network)
   return 0;
 
 error:
-  rt_free_context (&rt->impl_ctx);
+  rt_free_context(&rt->impl_ctx);
   rt->impl_ctx = NULL;
 alloc_error:
   return err;
 }
 
-int
-dnn_runtime_finalize (dnn_runtime_t * rt)
+int dnn_runtime_finalize(dnn_runtime_t * rt)
 {
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
 
   if (--s_dnn_gctx.rt_count == 0)
     {
-      free (s_dnn_gctx.scratch_buf);
+      free(s_dnn_gctx.scratch_buf);
       s_dnn_gctx.scratch_buf = NULL;
       s_dnn_gctx.scratch_buf_bsize = 0;
       s_dnn_gctx.req_scratch_buf_bsize = 0;
     }
 
-  return (int) rt_free_context ((rt_context_pointer *) & (rt->impl_ctx));
+  return (int)rt_free_context((rt_context_pointer *) & (rt->impl_ctx));
 }
 
-int
-dnn_runtime_forward (dnn_runtime_t * rt, const void *inputs[])
+int dnn_runtime_forward(dnn_runtime_t * rt, const void *inputs[])
 {
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
   rt_context_pointer ctx = (rt_context_pointer) rt->impl_ctx;
-  int input_num = rt_num_of_input (ctx);
+  int input_num = rt_num_of_input(ctx);
   rt_context_t *c = (rt_context_t *) ctx;
 
   for (int i = 0; i < input_num; ++i)
     {
-      c->variables[c->input_variable_ids[i]].data = (void *) inputs[i];
+      c->variables[c->input_variable_ids[i]].data = (void *)inputs[i];
     }
 
-  return (int) rt_forward (ctx);
+  return (int)rt_forward(ctx);
+}
+
+int dnn_runtime_input_num(dnn_runtime_t * rt)
+{
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
+  return rt_num_of_input((rt_context_pointer) rt->impl_ctx);
+}
+
+int dnn_runtime_input_size(dnn_runtime_t * rt, unsigned char data_index)
+{
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
+  return rt_input_size((rt_context_pointer) rt->impl_ctx, data_index);
+}
+
+int dnn_runtime_input_ndim(dnn_runtime_t * rt, unsigned char data_index)
+{
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
+  return rt_input_dimension((rt_context_pointer) rt->impl_ctx, data_index);
 }
 
 int
-dnn_runtime_input_num (dnn_runtime_t * rt)
+dnn_runtime_input_shape(dnn_runtime_t * rt, unsigned char data_index,
+                        unsigned char dim_index)
 {
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
-  return rt_num_of_input ((rt_context_pointer) rt->impl_ctx);
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
+  return rt_input_shape((rt_context_pointer) rt->impl_ctx, data_index,
+                        dim_index);
+}
+
+void *dnn_input_buffer(dnn_runtime_t * rt, unsigned char data_index)
+{
+  DNN_CHECK_NULL_RET(rt, NULL);
+  return rt_input_buffer(rt->impl_ctx, (size_t) data_index);
+}
+
+nn_variable_t *dnn_runtime_input_variable(dnn_runtime_t * rt,
+                                          unsigned char data_index)
+{
+  DNN_CHECK_NULL_RET(rt, NULL);
+  return rt_input_variable(rt->impl_ctx, data_index);
+}
+
+int dnn_runtime_output_num(dnn_runtime_t * rt)
+{
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
+  return rt_num_of_output(rt->impl_ctx);
+}
+
+int dnn_runtime_output_size(dnn_runtime_t * rt, unsigned char data_index)
+{
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
+  return rt_output_size(rt->impl_ctx, data_index);
+}
+
+int dnn_runtime_output_ndim(dnn_runtime_t * rt, unsigned char data_index)
+{
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
+  return rt_output_dimension(rt->impl_ctx, data_index);
 }
 
 int
-dnn_runtime_input_size (dnn_runtime_t * rt, unsigned char data_index)
+dnn_runtime_output_shape(dnn_runtime_t * rt, unsigned char data_index,
+                         unsigned char dim_index)
 {
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
-  return rt_input_size ((rt_context_pointer) rt->impl_ctx, data_index);
+  DNN_CHECK_NULL_RET(rt, -EINVAL);
+  return rt_output_shape(rt->impl_ctx, data_index, dim_index);
 }
 
-int
-dnn_runtime_input_ndim (dnn_runtime_t * rt, unsigned char data_index)
+void *dnn_runtime_output_buffer(dnn_runtime_t * rt, unsigned char data_index)
 {
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
-  return rt_input_dimension ((rt_context_pointer) rt->impl_ctx, data_index);
+  DNN_CHECK_NULL_RET(rt, NULL);
+  return rt_output_buffer(rt->impl_ctx, (size_t) data_index);
 }
 
-int
-dnn_runtime_input_shape (dnn_runtime_t * rt, unsigned char data_index,
-			 unsigned char dim_index)
+nn_variable_t *dnn_runtime_output_variable(dnn_runtime_t * rt,
+                                           unsigned char data_index)
 {
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
-  return rt_input_shape ((rt_context_pointer) rt->impl_ctx, data_index,
-			 dim_index);
+  DNN_CHECK_NULL_RET(rt, NULL);
+  return rt_output_variable(rt->impl_ctx, data_index);
 }
 
-void *
-dnn_input_buffer (dnn_runtime_t * rt, unsigned char data_index)
-{
-  DNN_CHECK_NULL_RET (rt, NULL);
-  return rt_input_buffer (rt->impl_ctx, (size_t) data_index);
-}
-
-nn_variable_t *
-dnn_runtime_input_variable (dnn_runtime_t * rt, unsigned char data_index)
-{
-  DNN_CHECK_NULL_RET (rt, NULL);
-  return rt_input_variable (rt->impl_ctx, data_index);
-}
-
-int
-dnn_runtime_output_num (dnn_runtime_t * rt)
-{
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
-  return rt_num_of_output (rt->impl_ctx);
-}
-
-int
-dnn_runtime_output_size (dnn_runtime_t * rt, unsigned char data_index)
-{
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
-  return rt_output_size (rt->impl_ctx, data_index);
-}
-
-int
-dnn_runtime_output_ndim (dnn_runtime_t * rt, unsigned char data_index)
-{
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
-  return rt_output_dimension (rt->impl_ctx, data_index);
-}
-
-int
-dnn_runtime_output_shape (dnn_runtime_t * rt, unsigned char data_index,
-			  unsigned char dim_index)
-{
-  DNN_CHECK_NULL_RET (rt, -EINVAL);
-  return rt_output_shape (rt->impl_ctx, data_index, dim_index);
-}
-
-void *
-dnn_runtime_output_buffer (dnn_runtime_t * rt, unsigned char data_index)
-{
-  DNN_CHECK_NULL_RET (rt, NULL);
-  return rt_output_buffer (rt->impl_ctx, (size_t) data_index);
-}
-
-nn_variable_t *
-dnn_runtime_output_variable (dnn_runtime_t * rt, unsigned char data_index)
-{
-  DNN_CHECK_NULL_RET (rt, NULL);
-  return rt_output_variable (rt->impl_ctx, data_index);
-}
-
-dnn_global_context *
-dnn_get_global_context (void)
+dnn_global_context *dnn_get_global_context(void)
 {
   return &s_dnn_gctx;
 }
 
-void
-dnn_req_scratch_buf (int size)
+void dnn_req_scratch_buf(int size)
 {
   if (size > s_dnn_gctx.req_scratch_buf_bsize)
     {
@@ -254,8 +238,7 @@ dnn_req_scratch_buf (int size)
     }
 }
 
-void *
-dnn_scratch_buf (void)
+void *dnn_scratch_buf(void)
 {
   return s_dnn_gctx.scratch_buf;
 }
