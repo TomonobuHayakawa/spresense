@@ -36,7 +36,7 @@
 #include <string.h>
 #include <dnnrt/runtime.h>
 
-/* header inclusion under dnnrt/src/externals/nnabla-c-runtime/include */
+/* header inclusion under $(SDKDIR)/../externals/nnabla-c-runtime/include */
 #include "nnablart/runtime.h"
 
 #include <context.h>

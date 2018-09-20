@@ -37,7 +37,7 @@
 -include $(SDKDIR)/Make.defs
 
 DELIM ?= $(strip /)
-RUNTIME_EXTERN_DIR := externals/nnabla-c-runtime
+RUNTIME_EXTERN_DIR := $(SDKDIR)/../externals/nnabla-c-runtime
 
 RUNTIME_EXTERN_SRCDIR := $(RUNTIME_EXTERN_DIR)/src
 
