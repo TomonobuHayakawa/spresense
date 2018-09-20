@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/bluetooth/stub/bluetooth_spp.c
+ * modules/bluetooth/bluetooth_spp.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

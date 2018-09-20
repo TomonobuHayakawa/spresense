@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/bluetooth/stub/bluetooth_avrcp.c
+ * modules/bluetooth/bluetooth_avrcp.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
