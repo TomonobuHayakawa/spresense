@@ -40,8 +40,8 @@
  * @details This API is for using HFP and includes Function and Callback
  */
 
-#ifndef __MODULES_INCLUDE_BLUETOOTH_API_BT_HFP_H
-#define __MODULES_INCLUDE_BLUETOOTH_API_BT_HFP_H
+#ifndef __MODULES_INCLUDE_BLUETOOTH_BT_HFP_H
+#define __MODULES_INCLUDE_BLUETOOTH_BT_HFP_H
 
 /****************************************************************************
  * Included Files
@@ -49,8 +49,8 @@
 
 #include <stdint.h>
 #include <bluetooth/bluetooth.h>
-#include <bluetooth/bluetooth_hfp_features.h>
-#include <bluetooth/api/bt_common.h>
+#include <bluetooth/bt_hfp_features.h>
+#include <bluetooth/bt_common.h>
 
 /****************************************************************************
  * Public Types
@@ -163,4 +163,4 @@ int bt_hfp_send_at_command(struct bt_acl_state_s *bt_acl_state, char *at_cmd_str
 
 int bt_hfp_register_cb(struct bt_hfp_ops_s *bt_hfp_ops);
 
-#endif /* __MODULES_INCLUDE_BLUETOOTH_API_BT_HFP_H */
+#endif /* __MODULES_INCLUDE_BLUETOOTH_BT_HFP_H */

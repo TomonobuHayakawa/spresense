@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/include/bluetooth/bluetooth_avrcp_cmds.h
+ * modules/include/bluetooth/bt_avrcp_cmds.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -34,15 +34,15 @@
  ****************************************************************************/
 
 /**
- * @file bluetooth_avrcp_cmds.h
+ * @file bt_avrcp_cmds.h
  * @author Sony Semiconductor Solutions Corporation
  * @brief AVRCP command I/F.
  * @details This header file includes AVRCP related commands list.
  *           - AVRCP available commands
  */
 
-#ifndef __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_AVRCP_CMDS_H
-#define __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_AVRCP_CMDS_H
+#ifndef __MODULES_INCLUDE_BLUETOOTH_BT_AVRCP_CMDS_H
+#define __MODULES_INCLUDE_BLUETOOTH_BT_AVRCP_CMDS_H
 
 /****************************************************************************
  * Included Files
@@ -121,4 +121,4 @@ typedef enum
   BT_AVRCP_CMD_VENDOR     = 0x7E  /**< Vendor unique button */
 } BT_AVRCP_CMD_ID;
 
-#endif /* __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_AVRCP_CMDS_H */
+#endif /* __MODULES_INCLUDE_BLUETOOTH_BT_AVRCP_CMDS_H */

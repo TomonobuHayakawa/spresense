@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/include/bluetooth/api/bt_avrcp.h
+ * modules/include/bluetooth/bt_avrcp.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -40,8 +40,8 @@
  * @details This API is for using AVRCP and includes Function and Callback
  */
 
-#ifndef __MODULES_INCLUDE_BLUETOOTH_API_BT_AVRCP_H
-#define __MODULES_INCLUDE_BLUETOOTH_API_BT_AVRCP_H
+#ifndef __MODULES_INCLUDE_BLUETOOTH_BT_AVRCP_H
+#define __MODULES_INCLUDE_BLUETOOTH_BT_AVRCP_H
 
 /****************************************************************************
  * Included Files
@@ -49,8 +49,8 @@
 
 #include <stdint.h>
 #include <bluetooth/bluetooth.h>
-#include <bluetooth/bluetooth_avrcp_cmds.h>
-#include <bluetooth/api/bt_common.h>
+#include <bluetooth/bt_avrcp_cmds.h>
+#include <bluetooth/bt_common.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -196,4 +196,4 @@ int bt_register_notification(struct bt_avrcp_notify_ops_s *bt_avrcp_notify_ops);
 
 int bt_avrcp_register_cb(struct bt_avrcp_ops_s *bt_avrcp_ops);
 
-#endif /* __MODULES_INCLUDE_BLUETOOTH_API_BT_AVRCP_H */
+#endif /* __MODULES_INCLUDE_BLUETOOTH_BT_AVRCP_H */

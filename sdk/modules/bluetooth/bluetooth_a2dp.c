@@ -37,7 +37,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <bluetooth/api/bt_a2dp.h>
+#include <bluetooth/bt_a2dp.h>
 #include <bluetooth/hal/bt_if.h>
 
 /****************************************************************************

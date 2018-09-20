@@ -38,7 +38,7 @@
  ****************************************************************************/
 
 #include <string.h>
-#include <bluetooth/api/bt_common.h>
+#include <bluetooth/bt_common.h>
 #include <bluetooth/hal/bt_if.h>
 
 /****************************************************************************

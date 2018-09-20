@@ -51,9 +51,9 @@
 
 #include <stdint.h>
 #include <bluetooth/bluetooth.h>
-#include <bluetooth/bluetooth_a2dp_codecs.h>
-#include <bluetooth/bluetooth_avrcp_cmds.h>
-#include <bluetooth/bluetooth_hfp_features.h>
+#include <bluetooth/bt_a2dp_codecs.h>
+#include <bluetooth/bt_avrcp_cmds.h>
+#include <bluetooth/bt_hfp_features.h>
 #include <bluetooth/hal/bt_event.h>
 
 /****************************************************************************

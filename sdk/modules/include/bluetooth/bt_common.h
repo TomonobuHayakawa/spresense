@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/include/bluetooth/api/bt_common.h
+ * modules/include/bluetooth/bt_common.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -40,8 +40,8 @@
  * @details This API is generic functions for bluetooth operations
  */
 
-#ifndef __MODULES_INCLUDE_BLUETOOTH_API_BT_COMMON_H
-#define __MODULES_INCLUDE_BLUETOOTH_API_BT_COMMON_H
+#ifndef __MODULES_INCLUDE_BLUETOOTH_BT_COMMON_H
+#define __MODULES_INCLUDE_BLUETOOTH_BT_COMMON_H
 
 /****************************************************************************
  * Included Files
@@ -269,4 +269,4 @@ int bt_cancel_inquiry(void);
 
 int bt_register_common_cb(struct bt_ble_common_ops_s *bt_ble_common_ops);
 
-#endif /* __MODULES_INCLUDE_BLUETOOTH_API_BT_COMMON_H */
+#endif /* __MODULES_INCLUDE_BLUETOOTH_BT_COMMON_H */

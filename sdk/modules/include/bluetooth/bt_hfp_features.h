@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/include/bluetooth/bluetooth_hfp_features.h
+ * modules/include/bluetooth/bt_hfp_features.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -34,7 +34,7 @@
  ****************************************************************************/
 
 /**
- * @file bluetooth_hfp_features.h
+ * @file bt_hfp_features.h
  * @author Sony Semiconductor Solutions Corporation
  * @brief Bluetooth HFP common header for SDK on Spresense.
  * @details This header file includes bluetooth HFP common definition between
@@ -43,8 +43,8 @@
  *           - Support feature flag
  */
 
-#ifndef __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_HFP_FEATURES_H
-#define __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_HFP_FEATURES_H
+#ifndef __MODULES_INCLUDE_BLUETOOTH_BT_HFP_FEATURES_H
+#define __MODULES_INCLUDE_BLUETOOTH_BT_HFP_FEATURES_H
 
 /****************************************************************************
  * Included Files
@@ -107,4 +107,4 @@ typedef enum
   BT_HFP_AG_FEATURE_ENHANCED_VOICE_RECOGNITION   = 0x00000001 << 12  /**< Enhanced voice recognition */
 } BT_HFP_AG_FEATURE_FLAG;
 
-#endif /* __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_HFP_FEATURES_H */
+#endif /* __MODULES_INCLUDE_BLUETOOTH_BT_HFP_FEATURES_H */

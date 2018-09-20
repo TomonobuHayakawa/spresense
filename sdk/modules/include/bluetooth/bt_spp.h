@@ -40,8 +40,8 @@
  * @details This API is for using SPP and includes Function and Callback
  */
 
-#ifndef __MODULES_INCLUDE_BLUETOOTH_API_BT_SPP_H
-#define __MODULES_INCLUDE_BLUETOOTH_API_BT_SPP_H
+#ifndef __MODULES_INCLUDE_BLUETOOTH_BT_SPP_H
+#define __MODULES_INCLUDE_BLUETOOTH_BT_SPP_H
 
 /****************************************************************************
  * Included Files
@@ -49,7 +49,7 @@
 
 #include <stdint.h>
 #include <bluetooth/bluetooth.h>
-#include <bluetooth/api/bt_common.h>
+#include <bluetooth/bt_common.h>
 
 /****************************************************************************
  * Public Types
@@ -151,4 +151,4 @@ int bt_spp_send_tx_data(struct bt_acl_state_s *bt_acl_state, uint8_t *data, int 
 
 int bt_spp_register_cb(struct bt_spp_ops_s *bt_spp_ops);
 
-#endif /* __MODULES_INCLUDE_BLUETOOTH_API_BT_SPP_H */
+#endif /* __MODULES_INCLUDE_BLUETOOTH_BT_SPP_H */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/include/bluetooth/api/bt_a2dp.h
+ * modules/include/bluetooth/bt_a2dp.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -40,8 +40,8 @@
  * @details This API is for using A2DP and includes Function and Callback
  */
 
-#ifndef __MODULES_INCLUDE_BLUETOOTH_API_BT_A2DP_H
-#define __MODULES_INCLUDE_BLUETOOTH_API_BT_A2DP_H
+#ifndef __MODULES_INCLUDE_BLUETOOTH_BT_A2DP_H
+#define __MODULES_INCLUDE_BLUETOOTH_BT_A2DP_H
 
 /****************************************************************************
  * Included Files
@@ -49,8 +49,8 @@
 
 #include <stdint.h>
 #include <bluetooth/bluetooth.h>
-#include <bluetooth/bluetooth_a2dp_codecs.h>
-#include <bluetooth/api/bt_common.h>
+#include <bluetooth/bt_a2dp_codecs.h>
+#include <bluetooth/bt_common.h>
 
 /****************************************************************************
  * Private Data
@@ -136,4 +136,4 @@ int bt_a2dp_set_codec_capability(BT_AUDIO_CODEC_INFO *codec_capabilities, uint8_
 
 int bt_a2dp_register_callback(struct bt_a2dp_ops_s *bt_a2dp_ops);
 
-#endif /* __MODULES_INCLUDE_BLUETOOTH_API_BT_A2DP_H */
+#endif /* __MODULES_INCLUDE_BLUETOOTH_BT_A2DP_H */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/include/bluetooth/bluetooth_a2dp_codecs.h
+ * modules/include/bluetooth/bt_a2dp_codecs.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -34,7 +34,7 @@
  ****************************************************************************/
 
 /**
- * @file bluetooth_a2dp_codecs.h
+ * @file bt_a2dp_codecs.h
  * @author Sony Semiconductor Solutions Corporation
  * @brief Bluetooth A2DP common header for SDK on Spresense.
  * @details This header file includes bluetooth A2DP common definition between
@@ -42,8 +42,8 @@
  *           - Codec information
  */
 
-#ifndef __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_A2DP_CODECS_H
-#define __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_A2DP_CODECS_H
+#ifndef __MODULES_INCLUDE_BLUETOOTH_BT_A2DP_CODECS_H
+#define __MODULES_INCLUDE_BLUETOOTH_BT_A2DP_CODECS_H
 
 /****************************************************************************
  * Included Files
@@ -203,4 +203,4 @@ typedef struct
   BT_A2DP_TRANSFER_TYPE transfer_type;
 } BT_AUDIO_CODEC_INFO;
 
-#endif /* __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_A2DP_CODECS_H */
+#endif /* __MODULES_INCLUDE_BLUETOOTH_BT_A2DP_CODECS_H */
