@@ -296,9 +296,14 @@ static int video_open(FAR struct file *filep)
   video_lock(&priv->excldev);
   if (priv->open_num == 0)
     {
+      /* Only in first execution, open device */
+
       ret = g_video_ops->open(priv);
     }
-  if (ret != OK)
+
+  /* In second or later execution, ret is initial value(=OK) */
+ 
+  if (ret == OK)
     {
       priv->open_num++;
     }
