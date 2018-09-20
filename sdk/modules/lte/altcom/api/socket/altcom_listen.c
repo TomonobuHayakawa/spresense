@@ -91,9 +91,9 @@ static int32_t listen_request(FAR struct altcom_socket_s *fsock,
 
   /* Allocate send and response command buffer */
 
-  if (!altcom_sock_alloc_cmdandresbuff(cmd, APICMDID_SOCK_LISTEN,
-                                   LISTEN_REQ_DATALEN, res,
-                                   LISTEN_RES_DATALEN))
+  if (!altcom_sock_alloc_cmdandresbuff(
+    (FAR void **)&cmd, APICMDID_SOCK_LISTEN, LISTEN_REQ_DATALEN,
+    (FAR void **)&res, LISTEN_RES_DATALEN))
     {
       return LISTEN_REQ_FAILURE;
     }
