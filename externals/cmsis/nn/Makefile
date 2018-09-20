@@ -42,14 +42,11 @@
 CMSIS_NN = libcmsis_nn$(LIBEXT)
 BIN = $(CMSIS_NN)
 
+# CFLAGS definitions
+
+include ../LibIncludes.mk
+
 CMSIS_ROOT = ../CMSIS_5/CMSIS
-
-CFLAGS += -I$(CMSIS_ROOT)/Core/Include
-CFLAGS += -I$(CMSIS_ROOT)/DSP/Include
-CFLAGS += -I$(CMSIS_ROOT)/NN/Include
-
-CFLAGS += -DARM_MATH_CM4
-CFLAGS += -D__FPU_PRESENT=1U
 
 SUBDIRS := $(dir $(wildcard $(CMSIS_ROOT)/NN/Source/*/))
 

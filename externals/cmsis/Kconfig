@@ -20,6 +20,22 @@ config EXTERNALS_CMSIS_DSP
 	---help---
 		Enable CMSIS-DSP: Fast implementation of digital signal processing.
 
+if EXTERNALS_CMSIS_DSP
+
+config EXTERNALS_CMSIS_DSP_ARM_MATH_MATRIX_CHECK
+	bool "CMSIS DSP MATH MATRIX CHECK"
+	default n
+	---help---
+		Enable checking on the input and output sizes of matrices
+
+config EXTERNALS_CMSIS_DSP_ARM_MATH_ROUNDING
+	bool "CMSIS DSP MATH ROUNDING"
+	default n
+	---help---
+		Enable rounding on support functions
+
+endif # EXTERNALS_CMSIS_DSP
+
 config EXTERNALS_CMSIS_NN
 	bool "CMSIS NN"
 	default y
@@ -27,4 +43,4 @@ config EXTERNALS_CMSIS_NN
 	---help---
 		Enable CMSIS-NN: Efficient neural network kernels.
 
-endif
+endif # EXTERNALS_CMSIS

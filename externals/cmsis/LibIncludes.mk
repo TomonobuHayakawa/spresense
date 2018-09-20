@@ -33,8 +33,10 @@
 #
 ############################################################################
 
--include $(TOPDIR)/Make.defs
--include $(SDKDIR)/Make.defs
+ifeq ($(CONFIG_EXTERNALS_CMSIS),y)
+CFLAGS += -DARM_MATH_CM4 -D__FPU_PRESENT=1U
+CXXFLAGS += -DARM_MATH_CM4 -D__FPU_PRESENT=1U
+endif
 
 ifeq ($(CONFIG_EXTERNALS_CMSIS_DSP),y)
 CFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/Core/Include"}
