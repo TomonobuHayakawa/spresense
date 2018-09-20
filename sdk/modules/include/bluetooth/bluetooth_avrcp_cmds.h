@@ -33,6 +33,14 @@
  *
  ****************************************************************************/
 
+/**
+ * @file bluetooth_avrcp_cmds.h
+ * @author Sony Semiconductor Solutions Corporation
+ * @brief AVRCP command I/F.
+ * @details This header file includes AVRCP related commands list.
+ *           - AVRCP available commands
+ */
+
 #ifndef __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_AVRCP_CMDS_H
 #define __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_AVRCP_CMDS_H
 
@@ -49,72 +57,68 @@
  ****************************************************************************/
 
 /**
- * @defgroup bt_datatypes Data types
- * @{
- */
-
-
-/**@brief AVRCP command list
+ * @enum BT_AVRCP_CMD_ID
+ * @brief AVRCP command list
  */
 typedef enum
 {
-  BT_AVRCP_CMD_SELECT     = 0x00,
-  BT_AVRCP_CMD_UP,
-  BT_AVRCP_CMD_DOWN,
-  BT_AVRCP_CMD_LEFT,
-  BT_AVRCP_CMD_RIGHT,
-  BT_AVRCP_CMD_RIGHT_UP,
-  BT_AVRCP_CMD_RIGHT_DOWN,
-  BT_AVRCP_CMD_LEFT_UP,
-  BT_AVRCP_CMD_LEFT_DOWN,
-  BT_AVRCP_CMD_ROOT_MENU,
-  BT_AVRCP_CMD_SETUP_MENU,
-  BT_AVRCP_CMD_CONT_MENU,
-  BT_AVRCP_CMD_FAV_MENU,
-  BT_AVRCP_CMD_EXIT,
-  BT_AVRCP_CMD_0          = 0x20,
-  BT_AVRCP_CMD_1,
-  BT_AVRCP_CMD_2,
-  BT_AVRCP_CMD_3,
-  BT_AVRCP_CMD_4,
-  BT_AVRCP_CMD_5,
-  BT_AVRCP_CMD_6,
-  BT_AVRCP_CMD_7,
-  BT_AVRCP_CMD_8,
-  BT_AVRCP_CMD_9,
-  BT_AVRCP_CMD_DOT,
-  BT_AVRCP_CMD_ENTER,
-  BT_AVRCP_CMD_CLEAR,
-  BT_AVRCP_CMD_CHAN_UP    = 0x30,
-  BT_AVRCP_CMD_CHAN_DOWN,
-  BT_AVRCP_CMD_PREV_CHAN,
-  BT_AVRCP_CMD_SOUND_SEL,
-  BT_AVRCP_CMD_INPUT_SEL,
-  BT_AVRCP_CMD_DISP_INFO,
-  BT_AVRCP_CMD_HELP,
-  BT_AVRCP_CMD_PAGE_UP,
-  BT_AVRCP_CMD_PAGE_DOWN,
-  BT_AVRCP_CMD_POWER      = 0x40,
-  BT_AVRCP_CMD_VOL_UP,
-  BT_AVRCP_CMD_VOL_DOWN,
-  BT_AVRCP_CMD_MUTE,
-  BT_AVRCP_CMD_PLAY,
-  BT_AVRCP_CMD_STOP,
-  BT_AVRCP_CMD_PAUSE,
-  BT_AVRCP_CMD_RECORD,
-  BT_AVRCP_CMD_REWIND,
-  BT_AVRCP_CMD_FAST_FOR,
-  BT_AVRCP_CMD_EJECT,
-  BT_AVRCP_CMD_FORWARD,
-  BT_AVRCP_CMD_BACKWARD,
-  BT_AVRCP_CMD_ANGLE      = 0x50,
-  BT_AVRCP_CMD_SUBPICT,
-  BT_AVRCP_CMD_F1         = 0x71,
-  BT_AVRCP_CMD_F2,
-  BT_AVRCP_CMD_F3,
-  BT_AVRCP_CMD_F4,
-  BT_AVRCP_CMD_F5,
-  BT_AVRCP_CMD_VENDOR     = 0x7E
+  BT_AVRCP_CMD_SELECT     = 0x00, /**< 'Select' button */
+  BT_AVRCP_CMD_UP,                /**< 'Up' button */
+  BT_AVRCP_CMD_DOWN,              /**< 'Down' button */
+  BT_AVRCP_CMD_LEFT,              /**< 'Left' button */
+  BT_AVRCP_CMD_RIGHT,             /**< 'Right' button */
+  BT_AVRCP_CMD_RIGHT_UP,          /**< 'Right Up' button */
+  BT_AVRCP_CMD_RIGHT_DOWN,        /**< 'Right Down' button */
+  BT_AVRCP_CMD_LEFT_UP,           /**< 'Left Up' button */
+  BT_AVRCP_CMD_LEFT_DOWN,         /**< 'Left Down' button */
+  BT_AVRCP_CMD_ROOT_MENU,         /**< 'Root menu' button */
+  BT_AVRCP_CMD_SETUP_MENU,        /**< 'Setup menu' button */
+  BT_AVRCP_CMD_CONT_MENU,         /**< 'Contents menu' button */
+  BT_AVRCP_CMD_FAV_MENU,          /**< 'Favorite menu' button */
+  BT_AVRCP_CMD_EXIT,              /**< 'Exit' button */
+  BT_AVRCP_CMD_0          = 0x20, /**< '0' button */
+  BT_AVRCP_CMD_1,                 /**< '1' button */
+  BT_AVRCP_CMD_2,                 /**< '2' button */
+  BT_AVRCP_CMD_3,                 /**< '3' button */
+  BT_AVRCP_CMD_4,                 /**< '4' button */
+  BT_AVRCP_CMD_5,                 /**< '5' button */
+  BT_AVRCP_CMD_6,                 /**< '6' button */
+  BT_AVRCP_CMD_7,                 /**< '7' button */
+  BT_AVRCP_CMD_8,                 /**< '8' button */
+  BT_AVRCP_CMD_9,                 /**< '9' button */
+  BT_AVRCP_CMD_DOT,               /**< '.' button */
+  BT_AVRCP_CMD_ENTER,             /**< 'Enter' button */
+  BT_AVRCP_CMD_CLEAR,             /**< 'Clear' button */
+  BT_AVRCP_CMD_CHAN_UP    = 0x30, /**< 'Channel Up' button */
+  BT_AVRCP_CMD_CHAN_DOWN,         /**< 'Channel Down' button */
+  BT_AVRCP_CMD_PREV_CHAN,         /**< 'Previous Channel' button */
+  BT_AVRCP_CMD_SOUND_SEL,         /**< 'Sound Select' button */
+  BT_AVRCP_CMD_INPUT_SEL,         /**< 'Input Select' button */
+  BT_AVRCP_CMD_DISP_INFO,         /**< 'Display Information' button */
+  BT_AVRCP_CMD_HELP,              /**< 'Help' button */
+  BT_AVRCP_CMD_PAGE_UP,           /**< 'Page Up' button */
+  BT_AVRCP_CMD_PAGE_DOWN,         /**< 'Page Down' button */
+  BT_AVRCP_CMD_POWER      = 0x40, /**< 'Power' button */
+  BT_AVRCP_CMD_VOL_UP,            /**< 'Volume Up' button */
+  BT_AVRCP_CMD_VOL_DOWN,          /**< 'Volume Down' button */
+  BT_AVRCP_CMD_MUTE,              /**< 'Mute' button */
+  BT_AVRCP_CMD_PLAY,              /**< 'Play' button */
+  BT_AVRCP_CMD_STOP,              /**< 'Stop' button */
+  BT_AVRCP_CMD_PAUSE,             /**< 'Pause' button */
+  BT_AVRCP_CMD_RECORD,            /**< 'Record' button */
+  BT_AVRCP_CMD_REWIND,            /**< 'Rewind' button */
+  BT_AVRCP_CMD_FAST_FOR,          /**< 'Fast Forward' button */
+  BT_AVRCP_CMD_EJECT,             /**< 'Eject' button */
+  BT_AVRCP_CMD_FORWARD,           /**< 'Forward' button */
+  BT_AVRCP_CMD_BACKWARD,          /**< 'Backward' button */
+  BT_AVRCP_CMD_ANGLE      = 0x50, /**< 'Angle' button */
+  BT_AVRCP_CMD_SUBPICT,           /**< 'Subpicture' button */
+  BT_AVRCP_CMD_F1         = 0x71, /**< 'F1' button */
+  BT_AVRCP_CMD_F2,                /**< 'F2' button */
+  BT_AVRCP_CMD_F3,                /**< 'F3' button */
+  BT_AVRCP_CMD_F4,                /**< 'F4' button */
+  BT_AVRCP_CMD_F5,                /**< 'F5' button */
+  BT_AVRCP_CMD_VENDOR     = 0x7E  /**< Vendor unique button */
 } BT_AVRCP_CMD_ID;
 
 #endif /* __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_AVRCP_CMDS_H */

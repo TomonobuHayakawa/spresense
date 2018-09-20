@@ -33,6 +33,13 @@
  *
  ****************************************************************************/
 
+/**
+ * @file bt_a2dp.h
+ * @author Sony Semiconductor Solutions Corporation
+ * @brief A2DP API.
+ * @details This API is for using A2DP and includes Function and Callback
+ */
+
 #ifndef __MODULES_INCLUDE_BLUETOOTH_API_BT_A2DP_H
 #define __MODULES_INCLUDE_BLUETOOTH_API_BT_A2DP_H
 
@@ -48,29 +55,29 @@
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-/**
- * @defgroup bt_defs Defines
- * @{
- */
 
-/** Bluetooth A2DP application callbacks
+/**
+ * @struct bt_a2dp_ops_s
+ * @brief Bluetooth A2DP application callbacks
  */
 struct bt_a2dp_ops_s
 {
-  void (*command_status)(BT_CMD_STATUS status);
-  void (*connect)(struct bt_acl_state_s *bt_acl_state, BT_AUDIO_CODEC_INFO codecInfo);
-  void (*disconnect)(struct bt_acl_state_s *bt_acl_state);
-  void (*receive_media_pkt)(struct bt_acl_state_s *bt_acl_state, uint8_t *data, int len);
+  void (*command_status)(BT_CMD_STATUS status);                                           /**< Command status */
+  void (*connect)(struct bt_acl_state_s *bt_acl_state, BT_AUDIO_CODEC_INFO codecInfo);    /**< Connection status */
+  void (*disconnect)(struct bt_acl_state_s *bt_acl_state);                                /**< Disconnection status */
+  void (*receive_media_pkt)(struct bt_acl_state_s *bt_acl_state, uint8_t *data, int len); /**< Receive media data */
 };
 
-/** Bluetooth A2DP context
+/**
+ * @struct bt_a2dp_state_s
+ * @brief Bluetooth A2DP context
  */
 struct bt_a2dp_state_s
 {
-  BT_CONNECT_STATUS        bt_a2dp_connection; /* Status of A2DP connection */
-  struct bt_acl_state_s    *bt_acl_state;      /* Bluetooth ACL context */
-  struct bt_hal_a2dp_ops_s *bt_hal_a2dp_ops;   /* A2DP HAL interfaces */
-  struct bt_a2dp_ops_s     *bt_a2dp_ops;       /* A2DP connection callbacks */
+  BT_CONNECT_STATUS        bt_a2dp_connection; /**< Status of A2DP connection @ref BT_CONNECT_STATUS */
+  struct bt_acl_state_s    *bt_acl_state;      /**< Bluetooth ACL context @ref bt_acl_state_s */
+  struct bt_hal_a2dp_ops_s *bt_hal_a2dp_ops;   /**< A2DP HAL interfaces @ref bt_hal_a2dp_ops_s */
+  struct bt_a2dp_ops_s     *bt_a2dp_ops;       /**< A2DP connection callbacks @ref bt_a2dp_ops_s */
 };
 
 /****************************************************************************
@@ -89,7 +96,7 @@ bool bt_a2dp_is_supported(void);
  * @brief Bluetooth A2DP connect
  *        Connect to peer device with A2DP.
  *
- * @param[in] addr: BT_ADDR* device BD_ADDR to connect
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
  *
  * @retval error code
  */
@@ -100,7 +107,7 @@ int bt_a2dp_connect(struct bt_acl_state_s *bt_acl_state);
  * @brief Bluetooth A2DP disconnect
  *        Disconnect to peer device with A2DP.
  *
- * @param[in] addr: BT_ADDR* device BD_ADDR to disconnect
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
  *
  * @retval error code
  */
@@ -111,7 +118,8 @@ int bt_a2dp_disconnect(struct bt_acl_state_s *bt_acl_state);
  * @brief Bluetooth A2DP set codec capability
  *        Set capability of audio codecs
  *
- * @param[in] codec: BT_A2DP_CODEC_TYPE Codec type list(SBC/AAC).
+ * @param[in] codec_capabilities: BT_A2DP_CODEC_TYPE Codec type list(SBC/AAC) @ref BT_AUDIO_CODEC_INFO
+ * @param[in] num: Length of codec capability
  *
  * @retval error code
  */
@@ -119,19 +127,9 @@ int bt_a2dp_disconnect(struct bt_acl_state_s *bt_acl_state);
 int bt_a2dp_set_codec_capability(BT_AUDIO_CODEC_INFO *codec_capabilities, uint8_t num);
 
 /**
- * @brief Register media packet callback
- *
- * @param[in] a2dp_cb: rxCallback A2DP media packet callback function.
- *
- * @retval error code
- */
-
-int bt_register_media_packet_callback(rx_callback a2dp_cb);
-
-/**
  * @brief Register A2DP event packet callback
  *
- * @param[in] a2dpCb: rxCallback A2DP media packet callback function.
+ * @param[in] bt_a2dp_ops: Callback function for event handler @ref bt_a2dp_ops_s
  *
  * @retval error code
  */

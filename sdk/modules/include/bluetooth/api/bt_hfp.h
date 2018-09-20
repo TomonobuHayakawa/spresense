@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/include/bluetooth/bluetooth_hfp.h
+ * modules/include/bluetooth/bt_hfp.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,6 +33,13 @@
  *
  ****************************************************************************/
 
+/**
+ * @file bt_hfp.h
+ * @author Sony Semiconductor Solutions Corporation
+ * @brief HFP API.
+ * @details This API is for using HFP and includes Function and Callback
+ */
+
 #ifndef __MODULES_INCLUDE_BLUETOOTH_API_BT_HFP_H
 #define __MODULES_INCLUDE_BLUETOOTH_API_BT_HFP_H
 
@@ -48,33 +55,33 @@
 /****************************************************************************
  * Public Types
  ****************************************************************************/
-/**
- * @defgroup bt_datatypes Data types
- * @{
- */
 
-/** Bluetooth HFP application callbacks
+/**
+ * @struct bt_hfp_ops_s
+ * @brief Bluetooth HFP application callbacks
  */
 struct bt_hfp_ops_s
 {
-  void (*command_status)(BT_CMD_STATUS status);
-  void (*connect)(struct bt_acl_state_s *bt_acl_state, BT_PROFILE_TYPE btProfileType);
-  void (*disconnect)(struct bt_acl_state_s *bt_acl_state);
-  void (*audio_connect)(struct bt_acl_state_s *bt_acl_state);
-  void (*audio_disconnect)(struct bt_acl_state_s *bt_acl_state);
-  void (*ag_feature)(struct bt_acl_state_s *bt_acl_state, BT_HFP_AG_FEATURE_FLAG feature);
-  void (*hf_at_response)(struct bt_acl_state_s *bt_acl_state, char *at_resp);
+  void (*command_status)(BT_CMD_STATUS status);                                            /**< Command status */
+  void (*connect)(struct bt_acl_state_s *bt_acl_state, BT_PROFILE_TYPE btProfileType);     /**< HFP connection status */
+  void (*disconnect)(struct bt_acl_state_s *bt_acl_state);                                 /**< HFP disconnection status */
+  void (*audio_connect)(struct bt_acl_state_s *bt_acl_state);                              /**< HFP audio connection status */
+  void (*audio_disconnect)(struct bt_acl_state_s *bt_acl_state);                           /**< HFP audio disconnection */
+  void (*ag_feature)(struct bt_acl_state_s *bt_acl_state, BT_HFP_AG_FEATURE_FLAG feature); /**< HFP AG feature response */
+  void (*hf_at_response)(struct bt_acl_state_s *bt_acl_state, char *at_resp);              /**< HFP AT command response */
 };
 
-/** Bluetooth HFP context
+/**
+ * @struct bt_hfp_state_s
+ * @brief Bluetooth HFP context
  */
 struct bt_hfp_state_s
 {
-  BT_CONNECT_STATUS        bt_hfp_connection;       /* Status of HFP connection */
-  BT_CONNECT_STATUS        bt_hfp_audio_connection; /* Status of HFP audio connection */
-  struct bt_acl_state_s    *bt_acl_state;           /* Bluetooth ACL context */
-  struct bt_hal_hfp_ops_s  *bt_hal_hfp_ops;         /* HFP HAL interfaces */
-  struct bt_hfp_ops_s      *bt_hfp_ops;             /* HFP connection callbacks */
+  BT_CONNECT_STATUS        bt_hfp_connection;       /**< Status of HFP connection @ref BT_CONNECT_STATUS */
+  BT_CONNECT_STATUS        bt_hfp_audio_connection; /**< Status of HFP audio connection @ref BT_CONNECT_STATUS */
+  struct bt_acl_state_s    *bt_acl_state;           /**< Bluetooth ACL context @ref bt_acl_state_s */
+  struct bt_hal_hfp_ops_s  *bt_hal_hfp_ops;         /**< HFP HAL interfaces @ref bt_hal_hfp_ops_s */
+  struct bt_hfp_ops_s      *bt_hfp_ops;             /**< HFP connection callbacks @ref bt_hfp_ops_s */
 };
 
 /****************************************************************************
@@ -93,7 +100,7 @@ bool bt_hfp_is_supported(void);
  * @brief Bluetooth HFP connect
  *        Connect to peer device with HFP.
  *
- * @param[in] addr: BT_ADDR* device BD_ADDR to connect
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
  *
  * @retval error code
  */
@@ -104,7 +111,7 @@ int bt_hfp_connect(struct bt_acl_state_s *bt_acl_state);
  * @brief Bluetooth HFP disconnect
  *        Disconnect to peer device with HFP.
  *
- * @param[in] addr: BT_ADDR* device BD_ADDR to disconnect
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
  *
  * @retval error code
  */
@@ -115,7 +122,7 @@ int bt_hfp_disconnect(struct bt_acl_state_s *bt_acl_state);
  * @brief Bluetooth HFP Audio connect
  *        Connect to peer device with HFP Audio.
  *
- * @param[in] addr: BT_ADDR* device BD_ADDR to connect
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
  *
  * @retval error code
  */
@@ -126,7 +133,7 @@ int bt_hfp_audio_connect(struct bt_acl_state_s *bt_acl_state);
  * @brief Bluetooth HFP Audio disconnect
  *        Disconnect to peer device with HFP Audio.
  *
- * @param[in] addr: BT_ADDR* device BD_ADDR to disconnect
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
  *
  * @retval error code
  */
@@ -137,8 +144,8 @@ int bt_hfp_audio_disconnect(struct bt_acl_state_s *bt_acl_state);
  * @brief Bluetooth send HFP command
  *        Send HFP command.
  *
- * @param[in] addr: BT_ADDR* device BD_ADDR to send command
- * @param[in] commandID: int command ID(TBD).
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
+ * @param[in] at_cmd_str: AT command string(Need to end with '\0')
  *
  * @retval error code
  */
@@ -149,7 +156,7 @@ int bt_hfp_send_at_command(struct bt_acl_state_s *bt_acl_state, char *at_cmd_str
  * @brief Bluetooth HFP Register callbacks
  *        Set callback about HFP.
  *
- * @param[in] bt_hfp_ops: bt_hfp_ops_s HFP callbacks
+ * @param[in] bt_hfp_ops: HFP callbacks @ref bt_hfp_ops_s
  *
  * @retval error code
  */

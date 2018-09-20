@@ -33,6 +33,15 @@
  *
  ****************************************************************************/
 
+/**
+ * @file bt_if.h
+ * @author Sony Semiconductor Solutions Corporation
+ * @brief Bluetooth HAL I/F.
+ * @details This header file includes bluetooth HAL I/F definitions.
+ *           - HAL I/F
+ *           - HAL callback function
+ */
+
 #ifndef __MODULES_INCLUDE_BLUETOOTH_HAL_BT_IF_H
 #define __MODULES_INCLUDE_BLUETOOTH_HAL_BT_IF_H
 
@@ -50,67 +59,73 @@
 /****************************************************************************
  * Public Types
  ****************************************************************************/
-/**
- * @defgroup bt_datatypes Data types
- * @{
- */
 
-/** Bluetooth Common HAL callbacks
+/**
+ * @struct bt_hal_common_ops_s
+ * @brief Bluetooth Common HAL callbacks
  */
 struct bt_hal_common_ops_s
 {
-  int (*init)(void);
-  int (*finalize)(void);
-  int (*enable)(bool enable);
-  int (*setDevAddr)(BT_ADDR *addr);
-  int (*getDevAddr)(BT_ADDR *addr);
-  int (*setDevName)(char *name);
-  int (*getDevName)(char *name);
-  int (*paringEnable)(bool enable);
-  int (*getBondList)(BT_ADDR *addrs, int *num);
-  int (*unBond)(BT_ADDR *addr);
-  int (*setVisibility)(BT_VISIBILITY visibility);
-  int (*inquiryStart)(void);
-  int (*inquiryCancel)(void);
+  int (*init)(void);                              /**< HAL initialization */
+  int (*finalize)(void);                          /**< HAL finalization */
+  int (*enable)(bool enable);                     /**< Turn ON/OFF */
+  int (*setDevAddr)(BT_ADDR *addr);               /**< Set device address */
+  int (*getDevAddr)(BT_ADDR *addr);               /**< Get current device address */
+  int (*setDevName)(char *name);                  /**< Set device name */
+  int (*getDevName)(char *name);                  /**< Get current device name */
+  int (*paringEnable)(bool enable);               /**< Set pairing mode enable/disable */
+  int (*getBondList)(BT_ADDR *addrs, int *num);   /**< Get bonding list */
+  int (*unBond)(BT_ADDR *addr);                   /**< Un-bond device */
+  int (*setVisibility)(BT_VISIBILITY visibility); /**< Set visibility */
+  int (*inquiryStart)(void);                      /**< Start inquiry */
+  int (*inquiryCancel)(void);                     /**< Cancel inquiry */
 };
 
-/** Bluetooth A2DP HAL callbacks
+/**
+ * @struct bt_hal_a2dp_ops_s
+ * @brief Bluetooth A2DP HAL callbacks
  */
 struct bt_hal_a2dp_ops_s
 {
-  int (*connect)(BT_ADDR *addr, bool connect);
-  int (*aacEnable)(bool enable);
-  int (*vendorCodecEnable)(bool enable);
-  int (*set_codec)(BT_AUDIO_CODEC_INFO *codec_info);
+  int (*connect)(BT_ADDR *addr, bool connect);        /**< Connect/Disconnect A2DP by BT_ADDR */
+  int (*aacEnable)(bool enable);                      /**< Enable/Disable AAC */
+  int (*vendorCodecEnable)(bool enable);              /**< Enable/Disable vendor codec */
+  int (*set_codec)(BT_AUDIO_CODEC_INFO *codec_info);  /**< Set codec parameters */
 };
 
-/** Bluetooth AVRCP HAL callbacks
+/**
+ * @struct bt_hal_avrcp_ops_s
+ * @brief Bluetooth AVRCP HAL callbacks
  */
 struct bt_hal_avrcp_ops_s
 {
-  int (*avrcc_connect)(BT_ADDR *addr, bool connect);
-  int (*avrct_connect)(BT_ADDR *addr, bool connect);
-  int (*send_avrcp_command)(BT_ADDR *addr, BT_AVRCP_CMD_ID cmd_id, bool press);
-  int (*configure_notification)(BT_AVRC_SUPPORT_NOTIFY_EVENT *notification_list);
+  int (*avrcc_connect)(BT_ADDR *addr, bool connect);                              /**< Connect/Disconnect AVRCP controller by BT_ADDR */
+  int (*avrct_connect)(BT_ADDR *addr, bool connect);                              /**< Connect/Disconnect AVRCP target by BT_ADDR */
+  int (*send_avrcp_command)(BT_ADDR *addr, BT_AVRCP_CMD_ID cmd_id, bool press);   /**< Send AVRCP command @ref BT_AVRCP_CMD_ID */
+  int (*configure_notification)(BT_AVRC_SUPPORT_NOTIFY_EVENT *notification_list); /**< Configure notification event @ref BT_AVRC_SUPPORT_NOTIFY_EVENT */
 };
 
-/** Bluetooth HFP HAL callbacks
+/**
+ * @struct bt_hal_hfp_ops_s
+ * @brief Bluetooth HFP HAL callbacks
  */
 struct bt_hal_hfp_ops_s
 {
-  int (*connect)(BT_ADDR *addr, bool connect);
-  int (*audio_connect)(BT_ADDR *addr, bool connect);
-  int (*set_hf_feature)(BT_HFP_HF_FEATURE_FLAG hf_heature);
-  int (*send_at_command)(BT_ADDR *addr, char *at_str);
+  int (*connect)(BT_ADDR *addr, bool connect);              /**< Connect/Disconnect HFP by BT_ADDR */
+  int (*audio_connect)(BT_ADDR *addr, bool connect);        /**< Connect/Disconnect HFP audio by BT_ADDR */
+  int (*set_hf_feature)(BT_HFP_HF_FEATURE_FLAG hf_heature); /**< Setup HFP HF feature @ref BT_HFP_HF_FEATURE_FLAG */
+  int (*send_at_command)(BT_ADDR *addr, char *at_str);      /**< Send AT comand */
 };
 
-/** Bluetooth SPP HAL callbacks
+/**
+ * @struct bt_hal_spp_ops_s
+ * @brief Bluetooth SPP HAL callbacks
  */
 struct bt_hal_spp_ops_s
 {
-  int (*connect)(BT_ADDR *addr, bool connect);
-  int (*setUuid)(BT_UUID *uuid);
-  int (*sendTxData)(BT_ADDR *addr, uint8_t *data, int len);
+  int (*connect)(BT_ADDR *addr, bool connect);              /**< Connect/Disconnect SPP by BT_ADDR */
+  int (*setUuid)(BT_UUID *uuid);                            /**< Setup UUID @ref BT_UUID */
+  int (*sendTxData)(BT_ADDR *addr, uint8_t *data, int len); /**< Send SPP Tx data */
 };
 
 /****************************************************************************
@@ -118,7 +133,9 @@ struct bt_hal_spp_ops_s
  ****************************************************************************/
 
 /**
- * @brief Bluetooth HAL register
+ * @brief Bluetooth common function HAL register
+ *
+ * @param[in] bt_hal_common_ops: HAL callback functions @ref bt_hal_common_ops_s
  *
  * @retval error code
  */
@@ -126,7 +143,10 @@ struct bt_hal_spp_ops_s
 int bt_common_register_hal(struct bt_hal_common_ops_s *bt_hal_common_ops);
 
 /**
- * @brief Bluetooth HAL register
+ * @brief Common event handler
+ *        HAL should call this function if receive common event(@ref BT_COMMON_EVENT_ID).
+ *
+ * @param[in] bt_event: Event data @ref bt_event_t
  *
  * @retval error code
  */
@@ -134,7 +154,9 @@ int bt_common_register_hal(struct bt_hal_common_ops_s *bt_hal_common_ops);
 int bt_common_event_handler(struct bt_event_t *bt_event);
 
 /**
- * @brief Bluetooth HAL register
+ * @brief Bluetooth A2DP function HAL register
+ *
+ * @param[in] bt_hal_a2dp_ops: HAL callback functions @ref bt_hal_a2dp_ops_s
  *
  * @retval error code
  */
@@ -142,7 +164,10 @@ int bt_common_event_handler(struct bt_event_t *bt_event);
 int bt_a2dp_register_hal(struct bt_hal_a2dp_ops_s *bt_hal_a2dp_ops);
 
 /**
- * @brief Bluetooth HAL register
+ * @brief A2DP event handler
+ *        HAL should call this function if receive A2DP event(@ref BT_A2DP_EVENT_ID).
+ *
+ * @param[in] bt_event: Event data @ref bt_event_t
  *
  * @retval error code
  */
@@ -150,7 +175,9 @@ int bt_a2dp_register_hal(struct bt_hal_a2dp_ops_s *bt_hal_a2dp_ops);
 int bt_a2dp_event_handler(struct bt_event_t *bt_event);
 
 /**
- * @brief Bluetooth HAL register
+ * @brief Bluetooth AVRCP function HAL register
+ *
+ * @param[in] bt_hal_avrcp_ops: HAL callback functions @ref bt_hal_avrcp_ops_s
  *
  * @retval error code
  */
@@ -158,7 +185,10 @@ int bt_a2dp_event_handler(struct bt_event_t *bt_event);
 int bt_avrcp_register_hal(struct bt_hal_avrcp_ops_s *bt_hal_avrcp_ops);
 
 /**
- * @brief Bluetooth HAL register
+ * @brief AVRCP event handler
+ *        HAL should call this function if receive AVRCP event(@ref BT_AVRCP_EVENT_ID).
+ *
+ * @param[in] bt_event: Event data @ref bt_event_t
  *
  * @retval error code
  */
@@ -166,7 +196,9 @@ int bt_avrcp_register_hal(struct bt_hal_avrcp_ops_s *bt_hal_avrcp_ops);
 int bt_avrcp_event_handler(struct bt_event_t *bt_event);
 
 /**
- * @brief Bluetooth HAL register
+ * @brief Bluetooth HFP function HAL register
+ *
+ * @param[in] bt_hal_hfp_ops: HAL callback functions @ref bt_hal_hfp_ops_s
  *
  * @retval error code
  */
@@ -174,7 +206,10 @@ int bt_avrcp_event_handler(struct bt_event_t *bt_event);
 int bt_hfp_register_hal(struct bt_hal_hfp_ops_s *bt_hal_hfp_ops);
 
 /**
- * @brief Bluetooth HAL register
+ * @brief HFP event handler
+ *        HAL should call this function if receive HFP event(@ref BT_HFP_EVENT_ID).
+ *
+ * @param[in] bt_event: Event data @ref bt_event_t
  *
  * @retval error code
  */
@@ -182,7 +217,9 @@ int bt_hfp_register_hal(struct bt_hal_hfp_ops_s *bt_hal_hfp_ops);
 int bt_hfp_event_handler(struct bt_event_t *bt_event);
 
 /**
- * @brief Bluetooth HAL register
+ * @brief Bluetooth SPP function HAL register
+ *
+ * @param[in] bt_hal_spp_ops: HAL callback functions @ref bt_hal_spp_ops_s
  *
  * @retval error code
  */
@@ -190,7 +227,10 @@ int bt_hfp_event_handler(struct bt_event_t *bt_event);
 int bt_spp_register_hal(struct bt_hal_spp_ops_s *bt_hal_spp_ops);
 
 /**
- * @brief Bluetooth HAL register
+ * @brief SPP event handler
+ *        HAL should call this function if receive SPP event(@ref BT_SPP_EVENT_ID).
+ *
+ * @param[in] bt_event: Event data @ref bt_event_t
  *
  * @retval error code
  */

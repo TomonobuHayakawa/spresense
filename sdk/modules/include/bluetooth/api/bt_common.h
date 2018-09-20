@@ -33,6 +33,13 @@
  *
  ****************************************************************************/
 
+/**
+ * @file bt_common.h
+ * @author Sony Semiconductor Solutions Corporation
+ * @brief Bluetooth generic API.
+ * @details This API is generic functions for bluetooth operations
+ */
+
 #ifndef __MODULES_INCLUDE_BLUETOOTH_API_BT_COMMON_H
 #define __MODULES_INCLUDE_BLUETOOTH_API_BT_COMMON_H
 
@@ -47,56 +54,58 @@
  * Public Types
  ****************************************************************************/
 
-/**@brief BT profile connection status
+/**
+ * @enum BT_CONNECT_STATUS
+ * @brief BT profile connection status
  */
 typedef enum
 {
-	BT_DISCONNECTED  = 0,
-	BT_DISCONNECTING = 1,
-	BT_CONNECTING    = 2,
-	BT_CONNECTED     = 3
+	BT_DISCONNECTED  = 0, /**< Disconnected */
+	BT_DISCONNECTING = 1, /**< Disconnect operation working */
+	BT_CONNECTING    = 2, /**< Connect operation working */
+	BT_CONNECTED     = 3  /**< Connected */
 } BT_CONNECT_STATUS;
 
-/** Bluetooth base context
+/**
+ * @struct bt_common_state_s
+ * @brief Bluetooth base context
  */
 struct bt_common_state_s
 {
-  struct bt_hal_common_ops_s *bt_hal_common_ops;    /* BT common HAL interfaces */
-  struct bt_ble_common_ops_s *bt_ble_common_ops;    /* BT status callbacks */
-  BT_ADDR                    bt_addr;               /* BT local device address */
-  BT_ADDR                    ble_addr;              /* BLE local device address */
-  char                       bt_name[BT_NAME_LEN];  /* BT local device name */
-  char                       ble_name[BT_NAME_LEN]; /* BLE local device name */
+  struct bt_hal_common_ops_s *bt_hal_common_ops;    /**< BT common HAL interfaces @ref bt_hal_common_ops_s */
+  struct bt_ble_common_ops_s *bt_ble_common_ops;    /**< BT status callbacks @ref bt_ble_common_ops_s */
+  BT_ADDR                    bt_addr;               /**< BT local device address @ref BT_ADDR */
+  BT_ADDR                    ble_addr;              /**< BLE local device address @ref BT_ADDR */
+  char                       bt_name[BT_NAME_LEN];  /**< BT local device name */
+  char                       ble_name[BT_NAME_LEN]; /**< BLE local device name */
 };
 
-/** Bluetooth ACL context
+/**
+ * @struct bt_acl_state_s
+ * @brief Bluetooth ACL context
  */
 struct bt_acl_state_s
 {
-  BT_CONNECT_STATUS          bt_acl_connection;            /* Status of ACL connection */
-  struct bt_common_state_s   *bt_common_state;            /* BT base context */
-  BT_ADDR                    bt_target_addr;              /* BT target device address */
-  char                       bt_target_name[BT_NAME_LEN]; /* BT target device name */
+  BT_CONNECT_STATUS          bt_acl_connection;           /**< Status of ACL connection @ref BT_CONNECT_STATUS */
+  struct bt_common_state_s   *bt_common_state;            /**< BT base context @ref bt_common_state_s */
+  BT_ADDR                    bt_target_addr;              /**< BT target device address @ref BT_ADDR */
+  char                       bt_target_name[BT_NAME_LEN]; /**< BT target device name */
 };
 
-/** Bluetooth Common application callbacks
+/**
+ * @struct bt_ble_common_ops_s
+ * @brief Bluetooth Common application callbacks
  */
 struct bt_ble_common_ops_s
 {
-  void (*command_status)(BT_CMD_STATUS status);
-  void (*pairing_complete)(BT_ADDR addr, BT_PAIR_STATUS status);
-  void (*inquiry_result)(BT_ADDR addr, char *name);
-  void (*inquiry_complete)(void);
-  void (*connect_status_changed)(struct bt_acl_state_s *bt_acl_state, bool connected, int status);
-  void (*connected_device_name)(const char *name);
-  void (*bond_info)(BT_ADDR addr);
+  void (*command_status)(BT_CMD_STATUS status);                                                    /**< Command status */
+  void (*pairing_complete)(BT_ADDR addr, BT_PAIR_STATUS status);                                   /**< Pairing complete */
+  void (*inquiry_result)(BT_ADDR addr, char *name);                                                /**< Inquiry data result */
+  void (*inquiry_complete)(void);                                                                  /**< Coplete inquiry */
+  void (*connect_status_changed)(struct bt_acl_state_s *bt_acl_state, bool connected, int status); /**< Connection status change */
+  void (*connected_device_name)(const char *name);                                                 /**< Device name change */
+  void (*bond_info)(BT_ADDR addr);                                                                 /**< Bonding information */
 };
-
-/** Rx Data Callback function
- * @param[out] pdata: Rx data body
- * @param[out] len  : Rx data length
- */
-typedef void (*rx_callback)(uint8_t *pdata, int len);
 
 /****************************************************************************
  * Public Function Prototypes
@@ -123,7 +132,7 @@ int bt_finalize(void);
  * @brief Set Bluetooth module address
  *        This is Spresense side address and should be call before bt_enable.
  *
- * @param[in] addr: BT_ADDR* Bluetooth device address
+ * @param[in] addr: Bluetooth device address @ref BT_ADDR
  *
  * @retval error code
  */
@@ -133,7 +142,7 @@ int bt_set_address(BT_ADDR *addr);
 /**
  * @brief Get Bluetooth module address
  *
- * @param[out] addr: BT_ADDR* Bluetooth device address
+ * @param[out] addr: Bluetooth device address @ref BT_ADDR
  *
  * @retval error code
  */
@@ -144,7 +153,7 @@ int bt_get_address(BT_ADDR *addr);
  * @brief Set Bluetooth module name
  *        This name visible for other devices and should be call before bt_enable.
  *
- * @param[in] name: char* Bluetooth device name
+ * @param[in] name: Bluetooth device name
  *
  * @retval error code
  */
@@ -154,7 +163,7 @@ int bt_set_name(char *name);
 /**
  * @brief Get Bluetooth module name
  *
- * @param[out] name: char* Bluetooth device name
+ * @param[out] name: Bluetooth device name
  *
  * @retval error code
  */
@@ -163,7 +172,7 @@ int bt_get_name(char *name);
 
 /**
  * @brief Bluetooth module enable
- *        Bluetooth set power on(and download firmware).
+ *        Bluetooth set power on(and download firmware, etc).
  *
  * @retval error code
  */
@@ -197,24 +206,12 @@ int bt_pairing_enable(void);
 
 int bt_paring_disable(void);
 
-#if 0
-/* TBD */
-/**
- * @brief Bluetooth set paring mode
- *        Paring mode setting.
- *
- * @retval error code
- */
-
-int btSetParingMode(mode);
-#endif
-
 /**
  * @brief Bluetooth get bond device list
  *        Get bond devices list with BD_ADDR.
  *
- * @param[in] addr: BT_ADDR* BD_ADDR list
- * @param[in] num: int* Number of BD_ADDR
+ * @param[in] addr: Device address list @ref BT_ADDR
+ * @param[in] num: Number of BD_ADDR
  *
  * @retval error code
  */
@@ -225,7 +222,7 @@ int bt_get_bond_list(BT_ADDR *addr, int *num);
  * @brief Bluetooth unbond by BD_ADDR
  *        Unbond device by BD_ADDR.
  *
- * @param[out] addr: BT_ADDR* Unbond device BD_ADDR
+ * @param[out] addr: Unbond device BD_ADDR @ref BT_ADDR
  *
  * @retval error code
  */
@@ -235,6 +232,8 @@ int bt_unbond(BT_ADDR *addr);
 /**
  * @brief Bluetooth set visible
  *        Visible this device from others.
+ *
+ * @param[in] visibility: Device visibility parameter @ref BT_VISIBILITY
  *
  * @retval error code
  */
@@ -260,8 +259,10 @@ int bt_start_inquiry(void);
 int bt_cancel_inquiry(void);
 
 /**
- * @brief Bluetooth register commin callbacks
+ * @brief Bluetooth register common callbacks
  *        Register Connect/Pairing/Inquiry callback
+ *
+ * @param[in] bt_ble_common_ops: Application callback @ref bt_ble_common_ops_s
  *
  * @retval error code
  */

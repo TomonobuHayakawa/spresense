@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/include/bluetooth/bluetooth_spp.h
+ * modules/include/bluetooth/bt_spp.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,6 +33,13 @@
  *
  ****************************************************************************/
 
+/**
+ * @file bt_spp.h
+ * @author Sony Semiconductor Solutions Corporation
+ * @brief SPP API.
+ * @details This API is for using SPP and includes Function and Callback
+ */
+
 #ifndef __MODULES_INCLUDE_BLUETOOTH_API_BT_SPP_H
 #define __MODULES_INCLUDE_BLUETOOTH_API_BT_SPP_H
 
@@ -47,30 +54,30 @@
 /****************************************************************************
  * Public Types
  ****************************************************************************/
-/**
- * @defgroup bt_datatypes Data types
- * @{
- */
 
-/** Bluetooth SPP application callbacks
+/**
+ * @struct bt_spp_ops_s
+ * @brief Bluetooth SPP application callbacks
  */
 struct bt_spp_ops_s
 {
-  void (*connect)(struct bt_acl_state_s *bt_acl_state);
-  void (*disconnect)(struct bt_acl_state_s *bt_acl_state);
-  void (*connection_fail)(struct bt_acl_state_s *bt_acl_state, BT_CONNECT_FAIL_REASON_ID fail_id);
-  void (*receive_data)(struct bt_acl_state_s *bt_acl_state, uint8_t *data, int len);
+  void (*connect)(struct bt_acl_state_s *bt_acl_state);                                            /**< Connection status */
+  void (*disconnect)(struct bt_acl_state_s *bt_acl_state);                                         /**< Disconnection status */
+  void (*connection_fail)(struct bt_acl_state_s *bt_acl_state, BT_CONNECT_FAIL_REASON_ID fail_id); /**< Connection fail */
+  void (*receive_data)(struct bt_acl_state_s *bt_acl_state, uint8_t *data, int len);               /**< Receive SPP data */
 };
 
-/** Bluetooth SPP context
+/**
+ * @struct bt_spp_state_s
+ * @brief Bluetooth SPP context
  */
 struct bt_spp_state_s
 {
-  BT_CONNECT_STATUS        bt_spp_connection; /* Status of SPP connection */
-  struct bt_acl_state_s    *bt_acl_state;     /* Bluetooth ACL context */
-  struct bt_hal_spp_ops_s  *bt_hal_spp_ops;   /* SPP HAL interfaces */
-  struct bt_spp_ops_s      *bt_spp_ops;       /* SPP connection callbacks */
-  BT_UUID                  spp_uuid;          /* SPP UUID */
+  BT_CONNECT_STATUS        bt_spp_connection; /**< Status of SPP connection @ref BT_CONNECT_STATUS */
+  struct bt_acl_state_s    *bt_acl_state;     /**< Bluetooth ACL context @ref bt_acl_state_s */
+  struct bt_hal_spp_ops_s  *bt_hal_spp_ops;   /**< SPP HAL interfaces @ref bt_hal_spp_ops_s */
+  struct bt_spp_ops_s      *bt_spp_ops;       /**< SPP connection callbacks @ref bt_spp_ops_s */
+  BT_UUID                  spp_uuid;          /**< SPP UUID @ref BT_UUID */
 };
 
 /****************************************************************************
@@ -93,7 +100,7 @@ bool bt_spp_is_supported(void);
  * @brief Bluetooth SPP connect
  *        Connect to peer device with SPP.
  *
- * @param[in] addr: BT_ADDR* device BD_ADDR to connect
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
  *
  * @retval error code
  */
@@ -104,7 +111,7 @@ int bt_spp_connect(struct bt_acl_state_s *bt_acl_state);
  * @brief Bluetooth SPP disconnect
  *        Disconnect to peer device with SPP.
  *
- * @param[in] addr: BT_ADDR* device BD_ADDR to disconnect
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
  *
  * @retval error code
  */
@@ -114,7 +121,7 @@ int bt_spp_disconnect(struct bt_acl_state_s *bt_acl_state);
 /**
  * @brief Bluetooth SPP set UUID
  *
- * @param[in] uuid: BT_UUID UUID.
+ * @param[in] uuid: UUID @ref BT_UUID
  *
  * @retval error code
  */
@@ -122,21 +129,11 @@ int bt_spp_disconnect(struct bt_acl_state_s *bt_acl_state);
 int bt_spp_set_uuid(BT_UUID *uuid);
 
 /**
- * @brief Bluetooth SPP set RX callback
+ * @brief Bluetooth SPP send Tx data
  *
- * @param[in] sppCb: rxCallback callback func.
- *
- * @retval error code
- */
-
-int bt_spp_set_rx_data_cb(rx_callback spp_cb);
-
-/**
- * @brief Bluetooth SPP send TX data
- *
- * @param[in] addr: BT_ADDR* device BD_ADDR to disconnect
- * @param[in] data: uint8_t * TX data.
- * @param[in] len: int TX data size.
+ * @param[in] bt_acl_state: Bluetooth context @ref bt_acl_state_s
+ * @param[in] data: uint8_t * Tx data.
+ * @param[in] len: int Tx data size.
  *
  * @retval error code
  */
@@ -147,7 +144,7 @@ int bt_spp_send_tx_data(struct bt_acl_state_s *bt_acl_state, uint8_t *data, int 
  * @brief Bluetooth SPP Register notification
  *        Set callback about SPP callbacks.
  *
- * @param[in] bt_spp_ops: bt_spp_ops_s callback funcs
+ * @param[in] bt_spp_ops: Callback functions @ref bt_spp_ops_s
  *
  * @retval error code
  */

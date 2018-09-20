@@ -33,6 +33,15 @@
  *
  ****************************************************************************/
 
+/**
+ * @file bluetooth_a2dp_codecs.h
+ * @author Sony Semiconductor Solutions Corporation
+ * @brief Bluetooth A2DP common header for SDK on Spresense.
+ * @details This header file includes bluetooth A2DP common definition between
+ *          API and HAL I/F.
+ *           - Codec information
+ */
+
 #ifndef __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_A2DP_CODECS_H
 #define __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_A2DP_CODECS_H
 
@@ -45,26 +54,17 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-/**
- * @defgroup bt_defs Defines
- * @{
- */
 
 /**
- * @name cie format data max length
+ * @name Codec Information format data max length
  * @{
  */
-#define CIE_MAX_LENGTH  20
+#define CODEC_INFO_MAX_LENGTH  20
 /** @} */
 
 /****************************************************************************
  * Public Types
  ****************************************************************************/
-
-/**
- * @defgroup bt_datatypes Data types
- * @{
- */
 
 /**@brief Masks for supported Codecs
  */
@@ -145,7 +145,7 @@ typedef struct
 	BT_A2DP_SBC_ALLOC_MODE allocMthd;
 	uint8_t                maxBitpool;
 	uint8_t                minBitpool;
-} BT_A2D_SBC_CIE;
+} BT_A2D_SBC_CODEC_INFO;
 
 
 /**@brief Masks for supported Codecs
@@ -179,15 +179,15 @@ typedef struct
 	BT_A2DP_CHANNEL_MODE chnl;
 	uint8_t              isVbrSupported;
 	uint32_t             bitrate;
-} BT_A2D_AAC_CIE;
+} BT_A2D_AAC_CODEC_INFO;
 
 /**@brief Vendor Specific Codec information element type
  */
 typedef struct
 {
-	uint8_t  cieLength;
-	uint8_t  cie[CIE_MAX_LENGTH];
-} BT_A2D_VENDOR_CIE;
+	uint8_t  codecInfoLength;
+	uint8_t  codecInfo[CODEC_INFO_MAX_LENGTH];
+} BT_A2D_VENDOR_CODEC_INFO;
 
 /**@brief Codec information element structure, used to provide info of a single type of codec
  */
@@ -196,10 +196,10 @@ typedef struct
 	BT_A2DP_CODEC_TYPE codecId;
 	union
 	{
-		BT_A2D_SBC_CIE    sbc;
-		BT_A2D_AAC_CIE    aac;
-		BT_A2D_VENDOR_CIE vsp;
-	}cie;
+		BT_A2D_SBC_CODEC_INFO    sbc;
+		BT_A2D_AAC_CODEC_INFO    aac;
+		BT_A2D_VENDOR_CODEC_INFO vsp;
+	} codec_info;
   BT_A2DP_TRANSFER_TYPE transfer_type;
 } BT_AUDIO_CODEC_INFO;
 

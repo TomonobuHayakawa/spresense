@@ -33,6 +33,16 @@
  *
  ****************************************************************************/
 
+/**
+ * @file bluetooth_hfp_features.h
+ * @author Sony Semiconductor Solutions Corporation
+ * @brief Bluetooth HFP common header for SDK on Spresense.
+ * @details This header file includes bluetooth HFP common definition between
+ *          API and HAL I/F.
+ *           - Profile type
+ *           - Support feature flag
+ */
+
 #ifndef __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_HFP_FEATURES_H
 #define __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_HFP_FEATURES_H
 
@@ -49,52 +59,52 @@
  ****************************************************************************/
 
 /**
- * @defgroup bt_datatypes Data types
- * @{
- */
-
-
-/**@brief BT HFP profile type
+ * @enum BT_PROFILE_TYPE
+ * @brief BT HFP profile type
  */
 typedef enum {
-	BT_HFP_PROFILE = 0,
-	BT_HSP_PROFILE
+	BT_HFP_PROFILE = 0, /**< Hands free profile */
+	BT_HSP_PROFILE      /**< Head set profile */
 } BT_PROFILE_TYPE;
 
-/**@brief HFP HF device supported feature flags.
+/**
+ * @enum BT_HFP_HF_FEATURE_FLAG
+ * @brief HFP HF device supported feature flags.
  */
 typedef enum
 {
-  BT_HFP_HF_FEATURE_ECNR                         = 0x00000001 << 0,
-  BT_HFP_HF_FEATURE_3WAY_CALLING                 = 0x00000001 << 1,
-  BT_HFP_HF_FEATURE_CLIP_CAPABILITY              = 0x00000001 << 2,
-  BT_HFP_HF_FEATURE_VOICE_RECOGNITION_ACTIVATION = 0x00000001 << 3,
-  BT_HFP_HF_FEATURE_REMOTE_VOLUME_CONTROL        = 0x00000001 << 4,
-  BT_HFP_HF_FEATURE_ENHANCED_CALL_STATUS         = 0x00000001 << 5,
-  BT_HFP_HF_FEATURE_ENHANCED_CALL_CONTROL        = 0x00000001 << 6,
-  BT_HFP_HF_FEATURE_CODEC_NEGOTIATION            = 0x00000001 << 7,
-  BT_HFP_HF_FEATURE_HF_INDICATORS                = 0x00000001 << 8,
-  BT_HFP_HF_FEATURE_ESCO_S4_T2_SETTINGS_SUPPORT  = 0x00000001 << 9,
-  BT_HFP_HF_FEATURE_ENHANCED_VOICE_RECOGNITION   = 0x00000001 << 10
+  BT_HFP_HF_FEATURE_ECNR                         = 0x00000001 << 0, /**< EC and/or NR function */
+  BT_HFP_HF_FEATURE_3WAY_CALLING                 = 0x00000001 << 1, /**< Three-way calling */
+  BT_HFP_HF_FEATURE_CLIP_CAPABILITY              = 0x00000001 << 2, /**< CLI presentation capability */
+  BT_HFP_HF_FEATURE_VOICE_RECOGNITION_ACTIVATION = 0x00000001 << 3, /**< Voice recognition activation */
+  BT_HFP_HF_FEATURE_REMOTE_VOLUME_CONTROL        = 0x00000001 << 4, /**< Remote volume control */
+  BT_HFP_HF_FEATURE_ENHANCED_CALL_STATUS         = 0x00000001 << 5, /**< Enhanced call status */
+  BT_HFP_HF_FEATURE_ENHANCED_CALL_CONTROL        = 0x00000001 << 6, /**< Enhanced call control */
+  BT_HFP_HF_FEATURE_CODEC_NEGOTIATION            = 0x00000001 << 7, /**< Codec negotiation */
+  BT_HFP_HF_FEATURE_HF_INDICATORS                = 0x00000001 << 8, /**< HF indicators */
+  BT_HFP_HF_FEATURE_ESCO_S4_T2_SETTINGS_SUPPORT  = 0x00000001 << 9, /**< eSCO S4 (and T2) Settings Supported */
+  BT_HFP_HF_FEATURE_ENHANCED_VOICE_RECOGNITION   = 0x00000001 << 10 /**< Enhanced voice recognition */
 } BT_HFP_HF_FEATURE_FLAG;
 
-/**@brief HFP AG device supported feature flags.
+/**
+ * @enum BT_HFP_AG_FEATURE_FLAG
+ * @brief HFP AG device supported feature flags.
  */
 typedef enum
 {
-  BT_HFP_AG_FEATURE_3WAY_CALLING                 = 0x00000001 << 0,
-  BT_HFP_AG_FEATURE_ECNR                         = 0x00000001 << 1,
-  BT_HFP_AG_FEATURE_VOICE_RECOGNITION_ACTIVATION = 0x00000001 << 2,
-  BT_HFP_AG_FEATURE_INBAND_RING_TONE_CAPABILITY  = 0x00000001 << 3,
-  BT_HFP_AG_FEATURE_ATTACH_NUMBER_TO_VOICE_TAG   = 0x00000001 << 4,
-  BT_HFP_AG_FEATURE_ABILITY_TO_REJECT_CALL       = 0x00000001 << 5,
-  BT_HFP_AG_FEATURE_ENHANCED_CALL_STATUS         = 0x00000001 << 6,
-  BT_HFP_AG_FEATURE_ENHANCED_CALL_CONTROL        = 0x00000001 << 7,
-  BT_HFP_AG_FEATURE_EXTENDED_ERROR_RESULT_CODES  = 0x00000001 << 8,
-  BT_HFP_AG_FEATURE_CODEC_NEGOTIATION            = 0x00000001 << 9,
-  BT_HFP_AG_FEATURE_HF_INDICATORS                = 0x00000001 << 10,
-  BT_HFP_AG_FEATURE_ESCO_S4_T2_SETTINGS_SUPPORT  = 0x00000001 << 11,
-  BT_HFP_AG_FEATURE_ENHANCED_VOICE_RECOGNITION   = 0x00000001 << 12
+  BT_HFP_AG_FEATURE_3WAY_CALLING                 = 0x00000001 << 0,  /**< Three-way calling */
+  BT_HFP_AG_FEATURE_ECNR                         = 0x00000001 << 1,  /**< EC and/or NR function */
+  BT_HFP_AG_FEATURE_VOICE_RECOGNITION_ACTIVATION = 0x00000001 << 2,  /**< Voice recognition function */
+  BT_HFP_AG_FEATURE_INBAND_RING_TONE_CAPABILITY  = 0x00000001 << 3,  /**< In-band ring tone capability */
+  BT_HFP_AG_FEATURE_ATTACH_NUMBER_TO_VOICE_TAG   = 0x00000001 << 4,  /**< Attach a number to a voice tag */
+  BT_HFP_AG_FEATURE_ABILITY_TO_REJECT_CALL       = 0x00000001 << 5,  /**< Ability to reject a call */
+  BT_HFP_AG_FEATURE_ENHANCED_CALL_STATUS         = 0x00000001 << 6,  /**< Enhanced call status */
+  BT_HFP_AG_FEATURE_ENHANCED_CALL_CONTROL        = 0x00000001 << 7,  /**< Enhanced call control */
+  BT_HFP_AG_FEATURE_EXTENDED_ERROR_RESULT_CODES  = 0x00000001 << 8,  /**< Extended Error Result Codes */
+  BT_HFP_AG_FEATURE_CODEC_NEGOTIATION            = 0x00000001 << 9,  /**< Codec negotiation */
+  BT_HFP_AG_FEATURE_HF_INDICATORS                = 0x00000001 << 10, /**< HF indicators */
+  BT_HFP_AG_FEATURE_ESCO_S4_T2_SETTINGS_SUPPORT  = 0x00000001 << 11, /**< eSCO S4 (and T2) Settings Supported */
+  BT_HFP_AG_FEATURE_ENHANCED_VOICE_RECOGNITION   = 0x00000001 << 12  /**< Enhanced voice recognition */
 } BT_HFP_AG_FEATURE_FLAG;
 
 #endif /* __MODULES_INCLUDE_BLUETOOTH_BLUETOOTH_HFP_FEATURES_H */

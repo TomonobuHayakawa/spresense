@@ -33,6 +33,17 @@
  *
  ****************************************************************************/
 
+/**
+ * @file bt_event.h
+ * @author Sony Semiconductor Solutions Corporation
+ * @brief Bluetooth HAL I/F for event handler.
+ * @details This header file includes bluetooth event related definitions
+ *          for HAL I/F.
+ *          Event handler will be use this definition for switch events.
+ *           - Event type
+ *           - Event structure
+ */
+
 #ifndef __MODULES_INCLUDE_BLUETOOTH_HAL_BT_EVENT_H
 #define __MODULES_INCLUDE_BLUETOOTH_HAL_BT_EVENT_H
 
@@ -48,7 +59,7 @@
  ****************************************************************************/
 
 /**
- *@name BT Address Length
+ *@name Max event data length
  *@{
  */
 #define BT_MAX_EVENT_DATA_LEN 1024
@@ -58,237 +69,281 @@
  * Public Types
  ****************************************************************************/
 
-/** Bluetooth profile and protocol ID
+/**
+ * @enum BT_GROUP_ID
+ * @brief Bluetooth profile and protocol ID
  */
 typedef enum
 {
-	BT_GROUP_COMMON = 0,
-	BT_GROUP_A2DP,
-	BT_GROUP_AVRCP,
-	BT_GROUP_HFP,
-	BT_GROUP_SPP,
-	BT_GROUP_RFCOMM,
+	BT_GROUP_COMMON = 0,  /**< Common group */
+	BT_GROUP_A2DP,        /**< A2DP */
+	BT_GROUP_AVRCP,       /**< AVRCP */
+	BT_GROUP_HFP,         /**< HFP */
+	BT_GROUP_SPP,         /**< SPP */
+	BT_GROUP_RFCOMM,      /**< RFCOMM */
 } BT_GROUP_ID;
 
-/** Bluetooth event ID for common function
+/**
+ * @enum BT_COMMON_EVENT_ID
+ * @brief Bluetooth event ID for common function
  */
 typedef enum
 {
-	BT_COMMON_EVENT_CMD_STATUS = 0,
-	BT_COMMON_EVENT_PAIRING_COMPLETE,
-	BT_COMMON_EVENT_INQUIRY_RESULT,
-	BT_COMMON_EVENT_INQUIRY_COMPLETE,
-	BT_COMMON_EVENT_CONN_STAT_CHANGE,
-	BT_COMMON_EVENT_CONN_DEV_NAME,
-	BT_COMMON_EVENT_BOND_INFO,
+	BT_COMMON_EVENT_CMD_STATUS = 0,   /**< Command status event */
+	BT_COMMON_EVENT_PAIRING_COMPLETE, /**< Pairing complete event */
+	BT_COMMON_EVENT_INQUIRY_RESULT,   /**< Inquiry result event */
+	BT_COMMON_EVENT_INQUIRY_COMPLETE, /**< Inquiry complete event */
+	BT_COMMON_EVENT_CONN_STAT_CHANGE, /**< Connection status change event */
+	BT_COMMON_EVENT_CONN_DEV_NAME,    /**< Connected device name event */
+	BT_COMMON_EVENT_BOND_INFO,        /**< Bonding information event */
 } BT_COMMON_EVENT_ID;
 
-/** Bluetooth event ID for A2DP
+/**
+ * @enum BT_A2DP_EVENT_ID
+ * @brief Bluetooth event ID for A2DP
  */
 typedef enum
 {
-	BT_A2DP_EVENT_CMD_STATUS = 0,
-	BT_A2DP_EVENT_CONNECT,
-	BT_A2DP_EVENT_DISCONNECT,
-	BT_A2DP_EVENT_MEDIA_PACKET,
+	BT_A2DP_EVENT_CMD_STATUS = 0, /**< Command status event */
+	BT_A2DP_EVENT_CONNECT,        /**< Connect event */
+	BT_A2DP_EVENT_DISCONNECT,     /**< Disconnect event */
+	BT_A2DP_EVENT_MEDIA_PACKET,   /**< Media packet receive event */
 } BT_A2DP_EVENT_ID;
 
-/** Bluetooth event ID for A2DP
+/**
+ * @enum BT_AVRCP_EVENT_ID
+ * @brief Bluetooth event ID for A2DP
  */
 typedef enum
 {
-	BT_AVRCP_EVENT_CMD_STATUS = 0,
-	BT_AVRCC_EVENT_CONNECT,
-	BT_AVRCC_EVENT_DISCONNECT,
-	BT_AVRCT_EVENT_CONNECT,
-	BT_AVRCT_EVENT_DISCONNECT,
-	BT_AVRCP_EVENT_PLAY_STAT_CHANGE,
-	BT_AVRCP_EVENT_TRACK_CHANGE,
-	BT_AVRCP_EVENT_TRACK_REACH_END,
-	BT_AVRCP_EVENT_TRACK_REACH_START,
-	BT_AVRCP_EVENT_PLAY_POS_CHANGE,
-	BT_AVRCP_EVENT_BATT_STAT_CHANGE,
-	BT_AVRCP_EVENT_SYS_STATUS_CHANGE,
-	BT_AVRCP_EVENT_APP_SETT_CHANGE,
-	BT_AVRCP_EVENT_NOW_PLAY_CHANGE,
-	BT_AVRCP_EVENT_AVAI_PLAYER_CHANGE,
-	BT_AVRCP_EVENT_ADDR_PLAYER_CHANGE,
-	BT_AVRCP_EVENT_UIDS_CHANGE,
-	BT_AVRCP_EVENT_VOLUME_CHANGE,
+	BT_AVRCP_EVENT_CMD_STATUS = 0,     /**< Command status event */
+	BT_AVRCC_EVENT_CONNECT,            /**< AVRCP controller connect event */
+	BT_AVRCC_EVENT_DISCONNECT,         /**< AVRCP vontroller disconnect event */
+	BT_AVRCT_EVENT_CONNECT,            /**< AVRCP target connect event */
+	BT_AVRCT_EVENT_DISCONNECT,         /**< AVRCP target disconnect event */
+	BT_AVRCP_EVENT_PLAY_STAT_CHANGE,   /**< Play status change event */
+	BT_AVRCP_EVENT_TRACK_CHANGE,       /**< Play track change event */
+	BT_AVRCP_EVENT_TRACK_REACH_END,    /**< Play track reach end event */
+	BT_AVRCP_EVENT_TRACK_REACH_START,  /**< Play track reach start event */
+	BT_AVRCP_EVENT_PLAY_POS_CHANGE,    /**< Play position change event */
+	BT_AVRCP_EVENT_BATT_STAT_CHANGE,   /**< Battery status change event */
+	BT_AVRCP_EVENT_SYS_STATUS_CHANGE,  /**< System status change event */
+	BT_AVRCP_EVENT_APP_SETT_CHANGE,    /**< Application settings change event */
+	BT_AVRCP_EVENT_NOW_PLAY_CHANGE,    /**< Content of Now Playing folder change event */
+	BT_AVRCP_EVENT_AVAI_PLAYER_CHANGE, /**< Available players change event */
+	BT_AVRCP_EVENT_ADDR_PLAYER_CHANGE, /**< Addressed player change event */
+	BT_AVRCP_EVENT_UIDS_CHANGE,        /**< UIDs change event */
+	BT_AVRCP_EVENT_VOLUME_CHANGE,      /**< Volume change on the target device event */
 } BT_AVRCP_EVENT_ID;
 
-/** Bluetooth event ID for HFP
+/**
+ * @enum BT_HFP_EVENT_ID
+ * @brief Bluetooth event ID for HFP
  */
 typedef enum
 {
-	BT_HFP_EVENT_CMD_STATUS = 0,
-	BT_HFP_EVENT_HF_CONNECT,
-	BT_HFP_EVENT_HF_DISCONNECT,
-	BT_HFP_EVENT_AUDIO_CONNECT,
-	BT_HFP_EVENT_AUDIO_DISCONNECT,
-	BT_HFP_EVENT_AG_FEATURE_RESP,
-	BT_HFP_EVENT_AT_CMD_RESP,
+	BT_HFP_EVENT_CMD_STATUS = 0,   /**< Command status event */
+	BT_HFP_EVENT_HF_CONNECT,       /**< HFP connect event */
+	BT_HFP_EVENT_HF_DISCONNECT,    /**< HFP disconnect event */
+	BT_HFP_EVENT_AUDIO_CONNECT,    /**< HFP audio connect event */
+	BT_HFP_EVENT_AUDIO_DISCONNECT, /**< HFP audio disconnect event */
+	BT_HFP_EVENT_AG_FEATURE_RESP,  /**< HFP AG feature response event */
+	BT_HFP_EVENT_AT_CMD_RESP,      /**< HFP AT command response event */
 } BT_HFP_EVENT_ID;
 
-/** Bluetooth event ID for SPP
+/**
+ * @enum BT_SPP_EVENT_ID
+ * @brief Bluetooth event ID for SPP
  */
 typedef enum
 {
-	BT_SPP_EVENT_CONNECT = 0,
-	BT_SPP_EVENT_DISCONNECT,
-	BT_SPP_EVENT_CONNECT_FAIL,
-	BT_SPP_EVENT_RX_DATA,
+	BT_SPP_EVENT_CONNECT = 0,  /**< Connect event */
+	BT_SPP_EVENT_DISCONNECT,   /**< Disconnect event */
+	BT_SPP_EVENT_CONNECT_FAIL, /**< Connection fail event */
+	BT_SPP_EVENT_RX_DATA,      /**< Receive SPP data event */
 } BT_SPP_EVENT_ID;
 
-/** Bluetooth general event data type
+/**
+ * @struct bt_event_t
+ * @brief Bluetooth parent event data type
  */
 struct bt_event_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  uint8_t data[BT_MAX_EVENT_DATA_LEN];
+  uint8_t group_id;                    /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;                    /**< Event sub ID */
+  uint8_t data[BT_MAX_EVENT_DATA_LEN]; /**< Event data */
 };
 
-/** Bluetooth command status event data type
+/**
+ * @struct bt_event_cmd_stat_t
+ * @brief Bluetooth command status event data type
  */
 struct bt_event_cmd_stat_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_CMD_STATUS cmd_status;
+  uint8_t group_id;         /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;         /**< Event sub ID */
+  BT_CMD_STATUS cmd_status; /**< Command status @ref BT_CMD_STATUS */
 };
 
-/** Bluetooth pairing complete event data type
+/**
+ * @struct bt_event_pair_cmplt_t
+ * @brief Bluetooth pairing complete event data type
  */
 struct bt_event_pair_cmplt_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
-  BT_PAIR_STATUS status;
+  uint8_t group_id;      /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;      /**< Event sub ID @ref BT_COMMON_EVENT_ID */
+  BT_ADDR addr;          /**< Pairing target device address @ref BT_ADDR */
+  BT_PAIR_STATUS status; /**< Pairing status @ref BT_PAIR_STATUS */
 };
 
-/** Bluetooth inquiry result event data type
+/**
+ * @struct bt_event_inquiry_rslt_t
+ * @brief Bluetooth inquiry result event data type
  */
 struct bt_event_inquiry_rslt_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
-  char name[BT_NAME_LEN];
+  uint8_t group_id;       /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;       /**< Event sub ID @ref BT_COMMON_EVENT_ID */
+  BT_ADDR addr;           /**< Scaned device address @ref BT_ADDR */
+  char name[BT_NAME_LEN]; /**< Scaned device name */
 };
 
-/** Bluetooth connection status change event data type
+/**
+ * @struct bt_event_conn_stat_t
+ * @brief Bluetooth connection status change event data type
  */
 struct bt_event_conn_stat_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
-  bool connected;
+  uint8_t group_id; /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id; /**< Event sub ID @ref BT_COMMON_EVENT_ID */
+  BT_ADDR addr;     /**< Target address @ref BT_ADDR */
+  bool connected;   /**< Connection status */
   uint8_t status;
 };
 
-/** Bluetooth change device name event data type
+/**
+ * @struct bt_event_dev_name_t
+ * @brief Bluetooth change device name event data type
  */
 struct bt_event_dev_name_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  char name[BT_NAME_LEN];
+  uint8_t group_id;       /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;       /**< Event sub ID @ref BT_COMMON_EVENT_ID */
+  char name[BT_NAME_LEN]; /**< Connected device name */
 };
 
-/** Bluetooth change device name event data type
+/**
+ * @struct bt_event_bond_info_t
+ * @brief Bluetooth new bonding information event data type
  */
 struct bt_event_bond_info_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
+  uint8_t group_id; /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id; /**< Event sub ID @ref BT_COMMON_EVENT_ID */
+  BT_ADDR addr;     /**< Bond device address @ref BT_ADDR */
 };
 
-/** Bluetooth A2DP connection event data type
+/**
+ * @struct bt_a2dp_event_connect_t
+ * @brief Bluetooth A2DP connection event data type
  */
 struct bt_a2dp_event_connect_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
+  uint8_t group_id; /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id; /**< Event sub ID @ref BT_A2DP_EVENT_ID */
+  BT_ADDR addr;     /**< Connected device address @ref BT_ADDR */
   BT_AUDIO_CODEC_INFO codecInfo;
 };
 
-/** Bluetooth A2DP receive data event data type
+/**
+ * @struct bt_a2dp_event_recv_t
+ * @brief Bluetooth A2DP receive data event data type
  */
 struct bt_a2dp_event_recv_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
-  uint8_t data[BT_MAX_EVENT_DATA_LEN];
-  int len;
+  uint8_t group_id;                    /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;                    /**< Event sub ID @ref BT_A2DP_EVENT_ID */
+  BT_ADDR addr;                        /**< Connected device address @ref BT_ADDR */
+  int len;                             /**< Receive data length */
+  uint8_t data[BT_MAX_EVENT_DATA_LEN]; /**< Receive data */
 };
 
-/** Bluetooth AVRCP connection event data type
+/**
+ * @struct bt_avrcp_event_connect_t
+ * @brief Bluetooth AVRCP connection event data type
  */
 struct bt_avrcp_event_connect_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
+  uint8_t group_id; /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id; /**< Event sub ID @ref BT_AVRCP_EVENT_ID */
+  BT_ADDR addr;     /**< Connected device address @ref BT_ADDR */
 };
 
-/** Bluetooth HFP connection event data type
+/**
+ * @struct bt_hfp_event_connect_t
+ * @brief Bluetooth HFP connection event data type
  */
 struct bt_hfp_event_connect_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
-  BT_PROFILE_TYPE hfp_type;
+  uint8_t group_id;         /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;         /**< Event sub ID @ref BT_HFP_EVENT_ID */
+  BT_ADDR addr;             /**< Connected device address @ref BT_ADDR */
+  BT_PROFILE_TYPE hfp_type; /**< Connected profile type @ref BT_PROFILE_TYPE */
 };
 
-/** Bluetooth HFP ag feature event data type
+/**
+ * @struct bt_hfp_event_ag_feature_t
+ * @brief Bluetooth HFP ag feature event data type
  */
 struct bt_hfp_event_ag_feature_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
-  BT_HFP_AG_FEATURE_FLAG ag_flag;
+  uint8_t group_id;               /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;               /**< Event sub ID @ref BT_HFP_EVENT_ID */
+  BT_ADDR addr;                   /**< Connected device address @ref BT_ADDR */
+  BT_HFP_AG_FEATURE_FLAG ag_flag; /**< Support AG feature flag @ref BT_HFP_AG_FEATURE_FLAG */
 };
 
-/** Bluetooth HFP at command event data type
+/**
+ * @struct bt_hfp_event_at_cmd_t
+ * @brief Bluetooth HFP at command event data type
  */
 struct bt_hfp_event_at_cmd_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
-  char at_resp[BT_MAX_EVENT_DATA_LEN];
+  uint8_t group_id;                    /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;                    /**< Event sub ID @ref BT_HFP_EVENT_ID */
+  BT_ADDR addr;                        /**< Connected device address @ref BT_ADDR */
+  char at_resp[BT_MAX_EVENT_DATA_LEN]; /**< AT command response */
 };
 
-/** Bluetooth SPP connection event data type
+/**
+ * @struct bt_spp_event_connect_t
+ * @brief Bluetooth SPP connection event data type
  */
 struct bt_spp_event_connect_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
-  BT_CONNECT_FAIL_REASON_ID reason;
+  uint8_t group_id;                 /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;                 /**< Event sub ID @ref BT_SPP_EVENT_ID */
+  BT_ADDR addr;                     /**< Connected device address @ref BT_ADDR */
+  BT_CONNECT_FAIL_REASON_ID reason; /**< Connection fail reason @ref BT_CONNECT_FAIL_REASON_ID */
 };
 
-/** Bluetooth SPP Rx event data type
+/**
+ * @struct bt_spp_event_recv_data_t
+ * @brief Bluetooth SPP Rx event data type
  */
 struct bt_spp_event_recv_data_t
 {
-  uint8_t group_id;
-  uint8_t event_id;
-  BT_ADDR addr;
-  uint8_t data[BT_MAX_EVENT_DATA_LEN];
-  int len;
+  uint8_t group_id;                    /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;                    /**< Event sub ID @ref BT_SPP_EVENT_ID */
+  BT_ADDR addr;                        /**< Connected device address @ref BT_ADDR */
+  int len;                             /**< REceive data length */
+  uint8_t data[BT_MAX_EVENT_DATA_LEN]; /**< REceive data */
 };
 
-/**@brief BT avrc supporter notify event
+/**
+ * @struct BT_AVRC_SUPPORT_NOTIFY_EVENT
+ * @brief BT avrc supported notify event
 */
 typedef struct {
 	bool playStatusChange;          /**< Playback Status Changed */
