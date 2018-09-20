@@ -58,9 +58,9 @@ CSRCS +=  arm_fully_connected_q15.c
 CSRCS +=  arm_fully_connected_q7.c
 CSRC_PATH += src/functions
 CSRC_PATH += src/runtime
-CSRC_PATH += externals/CMSIS_5/CMSIS/NN/Source/NNSupportFunctions
-CSRC_PATH += externals/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions
-CSRC_PATH += externals/CMSIS_5/CMSIS/NN/Source/FullyConnectedFunctions
+CSRC_PATH += $(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/NN/Source/NNSupportFunctions
+CSRC_PATH += $(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions
+CSRC_PATH += $(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/NN/Source/FullyConnectedFunctions
 
 VPATH += $(CSRC_PATH)
 ROOTDEPPATH =$(foreach dir,$(CSRC_PATH), --dep-path $(dir))
@@ -76,9 +76,9 @@ endif # ($(WINTOOL),y)
 CFLAGS += $(INCLUDES) -std=c99
 CFLAGS := $(patsubst -O%,-O3,$(CFLAGS)) # don't follow the -O. option in CFLAGS
 
-CMSIS_CFLAGS =  -I "externals/CMSIS_5/CMSIS/Core/Include" \
-				-I "externals/CMSIS_5/CMSIS/DSP/Include" \
-				-I "externals/CMSIS_5/CMSIS/NN/Include" \
+CMSIS_CFLAGS =  -I "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/Core/Include" \
+				-I "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/DSP/Include" \
+				-I "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/NN/Include" \
 				-D__FPU_PRESENT=1
 
 ifeq ($(CONFIG_ARCH_ARM),y)
