@@ -492,13 +492,6 @@ int bt_paring_disable(void)
   return ret;
 }
 
-#if 0
-int btSetParingMode(mode)
-{
-  return BT_SUCCESS;
-}
-#endif
-
 /****************************************************************************
  * Name: bt_get_bond_list
  *
