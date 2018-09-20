@@ -33,20 +33,20 @@
  ****************************************************************************/
 
 #ifndef _LOADER_NNB_H_
-#define _LOADER_NNB_H_
+#  define _LOADER_NNB_H_
 
-#include <dnnrt/runtime.h>
+#  include <dnnrt/runtime.h>
 
-#ifdef __cplusplus
+#  ifdef __cplusplus
 extern "C"
 {
-#endif
+#  endif
 
-  nn_network_t *alloc_nnb_network (const char *nnb_path);
-  void destroy_nnb_network (nn_network_t * network);
+  nn_network_t *alloc_nnb_network(const char *nnb_path);
+  void destroy_nnb_network(nn_network_t * network);
 
-#ifdef __cplusplus
+#  ifdef __cplusplus
 }
-#endif
+#  endif
 
-#endif				/* _LOADER_NNB_H_ */
+#endif                          /* _LOADER_NNB_H_ */

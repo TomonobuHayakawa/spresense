@@ -33,19 +33,19 @@
  ****************************************************************************/
 
 #ifndef _UTIL_H_
-#define _UTIL_H_
-#include <string.h>
+#  define _UTIL_H_
+#  include <string.h>
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#define my_open open
-#define my_close close
-#define my_read read
-#define my_write write
-#define my_stat stat
+#  include <fcntl.h>
+#  include <unistd.h>
+#  include <sys/stat.h>
+#  define my_open open
+#  define my_close close
+#  define my_read read
+#  define my_write write
+#  define my_stat stat
 
-int my_fgetc (int file);
-char *my_fgets (char *out, int size, int file);
+int my_fgetc(int file);
+char *my_fgets(char *out, int size, int file);
 
-#endif /* _UTIL_H_ */
+#endif                                 /* _UTIL_H_ */

@@ -35,13 +35,12 @@
 #include <stdio.h>
 #include "util.h"
 
-int
-my_fgetc (int file)
+int my_fgetc(int file)
 {
   unsigned char ch;
   ssize_t ret;
 
-  ret = my_read (file, &ch, 1);
+  ret = my_read(file, &ch, 1);
   if (ret > 0)
     {
       return ch;
@@ -52,18 +51,17 @@ my_fgetc (int file)
     }
 }
 
-char *
-my_fgets (char *out, int size, int file)
+char *my_fgets(char *out, int size, int file)
 {
-  int ch = EOF;			/* return NULL also when size < 1 */
+  int ch = EOF;                 /* return NULL also when size < 1 */
   char *buf = out;
-  while (size-- > 0 && (ch = my_fgetc (file)) != EOF)
+  while (size-- > 0 && (ch = my_fgetc(file)) != EOF)
     {
-      *buf++ = (char) ch;	/* safe conversion since ch != EOF */
+      *buf++ = (char)ch;        /* safe conversion since ch != EOF */
       if (ch == '\n')
-	{
-	  break;		/* EOL */
-	}
+        {
+          break;                /* EOL */
+        }
     }
   *buf = '\0';
   return (ch == EOF && buf == out) ? NULL : out;

@@ -40,20 +40,19 @@
 #include <fcntl.h>
 #include "util.h"
 
-#define MY_BUFSIZ (28*28)	// assume images in MNIST
+#define MY_BUFSIZ (28*28)       // assume images in MNIST
 
 typedef struct _pnm_header
-{
-  uint8_t magic_num;
-  uint16_t width_px;
-  uint16_t height_px;
-  uint16_t max;
-} pnm_header;
+  {
+    uint8_t magic_num;
+    uint16_t width_px;
+    uint16_t height_px;
+    uint16_t max;
+  } pnm_header;
 
-static int
-read_magic_number (const char *char_buf, pnm_header * header_ptr)
+static int read_magic_number(const char *char_buf, pnm_header * header_ptr)
 {
-  if (strnlen (char_buf, MY_BUFSIZ) == 3)
+  if (strnlen(char_buf, MY_BUFSIZ) == 3)
     {
       header_ptr->magic_num = char_buf[1] - '0';
       return 0;
@@ -64,11 +63,10 @@ read_magic_number (const char *char_buf, pnm_header * header_ptr)
     }
 }
 
-static int
-read_image_size (const char *char_buf, pnm_header * header_ptr)
+static int read_image_size(const char *char_buf, pnm_header * header_ptr)
 {
-  if (sscanf (char_buf, "%hu %hu",
-	      &(header_ptr->width_px), &(header_ptr->height_px)) == 2)
+  if (sscanf(char_buf, "%hu %hu",
+             &(header_ptr->width_px), &(header_ptr->height_px)) == 2)
     {
       return 0;
     }
@@ -78,15 +76,13 @@ read_image_size (const char *char_buf, pnm_header * header_ptr)
     }
 }
 
-static int
-read_max (const char *char_buf, pnm_header * header)
+static int read_max(const char *char_buf, pnm_header * header)
 {
-  header->max = atoi (char_buf);
+  header->max = atoi(char_buf);
   return 0;
 }
 
-static uint32_t
-calc_data_bsize (const pnm_header * header)
+static uint32_t calc_data_bsize(const pnm_header * header)
 {
   uint32_t bsize;
   bsize = header->height_px * header->width_px;
@@ -96,95 +92,92 @@ calc_data_bsize (const pnm_header * header)
 }
 
 static void
-read_binary_data (const pnm_header * header, const uint8_t * data_buffer,
-		  float norm_factor, float *output_buffer)
+read_binary_data(const pnm_header * header, const uint8_t * data_buffer,
+                 float norm_factor, float *output_buffer)
 {
   uint32_t out_crsr, in_crsr, color_crsr;
   uint32_t pri_color_num = (header->magic_num == 5u) ? 1u : 3u;
-  uint32_t data_bsize = calc_data_bsize (header);
+  uint32_t data_bsize = calc_data_bsize(header);
 
   out_crsr = 0u;
   for (color_crsr = 0u; color_crsr < pri_color_num; color_crsr++)
     {
-      for (in_crsr = color_crsr; in_crsr < data_bsize;
-	   in_crsr += pri_color_num)
-	{
-	  output_buffer[out_crsr] =
-	    (float) data_buffer[in_crsr] / norm_factor;
-	  out_crsr++;
-	}
+      for (in_crsr = color_crsr; in_crsr < data_bsize; in_crsr += pri_color_num)
+        {
+          output_buffer[out_crsr] = (float)data_buffer[in_crsr] / norm_factor;
+          out_crsr++;
+        }
     }
 }
 
 static int
-load_pnm_internal (const char *pnm_path,
-		   float norm_factor, float *output_buffer)
+load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
 {
   int err = 0;
   uint32_t exp_bsize, act_bsize;
   char char_buf[MY_BUFSIZ];
   pnm_header header;
   int pnm_file;
-  pnm_file = my_open (pnm_path, O_RDOK | O_BINARY, 0666);
+  pnm_file = my_open(pnm_path, O_RDOK | O_BINARY, 0666);
   if (pnm_file)
     {
       /* read magic number in .pnm */
-      if (my_fgets (char_buf, MY_BUFSIZ, pnm_file) != NULL)
-	{
-	  if ((err = read_magic_number (char_buf, &header)) < 0)
-	    {
-	      goto invalid_file;
-	    }
-	}
+      if (my_fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
+        {
+          if ((err = read_magic_number(char_buf, &header)) < 0)
+            {
+              goto invalid_file;
+            }
+        }
       else
-	{
-	  err = -EINVAL;
-	  goto invalid_file;
-	}
+        {
+          err = -EINVAL;
+          goto invalid_file;
+        }
 
       /* read height and width of this file */
-      if (my_fgets (char_buf, MY_BUFSIZ, pnm_file) != NULL)
-	{
-	  if ((err = read_image_size (char_buf, &header)) < 0)
-	    {
-	      goto invalid_file;
-	    }
-	}
+      if (my_fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
+        {
+          if ((err = read_image_size(char_buf, &header)) < 0)
+            {
+              goto invalid_file;
+            }
+        }
       else
-	{
-	  err = -EINVAL;
-	  goto invalid_file;
-	}
+        {
+          err = -EINVAL;
+          goto invalid_file;
+        }
 
       /* read max */
-      if (my_fgets (char_buf, MY_BUFSIZ, pnm_file) != NULL)
-	{
-	  if ((err = read_max (char_buf, &header)) < 0)
-	    {
-	      goto invalid_file;
-	    }
-	}
+      if (my_fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
+        {
+          if ((err = read_max(char_buf, &header)) < 0)
+            {
+              goto invalid_file;
+            }
+        }
       else
-	{
-	  err = -EINVAL;
-	  goto invalid_file;
-	}
+        {
+          err = -EINVAL;
+          goto invalid_file;
+        }
 
       /* read binary data of this image */
-      exp_bsize = calc_data_bsize (&header);
-      act_bsize = my_read (pnm_file, char_buf, exp_bsize);
+      exp_bsize = calc_data_bsize(&header);
+      act_bsize = my_read(pnm_file, char_buf, exp_bsize);
       if (exp_bsize == act_bsize)
-	{
-	  read_binary_data (&header, (const uint8_t *) char_buf, norm_factor,
-			    output_buffer);
-	}
+        {
+          read_binary_data(&header, (const uint8_t *)char_buf, norm_factor,
+                           output_buffer);
+        }
       else
-	{
-	  err = -EINVAL;
-	  goto invalid_file;
-	}
+        {
+          err = -EINVAL;
+          goto invalid_file;
+        }
 
-      my_close (pnm_file);
+      my_close(pnm_file);
     }
   else
     {
@@ -194,26 +187,24 @@ load_pnm_internal (const char *pnm_path,
   return 0;
 
 invalid_file:
-  my_close (pnm_file);
+  my_close(pnm_file);
 file_open_err:
   return err;
 }
 
-int
-pnm_load (const char *pnm_path, float norm_factor, float *output_buffer)
+int pnm_load(const char *pnm_path, float norm_factor, float *output_buffer)
 {
   int err;
   if (pnm_path != NULL && output_buffer != NULL)
     {
-      if ((err =
-	   load_pnm_internal (pnm_path, norm_factor, output_buffer)) == 0)
-	{
-	  /* normal case */
-	}
+      if ((err = load_pnm_internal(pnm_path, norm_factor, output_buffer)) == 0)
+        {
+          /* normal case */
+        }
       else
-	{
-	  goto load_error;
-	}
+        {
+          goto load_error;
+        }
     }
   else
     {

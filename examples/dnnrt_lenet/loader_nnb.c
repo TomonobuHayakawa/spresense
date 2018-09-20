@@ -39,8 +39,7 @@
 #include <dnnrt/runtime.h>
 #include "util.h"
 
-static int
-get_nnb_size (const char *nnb_path, uint32_t * size_ptr)
+static int get_nnb_size(const char *nnb_path, uint32_t * size_ptr)
 {
   int ret;
   struct stat nnb_stat;
@@ -49,7 +48,7 @@ get_nnb_size (const char *nnb_path, uint32_t * size_ptr)
     {
       return -EINVAL;
     }
-  ret = my_stat (nnb_path, &nnb_stat);
+  ret = my_stat(nnb_path, &nnb_stat);
   if (ret == 0)
     {
       *size_ptr = nnb_stat.st_size;
@@ -57,8 +56,7 @@ get_nnb_size (const char *nnb_path, uint32_t * size_ptr)
   return ret;
 }
 
-nn_network_t *
-alloc_nnb_network (const char *nnb_path)
+nn_network_t *alloc_nnb_network(const char *nnb_path)
 {
   int ret;
   int nnb_file;
@@ -69,39 +67,38 @@ alloc_nnb_network (const char *nnb_path)
     {
       goto file_open_err;;
     }
-  nnb_file = my_open (nnb_path, O_RDOK | O_BINARY, 0666);
+  nnb_file = my_open(nnb_path, O_RDOK | O_BINARY, 0666);
   if (nnb_file < 0)
     {
       goto file_open_err;
     }
   /* get size of nnb_file in units of bytes */
-  ret = get_nnb_size (nnb_path, &exp_data_bsize);
+  ret = get_nnb_size(nnb_path, &exp_data_bsize);
   if (ret)
     {
       goto get_size_error;
     }
   /* store content of nnb_file in heap memory */
-  network = malloc (exp_data_bsize);
+  network = malloc(exp_data_bsize);
   if (network == NULL)
     {
       goto malloc_error;
     }
-  act_data_bsize = my_read (nnb_file, network, exp_data_bsize);
+  act_data_bsize = my_read(nnb_file, network, exp_data_bsize);
   if (exp_data_bsize != act_data_bsize)
     {
-      free (network);
+      free(network);
       network = NULL;
     }
 
 malloc_error:
 get_size_error:
-  my_close (nnb_file);
+  my_close(nnb_file);
 file_open_err:
   return network;
 }
 
-void
-destroy_nnb_network (nn_network_t * network)
+void destroy_nnb_network(nn_network_t * network)
 {
-  free (network);
+  free(network);
 }

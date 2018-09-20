@@ -48,10 +48,10 @@
  * Type Definition
  ****************************************************************************/
 typedef struct
-{
-  char *nnb_path;
-  char *pnm_path;
-} my_setting_t;
+  {
+    char *nnb_path;
+    char *pnm_path;
+  } my_setting_t;
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -68,11 +68,10 @@ static float s_img_buffer[MNIST_SIZE_PX];
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-static void
-convert_datatype (dnn_runtime_t * rt)
+static void convert_datatype(dnn_runtime_t * rt)
 {
-  nn_variable_t *var = dnn_runtime_input_variable (rt, 0);
-  float coefficient = (float) (1 << var->fp_pos);
+  nn_variable_t *var = dnn_runtime_input_variable(rt, 0);
+  float coefficient = (float)(1 << var->fp_pos);
 
   if (var->type == NN_DATA_TYPE_FLOAT)
     {
@@ -82,22 +81,21 @@ convert_datatype (dnn_runtime_t * rt)
     {
       int16_t *int16_buffer = (int16_t *) s_img_buffer;
       for (uint16_t px = 0u; px < MNIST_SIZE_PX; px++)
-	{
-	  int16_buffer[px] = (int16_t) (coefficient * s_img_buffer[px]);
-	}
+        {
+          int16_buffer[px] = (int16_t) (coefficient * s_img_buffer[px]);
+        }
     }
   else
     {
       int8_t *int8_buffer = (int8_t *) s_img_buffer;
       for (uint16_t px = 0u; px < MNIST_SIZE_PX; px++)
-	{
-	  int8_buffer[px] = (int8_t) (coefficient * s_img_buffer[px]);
-	}
+        {
+          int8_buffer[px] = (int8_t) (coefficient * s_img_buffer[px]);
+        }
     }
 }
 
-static void
-parse_args (int argc, char *argv[], my_setting_t * setting)
+static void parse_args(int argc, char *argv[], my_setting_t * setting)
 {
   /* set my_setting_t::{nnb_path,pnm_path} to argv[] if necessary */
   setting->nnb_path = (argc >= 2) ? argv[1] : DNN_NNB_PATH;
@@ -108,11 +106,9 @@ parse_args (int argc, char *argv[], my_setting_t * setting)
  * dnnrt_lenet_main
  ****************************************************************************/
 #ifdef CONFIG_BUILD_KERNEL
-int
-main (int argc, FAR char *argv[])
+int main(int argc, FAR char *argv[])
 #else
-int
-dnnrt_lenet_main (int argc, char *argv[])
+int dnnrt_lenet_main(int argc, char *argv[])
 #endif
 {
   int ret;
@@ -124,72 +120,73 @@ dnnrt_lenet_main (int argc, char *argv[])
   my_setting_t setting = { 0 };
   struct timeval begin, end;
 
-  parse_args (argc, argv, &setting);
+  parse_args(argc, argv, &setting);
 
   /* load an MNIST image into s_img_buffer and divide the pixels by 255 */
-  printf ("load pnm image: %s\n", setting.pnm_path);
-  ret = pnm_load (setting.pnm_path, 255.0f, s_img_buffer);
+  printf("load pnm image: %s\n", setting.pnm_path);
+  ret = pnm_load(setting.pnm_path, 255.0f, s_img_buffer);
   if (ret)
     {
-      printf ("load pnm image failed due to %d\n", ret);
+      printf("load pnm image failed due to %d\n", ret);
       goto pnm_error;
     }
 
-  /* load an nnb file, which holds a network structure and weight values, into a heap memory */
-  printf ("load nnb file: %s\n", setting.nnb_path);
-  network = alloc_nnb_network (setting.nnb_path);
+  /* load an nnb file, which holds a network structure and weight values, into
+   * a heap memory */
+  printf("load nnb file: %s\n", setting.nnb_path);
+  network = alloc_nnb_network(setting.nnb_path);
   if (network == NULL)
     {
-      printf ("load nnb file failed\n");
+      printf("load nnb file failed\n");
       goto pnm_error;
     }
 
   /* initialize the dnnrt subsystem */
-  ret = dnn_initialize (NULL);
+  ret = dnn_initialize(NULL);
   if (ret)
     {
-      printf ("dnn_initialize() failed due to %d", ret);
+      printf("dnn_initialize() failed due to %d", ret);
       goto dnn_error;
     }
 
   /* instantiate a runtime object, dnn_runtime_t, based on the above nnb file */
-  ret = dnn_runtime_initialize (&rt, network);
+  ret = dnn_runtime_initialize(&rt, network);
   if (ret)
     {
-      printf ("dnn_runtime_initialize() failed due to %d\n", ret);
+      printf("dnn_runtime_initialize() failed due to %d\n", ret);
       goto rt_error;
     }
 
   /* convert the MNIST image's datatype in-place on s_img_buffer */
-  convert_datatype (&rt);
+  convert_datatype(&rt);
 
   /* feed the MNIST image into dnn_runtime_t and classify it */
-  printf ("start dnn_runtime_forward()\n");
-  gettimeofday (&begin, 0);
-  ret = dnn_runtime_forward (&rt, inputs);
-  gettimeofday (&end, 0);
+  printf("start dnn_runtime_forward()\n");
+  gettimeofday(&begin, 0);
+  ret = dnn_runtime_forward(&rt, inputs);
+  gettimeofday(&end, 0);
   if (ret)
     {
-      printf ("dnn_runtime_forward() failed due to %d\n", ret);
+      printf("dnn_runtime_forward() failed due to %d\n", ret);
       goto fin;
     }
 
   /* show the classification result and its processing time */
-  output_buffer = dnn_runtime_output_buffer (&rt, 0u);
+  output_buffer = dnn_runtime_output_buffer(&rt, 0u);
   for (i = 0u; i < 10u; i++)
     {
-      printf ("output[%u]=%.6f\n", i, output_buffer[i]);
+      printf("output[%u]=%.6f\n", i, output_buffer[i]);
     }
-  proc_time = (float) end.tv_sec + (float) end.tv_usec / 1.0e6;
-  proc_time -= (float) begin.tv_sec + (float) begin.tv_usec / 1.0e6;
-  printf ("inference time=%.3f\n", proc_time);
+  proc_time = (float)end.tv_sec + (float)end.tv_usec / 1.0e6;
+  proc_time -= (float)begin.tv_sec + (float)begin.tv_usec / 1.0e6;
+  printf("inference time=%.3f\n", proc_time);
 
 fin:
-  dnn_runtime_finalize (&rt);
+  dnn_runtime_finalize(&rt);
 rt_error:
-  dnn_finalize ();
+  dnn_finalize();
 dnn_error:
-  destroy_nnb_network (network);
+  destroy_nnb_network(network);
 pnm_error:
   return ret;
 }

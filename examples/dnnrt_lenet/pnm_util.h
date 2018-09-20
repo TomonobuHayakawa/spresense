@@ -33,7 +33,7 @@
  ****************************************************************************/
 
 #ifndef _PNM_UTIL_H_
-#define _PNM_UTIL_H_
+#  define _PNM_UTIL_H_
 
-int pnm_load (const char *path, float norm_parm, float *output_buffer);
-#endif /* _PNM_UTIL_H_ */
+int pnm_load(const char *path, float norm_parm, float *output_buffer);
+#endif                                 /* _PNM_UTIL_H_ */
