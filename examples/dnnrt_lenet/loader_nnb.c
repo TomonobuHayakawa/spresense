@@ -36,8 +36,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/stat.h>
 #include <dnnrt/runtime.h>
-#include "util.h"
 
 static int get_nnb_size(const char *nnb_path, uint32_t * size_ptr)
 {
@@ -48,7 +48,7 @@ static int get_nnb_size(const char *nnb_path, uint32_t * size_ptr)
     {
       return -EINVAL;
     }
-  ret = my_stat(nnb_path, &nnb_stat);
+  ret = stat(nnb_path, &nnb_stat);
   if (ret == 0)
     {
       *size_ptr = nnb_stat.st_size;
@@ -59,7 +59,7 @@ static int get_nnb_size(const char *nnb_path, uint32_t * size_ptr)
 nn_network_t *alloc_nnb_network(const char *nnb_path)
 {
   int ret;
-  int nnb_file;
+  FILE *nnb_file = NULL;
   uint32_t exp_data_bsize, act_data_bsize;
   nn_network_t *network = NULL;
 
@@ -67,8 +67,8 @@ nn_network_t *alloc_nnb_network(const char *nnb_path)
     {
       goto file_open_err;;
     }
-  nnb_file = my_open(nnb_path, O_RDOK | O_BINARY, 0666);
-  if (nnb_file < 0)
+  nnb_file = fopen(nnb_path, "r");
+  if (nnb_file == NULL)
     {
       goto file_open_err;
     }
@@ -84,7 +84,7 @@ nn_network_t *alloc_nnb_network(const char *nnb_path)
     {
       goto malloc_error;
     }
-  act_data_bsize = my_read(nnb_file, network, exp_data_bsize);
+  act_data_bsize = fread(network, 1, exp_data_bsize, nnb_file);
   if (exp_data_bsize != act_data_bsize)
     {
       free(network);
@@ -93,7 +93,7 @@ nn_network_t *alloc_nnb_network(const char *nnb_path)
 
 malloc_error:
 get_size_error:
-  my_close(nnb_file);
+  fclose(nnb_file);
 file_open_err:
   return network;
 }

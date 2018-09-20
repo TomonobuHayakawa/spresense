@@ -50,7 +50,7 @@ STACKSIZE = $(CONFIG_EXAMPLES_DNNRT_LENET_STACKSIZE)
 
 ASRCS =
 CSRCS =
-MAINSRC = dnnrt_lenet_main.c loader_nnb.c pnm_util.c util.c
+MAINSRC = dnnrt_lenet_main.c loader_nnb.c pnm_util.c
 
 CONFIG_EXAMPLES_DNNRT_LENET_PROGNAME ?= dnnrt_lenet$(EXEEXT)
 PROGNAME = $(CONFIG_EXAMPLES_DNNRT_LENET_PROGNAME)

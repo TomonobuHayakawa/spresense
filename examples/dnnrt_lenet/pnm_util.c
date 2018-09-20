@@ -38,7 +38,6 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include "util.h"
 
 #define MY_BUFSIZ (28*28)       // assume images in MNIST
 
@@ -117,12 +116,13 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
   uint32_t exp_bsize, act_bsize;
   char char_buf[MY_BUFSIZ];
   pnm_header header;
-  int pnm_file;
-  pnm_file = my_open(pnm_path, O_RDOK | O_BINARY, 0666);
-  if (pnm_file)
+  FILE *pnm_file;
+
+  pnm_file = fopen(pnm_path, "r");
+  if (pnm_file != NULL)
     {
       /* read magic number in .pnm */
-      if (my_fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
+      if (fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
         {
           if ((err = read_magic_number(char_buf, &header)) < 0)
             {
@@ -136,7 +136,7 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
         }
 
       /* read height and width of this file */
-      if (my_fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
+      if (fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
         {
           if ((err = read_image_size(char_buf, &header)) < 0)
             {
@@ -150,7 +150,7 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
         }
 
       /* read max */
-      if (my_fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
+      if (fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
         {
           if ((err = read_max(char_buf, &header)) < 0)
             {
@@ -165,7 +165,7 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
 
       /* read binary data of this image */
       exp_bsize = calc_data_bsize(&header);
-      act_bsize = my_read(pnm_file, char_buf, exp_bsize);
+      act_bsize = fread(char_buf, 1, exp_bsize, pnm_file);
       if (exp_bsize == act_bsize)
         {
           read_binary_data(&header, (const uint8_t *)char_buf, norm_factor,
@@ -177,7 +177,7 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
           goto invalid_file;
         }
 
-      my_close(pnm_file);
+      fclose(pnm_file);
     }
   else
     {
@@ -187,7 +187,7 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
   return 0;
 
 invalid_file:
-  my_close(pnm_file);
+  fclose(pnm_file);
 file_open_err:
   return err;
 }
