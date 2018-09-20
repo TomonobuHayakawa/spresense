@@ -57,6 +57,7 @@
 #include "devspecsock/devspecsock.h"
 #include "stubsock.h"
 #include "altcom_socket.h"
+#include "altcom_in.h"
 #include "altcom_errno.h"
 #include "dbg_if.h"
 
@@ -96,9 +97,9 @@ ssize_t stubsock_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
   int                             sockfd;
   int                             ret;
   int                             val = 0;
-  socklen_t                       addrlen = 0;
-  FAR altcom_socklen_t           *pfromlen = NULL;
-  FAR struct altcom_sockaddr     *pfrom = NULL;
+  altcom_socklen_t                altcom_fromlen;
+  socklen_t                       output_fromlen;
+  struct sockaddr_in6             tmpaddr;
   struct altcom_sockaddr_storage  storage;
 #ifdef CONFIG_NET_SOCKOPTS
   struct timeval                  tv_val;
@@ -107,21 +108,29 @@ ssize_t stubsock_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
 
   DBGIF_ASSERT(conn, "conn == NULL\n");
 
-  if (fromlen)
+  if (from != NULL)
     {
-      if (*fromlen > 0 && from == NULL)
+      if ((fromlen == NULL) || (*fromlen == 0))
         {
           return -EINVAL;
         }
+    }
 
-      addrlen = *fromlen;
-      pfromlen = fromlen;
-    }
-  if (from)
+  /* Adjust the length. Because the size of the structure is
+   * different between NuttX and remote. */
+
+  if (psock->s_domain == AF_INET)
     {
-      memset(&storage, 0, sizeof(struct altcom_sockaddr_storage));
-      pfrom = (FAR struct altcom_sockaddr*)&storage;
+      altcom_fromlen = sizeof(struct altcom_sockaddr_in);
+      output_fromlen = sizeof(struct sockaddr_in);
     }
+  else
+    {
+      altcom_fromlen = sizeof(struct altcom_sockaddr_in6);
+      output_fromlen = sizeof(struct sockaddr_in6);
+    }
+  memset(&storage, 0, sizeof(struct altcom_sockaddr_storage));
+  memset(&tmpaddr, 0, sizeof(struct sockaddr_in6));
 
   sockfd = conn->stubsockid;
 
@@ -143,17 +152,27 @@ ssize_t stubsock_recvfrom(FAR struct socket *psock, FAR void *buf, size_t len,
                     sizeof(tv_val));
 #endif
 
-  ret = altcom_recvfrom(sockfd, buf, len, stubsock_convflags_remote(flags),
-                        pfrom, pfromlen);
+  ret = altcom_recvfrom(sockfd, buf, len,
+                        stubsock_convflags_remote(flags),
+                        (FAR struct altcom_sockaddr *)&storage,
+                        &altcom_fromlen);
   if (ret < 0)
     {
       ret = altcom_errno();
       ret = -ret;
     }
-  else if (pfrom)
+  else if (from != NULL)
     {
-      stubsock_convstorage_local((struct altcom_sockaddr_storage*)pfrom,
-                                 from, addrlen);
+      /* Convert remote address to NuttX */
+
+      stubsock_convstorage_local(&storage, (FAR struct sockaddr*)&tmpaddr);
+
+      /* This function is supposed to return the partial address if
+       * a smaller buffer has been provided. */
+
+      memcpy(from, &tmpaddr, *fromlen);
+
+      *fromlen = output_fromlen;
     }
 
   return ret;

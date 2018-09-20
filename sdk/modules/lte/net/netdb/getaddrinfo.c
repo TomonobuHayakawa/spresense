@@ -141,11 +141,11 @@ int getaddrinfo(const char *nodename, const char *servname,
                      sizeof(struct altcom_sockaddr_storage));
 
               stubsock_convstorage_local((FAR struct altcom_sockaddr_storage*)ai->ai_addr,
-                                         (FAR struct sockaddr*)&ss, ai->ai_addrlen);
+                                         (FAR struct sockaddr*)&ss);
 
               memcpy(ai->ai_addr, &ss, ai->ai_addrlen);
 
-              if (ai->ai_family == AF_INET)
+              if (ai->ai_family == ALTCOM_AF_INET)
                 {
                   ai->ai_addrlen = sizeof(struct sockaddr_in);
                 }
