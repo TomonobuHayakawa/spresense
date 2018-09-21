@@ -594,6 +594,15 @@ void PlayerObj::init(MsgPacket *msg)
                    param.dsp_path,
                    param.sampling_rate);
 
+  /* Compare existence of multi-core between this time and last time. */
+
+  bool is_multi_core_prev = judgeMultiCore(
+                            m_input_device_handler->getSamplingRate(),
+                            m_input_device_handler->getBitLen());
+
+  bool is_multi_core_cur = judgeMultiCore(param.sampling_rate,
+                                         param.bit_length);
+
   result = m_input_device_handler->setParam(param);
 
   if (result == AS_ECODE_OK)
@@ -606,11 +615,8 @@ void PlayerObj::init(MsgPacket *msg)
 
       AudioCodec next_codec = m_input_device_handler->getCodecType();
 
-      bool dsp_multi_core = judgeMultiCore(param.sampling_rate,
-                                           param.bit_length);
-
       if ((m_codec_type != next_codec) ||
-          (m_dsp_multi_core != dsp_multi_core))
+          (is_multi_core_prev != is_multi_core_cur))
         {
           result = unloadCodec();
 
@@ -1284,10 +1290,6 @@ uint32_t PlayerObj::loadCodec(AudioCodec codec,
       return AS_ECODE_COMMAND_PARAM_CODEC_TYPE;
     }
 
-  /* Judge whether Slave DSP is required. */
-
-  m_dsp_multi_core = judgeMultiCore(param->sampling_rate, param->bit_length);
-
   ActDecCompParam act_param;
   act_param.codec          = codec;
   act_param.path           = (param->dsp_path != NULL) ? param->dsp_path :
@@ -1296,7 +1298,8 @@ uint32_t PlayerObj::loadCodec(AudioCodec codec,
   act_param.apu_pool_id    = m_apu_pool_id;
   act_param.apu_mid        = m_apu_dtq;
   act_param.dsp_inf        = dsp_inf;
-  act_param.dsp_multi_core = m_dsp_multi_core;
+  act_param.dsp_multi_core = judgeMultiCore(param->sampling_rate,
+                                            param->bit_length);
   rst = AS_decode_activate(&act_param);
   if (rst != AS_ECODE_OK)
     {
@@ -1353,7 +1356,9 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
   init_dec_comp_param.work_buffer.p_buffer = reinterpret_cast<unsigned long*>
       (allocSrcWorkBuf(m_max_src_work_buff_size));
   init_dec_comp_param.work_buffer.size     = m_max_src_work_buff_size;
-  init_dec_comp_param.dsp_multi_core       = m_dsp_multi_core;
+  init_dec_comp_param.dsp_multi_core       =
+    judgeMultiCore(m_input_device_handler->getSamplingRate(),
+                   m_input_device_handler->getBitLen());
   rst = AS_decode_init(&init_dec_comp_param, m_p_dec_instance, dsp_inf);
   if (rst != AS_ECODE_OK)
     {
