@@ -131,11 +131,15 @@ int dnn_runtime_finalize(dnn_runtime_t * rt)
   return (int)rt_free_context((rt_context_pointer *) & (rt->impl_ctx));
 }
 
-int dnn_runtime_forward(dnn_runtime_t * rt, const void *inputs[])
+int dnn_runtime_forward(dnn_runtime_t * rt, const void *inputs[],
+                unsigned char input_num)
 {
   DNN_CHECK_NULL_RET(rt, -EINVAL);
   rt_context_pointer ctx = (rt_context_pointer) rt->impl_ctx;
-  int input_num = rt_num_of_input(ctx);
+  if (rt_num_of_input (ctx) != input_num)
+    {
+      return -EINVAL;
+    }
   rt_context_t *c = (rt_context_t *) ctx;
 
   for (int i = 0; i < input_num; ++i)

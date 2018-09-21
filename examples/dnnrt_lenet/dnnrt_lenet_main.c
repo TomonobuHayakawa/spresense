@@ -161,10 +161,10 @@ int dnnrt_lenet_main(int argc, char *argv[])
   convert_datatype(&rt);
 
   /* feed the MNIST image into dnn_runtime_t and classify it */
-  printf("start dnn_runtime_forward()\n");
-  gettimeofday(&begin, 0);
-  ret = dnn_runtime_forward(&rt, inputs);
-  gettimeofday(&end, 0);
+  printf ("start dnn_runtime_forward()\n");
+  gettimeofday (&begin, 0);
+  ret = dnn_runtime_forward (&rt, inputs, 1);
+  gettimeofday (&end, 0);
   if (ret)
     {
       printf("dnn_runtime_forward() failed due to %d\n", ret);

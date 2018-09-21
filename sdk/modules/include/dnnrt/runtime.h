@@ -127,16 +127,18 @@ int dnn_runtime_finalize (dnn_runtime_t * rt);
 /**
  * execute forward propagation.
  *
- * @param [in,out] rt:      dnnrt runtime object
- * @param [in]     inputs:  an array of pointers to input buffers
+ * @param [in,out] rt:        dnnrt runtime object
+ * @param [in]     inputs:    an array of pointers to input buffers
+ * @param [in]     input_num: length of inputs
  *
  * @return 0 on success, otherwise returns error code in rt_return_value_t or errno_t.
  * @note feed input data taking the following points into account:
- *   - length of inputs equals to dnn_runtime_input_num()
+ *   - input_num equals to dnn_runtime_input_num()
  *   - length of each input buffer(i.e. inputs[i]) equals to dnn_runtime_input_size(rt, i)
  *   - internal representation of each input buffer(i.e. inputs[i]) can be obtained by dnn_runtime_input_variable(rt, i)
  */
-int dnn_runtime_forward (dnn_runtime_t * rt, const void *inputs[]);
+int dnn_runtime_forward (dnn_runtime_t * rt, const void *inputs[],
+                unsigned char input_num);
 
 /**
  * return the number of inputs which this network needs.
