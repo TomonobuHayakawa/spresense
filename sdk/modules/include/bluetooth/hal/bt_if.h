@@ -54,6 +54,7 @@
 #include <bluetooth/bt_a2dp_codecs.h>
 #include <bluetooth/bt_avrcp_cmds.h>
 #include <bluetooth/bt_hfp_features.h>
+#include <bluetooth/ble_params.h>
 #include <bluetooth/hal/bt_event.h>
 
 /****************************************************************************
@@ -126,6 +127,33 @@ struct bt_hal_spp_ops_s
   int (*connect)(BT_ADDR *addr, bool connect);              /**< Connect/Disconnect SPP by BT_ADDR */
   int (*setUuid)(BT_UUID *uuid);                            /**< Setup UUID @ref BT_UUID */
   int (*sendTxData)(BT_ADDR *addr, uint8_t *data, int len); /**< Send SPP Tx data */
+};
+
+/**
+ * @struct ble_hal_common_ops_s
+ * @brief Bluetooth LE common HAL callbacks
+ */
+struct ble_hal_common_ops_s
+{
+  int (*setDevAddr)(BT_ADDR *addr);                /**< Set BLE device address */
+  int (*setDevName)(char *name);                   /**< Set BLE device name */
+  int (*setAppearance)(BLE_APPEARANCE appearance); /**< Set BLE appearance ID @ref BLE_APPEARANCE */
+  int (*setPPCP)(BLE_CONN_PARAMS ppcp);            /**< Set PPCP connection parameter */
+  int (*advertise)(bool enable);                   /**< Advertisement start/stop */
+  int (*scan)(bool enable);                        /**< Scan start/stop */
+};
+
+/**
+ * @struct ble_hal_gatt_ops_s
+ * @brief Bluetooth LE GATT HAL callbacks
+ */
+struct ble_hal_gatt_ops_s
+{
+  int (*addService)(struct ble_gatt_service_s *ble_gatt_service);              /**< Add service to HAL */
+  int (*addChar)(uint16_t serv_handle, struct ble_gatt_char_s *ble_gatt_char); /**< Add characteristic to service */
+  int (*write)(struct ble_gatt_char_s *ble_gatt_char);                         /**< Write characteristic request(Central)/response(Peripheral) */
+  int (*read)(struct ble_gatt_char_s *ble_gatt_char);                          /**< Read characteristic request(Central)/response(Peripheral) */
+  int (*notify)(struct ble_gatt_char_s *ble_gatt_char);                        /**< Notify characteristic request(Central)/response(Peripheral) */
 };
 
 /****************************************************************************
@@ -236,5 +264,47 @@ int bt_spp_register_hal(struct bt_hal_spp_ops_s *bt_hal_spp_ops);
  */
 
 int bt_spp_event_handler(struct bt_event_t *bt_event);
+
+/**
+ * @brief Bluetooth LE common function HAL register
+ *
+ * @param[in] ble_hal_common_ops: HAL callback functions @ref ble_hal_common_ops_s
+ *
+ * @retval error code
+ */
+
+int ble_common_register_hal(struct ble_hal_common_ops_s *ble_hal_common_ops);
+
+/**
+ * @brief BLE common event handler
+ *        HAL should call this function if receive BLE common event(@ref BLE_COMMON_EVENT_ID).
+ *
+ * @param[in] bt_event: Event data @ref bt_event_t
+ *
+ * @retval error code
+ */
+
+int ble_common_event_handler(struct bt_event_t *bt_event);
+
+/**
+ * @brief Bluetooth LE GATT function HAL register
+ *
+ * @param[in] ble_hal_gatt_ops: HAL callback functions @ref ble_hal_gatt_ops_s
+ *
+ * @retval error code
+ */
+
+int ble_gatt_register_hal(struct ble_hal_gatt_ops_s *ble_hal_gatt_ops);
+
+/**
+ * @brief BLE GATT event handler
+ *        HAL should call this function if receive BLE GATT event(@ref BLE_GATT_EVENT_ID).
+ *
+ * @param[in] bt_event: Event data @ref bt_event_t
+ *
+ * @retval error code
+ */
+
+int ble_gatt_event_handler(struct bt_event_t *bt_event);
 
 #endif /* __MODULES_INCLUDE_BLUETOOTH_HAL_BT_IF_H */
