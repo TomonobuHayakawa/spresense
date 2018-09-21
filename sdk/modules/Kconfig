@@ -10,3 +10,4 @@ source modules/asmp/Kconfig
 source modules/fwuputils/Kconfig
 source modules/lte/Kconfig
 source modules/video/Kconfig
+source modules/bluetooth/Kconfig
