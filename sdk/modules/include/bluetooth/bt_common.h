@@ -73,7 +73,7 @@ typedef enum
 struct bt_common_state_s
 {
   struct bt_hal_common_ops_s *bt_hal_common_ops;    /**< BT common HAL interfaces @ref bt_hal_common_ops_s */
-  struct bt_ble_common_ops_s *bt_ble_common_ops;    /**< BT status callbacks @ref bt_ble_common_ops_s */
+  struct bt_common_ops_s     *bt_common_ops;        /**< BT status callbacks @ref bt_common_ops_s */
   BT_ADDR                    bt_addr;               /**< BT local device address @ref BT_ADDR */
   BT_ADDR                    ble_addr;              /**< BLE local device address @ref BT_ADDR */
   char                       bt_name[BT_NAME_LEN];  /**< BT local device name */
@@ -93,10 +93,10 @@ struct bt_acl_state_s
 };
 
 /**
- * @struct bt_ble_common_ops_s
+ * @struct bt_common_ops_s
  * @brief Bluetooth Common application callbacks
  */
-struct bt_ble_common_ops_s
+struct bt_common_ops_s
 {
   void (*command_status)(BT_CMD_STATUS status);                                                    /**< Command status */
   void (*pairing_complete)(BT_ADDR addr, BT_PAIR_STATUS status);                                   /**< Pairing complete */
@@ -262,11 +262,11 @@ int bt_cancel_inquiry(void);
  * @brief Bluetooth register common callbacks
  *        Register Connect/Pairing/Inquiry callback
  *
- * @param[in] bt_ble_common_ops: Application callback @ref bt_ble_common_ops_s
+ * @param[in] bt_common_ops: Application callback @ref bt_common_ops_s
  *
  * @retval error code
  */
 
-int bt_register_common_cb(struct bt_ble_common_ops_s *bt_ble_common_ops);
+int bt_register_common_cb(struct bt_common_ops_s *bt_common_ops);
 
 #endif /* __MODULES_INCLUDE_BLUETOOTH_BT_COMMON_H */

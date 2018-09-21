@@ -59,7 +59,7 @@ static void receiveData(struct bt_acl_state_s *bt_acl_state, uint8_t *pdata, int
  * Private Data
  ****************************************************************************/
 
-static struct bt_ble_common_ops_s bt_ble_common_ops =
+static struct bt_common_ops_s bt_common_ops =
   {
     .pairing_complete = paringComplete,
     .connect_status_changed = connectStatusChanged,
@@ -170,7 +170,7 @@ int bt_spp_main(int argc, char *argv[])
 
   /* Register BT event callback function */
 
-  ret = bt_register_common_cb(&bt_ble_common_ops);
+  ret = bt_register_common_cb(&bt_common_ops);
   if (ret != BT_SUCCESS)
   {
     printf("%s [BT] Register common call back failed. ret = %d\n", __func__, ret);

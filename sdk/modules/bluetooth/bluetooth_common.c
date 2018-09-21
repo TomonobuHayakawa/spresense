@@ -70,11 +70,11 @@ static struct bt_acl_state_s g_bt_acl_state =
 static int event_cmd_status(struct bt_event_cmd_stat_t *cmd_stat_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->command_status)
+  if (bt_common_ops && bt_common_ops->command_status)
     {
-      bt_ble_common_ops->command_status(cmd_stat_evt->cmd_status);
+      bt_common_ops->command_status(cmd_stat_evt->cmd_status);
     }
   else
     {
@@ -87,11 +87,11 @@ static int event_cmd_status(struct bt_event_cmd_stat_t *cmd_stat_evt)
 static int event_pairing_complete(struct bt_event_pair_cmplt_t *pair_cmplt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->pairing_complete)
+  if (bt_common_ops && bt_common_ops->pairing_complete)
     {
-      bt_ble_common_ops->pairing_complete(pair_cmplt->addr, pair_cmplt->status);
+      bt_common_ops->pairing_complete(pair_cmplt->addr, pair_cmplt->status);
     }
   else
     {
@@ -104,11 +104,11 @@ static int event_pairing_complete(struct bt_event_pair_cmplt_t *pair_cmplt)
 static int event_inquiry_result(struct bt_event_inquiry_rslt_t *inq_result_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->inquiry_result)
+  if (bt_common_ops && bt_common_ops->inquiry_result)
     {
-      bt_ble_common_ops->inquiry_result(inq_result_evt->addr, inq_result_evt->name);
+      bt_common_ops->inquiry_result(inq_result_evt->addr, inq_result_evt->name);
     }
   else
     {
@@ -121,11 +121,11 @@ static int event_inquiry_result(struct bt_event_inquiry_rslt_t *inq_result_evt)
 static int event_inquiry_complete(void)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->inquiry_complete)
+  if (bt_common_ops && bt_common_ops->inquiry_complete)
     {
-      bt_ble_common_ops->inquiry_complete();
+      bt_common_ops->inquiry_complete();
     }
   else
     {
@@ -138,7 +138,7 @@ static int event_inquiry_complete(void)
 static int event_conn_stat_change(struct bt_event_conn_stat_t *conn_stat_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
   if (conn_stat_evt->connected)
     {
@@ -150,9 +150,9 @@ static int event_conn_stat_change(struct bt_event_conn_stat_t *conn_stat_evt)
       g_bt_acl_state.bt_acl_connection = BT_DISCONNECTED;
     }
 
-  if (bt_ble_common_ops && bt_ble_common_ops->connect_status_changed)
+  if (bt_common_ops && bt_common_ops->connect_status_changed)
     {
-      bt_ble_common_ops->connect_status_changed(&g_bt_acl_state, conn_stat_evt->connected, conn_stat_evt->status);
+      bt_common_ops->connect_status_changed(&g_bt_acl_state, conn_stat_evt->connected, conn_stat_evt->status);
     }
   else
     {
@@ -165,12 +165,12 @@ static int event_conn_stat_change(struct bt_event_conn_stat_t *conn_stat_evt)
 static int event_conn_dev_name(struct bt_event_dev_name_t *dev_name_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->connected_device_name)
+  if (bt_common_ops && bt_common_ops->connected_device_name)
     {
       memcpy(g_bt_acl_state.bt_target_name, dev_name_evt->name, BT_NAME_LEN);
-      bt_ble_common_ops->connected_device_name(dev_name_evt->name);
+      bt_common_ops->connected_device_name(dev_name_evt->name);
     }
   else
     {
@@ -183,12 +183,12 @@ static int event_conn_dev_name(struct bt_event_dev_name_t *dev_name_evt)
 static int event_bond_info(struct bt_event_bond_info_t *bond_info_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->bond_info)
+  if (bt_common_ops && bt_common_ops->bond_info)
     {
       g_bt_acl_state.bt_target_addr = bond_info_evt->addr;
-      bt_ble_common_ops->bond_info(bond_info_evt->addr);
+      bt_common_ops->bond_info(bond_info_evt->addr);
     }
   else
     {
@@ -630,15 +630,15 @@ int bt_cancel_inquiry(void)
  *
  ****************************************************************************/
 
-int bt_register_common_cb(struct bt_ble_common_ops_s *bt_ble_common_ops)
+int bt_register_common_cb(struct bt_common_ops_s *bt_common_ops)
 {
-  if (!bt_ble_common_ops)
+  if (!bt_common_ops)
     {
       _err("%s [BT][Common] Set application callback failed.\n", __func__);
       return BT_FAIL;
     }
 
-  g_bt_common_state.bt_ble_common_ops = bt_ble_common_ops;
+  g_bt_common_state.bt_common_ops = bt_common_ops;
 
   return BT_SUCCESS;
 }
