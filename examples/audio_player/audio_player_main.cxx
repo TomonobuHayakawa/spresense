@@ -488,16 +488,24 @@ static bool app_create_audio_sub_system(void)
 
   AS_CreateAudioManager(ids, app_attention_callback);
 
-  AsCreatePlayerParam_t player_create_param;
-  player_create_param.msgq_id.player = MSGQ_AUD_PLY;
-  player_create_param.msgq_id.mng    = MSGQ_AUD_MNG;
-  player_create_param.msgq_id.mixer  = MSGQ_AUD_OUTPUT_MIX;
-  player_create_param.msgq_id.dsp    = MSGQ_AUD_DSP;
-  player_create_param.pool_id.es     = DEC_ES_MAIN_BUF_POOL;
-  player_create_param.pool_id.pcm    = REND_PCM_BUF_POOL;
-  player_create_param.pool_id.dsp    = DEC_APU_CMD_POOL;
+  /* Create player feature. */
 
-  result = AS_CreatePlayer(AS_PLAYER_ID_0, &player_create_param);
+  AsCreatePlayerParam_t player_create_param;
+  player_create_param.msgq_id.player   = MSGQ_AUD_PLY;
+  player_create_param.msgq_id.mng      = MSGQ_AUD_MNG;
+  player_create_param.msgq_id.mixer    = MSGQ_AUD_OUTPUT_MIX;
+  player_create_param.msgq_id.dsp      = MSGQ_AUD_DSP;
+  player_create_param.pool_id.es       = DEC_ES_MAIN_BUF_POOL;
+  player_create_param.pool_id.pcm      = REND_PCM_BUF_POOL;
+  player_create_param.pool_id.dsp      = DEC_APU_CMD_POOL;
+  player_create_param.pool_id.src_work = SRC_WORK_BUF_POOL;
+
+  /* When calling AS_CreatePlayerMulti(), use the pool area
+   * for multi-core playback processing.
+   * When calling BBB, use the heap area.
+   */
+
+  result = AS_CreatePlayerMulti(AS_PLAYER_ID_0, &player_create_param);
 
   if (!result)
     {

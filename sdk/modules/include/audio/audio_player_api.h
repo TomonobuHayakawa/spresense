@@ -612,6 +612,10 @@ typedef struct
   /*! \brief [in] Memory pool id of dsp command data */
 
   uint8_t dsp;
+
+  /*! \brief [in] Memory pool id of src work area */
+
+  uint8_t src_work;
 } AsPlayerPoolId_t;
 
 /** Activate function parameter */
@@ -650,9 +654,22 @@ extern "C"
  *
  * @retval     true  : success
  * @retval     false : failure
+ * @deprecated Use AS_CreatePlayerMulti() instead.
  */
 
 bool AS_CreatePlayer(AsPlayerId id, FAR AsCreatePlayerParam_t *param);
+
+/**
+ * @brief Create audio main player using memory pool in work area of src
+ *
+ * @param[in] param: Parameters of resources used by audio main player
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ * @note New create interface. The use size of the heap area is small.
+ */
+
+bool AS_CreatePlayerMulti(AsPlayerId id, FAR AsCreatePlayerParam_t *param);
 
 /**
  * @brief Activate audio (sub)player
