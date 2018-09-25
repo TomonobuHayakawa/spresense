@@ -488,7 +488,7 @@ void stubsock_convsockaddr_remote(FAR const struct sockaddr *from,
  ****************************************************************************/
 
 void stubsock_convstorage_local(FAR const struct altcom_sockaddr_storage *from,
-                                FAR struct sockaddr *to, socklen_t len)
+                                FAR struct sockaddr *to)
 {
   FAR struct altcom_sockaddr_in  *inaddr_from;
   FAR struct altcom_sockaddr_in6 *in6addr_from;
@@ -497,12 +497,6 @@ void stubsock_convstorage_local(FAR const struct altcom_sockaddr_storage *from,
 
   if (from->ss_family == ALTCOM_AF_INET)
     {
-      if (len < sizeof(struct sockaddr_in))
-        {
-          DBGIF_LOG2_WARNING("There is not enough space: %d, expected: %d\n", len, sizeof(struct sockaddr_in));
-          return;
-        }
-
       inaddr_from = (FAR struct altcom_sockaddr_in*)from;
       inaddr_to   = (FAR struct sockaddr_in*)to;
 
@@ -513,12 +507,6 @@ void stubsock_convstorage_local(FAR const struct altcom_sockaddr_storage *from,
     }
   else if (from->ss_family == ALTCOM_AF_INET6)
     {
-      if (len < sizeof(struct sockaddr_in6))
-        {
-          DBGIF_LOG2_WARNING("There is not enough space: %d, expected: %d\n", len, sizeof(struct sockaddr_in6));
-          return;
-        }
-
       in6addr_from = (FAR struct altcom_sockaddr_in6*)from;
       in6addr_to   = (FAR struct sockaddr_in6*)to;
 

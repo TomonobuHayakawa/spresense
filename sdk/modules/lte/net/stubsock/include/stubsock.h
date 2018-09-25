@@ -233,7 +233,7 @@ void stubsock_convsockaddr_remote(FAR const struct sockaddr *from,
  ****************************************************************************/
 
 void stubsock_convstorage_local(FAR const struct altcom_sockaddr_storage *from,
-                                FAR struct sockaddr *to, socklen_t len);
+                                FAR struct sockaddr *to);
 
 
 /****************************************************************************
