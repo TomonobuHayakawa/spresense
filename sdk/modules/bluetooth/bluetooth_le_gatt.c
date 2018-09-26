@@ -37,6 +37,7 @@
  * Included Files
  ****************************************************************************/
 
+#include <string.h>
 #include <bluetooth/ble_gatt.h>
 #include <bluetooth/hal/bt_if.h>
 
@@ -48,11 +49,157 @@
  * Private Data
  ****************************************************************************/
 
+static struct ble_gatt_state_s g_ble_gatt_state =
+{
+  .num = 0,
+  .services = {{0}}
+};
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
+static struct ble_gatt_char_s *ble_search_characteristic(uint16_t serv_handle, uint16_t char_handle)
+{
+  struct ble_gatt_service_s *ble_gatt_service;
+  struct ble_gatt_char_s *ble_gatt_char = NULL;
+  int n;
+
+  /* Seach service from GATT context */
+
+  for (n = 0; n < g_ble_gatt_state.num; n ++)
+    {
+      if (g_ble_gatt_state.services[n].handle == serv_handle)
+        {
+          ble_gatt_service = &g_ble_gatt_state.services[n];
+          break;
+        }
+    }
+
+  if (ble_gatt_service)
+    {
+      /*Search characteristic from service */
+
+      for (n = 0; n < ble_gatt_service->num; n ++)
+        {
+          if (ble_gatt_service->chars[n]->handle == char_handle)
+            {
+              ble_gatt_char = ble_gatt_service->chars[n];
+              break;
+            }
+        }
+    }
+
+  return ble_gatt_char;
+}
+
+static int event_write_req(struct ble_gatt_event_write_req_t *write_req_evt)
+{
+  int ret = BT_SUCCESS;
+  struct ble_gatt_char_s *ble_gatt_char;
+  struct ble_gatt_peripheral_ops_s *ble_gatt_peripheral_ops;
+  BLE_CHAR_VALUE  *value;
+
+  /* Search characteristic */
+
+  ble_gatt_char = ble_search_characteristic(write_req_evt->serv_handle, write_req_evt->char_handle);
+
+  if (!ble_gatt_char)
+    {
+      _err("%s [BLE][GATT] characteristic search failed(Not found).\n", __func__);
+      return BT_FAIL;
+    }
+
+  /* Copy write data */
+
+  value = &ble_gatt_char->value;
+
+  memcpy(value->data, write_req_evt->data, write_req_evt->length);
+
+  value->length = write_req_evt->length;
+
+  /* Callback to application with updated characteristic */
+
+  ble_gatt_peripheral_ops = ble_gatt_char->ble_gatt_peripheral_ops;
+
+  if (ble_gatt_peripheral_ops && ble_gatt_peripheral_ops->write)
+    {
+      ble_gatt_peripheral_ops->write(ble_gatt_char);
+    }
+  else
+    {
+      _err("%s [BLE][GATT] Write request event callback failed(CB not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  return ret;
+}
+
+static int event_read_req(struct ble_gatt_event_read_req_t *read_req_evt)
+{
+  int ret = BT_SUCCESS;
+  struct ble_gatt_char_s *ble_gatt_char;
+  struct ble_gatt_peripheral_ops_s *ble_gatt_peripheral_ops;
+
+  /* Search characteristic */
+
+  ble_gatt_char = ble_search_characteristic(read_req_evt->serv_handle, read_req_evt->char_handle);
+
+  if (!ble_gatt_char)
+    {
+      _err("%s [BLE][GATT] characteristic search failed(Not found).\n", __func__);
+      return BT_FAIL;
+    }
+
+  /* Callback to application with searched characteristic */
+
+  ble_gatt_peripheral_ops = ble_gatt_char->ble_gatt_peripheral_ops;
+
+  if (ble_gatt_peripheral_ops && ble_gatt_peripheral_ops->read)
+    {
+      ble_gatt_peripheral_ops->read(ble_gatt_char);
+    }
+  else
+    {
+      _err("%s [BLE][GATT] Read request event callback failed(CB not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  return ret;
+}
+
+static int event_notify_req(struct ble_gatt_event_notify_req_t *notify_req_evt)
+{
+  int ret = BT_SUCCESS;
+  struct ble_gatt_char_s *ble_gatt_char;
+  struct ble_gatt_peripheral_ops_s *ble_gatt_peripheral_ops;
+
+  /* Search characteristic */
+
+  ble_gatt_char = ble_search_characteristic(notify_req_evt->serv_handle, notify_req_evt->char_handle);
+
+  if (!ble_gatt_char)
+    {
+      _err("%s [BLE][GATT] characteristic search failed(Not found).\n", __func__);
+      return BT_FAIL;
+    }
+
+  /* Callback to application with searched characteristic */
+
+  ble_gatt_peripheral_ops = ble_gatt_char->ble_gatt_peripheral_ops;
+
+  if (ble_gatt_peripheral_ops && ble_gatt_peripheral_ops->notify)
+    {
+      ble_gatt_peripheral_ops->notify(ble_gatt_char, notify_req_evt->enable);
+    }
+  else
+    {
+      _err("%s [BLE][GATT] Notify request event callback failed(CB not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  return ret;
+}
 
 /****************************************************************************
  * Public Functions
@@ -68,7 +215,9 @@
 
 bool ble_gatt_is_supported(void)
 {
-  return true;
+  /* If HAL interface was registered, return true. */
+
+  return !(!g_ble_gatt_state.ble_hal_gatt_ops);
 }
 
 /****************************************************************************
@@ -82,6 +231,16 @@ bool ble_gatt_is_supported(void)
 
 int ble_create_service(struct ble_gatt_service_s *service)
 {
+  if (g_ble_gatt_state.num < BLE_MAX_SERVICES)
+    {
+      service = &g_ble_gatt_state.services[g_ble_gatt_state.num];
+      g_ble_gatt_state.num ++;
+    }
+  else
+    {
+      _err("%s [BLE][GATT] BLE create service failed(max services reached).\n", __func__);
+      return BT_FAIL;
+    }
   return BT_SUCCESS;
 }
 
@@ -96,7 +255,51 @@ int ble_create_service(struct ble_gatt_service_s *service)
 
 int ble_register_servce(struct ble_gatt_service_s *service)
 {
-  return BT_SUCCESS;
+  int ret = BT_SUCCESS;
+  int n;
+  struct ble_hal_gatt_ops_s *ble_hal_gatt_ops = g_ble_gatt_state.ble_hal_gatt_ops;
+
+  if (!service)
+    {
+      _err("%s [BLE][GATT] BLE register service failed(service not created).\n", __func__);
+      return BT_FAIL;
+    }
+
+  if (service->handle)
+    {
+      _err("%s [BLE][GATT] BLE register service failed(service already registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  if (ble_hal_gatt_ops && ble_hal_gatt_ops->addService &&
+      ble_hal_gatt_ops->addChar)
+    {
+      ret = ble_hal_gatt_ops->addService(service);
+
+      if (ret != BT_SUCCESS)
+        {
+          _err("%s [BLE][GATT] Register service failed(Cannot get service handle).\n", __func__);
+          return ret;
+        }
+
+      for (n = 0; n < service->num; n ++)
+        {
+          ret = ble_hal_gatt_ops->addChar(service->handle, service->chars[n]);
+
+          if (ret != BT_SUCCESS)
+            {
+              _err("%s [BLE][GATT] Register service failed(Cannot add characteristic).\n", __func__);
+              return ret;
+            }
+        }
+    }
+  else
+    {
+      _err("%s [BLE][GATT] Register service failed(HAL not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  return ret;
 }
 
 /****************************************************************************
@@ -109,6 +312,22 @@ int ble_register_servce(struct ble_gatt_service_s *service)
 
 int ble_add_characteristic(struct ble_gatt_service_s *service, struct ble_gatt_char_s *charc)
 {
+  if (!service)
+    {
+      _err("%s [BLE][GATT] BLE add characteristic failed(service not created).\n", __func__);
+      return BT_FAIL;
+    }
+
+  if (service->num < BLE_MAX_CHARACTERISTICS)
+    {
+      service->chars[service->num] = charc;
+      service->num ++;
+    }
+  else
+    {
+      _err("%s [BLE][GATT] BLE create service failed(max services reached).\n", __func__);
+      return BT_FAIL;
+    }
   return BT_SUCCESS;
 }
 
@@ -123,7 +342,39 @@ int ble_add_characteristic(struct ble_gatt_service_s *service, struct ble_gatt_c
 
 int ble_characteristic_notify(struct ble_gatt_char_s *charc, uint8_t *data, int len)
 {
-  return BT_SUCCESS;
+  int ret = BT_SUCCESS;
+  struct ble_hal_gatt_ops_s *ble_hal_gatt_ops = g_ble_gatt_state.ble_hal_gatt_ops;
+  BLE_CHAR_VALUE *value;
+
+  if (!charc)
+    {
+      _err("%s [BLE][GATT] BLE notify failed(characteristic not created).\n", __func__);
+      return BT_FAIL;
+    }
+
+  value = &charc->value;
+
+  if (BLE_MAX_CHAR_SIZE <= len)
+    {
+      _err("%s [BLE][GATT] BLE notify failed(value size is too big).\n", __func__);
+      return BT_FAIL;
+    }
+
+  if (ble_hal_gatt_ops && ble_hal_gatt_ops->notify)
+    {
+      memcpy(value->data, data, len);
+
+      value->length = len;
+
+      ret = ble_hal_gatt_ops->notify(charc);
+    }
+  else
+    {
+      _err("%s [BLE][GATT] Notify failed(HAL not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  return ret;
 }
 
 /****************************************************************************
@@ -137,7 +388,8 @@ int ble_characteristic_notify(struct ble_gatt_char_s *charc, uint8_t *data, int 
 
 int ble_characteristic_read(struct ble_gatt_char_s *charc)
 {
-  return BT_SUCCESS;
+  _err("%s [BLE][GATT] BLE read failed(Central not supported yet).\n", __func__);
+  return BT_FAIL;
 }
 
 /****************************************************************************
@@ -151,7 +403,8 @@ int ble_characteristic_read(struct ble_gatt_char_s *charc)
 
 int ble_characteristic_write(struct ble_gatt_char_s *charc, uint8_t *data, int len)
 {
-  return BT_SUCCESS;
+  _err("%s [BLE][GATT] BLE write failed(Central not supported yet).\n", __func__);
+  return BT_FAIL;
 }
 
 /****************************************************************************
@@ -164,6 +417,14 @@ int ble_characteristic_write(struct ble_gatt_char_s *charc, uint8_t *data, int l
 
 int ble_gatt_register_hal(struct ble_hal_gatt_ops_s *ble_hal_gatt_ops)
 {
+  if (!ble_hal_gatt_ops)
+    {
+      _err("%s [BLE][GATT] Set HAL callback failed.\n", __func__);
+      return BT_FAIL;
+    }
+
+  g_ble_gatt_state.ble_hal_gatt_ops = ble_hal_gatt_ops;
+
   return BT_SUCCESS;
 }
 
@@ -178,6 +439,26 @@ int ble_gatt_register_hal(struct ble_hal_gatt_ops_s *ble_hal_gatt_ops)
 
 int ble_gatt_event_handler(struct bt_event_t *bt_event)
 {
+  switch (bt_event->event_id)
+    {
+      case BLE_GATT_EVENT_WRITE_REQ:
+        return event_write_req((struct ble_gatt_event_write_req_t *) bt_event);
+
+      case BLE_GATT_EVENT_READ_REQ:
+        return event_read_req((struct ble_gatt_event_read_req_t *) bt_event);
+
+      case BLE_GATT_EVENT_NOTIFY_REQ:
+        return event_notify_req((struct ble_gatt_event_notify_req_t *) bt_event);
+
+      case BLE_GATT_EVENT_WRITE_RESP:
+      case BLE_GATT_EVENT_READ_RESP:
+      case BLE_GATT_EVENT_NOTIFY_RESP:
+        /* Central role not supported yet */
+        break;
+
+      default:
+        break;
+    }
   return BT_SUCCESS;
 }
 
