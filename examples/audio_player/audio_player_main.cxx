@@ -502,7 +502,7 @@ static bool app_create_audio_sub_system(void)
 
   /* When calling AS_CreatePlayerMulti(), use the pool area
    * for multi-core playback processing.
-   * When calling BBB, use the heap area.
+   * When calling AS_CreatePlayer(), use the heap area.
    */
 
   result = AS_CreatePlayerMulti(AS_PLAYER_ID_0, &player_create_param);

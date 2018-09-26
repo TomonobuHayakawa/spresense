@@ -156,8 +156,6 @@ private:
   AsPcmDataDest m_pcm_dest;
   AsPcmDataPath m_pcm_path;
 
-  bool m_dsp_multi_core;
-
   void run(void);
   void parse(MsgPacket *);
   void parseSubState(MsgPacket *);
