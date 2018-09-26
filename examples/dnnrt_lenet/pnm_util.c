@@ -181,6 +181,7 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
     }
   else
     {
+      err = -errno;
       goto file_open_err;
     }
 
