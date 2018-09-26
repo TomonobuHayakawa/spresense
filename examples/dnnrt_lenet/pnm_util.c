@@ -109,6 +109,38 @@ read_binary_data(const pnm_header * header, const uint8_t * data_buffer,
     }
 }
 
+static char *read_pnm_line(char *buf, int size, FILE *pnm_file)
+{
+  char *line;
+  char *p;
+
+  for (;;)
+    {
+      line = fgets(buf, size, pnm_file);
+      if (line == NULL)
+        {
+          break;
+        }
+
+      for (p = line; *p != 0; ++p)
+        {
+          if (*p == ' ' || *p == '\t')
+            {
+              continue;
+            }
+
+          break;
+        }
+
+      if (*p != '#')
+        {
+          break;
+        }
+    }
+
+  return line;
+}
+
 static int
 load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
 {
@@ -122,7 +154,7 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
   if (pnm_file != NULL)
     {
       /* read magic number in .pnm */
-      if (fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
+      if (read_pnm_line(char_buf, MY_BUFSIZ, pnm_file) != NULL)
         {
           if ((err = read_magic_number(char_buf, &header)) < 0)
             {
@@ -136,7 +168,7 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
         }
 
       /* read height and width of this file */
-      if (fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
+      if (read_pnm_line(char_buf, MY_BUFSIZ, pnm_file) != NULL)
         {
           if ((err = read_image_size(char_buf, &header)) < 0)
             {
@@ -150,7 +182,7 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
         }
 
       /* read max */
-      if (fgets(char_buf, MY_BUFSIZ, pnm_file) != NULL)
+      if (read_pnm_line(char_buf, MY_BUFSIZ, pnm_file) != NULL)
         {
           if ((err = read_max(char_buf, &header)) < 0)
             {
