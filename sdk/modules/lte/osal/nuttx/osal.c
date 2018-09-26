@@ -102,18 +102,36 @@ static int task_entry(int argc, FAR char *argv[])
   CODE void              (*func)(FAR void *arg);
   char                   *endptr;
 
-  DBGIF_ASSERT((argc == 2), "Invalid argument\n");
+  if (argc != 2)
+    {
+      DBGIF_LOG_ERROR("Invalid argument\n");
+      return -EINVAL;
+    }
 
   /* It converts from a character string to a numeric value */
 
   addr = (struct task_info_s *)strtol(argv[1], &endptr, 16);
 
-  DBGIF_ASSERT(!((errno == ERANGE) && ((int)addr == LONG_MAX)),
-               "strtol overflow\n");
-  DBGIF_ASSERT(!((errno == ERANGE) && ((int)addr == LONG_MIN)),
-               "strtol underflow\n");
-  DBGIF_ASSERT((endptr != argv[1]), "No digits were found\n");
-  DBGIF_ASSERT(addr, "value is null\n");
+  if ((errno == ERANGE) && ((int)addr == LONG_MAX))
+    {
+      DBGIF_LOG_ERROR("strtol overflow\n");
+      return -ERANGE;
+    }
+  if (((errno == ERANGE) && ((int)addr == LONG_MIN)))
+    {
+      DBGIF_LOG_ERROR("strtol underflow\n");
+      return -ERANGE;
+    }
+  if ((endptr == argv[1]))
+    {
+      DBGIF_LOG_ERROR("No digits were found\n");
+      return -EINVAL;
+    }
+  if ((!addr))
+    {
+      DBGIF_LOG_ERROR("value is null\n");
+      return -EINVAL;
+    }
 
   /* Save it to a local variables before free it */
 
