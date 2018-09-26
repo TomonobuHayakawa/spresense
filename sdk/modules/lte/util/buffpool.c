@@ -39,6 +39,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include "buffpool.h"
 #include "dbg_if.h"
 
@@ -188,6 +189,12 @@ static FAR struct buffpool_blockinfo_s *buffpool_createblockinfo(
   FAR struct buffpool_blockinfo_s *blkinfo         = NULL;
   FAR struct buffpool_buffinfo_s  **targetbuffinfo = NULL;
   uint32_t                        num              = 0;
+
+  if (USHRT_MAX < (blkset->size * blkset->num))
+  {
+    DBGIF_LOG2_ERROR("Unexpected value. size:%u, num:%u\n", blkset->size, blkset->num);
+    goto errout;
+  }
 
   /* Allocate block info. */
 
