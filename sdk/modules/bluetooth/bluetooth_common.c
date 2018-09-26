@@ -704,3 +704,210 @@ int bt_common_event_handler(struct bt_event_t *bt_event)
   return BT_SUCCESS;
 }
 
+/****************************************************************************
+ * Name: ble_set_address
+ *
+ * Description:
+ *   Set Bluetooth LE module address
+ *   This is Spresense side address and should be call before bt_enable.
+ *
+ ****************************************************************************/
+
+int ble_set_address(BT_ADDR *addr)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_get_address
+ *
+ * Description:
+ *   Get Bluetooth LE module address
+ *
+ ****************************************************************************/
+
+int ble_get_address(BT_ADDR *addr)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_set_name
+ *
+ * Description:
+ *   Set Bluetooth LE module name
+ *   This name visible for other devices and should be call before bt_enable.
+ *
+ ****************************************************************************/
+
+int ble_set_name(char *name)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_get_name
+ *
+ * Description:
+ *   Get Bluetooth LE module name
+ *
+ ****************************************************************************/
+
+int ble_get_name(char *name)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_enable
+ *
+ * Description:
+ *   Bluetooth LE enable
+ *   Set initialize parameter to HAL(Name/Addr/PPCP/Appearance)
+ *
+ ****************************************************************************/
+
+int ble_enable(void)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_disable
+ *
+ * Description:
+ *   Bluetooth LE disable
+ *
+ ****************************************************************************/
+
+int ble_disable(void)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_connect
+ *
+ * Description:
+ *   Bluetooth LE connect for Central
+ *   This function is for Central role.
+ *
+ ****************************************************************************/
+
+int ble_connect(struct ble_state_s *ble_state)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_disconnect
+ *
+ * Description:
+ *   Bluetooth LE disconnect for Central
+ *   This function is for Central role.
+ *
+ ****************************************************************************/
+
+int ble_disconnect(struct ble_state_s *ble_state)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: bt_start_advertise
+ *
+ * Description:
+ *   Start BLE advertise mode.
+ *   This function is for Peripheral role.
+ *
+ ****************************************************************************/
+
+int bt_start_advertise(void)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: bt_cancel_advertise
+ *
+ * Description:
+ *   Cancel BLE advertise mode.
+ *   This function is for Peripheral role.
+ *
+ ****************************************************************************/
+
+int bt_cancel_advertise(void)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: bt_start_scan
+ *
+ * Description:
+ *   Start BLE scan mode.
+ *   This function is for Central role.
+ *
+ ****************************************************************************/
+
+int bt_start_scan(void)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: bt_cancel_scan
+ *
+ * Description:
+ *   Cancel BLE scan mode.
+ *   This function is for Central role.
+ *
+ ****************************************************************************/
+
+int bt_cancel_scan(void)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_register_common_cb
+ *
+ * Description:
+ *   Bluetooth LE register common callbacks
+ *   Register Connect/Advertise/Scan callback.
+ *
+ ****************************************************************************/
+
+int ble_register_common_cb(struct ble_common_ops_s *ble_common_ops)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_common_register_hal
+ *
+ * Description:
+ *   Bluetooth LE common function HAL register
+ *   This is Spresense side address and should be call before bt_enable.
+ *
+ ****************************************************************************/
+
+int ble_common_register_hal(struct ble_hal_common_ops_s *ble_hal_common_ops)
+{
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_common_event_handler
+ *
+ * Description:
+ *   BLE common event handler
+ *   HAL should call this function if receive BLE common event(@ref BLE_COMMON_EVENT_ID).
+ *
+ ****************************************************************************/
+
+int ble_common_event_handler(struct bt_event_t *bt_event)
+{
+  return BT_SUCCESS;
+}
+
