@@ -103,27 +103,19 @@ void altcom_sockaddr_to_sockstorage(FAR const struct altcom_sockaddr *addr,
   if (addr->sa_family == ALTCOM_PF_INET)
     {
       inaddr = (FAR struct altcom_sockaddr_in*)addr;
-      storage->s2_len    = inaddr->sin_len;
-      storage->ss_family = inaddr->sin_family;
 
       /* These parameter are network byte order */
 
-      memcpy(&storage->s2_data1[0], &inaddr->sin_port,
-             sizeof(altcom_in_port_t));
-      memcpy(&storage->s2_data2[0], &inaddr->sin_addr,
-             sizeof(struct altcom_in_addr));
+      memcpy((FAR struct altcom_sockaddr_in*)storage, inaddr,
+             sizeof(struct altcom_sockaddr_in));
     }
   else if (addr->sa_family == ALTCOM_PF_INET6)
     {
       in6addr = (FAR struct altcom_sockaddr_in6*)addr;
-      storage->s2_len    = in6addr->sin6_len;
-      storage->ss_family = in6addr->sin6_family;
 
       /* These parameter are network byte order */
 
-      memcpy(&storage->s2_data1[0], &in6addr->sin6_port,
-             sizeof(altcom_in_port_t));
-      memcpy(&storage->s2_data2[1], &in6addr->sin6_addr,
-             sizeof(struct altcom_in6_addr));
+      memcpy((FAR struct altcom_sockaddr_in6*)storage, in6addr,
+             sizeof(struct altcom_sockaddr_in6));
     }
 }
