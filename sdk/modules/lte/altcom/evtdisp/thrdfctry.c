@@ -184,6 +184,10 @@ int32_t thrdfctry_init(FAR struct thrdfctry_thrdset_s set[], int8_t setnum)
             poolset.maxquenum     = set[num].u.seqset.maxquenum;
             break;
           default:
+            DBGIF_LOG1_ERROR("unexpected type:%d\n", set[num].type);
+            thrdfctry_dellist();
+            g_thrdfctry_list = NULL;
+            return -EINVAL;
             break;
         }
 

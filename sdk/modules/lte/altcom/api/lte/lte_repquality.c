@@ -99,7 +99,7 @@ int32_t lte_set_report_quality(quality_report_cb_t quality_callback,
   FAR struct apicmd_cmddat_setrepquality_res_s *resbuff   = NULL;
   uint16_t                                     resbufflen =
                                                  QUALITY_SETRES_DATA_LEN;
-  uint16_t                                     reslen;
+  uint16_t                                     reslen     = 0;
 
   /* Check if the library is initialized */
 
