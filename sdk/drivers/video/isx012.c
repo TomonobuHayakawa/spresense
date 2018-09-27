@@ -328,6 +328,7 @@ static const isx012_reg_t g_isx012_def_init[] = {
 #ifdef ISX012_NOT_USE_NSTBY
   {INCK_SET,        0x17,   0x01}, /* INCK_SET */
 #endif
+  {FRM_FIX_SN1_2,     0xFF, 0x01}, /* Fix framerate */
   {FAST_MODECHG_EN,   0x01, 0x01},
   {FAST_SHT_MODE_SEL, 0x01, 0x01},
   {CAP_HALF_AE_CTRL,  0x07, 0x01}, /* HAFREL=HIGHSPEED, CAP=Auto  */
