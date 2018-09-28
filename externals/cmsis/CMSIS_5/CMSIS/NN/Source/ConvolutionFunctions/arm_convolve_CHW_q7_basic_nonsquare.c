@@ -18,8 +18,6 @@
  */
 
 /* ----------------------------------------------------------------------
- * CHANGE NOTICE
- *
  * Title:        arm_convolve_CHW_q7_basic_nonsquare.c
  * Author:       Sony Corporation
  * Description:  Sony Corporation added this file to 5.4.0

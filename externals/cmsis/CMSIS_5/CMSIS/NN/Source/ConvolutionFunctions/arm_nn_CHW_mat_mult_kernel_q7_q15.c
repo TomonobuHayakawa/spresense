@@ -18,8 +18,6 @@
  */
 
 /* ----------------------------------------------------------------------
- * CHANGE NOTICE
- *
  * Title:        arm_nn_CHW_mat_mult_kernel_q7_q15.c
  * Author:       Sony Corporation
  * Description:  Sony Corporation added this file to 5.4.0

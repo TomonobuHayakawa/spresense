@@ -18,8 +18,6 @@
  */
 
 /* ----------------------------------------------------------------------
- * CHANGE NOTICE
- *
  * Title:        arm_nnfunctions_nnabla.h
  * Author:       Sony Corporation
  * Description:  Sony Corporation added this file to 5.4.0
