@@ -42,7 +42,7 @@
  * @defgroup dnnrt dnnrt
  * @{
  *
- * dnnrt is a neural network runtime fully utilizing ASMP Framework.
+ * dnnrt is an Deep Neural Networks RunTime optimized for for CXD5602
  */
 
 #include <dnnrt/nnablart/network.h>
@@ -64,7 +64,7 @@ typedef struct dnn_runtime dnn_runtime_t;
 
 struct dnn_runtime
 {
-  void *impl_ctx;   /**< the context corresponding to a concrete implementation. */
+  void *impl_ctx;
 };
 
 /** @} dnnrt_datatype */
@@ -78,31 +78,31 @@ struct dnn_runtime
  */
 
 /**
- * Initialize dnnrt module.
+ * Initialize the whole dnnrt subsystem
  *
- * @param [in] config: configuration about multicore processing
+ * @param [in] reserved: reserved argument. Currently, this argument must be NULL.
  *
  * @return 0 on success, otherwise returns error code in errno_t.
  *
- * @note This function must be called before dnn_runtime_t is initialized.
+ * @note this function must be called before any dnn_runtime_t object is initialized.
  */
-int dnn_initialize (void* config);
+int dnn_initialize (void* reserved);
 
 /**
- * Finalize dnnrt module.
+ * Finalize the whole dnnrt subsystem.
  * This function frees all the resources allocated through dnn_initialize().
  *
  * @return 0 on success, otherwise returns error code in errno_t.
  *
- * @note This function must be called after all the dnn_runtime_t is finalized
+ * @note this function must be called after all the dnn_runtime_t is finalized
  */
 int dnn_finalize (void);
 
  /**
-  * Initialize a runtime object based on an .nnb file
+  * Instantiate a neural network defined by nn_network_t as a dnn_runtime_t object.
   *
-  * @param [in,out] rt:      dnnrt runtime object
-  * @param [in]     network: network object loaded from a .nnb file
+  * @param [in,out] rt:      dnnrt_runtime_t object
+  * @param [in]     network: pointer to a memory into which .nnb file is loaded
   *
   * @return 0 on success, otherwise returns error code in rt_return_value_t or errno_t.
   *
@@ -114,9 +114,9 @@ int dnn_finalize (void);
 int dnn_runtime_initialize (dnn_runtime_t * rt, const nn_network_t * network);
 
  /**
-  * Free all the memory allocated to a runtime object
+  * Free all the memory allocated to a dnn_runtime_t object
   *
-  * @param [in,out] rt:      dnnrt runtime object
+  * @param [in,out] rt:      dnnrt_runtime_t object
   *
   * @return 0 on success, otherwise returns error code in rt_return_value_t or errno_t.
   *
@@ -125,9 +125,9 @@ int dnn_runtime_initialize (dnn_runtime_t * rt, const nn_network_t * network);
 int dnn_runtime_finalize (dnn_runtime_t * rt);
 
 /**
- * execute forward propagation.
+ * Execute forward propagation after feeding input data.
  *
- * @param [in,out] rt:        dnnrt runtime object
+ * @param [in,out] rt:        dnnrt_runtime_t object
  * @param [in]     inputs:    an array of pointers to input buffers
  * @param [in]     input_num: length of inputs
  *
@@ -141,28 +141,28 @@ int dnn_runtime_forward (dnn_runtime_t * rt, const void *inputs[],
                 unsigned char input_num);
 
 /**
- * return the number of inputs which this network needs.
+ * Return the number of inputs which this network needs.
  *
- * @param [in,out] rt:      dnnrt runtime object
+ * @param [in,out] rt:      dnnrt_runtime_t object
  *
- * @return the number of inputs on success, otherwise -EINVAL.
+ * @return number of inputs on success, otherwise -EINVAL.
  */
 int dnn_runtime_input_num (dnn_runtime_t * rt);
 
 /**
- * return the number of elements in a specified input.
+ * Return the number of elements in a specified input.
  *
- * @param [in,out] rt:          dnnrt runtime object
+ * @param [in,out] rt:          dnnrt_runtime_t object
  * @param [in]     input_index: index to specify an input
  *
- * @return the number of elements in the specified input on success, otherwise -EINVAL.
+ * @return number of elements in the specified input on success, otherwise -EINVAL.
  */
 int dnn_runtime_input_size (dnn_runtime_t * rt, unsigned char input_index);
 
 /**
- * return the number of a specified input's dimensions.
+ * Return the number of a specified input's dimensions.
  *
- * @param [in,out] rt:          dnnrt runtime object
+ * @param [in,out] rt:          dnnrt_runtime_t object
  * @param [in]     input_index: index to specify an input
  *
  * @return number of the specified input's dimensions on success,
@@ -171,22 +171,22 @@ int dnn_runtime_input_size (dnn_runtime_t * rt, unsigned char input_index);
 int dnn_runtime_input_ndim (dnn_runtime_t * rt, unsigned char input_index);
 
 /**
- * return the number of elements in a specified dimension of an input.
+ * Return the number of elements in a specified dimension of an input.
  *
- * @param [in,out] rt:           dnnrt runtime object
+ * @param [in,out] rt:           dnnrt_runtime_t object
  * @param [in]     input_index:  index to specify an input
  * @param [in]     dim_index:    index to specify a dimension
  *
- * @return the number of elements in the specified dimension of the input on success,
+ * @return number of elements in the specified dimension of the input on success,
  *         otherwise -EINVAL.
  */
 int dnn_runtime_input_shape (dnn_runtime_t * rt, unsigned char input_index,
 			     unsigned char dim_index);
 
 /**
- * obtain nn_variable_t* corresponding to a specified input
+ * Get nn_variable_t* corresponding to a specified input
  *
- * @param [in,out] rt:          dnnrt runtime object
+ * @param [in,out] rt:          dnnrt_runtime_t object
  * @param [in]     input_index: index to specify an input
  *
  * @return pointer to nn_variable_t in nn_network_t on success,
@@ -196,28 +196,28 @@ nn_variable_t *dnn_runtime_input_variable (dnn_runtime_t * rt,
 					   unsigned char input_index);
 
 /**
- * return the number of outputs which this network emits.
+ * Return the number of outputs which this network emits.
  *
- * @param [in,out] rt:      dnnrt runtime object
+ * @param [in,out] rt:      dnnrt_runtime_t object
  *
- * @return the number of outputs on success, otherwise -EINVAL.
+ * @return number of outputs on success, otherwise -EINVAL.
  */
 int dnn_runtime_output_num (dnn_runtime_t * rt);
 
 /**
- * return the number of elements in a specified output.
+ * Return the number of elements in a specified output.
  *
- * @param [in,out] rt:           dnnrt runtime object
+ * @param [in,out] rt:           dnnrt_runtime_t object
  * @param [in]     output_index: index to specify an output
  *
- * @return the number of elements in the specified output on success, otherwise -EINVAL.
+ * @return number of elements in the specified output on success, otherwise -EINVAL.
  */
 int dnn_runtime_output_size (dnn_runtime_t * rt, unsigned char output_index);
 
 /**
- * return the number of a specified output's dimensions.
+ * Return the number of a specified output's dimensions.
  *
- * @param [in,out] rt:           dnnrt runtime object
+ * @param [in,out] rt:           dnnrt_runtime_t object
  * @param [in]     output_index: index to specify an input
  *
  * @return number of the specified input's dimensions on success,
@@ -226,22 +226,22 @@ int dnn_runtime_output_size (dnn_runtime_t * rt, unsigned char output_index);
 int dnn_runtime_output_ndim (dnn_runtime_t * rt, unsigned char output_index);
 
 /**
- * return the number of elements in a specified dimension of an output.
+ * Return the number of elements in a specified dimension of an output.
  *
- * @param [in,out] rt:            dnnrt runtime object
+ * @param [in,out] rt:            dnnrt_runtime_t object
  * @param [in]     output_index:  index to specify an output
  * @param [in]     dim_index:     index to specify a dimension
  *
- * @return the number of elements in the specified dimension of the output on success,
+ * @return number of elements in the specified dimension of the output on success,
  *         otherwise -EINVAL.
  */
 int dnn_runtime_output_shape (dnn_runtime_t * rt, unsigned char output_index,
 			      unsigned char dim_index);
 
 /**
- * obtain nn_variable_t* corresponding to a specified output
+ * Get nn_variable_t* corresponding to a specified output
  *
- * @param [in,out] rt:           dnnrt runtime object
+ * @param [in,out] rt:           dnnrt_runtime_t object
  * @param [in]     output_index: index to specify an output
  *
  * @return pointer to nn_variable_t in nn_network_t on success,
@@ -251,11 +251,11 @@ nn_variable_t *dnn_runtime_output_variable (dnn_runtime_t * rt,
 					    unsigned char output_index);
 
 /**
- * return a pointer to a specified output
+ * Return a pointer to a specified output
  *
- * @param [in,out] rt:           dnnrt runtime object
+ * @param [in,out] rt:           dnnrt_runtime_t object
  * @param [in]     output_index: index to specify an output
- * @return a pointer to corresponding the output buffer if output_index is valid,
+ * @return pointer to corresponding the output buffer if output_index is valid,
  *         otherwise NULL.
  * @note read output data taking the following points into account:
  *   - output_index must be less than dnn_runtime_output_num(rt)
