@@ -53,7 +53,7 @@
 #define DSP_AACDEC_VERSION    0x010303    /* 01.03.03 */
 #define DSP_MP3DEC_VERSION    0x010303    /* 01.03.03 */
 #define DSP_OPUSDEC_VERSION   0x010304    /* 01.03.04 */
-#define DSP_WAVDEC_VERSION    0x010401    /* 01.04.01 */
+#define DSP_WAVDEC_VERSION    0x010402    /* 01.04.02 */
 
 /* Encoder Version. */
 
@@ -65,7 +65,7 @@
 #define DSP_MFESRC_VERSION    0x010203    /* 01.02.03 */
 #define DSP_SRC_VERSION       0x020102    /* 02.01.02 */
 #define DSP_MPPEAX_VERSION    0x010203    /* 01.02.03 */
-#define DSP_SLAVE_SRC_VERSION 0x010101    /* 01.01.01 */
+#define DSP_SLAVE_SRC_VERSION 0x010102    /* 01.01.02 */
 
 /* Postfilter Version. */
 

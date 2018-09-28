@@ -180,6 +180,7 @@ uint32_t InputHandlerOfRAM::setParam(const AsInitPlayerParam& param)
       case AS_SAMPLINGRATE_64000:
       case AS_SAMPLINGRATE_88200:
       case AS_SAMPLINGRATE_96000:
+      case AS_SAMPLINGRATE_176400:
       case AS_SAMPLINGRATE_192000:
         m_cur_wav_au_sample_num = LPCM_SAMPLE_HIGH;
         break;
