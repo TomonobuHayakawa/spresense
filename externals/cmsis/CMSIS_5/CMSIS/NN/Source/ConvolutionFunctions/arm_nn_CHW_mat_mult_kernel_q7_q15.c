@@ -28,7 +28,7 @@
  * -------------------------------------------------------------------- */
 
 #include "arm_math.h"
-#include "arm_nnfunctions.h"
+#include "arm_nnfunctions_nnabla.h"
 
   /**
    * @brief Matrix-multiplication function for convolution with CHW output
