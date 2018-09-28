@@ -57,3 +57,5 @@ modules$(DELIM)bluetooth$(DELIM)libbluetooth$(LIBEXT): context
 
 lib$(DELIM)libbluetooth$(LIBEXT): modules$(DELIM)bluetooth$(DELIM)libbluetooth$(LIBEXT)
 	$(Q) install $< $@
+
+include $(wildcard modules/bluetooth/hal/*/LibTargets.mk)
