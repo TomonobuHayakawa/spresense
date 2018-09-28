@@ -72,12 +72,14 @@ typedef enum
  */
 struct bt_common_state_s
 {
-  struct bt_hal_common_ops_s *bt_hal_common_ops;    /**< BT common HAL interfaces @ref bt_hal_common_ops_s */
-  struct bt_ble_common_ops_s *bt_ble_common_ops;    /**< BT status callbacks @ref bt_ble_common_ops_s */
-  BT_ADDR                    bt_addr;               /**< BT local device address @ref BT_ADDR */
-  BT_ADDR                    ble_addr;              /**< BLE local device address @ref BT_ADDR */
-  char                       bt_name[BT_NAME_LEN];  /**< BT local device name */
-  char                       ble_name[BT_NAME_LEN]; /**< BLE local device name */
+  struct bt_hal_common_ops_s  *bt_hal_common_ops;    /**< BT common HAL interfaces @ref bt_hal_common_ops_s */
+  struct ble_hal_common_ops_s *ble_hal_common_ops;   /**< BLE common HAL interfaces @ref ble_hal_common_ops_s */
+  struct bt_common_ops_s      *bt_common_ops;        /**< BT status callbacks @ref bt_common_ops_s */
+  struct ble_common_ops_s      *ble_common_ops;      /**< BLE status callbacks @ref ble_common_ops_s */
+  BT_ADDR                     bt_addr;               /**< BT local device address @ref BT_ADDR */
+  BT_ADDR                     ble_addr;              /**< BLE local device address @ref BT_ADDR */
+  char                        bt_name[BT_NAME_LEN];  /**< BT local device name */
+  char                        ble_name[BT_NAME_LEN]; /**< BLE local device name */
 };
 
 /**
@@ -93,10 +95,22 @@ struct bt_acl_state_s
 };
 
 /**
- * @struct bt_ble_common_ops_s
+ * @struct ble_state_s
+ * @brief Bluetooth LE context
+ */
+struct ble_state_s
+{
+  BT_CONNECT_STATUS          ble_connection;              /**< Status of BLE connection @ref BT_CONNECT_STATUS */
+  struct bt_common_state_s   *bt_common_state;            /**< BT base context @ref bt_common_state_s */
+  BT_ADDR                    bt_target_addr;              /**< BT target device address @ref BT_ADDR */
+  char                       bt_target_name[BT_NAME_LEN]; /**< BT target device name */
+};
+
+/**
+ * @struct bt_common_ops_s
  * @brief Bluetooth Common application callbacks
  */
-struct bt_ble_common_ops_s
+struct bt_common_ops_s
 {
   void (*command_status)(BT_CMD_STATUS status);                                                    /**< Command status */
   void (*pairing_complete)(BT_ADDR addr, BT_PAIR_STATUS status);                                   /**< Pairing complete */
@@ -105,6 +119,17 @@ struct bt_ble_common_ops_s
   void (*connect_status_changed)(struct bt_acl_state_s *bt_acl_state, bool connected, int status); /**< Connection status change */
   void (*connected_device_name)(const char *name);                                                 /**< Device name change */
   void (*bond_info)(BT_ADDR addr);                                                                 /**< Bonding information */
+};
+
+/**
+ * @struct ble_common_ops_s
+ * @brief Bluetooth LE Common application callbacks
+ */
+struct ble_common_ops_s
+{
+  void (*connect_status_changed)(struct ble_state_s *ble_state, bool connected);  /**< Connection status change */
+  void (*connected_device_name_resp)(const char *name);                           /**< Device name change */
+  void (*scan_result)(BT_ADDR addr, char *dev_name);                              /**< Result callback for scan */
 };
 
 /****************************************************************************
@@ -262,11 +287,132 @@ int bt_cancel_inquiry(void);
  * @brief Bluetooth register common callbacks
  *        Register Connect/Pairing/Inquiry callback
  *
- * @param[in] bt_ble_common_ops: Application callback @ref bt_ble_common_ops_s
+ * @param[in] bt_common_ops: Application callback @ref bt_common_ops_s
  *
  * @retval error code
  */
 
-int bt_register_common_cb(struct bt_ble_common_ops_s *bt_ble_common_ops);
+int bt_register_common_cb(struct bt_common_ops_s *bt_common_ops);
+
+/**
+ * @brief Set Bluetooth LE module address
+ *        This is Spresense side address and should be call before bt_enable.
+ *
+ * @param[in] addr: Bluetooth LE device address @ref BT_ADDR
+ *
+ * @retval error code
+ */
+
+int ble_set_address(BT_ADDR *addr);
+
+/**
+ * @brief Get Bluetooth LE module address
+ *
+ * @param[out] addr: Bluetooth LE device address @ref BT_ADDR
+ *
+ * @retval error code
+ */
+
+int ble_get_address(BT_ADDR *addr);
+
+/**
+ * @brief Set Bluetooth LE module name
+ *        This name visible for other devices and should be call before bt_enable.
+ *
+ * @param[in] name: Bluetooth LE device name
+ *
+ * @retval error code
+ */
+
+int ble_set_name(char *name);
+
+/**
+ * @brief Get Bluetooth LE module name
+ *
+ * @param[out] name: Bluetooth LE device name
+ *
+ * @retval error code
+ */
+
+int ble_get_name(char *name);
+
+/**
+ * @brief Bluetooth LE enable
+ *
+ * @retval error code
+ */
+
+int ble_enable(void);
+
+/**
+ * @brief Bluetooth LE disable
+ *
+ * @retval error code
+ */
+
+int ble_disable(void);
+
+/**
+ * @brief Bluetooth LE connect for Central
+ *
+ * @retval error code
+ */
+
+int ble_connect(struct ble_state_s *ble_state);
+
+/**
+ * @brief Bluetooth LE dicsonnect for Central
+ *
+ * @retval error code
+ */
+
+int ble_disconnect(struct ble_state_s *ble_state);
+
+/**
+ * @brief Bluetooth start advertise
+ *        Start BLE advertise mode.
+ *
+ * @retval error code
+ */
+
+int bt_start_advertise(void);
+
+/**
+ * @brief Bluetooth cancel advertise
+ *        Cancel BLE advertise mode.
+ *
+ * @retval error code
+ */
+
+int bt_cancel_advertise(void);
+
+/**
+ * @brief Bluetooth start scan
+ *        Start BLE scan mode.
+ *
+ * @retval error code
+ */
+
+int bt_start_scan(void);
+
+/**
+ * @brief Bluetooth cancel scan
+ *        Cancel BLE scan mode.
+ *
+ * @retval error code
+ */
+
+int bt_cancel_scan(void);
+
+/**
+ * @brief Bluetooth LE register common callbacks
+ *        Register Connect/Advertise/Scan callback
+ *
+ * @param[in] ble_common_ops: Application callback @ref ble_common_ops_s
+ *
+ * @retval error code
+ */
+
+int ble_register_common_cb(struct ble_common_ops_s *ble_common_ops);
 
 #endif /* __MODULES_INCLUDE_BLUETOOTH_BT_COMMON_H */

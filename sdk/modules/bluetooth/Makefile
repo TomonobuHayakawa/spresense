@@ -63,6 +63,7 @@ BT_C_SRCS_APP +=  bluetooth_avrcp.c
 BT_C_SRCS_APP +=  bluetooth_common.c
 BT_C_SRCS_APP +=  bluetooth_hfp.c
 BT_C_SRCS_APP +=  bluetooth_spp.c
+BT_C_SRCS_APP +=  bluetooth_le_gatt.c
 
 ASRCS =
 CSRCS = $(BT_C_SRCS_APP)

@@ -213,6 +213,65 @@ typedef enum
   BT_VIS_DISCOVERY_CONNECTABLE       = 3  /**< Discoverable and connectable */
 } BT_VISIBILITY;
 
+/**
+ * @enum BLE_APPEARANCE
+ * @brief BLE appearance ID
+ */
+typedef enum
+{
+  BLE_APPEARANCE_GENERIC_PHONE                    = 64,
+  BLE_APPEARANCE_GENERIC_COMPUTER                 = 128,
+  BLE_APPEARANCE_GENERIC_WATCH                    = 192,
+  BLE_APPEARANCE_WATCH_SPORTS                     = 193,
+  BLE_APPEARANCE_GENERIC_CLOCK                    = 256,
+  BLE_APPEARANCE_GENERIC_DISPLAY                  = 320,
+  BLE_APPEARANCE_GENERIC_REMOTE_CONTROL           = 384,
+  BLE_APPEARANCE_GENERIC_EYE_GLASSES              = 448,
+  BLE_APPEARANCE_GENERIC_TAG                      = 512,
+  BLE_APPEARANCE_GENERIC_KEYRING                  = 576,
+  BLE_APPEARANCE_GENERIC_MEDIA_PLAYER             = 640,
+  BLE_APPEARANCE_GENERIC_BARCODE_SCANNER          = 704,
+  BLE_APPEARANCE_GENERIC_THERMOMETER              = 768,
+  BLE_APPEARANCE_THERMOMETER_EAR                  = 769,
+  BLE_APPEARANCE_GENERIC_HEART_RATE_SENSOR        = 832,
+  BLE_APPEARANCE_HEART_RATE_BELT                  = 833,
+  BLE_APPEARANCE_GENERIC_BLOOD_PRESSURE           = 896,
+  BLE_APPEARANCE_BLOOD_PRESSURE_ARM               = 897,
+  BLE_APPEARANCE_BLOOD_PRESSURE_WRIST             = 898,
+  BLE_APPEARANCE_GENERIC_HID_DEVICE               = 960,
+  BLE_APPEARANCE_HID_KEYBOARD                     = 961,
+  BLE_APPEARANCE_HID_MOUSE                        = 962,
+  BLE_APPEARANCE_HID_JOYSTICK                     = 963,
+  BLE_APPEARANCE_HID_GAMEPAD                      = 964,
+  BLE_APPEARANCE_HID_DIGITIZER_TABLET             = 965,
+  BLE_APPEARANCE_HID_CARD_READER                  = 966,
+  BLE_APPEARANCE_HID_DIGITAL_PEN                  = 967,
+  BLE_APPEARANCE_HID_BARCODE_SCANNER              = 968,
+  BLE_APPEARANCE_GENERIC_GLUCOSE_METER            = 1024,
+  BLE_APPEARANCE_GENERIC_RUNNING_WALKING_SENSOR   = 1088,
+  BLE_APPEARANCE_RUNNING_WALKING_SENSOR_IN_SHOE   = 1089,
+  BLE_APPEARANCE_RUNNING_WALKING_SENSOR_ON_SHOE   = 1090,
+  BLE_APPEARANCE_RUNNING_WALKING_SENSOR_ON_HIP    = 1091,
+  BLE_APPEARANCE_GENERIC_CYCLING                  = 1152,
+  BLE_APPEARANCE_CYCLING_COMPUTER                 = 1153,
+  BLE_APPEARANCE_CYCLING_SPEED_SENSOR             = 1154,
+  BLE_APPEARANCE_CYCLING_CADENCE_SENSOR           = 1155,
+  BLE_APPEARANCE_CYCLING_POWER_SENSOR             = 1156,
+  BLE_APPEARANCE_CYCLING_SPEED_AND_CADENCE_SENSOR = 1157,
+} BLE_APPEARANCE;
+
+/**
+ * @enum BLE_GAP_IO_CAP
+ * @brief BLE IO capability
+ */
+typedef enum {
+	BLE_GAP_IO_CAP_DISPLAY_ONLY = 0,   /**< Display Only */
+	BLE_GAP_IO_CAP_DISPLAY_YESNO,      /**< Display and Yes/No entry */
+	BLE_GAP_IO_CAP_KEYBOARD_ONLY,      /**< Keyboard Only */
+	BLE_GAP_IO_CAP_NO_INPUT_NO_OUTPUT, /**< No Input No Output */
+	BLE_GAP_IO_CAP_KEYBOARD_DISPLAY,   /**< Keyboard and Display */
+} BLE_GAP_IO_CAP;
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/

@@ -63,18 +63,24 @@ static struct bt_acl_state_s g_bt_acl_state =
   .bt_common_state   = &g_bt_common_state
 };
 
+static struct ble_state_s g_ble_state =
+{
+  .ble_connection    = BT_DISCONNECTED,
+  .bt_common_state   = &g_bt_common_state
+};
+
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-static int event_cmd_status(struct bt_event_cmd_stat_t *cmd_stat_evt)
+static int bt_event_cmd_status(struct bt_event_cmd_stat_t *cmd_stat_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->command_status)
+  if (bt_common_ops && bt_common_ops->command_status)
     {
-      bt_ble_common_ops->command_status(cmd_stat_evt->cmd_status);
+      bt_common_ops->command_status(cmd_stat_evt->cmd_status);
     }
   else
     {
@@ -84,14 +90,14 @@ static int event_cmd_status(struct bt_event_cmd_stat_t *cmd_stat_evt)
   return ret;
 }
 
-static int event_pairing_complete(struct bt_event_pair_cmplt_t *pair_cmplt)
+static int bt_event_pairing_complete(struct bt_event_pair_cmplt_t *pair_cmplt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->pairing_complete)
+  if (bt_common_ops && bt_common_ops->pairing_complete)
     {
-      bt_ble_common_ops->pairing_complete(pair_cmplt->addr, pair_cmplt->status);
+      bt_common_ops->pairing_complete(pair_cmplt->addr, pair_cmplt->status);
     }
   else
     {
@@ -101,14 +107,14 @@ static int event_pairing_complete(struct bt_event_pair_cmplt_t *pair_cmplt)
   return ret;
 }
 
-static int event_inquiry_result(struct bt_event_inquiry_rslt_t *inq_result_evt)
+static int bt_event_inquiry_result(struct bt_event_inquiry_rslt_t *inq_result_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->inquiry_result)
+  if (bt_common_ops && bt_common_ops->inquiry_result)
     {
-      bt_ble_common_ops->inquiry_result(inq_result_evt->addr, inq_result_evt->name);
+      bt_common_ops->inquiry_result(inq_result_evt->addr, inq_result_evt->name);
     }
   else
     {
@@ -118,14 +124,14 @@ static int event_inquiry_result(struct bt_event_inquiry_rslt_t *inq_result_evt)
   return ret;
 }
 
-static int event_inquiry_complete(void)
+static int bt_event_inquiry_complete(void)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->inquiry_complete)
+  if (bt_common_ops && bt_common_ops->inquiry_complete)
     {
-      bt_ble_common_ops->inquiry_complete();
+      bt_common_ops->inquiry_complete();
     }
   else
     {
@@ -135,10 +141,10 @@ static int event_inquiry_complete(void)
   return ret;
 }
 
-static int event_conn_stat_change(struct bt_event_conn_stat_t *conn_stat_evt)
+static int bt_event_conn_stat_change(struct bt_event_conn_stat_t *conn_stat_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
   if (conn_stat_evt->connected)
     {
@@ -150,9 +156,9 @@ static int event_conn_stat_change(struct bt_event_conn_stat_t *conn_stat_evt)
       g_bt_acl_state.bt_acl_connection = BT_DISCONNECTED;
     }
 
-  if (bt_ble_common_ops && bt_ble_common_ops->connect_status_changed)
+  if (bt_common_ops && bt_common_ops->connect_status_changed)
     {
-      bt_ble_common_ops->connect_status_changed(&g_bt_acl_state, conn_stat_evt->connected, conn_stat_evt->status);
+      bt_common_ops->connect_status_changed(&g_bt_acl_state, conn_stat_evt->connected, conn_stat_evt->status);
     }
   else
     {
@@ -162,39 +168,86 @@ static int event_conn_stat_change(struct bt_event_conn_stat_t *conn_stat_evt)
   return ret;
 }
 
-static int event_conn_dev_name(struct bt_event_dev_name_t *dev_name_evt)
+static int bt_event_conn_dev_name(struct bt_event_dev_name_t *dev_name_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->connected_device_name)
+  if (bt_common_ops && bt_common_ops->connected_device_name)
     {
       memcpy(g_bt_acl_state.bt_target_name, dev_name_evt->name, BT_NAME_LEN);
-      bt_ble_common_ops->connected_device_name(dev_name_evt->name);
+      bt_common_ops->connected_device_name(dev_name_evt->name);
     }
   else
     {
-      _err("%s [BT][Common] Command status callback failed(CB not registered).\n", __func__);
+      _err("%s [BT][Common] Connected device name callback failed(CB not registered).\n", __func__);
       return BT_FAIL;
     }
   return ret;
 }
 
-static int event_bond_info(struct bt_event_bond_info_t *bond_info_evt)
+static int bt_event_bond_info(struct bt_event_bond_info_t *bond_info_evt)
 {
   int ret = BT_SUCCESS;
-  struct bt_ble_common_ops_s *bt_ble_common_ops = g_bt_common_state.bt_ble_common_ops;
+  struct bt_common_ops_s *bt_common_ops = g_bt_common_state.bt_common_ops;
 
-  if (bt_ble_common_ops && bt_ble_common_ops->bond_info)
+  if (bt_common_ops && bt_common_ops->bond_info)
     {
       g_bt_acl_state.bt_target_addr = bond_info_evt->addr;
-      bt_ble_common_ops->bond_info(bond_info_evt->addr);
+      bt_common_ops->bond_info(bond_info_evt->addr);
     }
   else
     {
       _err("%s [BT][Common] Bonding information callback failed(CB not registered).\n", __func__);
       return BT_FAIL;
     }
+  return ret;
+}
+
+static int ble_event_connect_stat_change(struct ble_event_conn_stat_t *conn_stat_evt)
+{
+  int ret = BT_SUCCESS;
+  struct ble_common_ops_s *ble_common_ops = g_bt_common_state.ble_common_ops;
+
+  if (conn_stat_evt->connected)
+    {
+      g_ble_state.bt_target_addr = conn_stat_evt->addr;
+      g_ble_state.ble_connection = BT_CONNECTED;
+    }
+  else
+    {
+      g_ble_state.ble_connection = BT_DISCONNECTED;
+    }
+
+  if (ble_common_ops && ble_common_ops->connect_status_changed)
+    {
+      ble_common_ops->connect_status_changed(&g_ble_state, conn_stat_evt->connected);
+    }
+  else
+    {
+      _err("%s [BLE][Common] Connect status callback failed(CB not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  return ret;
+}
+
+static int ble_event_connect_dev_name(struct ble_event_dev_name_t *dev_name_evt)
+{
+  int ret = BT_SUCCESS;
+  struct ble_common_ops_s *ble_common_ops = g_bt_common_state.ble_common_ops;
+
+  if (ble_common_ops && ble_common_ops->connected_device_name_resp)
+    {
+      memcpy(g_ble_state.bt_target_name, dev_name_evt->name, BT_NAME_LEN);
+      ble_common_ops->connected_device_name_resp(dev_name_evt->name);
+    }
+  else
+    {
+      _err("%s [BLE][Common] Connected device name callback failed(CB not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
   return ret;
 }
 
@@ -630,15 +683,15 @@ int bt_cancel_inquiry(void)
  *
  ****************************************************************************/
 
-int bt_register_common_cb(struct bt_ble_common_ops_s *bt_ble_common_ops)
+int bt_register_common_cb(struct bt_common_ops_s *bt_common_ops)
 {
-  if (!bt_ble_common_ops)
+  if (!bt_common_ops)
     {
       _err("%s [BT][Common] Set application callback failed.\n", __func__);
       return BT_FAIL;
     }
 
-  g_bt_common_state.bt_ble_common_ops = bt_ble_common_ops;
+  g_bt_common_state.bt_common_ops = bt_common_ops;
 
   return BT_SUCCESS;
 }
@@ -678,25 +731,377 @@ int bt_common_event_handler(struct bt_event_t *bt_event)
   switch (bt_event->event_id)
     {
       case BT_COMMON_EVENT_CMD_STATUS:
-        return event_cmd_status((struct bt_event_cmd_stat_t *) bt_event);
+        return bt_event_cmd_status((struct bt_event_cmd_stat_t *) bt_event);
 
       case BT_COMMON_EVENT_PAIRING_COMPLETE:
-        return event_pairing_complete((struct bt_event_pair_cmplt_t *) bt_event);
+        return bt_event_pairing_complete((struct bt_event_pair_cmplt_t *) bt_event);
 
       case BT_COMMON_EVENT_INQUIRY_RESULT:
-        return event_inquiry_result((struct bt_event_inquiry_rslt_t *) bt_event);
+        return bt_event_inquiry_result((struct bt_event_inquiry_rslt_t *) bt_event);
 
       case BT_COMMON_EVENT_INQUIRY_COMPLETE:
-        return event_inquiry_complete();
+        return bt_event_inquiry_complete();
 
       case BT_COMMON_EVENT_CONN_STAT_CHANGE:
-        return event_conn_stat_change((struct bt_event_conn_stat_t *) bt_event);
+        return bt_event_conn_stat_change((struct bt_event_conn_stat_t *) bt_event);
 
       case BT_COMMON_EVENT_CONN_DEV_NAME:
-        return event_conn_dev_name((struct bt_event_dev_name_t *) bt_event);
+        return bt_event_conn_dev_name((struct bt_event_dev_name_t *) bt_event);
 
       case BT_COMMON_EVENT_BOND_INFO:
-        return event_bond_info((struct bt_event_bond_info_t *) bt_event);
+        return bt_event_bond_info((struct bt_event_bond_info_t *) bt_event);
+
+      default:
+        break;
+    }
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_set_address
+ *
+ * Description:
+ *   Set Bluetooth LE module address
+ *   This is Spresense side address and should be call before bt_enable.
+ *
+ ****************************************************************************/
+
+int ble_set_address(BT_ADDR *addr)
+{
+  int ret = BT_SUCCESS;
+
+  if (!addr)
+    {
+      _err("%s [BLE][Common] Set local BT address failed(addr not set).\n", __func__);
+      return BT_FAIL;
+    }
+
+  memcpy(&g_bt_common_state.ble_addr, addr, sizeof(BT_ADDR));
+  return ret;
+}
+
+/****************************************************************************
+ * Name: ble_get_address
+ *
+ * Description:
+ *   Get Bluetooth LE module address
+ *
+ ****************************************************************************/
+
+int ble_get_address(BT_ADDR *addr)
+{
+  int ret = BT_SUCCESS;
+
+  if (!addr)
+    {
+      _err("%s [BLE][Common] addr not allocated.\n", __func__);
+      return BT_FAIL;
+    }
+
+  memcpy(addr, &g_bt_common_state.ble_addr, sizeof(BT_ADDR));
+  return ret;
+}
+
+/****************************************************************************
+ * Name: ble_set_name
+ *
+ * Description:
+ *   Set Bluetooth LE module name
+ *   This name visible for other devices and should be call before bt_enable.
+ *
+ ****************************************************************************/
+
+int ble_set_name(char *name)
+{
+  int ret = BT_SUCCESS;
+
+  if (!name)
+    {
+      _err("%s [BLE][Common] Set BT name failed(name not set).\n", __func__);
+      return BT_FAIL;
+    }
+
+  memcpy(g_bt_common_state.ble_name, name, sizeof(char) * BT_NAME_LEN);
+  return ret;
+}
+
+/****************************************************************************
+ * Name: ble_get_name
+ *
+ * Description:
+ *   Get Bluetooth LE module name
+ *
+ ****************************************************************************/
+
+int ble_get_name(char *name)
+{
+  int ret = BT_SUCCESS;
+
+  if (!name)
+    {
+      _err("%s [BLE][Common] name not allocated.\n", __func__);
+      return BT_FAIL;
+    }
+
+  memcpy(name, g_bt_common_state.ble_name, sizeof(char) * BT_NAME_LEN);
+  return ret;
+}
+
+/****************************************************************************
+ * Name: ble_enable
+ *
+ * Description:
+ *   Bluetooth LE enable
+ *   Set initialize parameter to HAL(Name/Addr/PPCP/Appearance)
+ *
+ ****************************************************************************/
+
+int ble_enable(void)
+{
+  int ret = BT_SUCCESS;
+  struct ble_hal_common_ops_s *ble_hal_common_ops = g_bt_common_state.ble_hal_common_ops;
+  BLE_CONN_PARAMS ppcp = {0xFFFF, 0xFFFF, 0x00, 0xFFFF};
+
+  if (ble_hal_common_ops && ble_hal_common_ops->setDevName &&
+      ble_hal_common_ops->setDevAddr &&
+      ble_hal_common_ops->setAppearance &&
+      ble_hal_common_ops->setPPCP)
+    {
+      ret = ble_hal_common_ops->setDevName(g_bt_common_state.ble_name);
+
+      if (ret != BT_SUCCESS)
+        {
+          _err("%s [BLE][Common] BLE set name failed.\n", __func__);
+          return ret;
+        }
+
+      ret = ble_hal_common_ops->setDevAddr(&g_bt_common_state.ble_addr);
+
+      if (ret != BT_SUCCESS)
+        {
+          _err("%s [BLE][Common] BLE set address failed.\n", __func__);
+          return ret;
+        }
+
+      ret = ble_hal_common_ops->setAppearance(BLE_APPEARANCE_GENERIC_PHONE);
+
+      if (ret != BT_SUCCESS)
+        {
+          _err("%s [BLE][Common] BLE set appearance failed.\n", __func__);
+          return ret;
+        }
+
+      ret = ble_hal_common_ops->setPPCP(ppcp);
+
+      if (ret != BT_SUCCESS)
+        {
+          _err("%s [BLE][Common] BLE set PPCP failed.\n", __func__);
+          return ret;
+        }
+    }
+  else
+    {
+      _err("%s [BLE][Common] BLE enable failed(HAL not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  return ret;
+}
+
+/****************************************************************************
+ * Name: ble_disable
+ *
+ * Description:
+ *   Bluetooth LE disable
+ *
+ ****************************************************************************/
+
+int ble_disable(void)
+{
+  /* nop */
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_connect
+ *
+ * Description:
+ *   Bluetooth LE connect for Central
+ *   This function is for Central role.
+ *
+ ****************************************************************************/
+
+int ble_connect(struct ble_state_s *ble_state)
+{
+  _err("%s [BLE][Common] BLE connect failed(Central not supported yet).\n", __func__);
+  return BT_FAIL;
+}
+
+/****************************************************************************
+ * Name: ble_disconnect
+ *
+ * Description:
+ *   Bluetooth LE disconnect for Central
+ *   This function is for Central role.
+ *
+ ****************************************************************************/
+
+int ble_disconnect(struct ble_state_s *ble_state)
+{
+  _err("%s [BLE][Common] BLE connect failed(Central not supported yet).\n", __func__);
+  return BT_FAIL;
+}
+
+/****************************************************************************
+ * Name: bt_start_advertise
+ *
+ * Description:
+ *   Start BLE advertise mode.
+ *   This function is for Peripheral role.
+ *
+ ****************************************************************************/
+
+int bt_start_advertise(void)
+{
+  int ret = BT_SUCCESS;
+  struct ble_hal_common_ops_s *ble_hal_common_ops = g_bt_common_state.ble_hal_common_ops;
+
+  if (ble_hal_common_ops && ble_hal_common_ops->advertise)
+    {
+      ret = ble_hal_common_ops->advertise(true);
+    }
+  else
+    {
+      _err("%s [BLE][Common] BLE start advertise(HAL not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  return ret;
+}
+
+/****************************************************************************
+ * Name: bt_cancel_advertise
+ *
+ * Description:
+ *   Cancel BLE advertise mode.
+ *   This function is for Peripheral role.
+ *
+ ****************************************************************************/
+
+int bt_cancel_advertise(void)
+{
+  int ret = BT_SUCCESS;
+  struct ble_hal_common_ops_s *ble_hal_common_ops = g_bt_common_state.ble_hal_common_ops;
+
+  if (ble_hal_common_ops && ble_hal_common_ops->advertise)
+    {
+      ret = ble_hal_common_ops->advertise(false);
+    }
+  else
+    {
+      _err("%s [BLE][Common] BLE cancel advertise(HAL not registered).\n", __func__);
+      return BT_FAIL;
+    }
+
+  return ret;
+}
+
+/****************************************************************************
+ * Name: bt_start_scan
+ *
+ * Description:
+ *   Start BLE scan mode.
+ *   This function is for Central role.
+ *
+ ****************************************************************************/
+
+int bt_start_scan(void)
+{
+  _err("%s [BLE][Common] BLE scan failed(Central not supported yet).\n", __func__);
+  return BT_FAIL;
+}
+
+/****************************************************************************
+ * Name: bt_cancel_scan
+ *
+ * Description:
+ *   Cancel BLE scan mode.
+ *   This function is for Central role.
+ *
+ ****************************************************************************/
+
+int bt_cancel_scan(void)
+{
+  _err("%s [BLE][Common] BLE scan failed(Central not supported yet).\n", __func__);
+  return BT_FAIL;
+}
+
+/****************************************************************************
+ * Name: ble_register_common_cb
+ *
+ * Description:
+ *   Bluetooth LE register common callbacks
+ *   Register Connect/Advertise/Scan callback.
+ *
+ ****************************************************************************/
+
+int ble_register_common_cb(struct ble_common_ops_s *ble_common_ops)
+{
+  if (!ble_common_ops)
+    {
+      _err("%s [BLE][Common] Set application callback failed.\n", __func__);
+      return BT_FAIL;
+    }
+
+  g_bt_common_state.ble_common_ops = ble_common_ops;
+
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_common_register_hal
+ *
+ * Description:
+ *   Bluetooth LE common function HAL register
+ *   This is Spresense side address and should be call before bt_enable.
+ *
+ ****************************************************************************/
+
+int ble_common_register_hal(struct ble_hal_common_ops_s *ble_hal_common_ops)
+{
+  if (!ble_hal_common_ops)
+    {
+      _err("%s [BLE][Common] Set HAL callback failed.\n", __func__);
+      return BT_FAIL;
+    }
+
+  g_bt_common_state.ble_hal_common_ops = ble_hal_common_ops;
+
+  return BT_SUCCESS;
+}
+
+/****************************************************************************
+ * Name: ble_common_event_handler
+ *
+ * Description:
+ *   BLE common event handler
+ *   HAL should call this function if receive BLE common event(@ref BLE_COMMON_EVENT_ID).
+ *
+ ****************************************************************************/
+
+int ble_common_event_handler(struct bt_event_t *bt_event)
+{
+  switch (bt_event->event_id)
+    {
+      case BLE_COMMON_EVENT_CONN_STAT_CHANGE:
+        return ble_event_connect_stat_change((struct ble_event_conn_stat_t *) bt_event);
+
+      case BLE_COMMON_EVENT_CONN_DEV_NAME:
+        return ble_event_connect_dev_name((struct ble_event_dev_name_t *) bt_event);
+
+      case BLE_COMMON_EVENT_SCAN_RESULT:
+        /* Central role not supported yet */
+        break;
 
       default:
         break;

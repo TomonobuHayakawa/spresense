@@ -81,6 +81,8 @@ typedef enum
 	BT_GROUP_HFP,         /**< HFP */
 	BT_GROUP_SPP,         /**< SPP */
 	BT_GROUP_RFCOMM,      /**< RFCOMM */
+	BLE_GROUP_COMMON,     /**< BLE Common */
+	BLE_GROUP_GATT        /**< BLE GATT */
 } BT_GROUP_ID;
 
 /**
@@ -162,6 +164,31 @@ typedef enum
 	BT_SPP_EVENT_CONNECT_FAIL, /**< Connection fail event */
 	BT_SPP_EVENT_RX_DATA,      /**< Receive SPP data event */
 } BT_SPP_EVENT_ID;
+
+/**
+ * @enum BLE_COMMON_EVENT_ID
+ * @brief Bluetooth LE event ID for common function
+ */
+typedef enum
+{
+	BLE_COMMON_EVENT_CONN_STAT_CHANGE = 0, /**< Connection status change event */
+	BLE_COMMON_EVENT_CONN_DEV_NAME,        /**< Device name receive event */
+	BLE_COMMON_EVENT_SCAN_RESULT,          /**< Scan result event */
+} BLE_COMMON_EVENT_ID;
+
+/**
+ * @enum BLE_COMMON_EVENT_ID
+ * @brief Bluetooth LE event ID for common function
+ */
+typedef enum
+{
+	BLE_GATT_EVENT_WRITE_REQ = 0, /**< GATT Characteristic write request event */
+	BLE_GATT_EVENT_READ_REQ,      /**< GATT Characteristic read request event */
+	BLE_GATT_EVENT_NOTIFY_REQ,    /**< GATT Characteristic notify request event */
+	BLE_GATT_EVENT_WRITE_RESP,    /**< GATT Characteristic write response event */
+	BLE_GATT_EVENT_READ_RESP,     /**< GATT Characteristic read response event */
+	BLE_GATT_EVENT_NOTIFY_RESP,   /**< GATT Characteristic notify response event */
+} BLE_GATT_EVENT_ID;
 
 /**
  * @struct bt_event_t
@@ -310,10 +337,10 @@ struct bt_hfp_event_ag_feature_t
  */
 struct bt_hfp_event_at_cmd_t
 {
-  uint8_t group_id;                    /**< Event group ID @ref BT_GROUP_ID */
-  uint8_t event_id;                    /**< Event sub ID @ref BT_HFP_EVENT_ID */
-  BT_ADDR addr;                        /**< Connected device address @ref BT_ADDR */
-  char at_resp[BT_MAX_EVENT_DATA_LEN]; /**< AT command response */
+  uint8_t group_id;                       /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;                       /**< Event sub ID @ref BT_HFP_EVENT_ID */
+  BT_ADDR addr;                           /**< Connected device address @ref BT_ADDR */
+  char at_resp[BT_MAX_EVENT_DATA_LEN];    /**< AT command response */
 };
 
 /**
@@ -337,8 +364,71 @@ struct bt_spp_event_recv_data_t
   uint8_t group_id;                    /**< Event group ID @ref BT_GROUP_ID */
   uint8_t event_id;                    /**< Event sub ID @ref BT_SPP_EVENT_ID */
   BT_ADDR addr;                        /**< Connected device address @ref BT_ADDR */
-  int len;                             /**< REceive data length */
-  uint8_t data[BT_MAX_EVENT_DATA_LEN]; /**< REceive data */
+  int     len;                         /**< Receive data length */
+  uint8_t data[BT_MAX_EVENT_DATA_LEN]; /**< Receive data */
+};
+
+/**
+ * @struct ble_event_conn_stat_t
+ * @brief Bluetooth LE connection status change event data type
+ */
+struct ble_event_conn_stat_t
+{
+  uint8_t group_id; /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id; /**< Event sub ID @ref BLE_COMMON_EVENT_ID */
+  BT_ADDR addr;     /**< Target address @ref BT_ADDR */
+  bool connected;   /**< Connection status */
+};
+
+/**
+ * @struct ble_event_conn_stat_t
+ * @brief Bluetooth LE connection status change event data type
+ */
+struct ble_event_dev_name_t
+{
+  uint8_t group_id;       /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;       /**< Event sub ID @ref BLE_COMMON_EVENT_ID */
+  BT_ADDR addr;           /**< Target address @ref BT_ADDR */
+  char name[BT_NAME_LEN]; /**< Connected device name */
+};
+
+/**
+ * @struct ble_gatt_event_write_req_t
+ * @brief Bluetooth LE GATT Write request event
+ */
+struct ble_gatt_event_write_req_t
+{
+  uint8_t group_id;                    /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;                    /**< Event sub ID @ref BLE_GATT_EVENT_ID */
+  uint16_t serv_handle;                /**< Service handle ID @ref ble_gatt_service_s */
+  uint16_t char_handle;                /**< Characteristic handle ID @ref ble_gatt_char_s */
+  uint16_t length;                     /**< Write data length */
+  uint8_t data[BT_MAX_EVENT_DATA_LEN]; /**< Write data */
+};
+
+/**
+ * @struct ble_gatt_event_read_req_t
+ * @brief Bluetooth LE GATT Read request event
+ */
+struct ble_gatt_event_read_req_t
+{
+  uint8_t group_id;                    /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;                    /**< Event sub ID @ref BLE_GATT_EVENT_ID */
+  uint16_t serv_handle;                /**< Service handle ID @ref ble_gatt_service_s */
+  uint16_t char_handle;                /**< Characteristic handle ID @ref ble_gatt_char_s */
+};
+
+/**
+ * @struct ble_gatt_event_notify_req_t
+ * @brief Bluetooth LE GATT Notify request event
+ */
+struct ble_gatt_event_notify_req_t
+{
+  uint8_t group_id;                    /**< Event group ID @ref BT_GROUP_ID */
+  uint8_t event_id;                    /**< Event sub ID @ref BLE_GATT_EVENT_ID */
+  uint16_t serv_handle;                /**< Service handle ID @ref ble_gatt_service_s */
+  uint16_t char_handle;                /**< Characteristic handle ID @ref ble_gatt_char_s */
+  bool enable;                         /**< Notify enable/disable */
 };
 
 /**
