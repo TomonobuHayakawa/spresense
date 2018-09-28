@@ -4,5 +4,6 @@
 #
 
 menu "HAL Support"
+source modules/bluetooth/hal/bcm20706/Kconfig
 endmenu
 
