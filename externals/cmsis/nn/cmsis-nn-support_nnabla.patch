@@ -1,6 +1,12 @@
 diff --git a/externals/cmsis/CMSIS_5/CMSIS/NN/Include/arm_nnfunctions_nnabla.h b/externals/cmsis/CMSIS_5/CMSIS/NN/Include/arm_nnfunctions_nnabla.h
-new file mode 100644
-index 0000000..a3ee6fd
+===CHANGE_NOTICE(1/5)===========================================================
+Sony Corporation added this file to 5.4.0
+to add the following function prototypes:
+ - arm_convolve_CHW_f32_basic_nonsquare()
+ - arm_convolve_CHW_q15_basic_nonsquare()
+ - arm_convolve_CHW_q7_basic_nonsquare()
+ - arm_nn_CHW_mat_mult_kernel_q7_q15()
+================================================================================
 --- /dev/null
 +++ b/externals/cmsis/CMSIS_5/CMSIS/NN/Include/arm_nnfunctions_nnabla.h
 @@ -0,0 +1,217 @@
@@ -222,8 +228,11 @@ index 0000000..a3ee6fd
 +#endif
 +#endif
 diff --git a/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_CHW_f32_basic_nonsquare.c b/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_CHW_f32_basic_nonsquare.c
-new file mode 100644
-index 0000000..e593a4e
+===CHANGE_NOTICE(2/5)===========================================================
+Sony Corporation added this file to 5.4.0 for these reasons:
+ - support float version of convolution
+ - support the CHW tensor layout
+================================================================================
 --- /dev/null
 +++ b/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_CHW_f32_basic_nonsquare.c
 @@ -0,0 +1,207 @@
@@ -435,8 +444,9 @@ index 0000000..e593a4e
 + * @} end of NNConv group
 + */
 diff --git a/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_CHW_q15_basic_nonsquare.c b/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_CHW_q15_basic_nonsquare.c
-new file mode 100644
-index 0000000..d78c90a
+===CHANGE_NOTICE(3/5)===========================================================
+Sony Corporation added this file to 5.4.0 to support the CHW tensor layout
+================================================================================
 --- /dev/null
 +++ b/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_CHW_q15_basic_nonsquare.c
 @@ -0,0 +1,231 @@
@@ -672,8 +682,9 @@ index 0000000..d78c90a
 + * @} end of NNConv group
 + */
 diff --git a/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_CHW_q7_basic_nonsquare.c b/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_CHW_q7_basic_nonsquare.c
-new file mode 100644
-index 0000000..91344cf
+===CHANGE_NOTICE(4/5)===========================================================
+Sony Corporation added this file to 5.4.0 to support the CHW tensor layout
+================================================================================
 --- /dev/null
 +++ b/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_CHW_q7_basic_nonsquare.c
 @@ -0,0 +1,214 @@
@@ -892,8 +903,9 @@ index 0000000..91344cf
 + * @} end of NNConv group
 + */
 diff --git a/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_nn_CHW_mat_mult_kernel_q7_q15.c b/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_nn_CHW_mat_mult_kernel_q7_q15.c
-new file mode 100644
-index 0000000..51ad963
+===CHANGE_NOTICE(5/5)===========================================================
+Sony Corporation added this file to 5.4.0 to support the CHW tensor layout
+================================================================================
 --- /dev/null
 +++ b/externals/cmsis/CMSIS_5/CMSIS/NN/Source/ConvolutionFunctions/arm_nn_CHW_mat_mult_kernel_q7_q15.c
 @@ -0,0 +1,196 @@
