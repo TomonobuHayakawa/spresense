@@ -52,7 +52,11 @@ NUTTX_VERSION="7.22"
 # Get short hash for specified tag
 GIT_REVISION=`git rev-parse ${TAG} | cut -b -7`
 
-BUILD_ID="${APP_VERSION}-${SDK_VERSION}-${GIT_REVISION}"
+if [ "${GIT_REVISION}" != "" ]; then
+    BUILD_ID="${APP_VERSION}-${SDK_VERSION}-${GIT_REVISION}"
+else
+    BUILD_ID="${APP_VERSION}-${SDK_VERSION}"
+fi
 
 # BUILD_ID must be 40 characters or less
 if [ ${#BUILD_ID} -gt 40 ]; then
