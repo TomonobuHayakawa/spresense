@@ -52,6 +52,8 @@ endif
 ifeq ($(CONFIG_EXTERNALS_CMSIS_DSP_ARM_MATH_ROUNDING),y)
 CFLAGS += -DARM_MATH_ROUNDING
 endif
+CFLAGS += -fno-strict-aliasing -ffunction-sections -fdata-sections
+CFLAGS += -ffast-math
 
 CMSIS_ROOT = ../CMSIS_5/CMSIS
 
