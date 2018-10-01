@@ -1,35 +1,35 @@
 functions:
-  Convolution:
+  Convolution:     # force float arithmetic
     implement: 100 # NN_FUNCTION_IMPLEMENT_AUTO
   ReLU:
     implement: 0
   MaxPooling:
     implement: 0
-  Convolution_2:
+  Convolution_2:   # force float arithmetic
     implement: 100 # NN_FUNCTION_IMPLEMENT_AUTO
   MaxPooling_2:
     implement: 0
   Tanh_2:
     implement: 0
-  Affine:
+  Affine:          # force float arithmetic
     implement: 100 # NN_FUNCTION_IMPLEMENT_AUTO
   ReLU_2:
     implement: 0
-  Affine_2:
+  Affine_2:        # force float arithmetic
     implement: 100 # NN_FUNCTION_IMPLEMENT_AUTO
   Softmax:
     implement: 0
 variables:
-  Input: FLOAT32
-  Convolution: FLOAT32
+  Input: FIXED16_6
+  Convolution: FIXED16_9
   ReLU: FLOAT32
-  MaxPooling: FLOAT32
-  Convolution_2: FLOAT32
+  MaxPooling: FIXED16_9
+  Convolution_2: FIXED16_9
   MaxPooling_2: FLOAT32
-  Tanh_2: FLOAT32
-  Affine: FLOAT32
-  ReLU_2: FLOAT32
-  Affine_2: FLOAT32
+  Tanh_2: FIXED16_10
+  Affine: FIXED16_10
+  ReLU_2: FIXED16_10
+  Affine_2: FIXED16_10
   Softmax: FLOAT32
   Convolution/conv/W: FIXED16
   Convolution/conv/b: FIXED16

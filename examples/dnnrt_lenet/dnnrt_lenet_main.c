@@ -70,15 +70,17 @@ static float s_img_buffer[MNIST_SIZE_PX];
  ****************************************************************************/
 static void convert_datatype(dnn_runtime_t * rt)
 {
+  /* get datatype which this dnn_runtime_t expects */
   nn_variable_t *var = dnn_runtime_input_variable(rt, 0);
   float coefficient = (float)(1 << var->fp_pos);
 
   if (var->type == NN_DATA_TYPE_FLOAT)
     {
-      // do nothing
+      /* do nothing since the image data is stored as float */
     }
   else if (var->type == NN_DATA_TYPE_INT16)
     {
+      /* convert the image data in-place to 16-bit fixed-point values */
       int16_t *int16_buffer = (int16_t *) s_img_buffer;
       for (uint16_t px = 0u; px < MNIST_SIZE_PX; px++)
         {
@@ -87,6 +89,7 @@ static void convert_datatype(dnn_runtime_t * rt)
     }
   else
     {
+      /* convert the image data in-place to 8-bit fixed-point values */
       int8_t *int8_buffer = (int8_t *) s_img_buffer;
       for (uint16_t px = 0u; px < MNIST_SIZE_PX; px++)
         {
@@ -122,8 +125,8 @@ int dnnrt_lenet_main(int argc, char *argv[])
 
   parse_args(argc, argv, &setting);
 
-  /* load an MNIST image into s_img_buffer and divide the pixels by 255 */
-  printf("load pnm image: %s\n", setting.pnm_path);
+  /* load an hand-written digit image into s_img_buffer,
+     and then divide the pixels by 255.0 for normalization */
   ret = pnm_load(setting.pnm_path, 255.0f, s_img_buffer);
   if (ret)
     {
@@ -131,9 +134,8 @@ int dnnrt_lenet_main(int argc, char *argv[])
       goto pnm_error;
     }
 
-  /* load an nnb file, which holds a network structure and weight values, into
-   * a heap memory */
-  printf("load nnb file: %s\n", setting.nnb_path);
+  /* load an nnb file, which holds a network structure and weight values,
+     into a heap memory */
   network = alloc_nnb_network(setting.nnb_path);
   if (network == NULL)
     {
@@ -141,7 +143,11 @@ int dnnrt_lenet_main(int argc, char *argv[])
       goto pnm_error;
     }
 
-  /* initialize the dnnrt subsystem */
+  /* print loaded files */
+  printf("load nnb file: %s\n", setting.nnb_path);
+  printf("load pnm image: %s\n", setting.pnm_path);
+
+  /* Step-A: initialize the whole dnnrt subsystem */
   ret = dnn_initialize(NULL);
   if (ret)
     {
@@ -149,7 +155,8 @@ int dnnrt_lenet_main(int argc, char *argv[])
       goto dnn_error;
     }
 
-  /* instantiate a runtime object, dnn_runtime_t, based on the above nnb file */
+  /* Step-B: instantiate a neural network defined
+             by nn_network_t as a dnn_runtime_t object */
   ret = dnn_runtime_initialize(&rt, network);
   if (ret)
     {
@@ -157,10 +164,10 @@ int dnnrt_lenet_main(int argc, char *argv[])
       goto rt_error;
     }
 
-  /* convert the MNIST image's datatype in-place on s_img_buffer */
+  /* convert the image data to datatype this dnn_runtime_t expects */
   convert_datatype(&rt);
 
-  /* feed the MNIST image into dnn_runtime_t and classify it */
+  /* Step-C: perform inference after feeding inputs */
   printf ("start dnn_runtime_forward()\n");
   gettimeofday (&begin, 0);
   ret = dnn_runtime_forward (&rt, inputs, 1);
@@ -171,8 +178,10 @@ int dnnrt_lenet_main(int argc, char *argv[])
       goto fin;
     }
 
-  /* show the classification result and its processing time */
+  /* Step-D: obtain the output from this dnn_runtime_t */
   output_buffer = dnn_runtime_output_buffer(&rt, 0u);
+
+  /* show the classification result and its processing time */
   for (i = 0u; i < 10u; i++)
     {
       printf("output[%u]=%.6f\n", i, output_buffer[i]);
@@ -182,10 +191,13 @@ int dnnrt_lenet_main(int argc, char *argv[])
   printf("inference time=%.3f\n", proc_time);
 
 fin:
+  /* Step-F: free memories allocated to dnn_runtime_t */
   dnn_runtime_finalize(&rt);
 rt_error:
+  /* Step-G: finalize the whole dnnrt subsystem */
   dnn_finalize();
 dnn_error:
+  /* just call free() */
   destroy_nnb_network(network);
 pnm_error:
   return ret;

@@ -1,22 +1,22 @@
 functions:
   Convolution:
-    implement: 100 # NN_FUNCTION_IMPLEMENT_AUTO
+    implement: 0
   ReLU:
     implement: 0
   MaxPooling:
     implement: 0
   Convolution_2:
-    implement: 100 # NN_FUNCTION_IMPLEMENT_AUTO
+    implement: 0
   MaxPooling_2:
     implement: 0
   Tanh_2:
     implement: 0
   Affine:
-    implement: 100 # NN_FUNCTION_IMPLEMENT_AUTO
+    implement: 0
   ReLU_2:
     implement: 0
   Affine_2:
-    implement: 100 # NN_FUNCTION_IMPLEMENT_AUTO
+    implement: 0
   Softmax:
     implement: 0
 variables:
