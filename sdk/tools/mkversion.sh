@@ -60,4 +60,4 @@ if [ ${#BUILD_ID} -gt 40 ]; then
     exit 1
 fi
 
-${SCRIPT_DIR}/../../nuttx/tools/version.sh -v ${NUTTX_VERSION} -b "${BUILD_ID}" .version
+${SCRIPT_DIR}/../../nuttx/tools/version.sh -v ${NUTTX_VERSION} -b "${BUILD_ID}" ${SCRIPT_DIR}/../../nuttx/.version
