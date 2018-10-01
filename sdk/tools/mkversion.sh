@@ -34,6 +34,10 @@
 #
 ############################################################################
 
+CURRENT_DIR=`pwd`
+SCRIPT_NAME=`readlink -e "${BASH_SOURCE[0]}"`
+SCRIPT_DIR=`dirname "$SCRIPT_NAME"`
+
 TOPDIR=${TOPDIR:-nuttx}
 TAG=${1:-HEAD}
 
@@ -56,4 +60,4 @@ if [ ${#BUILD_ID} -gt 40 ]; then
     exit 1
 fi
 
-${TOPDIR}/tools/version.sh -v ${NUTTX_VERSION} -b "${BUILD_ID}" .version
+${SCRIPT_DIR}/../../nuttx/tools/version.sh -v ${NUTTX_VERSION} -b "${BUILD_ID}" .version
