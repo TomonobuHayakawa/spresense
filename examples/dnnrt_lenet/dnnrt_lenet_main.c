@@ -37,7 +37,8 @@
  ****************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdbool.h>
+#include <unistd.h>
 #include <sys/time.h>
 #include <nuttx/config.h>
 #include <dnnrt/runtime.h>
@@ -51,6 +52,7 @@ typedef struct
   {
     char *nnb_path;
     char *pnm_path;
+    bool skip_norm;
   } my_setting_t;
 
 /****************************************************************************
@@ -100,9 +102,33 @@ static void convert_datatype(dnn_runtime_t * rt)
 
 static void parse_args(int argc, char *argv[], my_setting_t * setting)
 {
+  /* parse options by getopt() */
+  int opt;
+  while ((opt = getopt(argc, argv, "s")) != -1)
+    {
+      switch (opt)
+        {
+          case 's': /* skip normalization */
+            setting->skip_norm = true;
+            break;
+        }
+    }
+
   /* set my_setting_t::{nnb_path,pnm_path} to argv[] if necessary */
-  setting->nnb_path = (argc >= 2) ? argv[1] : DNN_NNB_PATH;
-  setting->pnm_path = (argc >= 3) ? argv[2] : DNN_PNM_PATH;
+  setting->nnb_path = (optind < argc) ? argv[optind++] : DNN_NNB_PATH;
+  setting->pnm_path = (optind < argc) ? argv[optind]   : DNN_PNM_PATH;
+
+  /* print my_setting_t */
+  printf("load nnb file: %s\n",  setting->nnb_path);
+  printf("load pnm image: %s\n", setting->pnm_path);
+  if (setting->skip_norm)
+    {
+      printf("Image Normalization (1.0/255.0): skipped\n");
+    }
+  else
+    {
+      printf("Image Normalization (1.0/255.0): enabled\n");
+    }
 }
 
 /****************************************************************************
@@ -116,7 +142,7 @@ int dnnrt_lenet_main(int argc, char *argv[])
 {
   int ret;
   unsigned char i;
-  float *output_buffer, proc_time;
+  float *output_buffer, proc_time, norm_factor;
   const void *inputs[1] = { s_img_buffer };
   dnn_runtime_t rt;
   nn_network_t *network;
@@ -127,7 +153,8 @@ int dnnrt_lenet_main(int argc, char *argv[])
 
   /* load an hand-written digit image into s_img_buffer,
      and then divide the pixels by 255.0 for normalization */
-  ret = pnm_load(setting.pnm_path, 255.0f, s_img_buffer);
+  norm_factor = setting.skip_norm ? 1.0f : 255.0f;
+  ret = pnm_load(setting.pnm_path, norm_factor, s_img_buffer);
   if (ret)
     {
       printf("load pnm image failed due to %d\n", ret);
@@ -142,10 +169,6 @@ int dnnrt_lenet_main(int argc, char *argv[])
       printf("load nnb file failed\n");
       goto pnm_error;
     }
-
-  /* print loaded files */
-  printf("load nnb file: %s\n", setting.nnb_path);
-  printf("load pnm image: %s\n", setting.pnm_path);
 
   /* Step-A: initialize the whole dnnrt subsystem */
   ret = dnn_initialize(NULL);
@@ -168,10 +191,10 @@ int dnnrt_lenet_main(int argc, char *argv[])
   convert_datatype(&rt);
 
   /* Step-C: perform inference after feeding inputs */
-  printf ("start dnn_runtime_forward()\n");
-  gettimeofday (&begin, 0);
-  ret = dnn_runtime_forward (&rt, inputs, 1);
-  gettimeofday (&end, 0);
+  printf("start dnn_runtime_forward()\n");
+  gettimeofday(&begin, 0);
+  ret = dnn_runtime_forward(&rt, inputs, 1);
+  gettimeofday(&end, 0);
   if (ret)
     {
       printf("dnn_runtime_forward() failed due to %d\n", ret);
