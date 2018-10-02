@@ -26,7 +26,10 @@ Run `dnnrt_lenet` after storing `lenet-5.nnb` and hand-written images onto SD ca
 ### file arrangement on the host-side:
 
 Train the LeNet-5 model and export it as `lenet-5.nnb`
-Detailed instructions for this operation are available in Spresense SDK Developer Guide.
+Detailed instructions for this operation are available in the following page:
+
+http://developer.sony.com/develop/spresense/developer-tools/get-started-using-nuttx/set-up-the-nuttx-environment
+(TODO: fix this URL when the corresponding chapter is created)
 
 ### file arrangement on SD card:
 
