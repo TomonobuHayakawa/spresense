@@ -43,7 +43,7 @@
 #include <runtime/runtime_common.h>
 #include <runtime_internal.h>
 #include <utilities/shape.h>
-#include <arm_nnfunctions.h>
+#include <arm_nnfunctions_nnabla.h>
 
 #define _S(p) (sizeof(p) / sizeof(p[0]))
 #define X (0)                   // x input

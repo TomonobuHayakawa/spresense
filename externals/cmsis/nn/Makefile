@@ -86,9 +86,14 @@ $(BIN): $(LIB_OBJS)
 
 depend: .depend
 
-context:
+.context:
+	$(Q) patch -d .. -p3    < cmsis-nn-support_nnabla.patch
+	$(Q) touch $@
+
+context: .context
 
 clean_context:
+	$(Q) patch -d .. -p3 -R < cmsis-nn-support_nnabla.patch
 
 clean:
 	$(call DELFILE, $(BIN))
