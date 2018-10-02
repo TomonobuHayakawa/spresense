@@ -54,6 +54,41 @@
 #define APP_MAX_MQUEUE_MSG 1
 #define APP_MQUEUE_MODE    0666
 #define APP_IOBUFFER_LEN   512
+#define APP_SESSION_ID     1
+
+/* APN settings */
+
+#ifdef CONFIG_EXAMPLES_LTE_APN_NAME
+#  define APP_APN_NAME     CONFIG_EXAMPLES_LTE_APN_NAME
+#else
+#  define APP_APN_NAME     "lte_sample_apn"
+#endif
+
+#ifdef CONFIG_EXAMPLES_LTE_APN_IPTYPE
+#  define APP_APN_IPTYPE   CONFIG_EXAMPLES_LTE_APN_IPTYPE
+#else
+#  define APP_APN_IPTYPE   LTE_APN_IPTYPE_IP
+#endif
+
+#ifdef CONFIG_EXAMPLES_LTE_APN_AUTHTYPE
+#  define APP_APN_AUTHTYPE CONFIG_EXAMPLES_LTE_APN_AUTHTYPE
+#else
+#  define APP_APN_AUTHTYPE LTE_APN_AUTHTYPE_NONE
+#endif
+
+#ifdef CONFIG_EXAMPLES_LTE_APN_USERNAME
+#  define APP_APN_USR_NAME CONFIG_EXAMPLES_LTE_APN_USERNAME
+#else
+#  define APP_APN_USR_NAME ""
+#endif
+
+#ifdef CONFIG_EXAMPLES_LTE_APN_PASSWD
+#  define APP_APN_PASSWD   CONFIG_EXAMPLES_LTE_APN_PASSWD
+#else
+#  define APP_APN_PASSWD   ""
+#endif
+
+#define APP_WGET_URL       "http://example.com/"
 
 /****************************************************************************
  * Private Data
@@ -66,23 +101,22 @@ static char g_app_iobuffer[APP_IOBUFFER_LEN];
  ****************************************************************************/
 
 /****************************************************************************
- * Name: app_init
+ * Name: app_mq_create
  ****************************************************************************/
 
-static int app_init(void)
+static int app_mq_create(FAR const char *mq_name)
 {
-  int errcode;
-  mqd_t mqd;
+  int            errcode;
+  mqd_t          mqd;
   struct mq_attr mq_attr;
 
   mq_attr.mq_maxmsg  = APP_MAX_MQUEUE_MSG;
   mq_attr.mq_msgsize = sizeof(int);
   mq_attr.mq_flags   = 0;
 
-  /* Create message queue resource */
+  /* Create message queue */
 
-  mqd = mq_open(APP_MQUEUE_NAME, (O_RDWR | O_CREAT), APP_MQUEUE_MODE,
-                &mq_attr);
+  mqd = mq_open(mq_name, (O_RDWR | O_CREAT), APP_MQUEUE_MODE, &mq_attr);
   if (mqd < 0)
     {
       errcode = errno;
@@ -95,24 +129,26 @@ static int app_init(void)
 }
 
 /****************************************************************************
- * Name: app_fin
+ * Name: app_mq_delete
  ****************************************************************************/
 
-static void app_fin(void)
+static void app_mq_delete(FAR const char *mq_name)
 {
-  mq_unlink(APP_MQUEUE_NAME);
+  /* Delete message queue */
+
+  mq_unlink(mq_name);
 }
 
 /****************************************************************************
- * Name: app_notify_response
+ * Name: app_mq_notify_result
  ****************************************************************************/
 
-static void app_notify_response(int response)
+static void app_mq_notify_result(int result)
 {
-  int ret;
+  int   ret;
   mqd_t mqd;
-  int errcode;
-  int buffer = response;
+  int   errcode;
+  int   buffer = result;
 
   /* Open message queue for send */
 
@@ -124,7 +160,7 @@ static void app_notify_response(int response)
       return;
     }
 
-  /* Send response */
+  /* Send result of callback */
 
   ret = mq_send(mqd, (FAR const char*)&buffer, sizeof(buffer), 0);
   if (ret < 0)
@@ -138,15 +174,15 @@ static void app_notify_response(int response)
 }
 
 /****************************************************************************
- * Name: app_wait_response
+ * Name: app_mq_recv_async_callback
  ****************************************************************************/
 
-static int app_wait_response(int *response)
+static int app_mq_recv_async_callback(int *result)
 {
-  int ret;
+  int   ret;
   mqd_t mqd;
-  int errcode;
-  int resp;
+  int   errcode;
+  int   buffer;
 
   /* Open message queue for receive */
 
@@ -158,9 +194,9 @@ static int app_wait_response(int *response)
       return -1;
     }
 
-  /* Receive response */
+  /* Receive result of callback */
 
-  ret = mq_receive(mqd, (FAR char*)&resp, sizeof(resp), 0);
+  ret = mq_receive(mqd, (FAR char*)&buffer, sizeof(buffer), 0);
   if (ret < 0)
     {
       errcode = errno;
@@ -170,7 +206,7 @@ static int app_wait_response(int *response)
     }
   mq_close(mqd);
 
-  *response = resp;
+  *result = buffer;
 
   return 0;
 }
@@ -183,7 +219,9 @@ static void app_poweron_cb(uint32_t result)
 {
   printf("%s called\n", __func__);
 
-  app_notify_response(result);
+  /* Notify the result to the lte sample application task */
+
+  app_mq_notify_result(result);
 }
 
 /****************************************************************************
@@ -194,7 +232,22 @@ static void app_poweroff_cb(uint32_t result)
 {
   printf("%s called\n", __func__);
 
-  app_notify_response(result);
+  /* Notify the result to the lte sample application task */
+
+  app_mq_notify_result(result);
+}
+
+/****************************************************************************
+ * Name: app_set_apn_cb
+ ****************************************************************************/
+
+static void app_set_apn_cb(uint32_t result)
+{
+  printf("%s called\n", __func__);
+
+  /* Notify the result to the lte sample application task */
+
+  app_mq_notify_result(result);
 }
 
 /****************************************************************************
@@ -213,7 +266,9 @@ static void app_attach_net_cb(uint32_t result, uint32_t errcause)
       printf("%s called: result:%d\n", __func__, result);
     }
 
-  app_notify_response(result);
+  /* Notify the result to the lte sample application task */
+
+  app_mq_notify_result(result);
 }
 
 /****************************************************************************
@@ -224,7 +279,9 @@ static void app_detach_net_cb(uint32_t result)
 {
   printf("%s called: result:%d\n", __func__, result);
 
-  app_notify_response(result);
+  /* Notify the result to the lte sample application task */
+
+  app_mq_notify_result(result);
 }
 
 /****************************************************************************
@@ -234,97 +291,9 @@ static void app_detach_net_cb(uint32_t result)
 static void app_wget_cb(FAR char **buffer, int offset, int datend,
                         FAR int *buflen, FAR void *arg)
 {
+  /* Write HTTP data to standard output */
+
   (void)write(1, &((*buffer)[offset]), datend - offset);
-}
-
-/****************************************************************************
- * Name: app_lte_init
- ****************************************************************************/
-
-static int app_lte_init(void)
-{
-  int ret;
-  int response = LTE_RESULT_OK;
-
-  /* Initialize the LTE library */
-
-  ret = lte_initialize();
-  if (ret < 0)
-    {
-      printf("Failed to initialize LTE library :%d\n", ret);
-      goto errout;
-    }
-
-  /* Power on the modem
-   * If it succeeds, it will be able to accept requests from all APIs */
-
-  ret = lte_power_control(LTE_POWERON, app_poweron_cb);
-  if (ret < 0)
-    {
-      printf("Failed to power on the modem :%d\n", ret);
-      goto errout_with_fin;
-    }
-
-  /* Wait until the modem startup completed */
-
-  ret = app_wait_response(&response);
-  if ((ret < 0) || (response != LTE_RESULT_OK))
-    {
-      goto errout_with_fin;
-    }
-
-  return 0;
-
-errout_with_fin:
-  lte_finalize();
-
-errout:
-  return ret;
-}
-
-/****************************************************************************
- * Name: app_lte_fin
- ****************************************************************************/
-
-static int app_lte_fin(void)
-{
-  int ret;
-  int response = LTE_RESULT_OK;
-
-  /* Power off the modem
-   * If it succeeds, it will be not able to accept requests from all APIs */
-
-  ret = lte_power_control(LTE_POWEROFF, app_poweroff_cb);
-  if (ret < 0)
-    {
-      printf("Failed to power off the modem :%d\n", ret);
-      goto errout_with_fin;
-    }
-
-  /* Wait until the modem shutdown completed */
-
-  ret = app_wait_response(&response);
-  if ((ret < 0) || (response != LTE_RESULT_OK))
-    {
-      goto errout_with_fin;
-    }
-
-  /* Finalize LTE library */
-
-  ret = lte_finalize();
-  if (ret < 0)
-    {
-      printf("Failed to finalize LTE library :%d\n", ret);
-      goto errout;
-    }
-
-  return 0;
-
-errout_with_fin:
-  lte_finalize();
-
-errout:
-  return ret;
 }
 
 /****************************************************************************
@@ -341,31 +310,79 @@ int main(int argc, FAR char *argv[])
 int lte_main(int argc, char *argv[])
 #endif
 {
-  int  ret;
-  int  response = LTE_RESULT_OK;
-  char *url     = NULL;
+  int       ret;
+  int       result = LTE_RESULT_OK;
+  FAR char *url    = APP_WGET_URL;
+
+  /* This application is a sample that connect to the LTE network,
+   * get a file with wget, and disconnect the LTE network.
+   * The URL is specified by the second argument.
+   * If URL is not specified, use the default URL.
+   * The URL starts with "http://"
+   * (eg, http://example.com/, or http://192.0.2.1:80/). */
 
   if (argc > 1)
     {
-      /* The URL of the file to get */
-
       url = argv[1];
     }
 
-  /* Initialize the this application */
+  /* Create a message queue. It is used to receive result from the
+   * asynchronous API callback.*/
 
-  ret = app_init();
+  ret = app_mq_create(APP_MQUEUE_NAME);
   if (ret < 0)
     {
       goto errout;
     }
 
-  /* Initialize the LTE */
+  /* Initialize the LTE library */
 
-  ret = app_lte_init();
+  ret = lte_initialize();
   if (ret < 0)
     {
+      printf("Failed to initialize LTE library :%d\n", ret);
       goto errout_with_fin;
+    }
+
+  /* Power on the LTE modem */
+
+  ret = lte_power_control(LTE_POWERON, app_poweron_cb);
+  if (ret < 0)
+    {
+      printf("Failed to power on the modem :%d\n", ret);
+      goto errout_with_lte_fin;
+    }
+
+  /* Wait until the modem startup normally and notification
+   * comes from the callback(app_poweron_cb)
+   * registered by lte_power_control. */
+
+  ret = app_mq_recv_async_callback(&result);
+  if ((ret < 0) || (result != LTE_RESULT_OK))
+    {
+      goto errout_with_lte_fin;
+    }
+
+  /* Do APN setting for session ID 1 which is used by lte_attach_network.
+   * It is necessary to set the correct APN according to your environment. */
+  
+  ret = lte_set_apn(APP_SESSION_ID, (int8_t*)APP_APN_NAME, APP_APN_IPTYPE,
+                    APP_APN_AUTHTYPE, (int8_t*)APP_APN_USR_NAME,
+                    (int8_t*)APP_APN_PASSWD, app_set_apn_cb);
+  if (ret < 0)
+    {
+      printf("Failed to set access point name :%d\n", ret);
+      goto errout_with_lte_fin;
+    }
+
+  /* Wait until the APN setting is completed and notification
+   * comes from the callback(app_set_apn_cb)
+   * registered by lte_set_apn. */
+
+  ret = app_mq_recv_async_callback(&result);
+  if ((ret < 0) || (result == LTE_RESULT_ERROR))
+    {
+      goto errout_with_lte_fin;
     }
 
   /* Attach to LTE network */
@@ -377,20 +394,21 @@ int lte_main(int argc, char *argv[])
       goto errout_with_lte_fin;
     }
 
-  /* Wait until attach to LTE network to be completed */
+  /* Wait until the LTE network is connected and notification
+   * comes from the callback(app_attach_net_cb)
+   * registered by lte_attach_network. */
 
-  ret = app_wait_response(&response);
-  if ((ret < 0) || (response == LTE_RESULT_ERROR))
+  ret = app_mq_recv_async_callback(&result);
+  if ((ret < 0) || (result == LTE_RESULT_ERROR))
     {
       goto errout_with_lte_fin;
     }
 
-  if (url != NULL)
-    {
-      wget(url, g_app_iobuffer, APP_IOBUFFER_LEN, app_wget_cb, NULL);
-    }
+  /* Retrieve the file with the specified URL. */
 
-  /* Detach to LTE network */
+  wget(url, g_app_iobuffer, APP_IOBUFFER_LEN, app_wget_cb, NULL);
+
+  /* Detach from LTE network */
 
   ret = lte_detach_network(app_detach_net_cb);
   if (ret < 0)
@@ -399,33 +417,57 @@ int lte_main(int argc, char *argv[])
       goto errout_with_lte_fin;
     }
 
-  /* Wait until detach from LTE network to be completed */
+  /* Wait until the LTE network is disconnected and notification
+   * comes from the callback(app_detach_net_cb)
+   * registered by lte_detach_network. */
 
-  ret = app_wait_response(&response);
-  if ((ret < 0) || (response == LTE_RESULT_ERROR))
+  ret = app_mq_recv_async_callback(&result);
+  if ((ret < 0) || (result == LTE_RESULT_ERROR))
     {
       goto errout_with_lte_fin;
     }
 
-  /* Finalize the LTE */
+  /* Power off the modem. If asynchronous API has not notified
+   * the result by callback, it will be canceled */
 
-  ret = app_lte_fin();
+  ret = lte_power_control(LTE_POWEROFF, app_poweroff_cb);
   if (ret < 0)
     {
+      printf("Failed to power off the modem :%d\n", ret);
+      goto errout_with_lte_fin;
+    }
+
+  /* Wait until the modem shutdown complete and notification
+   * comes from the callback(app_poweroff_cb)
+   * registered by lte_power_control. */
+
+  ret = app_mq_recv_async_callback(&result);
+  if ((ret < 0) || (result != LTE_RESULT_OK))
+    {
+      goto errout_with_lte_fin;
+    }
+
+  /* Finalize LTE library
+   * If this function is called while the modem power is on, shutdown the modem */
+
+  ret = lte_finalize();
+  if (ret < 0)
+    {
+      printf("Failed to finalize LTE library :%d\n", ret);
       goto errout_with_fin;
     }
 
-  /* Finalize the this application */
+  /* Delete a message queue */
 
-  app_fin();
+  app_mq_delete(APP_MQUEUE_NAME);
 
   return 0;
 
 errout_with_lte_fin:
-  app_lte_fin();
+  lte_finalize();
 
 errout_with_fin:
-  app_fin();
+  app_mq_delete(APP_MQUEUE_NAME);
 
 errout:
   return -1;
