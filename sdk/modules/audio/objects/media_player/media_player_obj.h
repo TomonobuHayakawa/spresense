@@ -132,8 +132,8 @@ private:
   uint32_t  m_max_src_work_buff_size;
   AudioCodec  m_codec_type;
 
-  #define  MAX_EXEC_COUNT    4  /* Number of audio frames to be prior introduced. */
-  #define  MAX_OUT_BUFF_NUM  9  /* Number of PCM buffer. */
+  #define  MAX_EXEC_COUNT    2   /* Number of audio frames to be prior introduced. */
+  #define  MAX_OUT_BUFF_NUM  10  /* Number of PCM buffer. */
   #define  MAX_SRC_WORK_BUFF_NUM 1 /* Number of SRC work buffer. */
 
   typedef s_std::Queue<MemMgrLite::MemHandle, MAX_EXEC_COUNT + 1> EsMhQueue;

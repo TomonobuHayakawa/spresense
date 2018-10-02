@@ -1031,7 +1031,7 @@ void PlayerObj::decDoneOnPrePlay(MsgPacket *msg)
 
   freePcmBuf();
 
-  if (m_decoded_pcm_mh_que.size() < MAX_EXEC_COUNT)
+  if (m_decoded_pcm_mh_que.size() <= MAX_EXEC_COUNT)
     {
       uint32_t es_size = m_max_es_buff_size;
       void    *es_addr = getEs(&es_size);
@@ -1372,21 +1372,19 @@ uint32_t PlayerObj::startPlay(uint32_t* dsp_inf)
       return AS_ECODE_QUEUE_OPERATION_ERROR;
     }
 
-  for (int i=0; i < MAX_EXEC_COUNT; i++)
+  /* Get ES data. */
+
+  uint32_t es_size = m_max_es_buff_size;
+  void    *es_addr = getEs(&es_size);
+
+  if (es_addr == NULL)
     {
-      /* Get ES data. */
+      freeSrcWorkBuf();
+      return  AS_ECODE_SIMPLE_FIFO_UNDERFLOW;
+    }
 
-      uint32_t es_size = m_max_es_buff_size;
-      void    *es_addr = getEs(&es_size);
+  decode(es_addr, es_size);
 
-      if (es_addr == NULL)
-        {
-          freeSrcWorkBuf();
-          return  AS_ECODE_SIMPLE_FIFO_UNDERFLOW;
-        }
-
-    decode(es_addr, es_size);
-  }
   return AS_ECODE_OK;
 }
 
