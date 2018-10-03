@@ -57,7 +57,9 @@
 #include "include/msgq_pool.h"
 #include "include/pool_layout.h"
 #include "include/fixed_fence.h"
-#include "playlist/playlist.h"
+#ifdef CONFIG_AUDIOUTILS_PLAYLIST
+#  include "playlist/playlist.h"
+#endif
 
 using namespace MemMgrLite;
 
@@ -72,19 +74,21 @@ using namespace MemMgrLite;
 
 /* Path of playback file. */
 
-#define AUDIOFILE_ROOTPATH "/mnt/sd0/AUDIO"
-
-/* Path of playlist file. */
-
-#define PLAYLISTFILE_PATH  "/mnt/sd0/PLAYLIST"
+#define PLAYBACK_FILE_PATH "/mnt/sd0/AUDIO"
 
 /* Path of DSP image file. */
 
-#define DSPBIN_PATH        "/mnt/sd0/BIN"
+#define DSPBIN_FILE_PATH   "/mnt/sd0/BIN"
+
+#ifdef CONFIG_AUDIOUTILS_PLAYLIST
+/* Path of playlist file. */
+
+#  define PLAYLIST_FILE_PATH "/mnt/sd0/PLAYLIST"
 
 /* PlayList file name. */
 
-#define PLAY_LIST_NAME     "TRACK_DB.CSV"
+#  define PLAYLIST_FILE_NAME "TRACK_DB.CSV"
+#endif
 
 /* Default Volume. -20dB */
 
@@ -130,6 +134,14 @@ using namespace MemMgrLite;
 
 #define PLAYER_FIFO_PUSH_NUM_MAX  5
 
+/* Definition of content information to be used when not using playlist. */
+
+#define PLAYBACK_FILE_NAME     "Sound.mp3"
+#define PLAYBACK_CH_NUM        AS_CHANNEL_STEREO
+#define PLAYBACK_BIT_LEN       AS_BITLENGTH_16
+#define PLAYBACK_SAMPLING_RATE AS_SAMPLINGRATE_48000   
+#define PLAYBACK_CODEC_TYPE    AS_CODECTYPE_MP3
+
 /*------------------------------
  * Definition specified by config
  *------------------------------
@@ -165,10 +177,6 @@ using namespace MemMgrLite;
 #define FIFO_ELEMENT_SIZE  (FIFO_FRAME_SIZE * FIFO_FRAME_NUM)
 #define FIFO_QUEUE_SIZE    (FIFO_ELEMENT_SIZE * FIFO_ELEMENT_NUM)
 
-/* PlayList file name. */
-
-#define PLAY_LIST_NAME "TRACK_DB.CSV"
-
 /* Local error code. */
 
 #define FIFO_RESULT_OK  0
@@ -190,6 +198,17 @@ struct player_fifo_info_s
   uint8_t  read_buf[FIFO_ELEMENT_SIZE];
 };
 
+#ifndef CONFIG_AUDIOUTILS_PLAYLIST
+struct Track
+{
+  char title[64];
+  uint8_t   channel_number;  /* Channel number. */
+  uint8_t   bit_length;      /* Bit length.     */
+  uint32_t  sampling_rate;   /* Sampling rate.  */
+  uint8_t   codec_type;      /* Codec type.     */
+};
+#endif
+
 /* For play file */
 
 struct player_file_info_s
@@ -208,8 +227,6 @@ struct player_info_s
   struct player_file_info_s   file;
 #ifdef CONFIG_AUDIOUTILS_PLAYLIST
   Playlist *playlist_ins = NULL;
-#else
-error "AUDIOUTILS_PLAYLIST is not enable"
 #endif
 };
 
@@ -261,7 +278,7 @@ static void app_freq_release(void)
 static bool app_open_contents_dir(void)
 {
   DIR *dirp;
-  const char *name = AUDIOFILE_ROOTPATH;
+  const char *name = PLAYBACK_FILE_PATH;
   
   dirp = opendir(name);
 
@@ -283,7 +300,7 @@ static bool app_close_contents_dir(void)
   return true;
 }
 
-
+#ifdef CONFIG_AUDIOUTILS_PLAYLIST
 static bool app_open_playlist(void)
 {
   bool result = false;
@@ -294,9 +311,9 @@ static bool app_open_playlist(void)
       return false;
     }
 
-  s_player_info.playlist_ins = new Playlist(PLAY_LIST_NAME);
+  s_player_info.playlist_ins = new Playlist(PLAYLIST_FILE_NAME);
   
-  result = s_player_info.playlist_ins->init(PLAYLISTFILE_PATH);
+  result = s_player_info.playlist_ins->init(PLAYLIST_FILE_PATH);
   if (!result)
     {
       printf("Error: Playlist::init() failure.\n");
@@ -340,21 +357,30 @@ static bool app_close_playlist(void)
 
   return true;
 }
+#endif /* #ifdef CONFIG_AUDIOUTILS_PLAYLIST */
 
 static bool app_get_next_track(Track* track)
 {
-  bool ret;
+  bool ret = true;;
 
+#ifdef CONFIG_AUDIOUTILS_PLAYLIST
   if (s_player_info.playlist_ins == NULL)
     {
       printf("Error: Get next track failure. Playlist is not open\n");
       return false;
     }
-
   ret = s_player_info.playlist_ins->getNextTrack(track);
+#else
+  snprintf(track->title, sizeof(track->title), "%s", PLAYBACK_FILE_NAME);
+  track->channel_number = PLAYBACK_CH_NUM;
+  track->bit_length     = PLAYBACK_BIT_LEN;
+  track->sampling_rate  = PLAYBACK_SAMPLING_RATE;
+  track->codec_type     = PLAYBACK_CODEC_TYPE;
+#endif /* #ifdef CONFIG_AUDIOUTILS_PLAYLIST */
 
   return ret;
 }
+
 
 static void app_input_device_callback(uint32_t size)
 {
@@ -674,7 +700,10 @@ static int app_init_player(uint8_t codec_type,
     command.player.init_param.bit_length     = bit_length;
     command.player.init_param.channel_number = channel_number;
     command.player.init_param.sampling_rate  = sampling_rate;
-    snprintf(command.player.init_param.dsp_path, AS_AUDIO_DSP_PATH_LEN, "%s", DSPBIN_PATH);
+    snprintf(command.player.init_param.dsp_path,
+             AS_AUDIO_DSP_PATH_LEN,
+             "%s",
+             DSPBIN_FILE_PATH);
     AS_SendAudioCommand(&command);
 
     AudioResult result;
@@ -856,8 +885,11 @@ static bool app_open_next_play_file(void)
     }
 
   char full_path[128];
-  snprintf(full_path, sizeof(full_path), "%s/%s",
-           AUDIOFILE_ROOTPATH, s_player_info.file.track.title);
+  snprintf(full_path,
+           sizeof(full_path),
+           "%s/%s",
+           PLAYBACK_FILE_PATH,
+           s_player_info.file.track.title);
 
   s_player_info.file.fd = app_play_file_open(full_path, &s_player_info.file.size);
   if (s_player_info.file.fd < 0)
@@ -1044,6 +1076,7 @@ extern "C" int player_main(int argc, char *argv[])
       goto errout_power_on;
     }
 
+#ifdef CONFIG_AUDIOUTILS_PLAYLIST
   /* Open playlist. */
 
   if (!app_open_playlist())
@@ -1054,6 +1087,7 @@ extern "C" int player_main(int argc, char *argv[])
 
       goto errout_open_playlist;
     }
+#endif
 
   /* Initialize simple fifo. */
 
@@ -1213,6 +1247,10 @@ extern "C" int player_main(int argc, char *argv[])
           printf("Error: app_stop() failure.\n");
           return 1;
         }
+
+#ifndef CONFIG_AUDIOUTILS_PLAYLIST
+      break;
+#endif
     }
 
   /* Set output mute. */
@@ -1226,7 +1264,9 @@ errout_start:
 
   /* Return the state of AudioSubSystem before voice_call operation. */
 
+#ifdef CONFIG_AUDIOUTILS_PLAYLIST
 errout_open_playlist:
+#endif
 errout_init_simple_fifo:
 errout_init_output_select:
 errout_open_next_play_file:
@@ -1255,6 +1295,7 @@ errout_amp_mute_control:
 
   app_freq_release();
 
+#ifdef CONFIG_AUDIOUTILS_PLAYLIST
   /* Close playlist. */
 
   if (!app_close_playlist())
@@ -1262,6 +1303,7 @@ errout_amp_mute_control:
       printf("Error: app_close_playlist() failure.\n");
       return 1;
     }
+#endif
 
   /* Close directory of play contents. */
 
