@@ -1,5 +1,5 @@
 ############################################################################
-# examples/lte/Make.defs
+# lte_http_get/Makefile
 #
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
@@ -33,6 +33,25 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_EXAMPLES_LTE),y)
-CONFIGURED_APPS += lte
-endif
+-include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
+
+# lte_http_get built-in application info
+
+CONFIG_EXAMPLES_LTE_HTTP_GET_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+CONFIG_EXAMPLES_LTE_HTTP_GET_STACKSIZE ?= 2048
+
+APPNAME = lte_http_get
+PRIORITY = $(CONFIG_EXAMPLES_LTE_HTTP_GET_PRIORITY)
+STACKSIZE = $(CONFIG_EXAMPLES_LTE_HTTP_GET_STACKSIZE)
+
+# lte_http_get Example
+
+ASRCS =
+CSRCS =
+MAINSRC = lte_http_get_main.c
+
+CONFIG_EXAMPLES_LTE_HTTP_GET_PROGNAME ?= lte_http_get$(EXEEXT)
+PROGNAME = $(CONFIG_EXAMPLES_LTE_HTTP_GET_PROGNAME)
+
+include $(APPDIR)/Application.mk

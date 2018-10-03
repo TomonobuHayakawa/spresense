@@ -1,5 +1,5 @@
 /****************************************************************************
- * lte/lte_main.c
+ * lte_http_get/lte_http_get_main.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -50,7 +50,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define APP_MQUEUE_NAME    "lte_sample_queue"
+#define APP_MQUEUE_NAME    "lte_http_get_sample_queue"
 #define APP_MAX_MQUEUE_MSG 1
 #define APP_MQUEUE_MODE    0666
 #define APP_IOBUFFER_LEN   512
@@ -58,32 +58,32 @@
 
 /* APN settings */
 
-#ifdef CONFIG_EXAMPLES_LTE_APN_NAME
-#  define APP_APN_NAME     CONFIG_EXAMPLES_LTE_APN_NAME
+#ifdef CONFIG_EXAMPLES_LTE_HTTP_GET_APN_NAME
+#  define APP_APN_NAME     CONFIG_EXAMPLES_LTE_HTTP_GET_APN_NAME
 #else
-#  define APP_APN_NAME     "lte_sample_apn"
+#  define APP_APN_NAME     "lte_http_get_sample_apn"
 #endif
 
-#ifdef CONFIG_EXAMPLES_LTE_APN_IPTYPE
-#  define APP_APN_IPTYPE   CONFIG_EXAMPLES_LTE_APN_IPTYPE
+#ifdef CONFIG_EXAMPLES_LTE_HTTP_GET_APN_IPTYPE
+#  define APP_APN_IPTYPE   CONFIG_EXAMPLES_LTE_HTTP_GET_APN_IPTYPE
 #else
 #  define APP_APN_IPTYPE   LTE_APN_IPTYPE_IP
 #endif
 
-#ifdef CONFIG_EXAMPLES_LTE_APN_AUTHTYPE
-#  define APP_APN_AUTHTYPE CONFIG_EXAMPLES_LTE_APN_AUTHTYPE
+#ifdef CONFIG_EXAMPLES_LTE_HTTP_GET_APN_AUTHTYPE
+#  define APP_APN_AUTHTYPE CONFIG_EXAMPLES_LTE_HTTP_GET_APN_AUTHTYPE
 #else
 #  define APP_APN_AUTHTYPE LTE_APN_AUTHTYPE_NONE
 #endif
 
-#ifdef CONFIG_EXAMPLES_LTE_APN_USERNAME
-#  define APP_APN_USR_NAME CONFIG_EXAMPLES_LTE_APN_USERNAME
+#ifdef CONFIG_EXAMPLES_LTE_HTTP_GET_APN_USERNAME
+#  define APP_APN_USR_NAME CONFIG_EXAMPLES_LTE_HTTP_GET_APN_USERNAME
 #else
 #  define APP_APN_USR_NAME ""
 #endif
 
-#ifdef CONFIG_EXAMPLES_LTE_APN_PASSWD
-#  define APP_APN_PASSWD   CONFIG_EXAMPLES_LTE_APN_PASSWD
+#ifdef CONFIG_EXAMPLES_LTE_HTTP_GET_APN_PASSWD
+#  define APP_APN_PASSWD   CONFIG_EXAMPLES_LTE_HTTP_GET_APN_PASSWD
 #else
 #  define APP_APN_PASSWD   ""
 #endif
@@ -223,7 +223,7 @@ static void app_poweron_cb(uint32_t result)
 {
   printf("%s called\n", __func__);
 
-  /* Notify the result to the lte sample application task */
+  /* Notify the result to the lte_http_get sample application task */
 
   app_mq_notify_result(result);
 }
@@ -240,7 +240,7 @@ static void app_poweroff_cb(uint32_t result)
 {
   printf("%s called\n", __func__);
 
-  /* Notify the result to the lte sample application task */
+  /* Notify the result to the lte_http_get sample application task */
 
   app_mq_notify_result(result);
 }
@@ -256,7 +256,7 @@ static void app_set_apn_cb(uint32_t result)
 {
   printf("%s called\n", __func__);
 
-  /* Notify the result to the lte sample application task */
+  /* Notify the result to the lte_http_get sample application task */
 
   app_mq_notify_result(result);
 }
@@ -280,7 +280,7 @@ static void app_attach_net_cb(uint32_t result, uint32_t errcause)
       printf("%s called: result:%d\n", __func__, result);
     }
 
-  /* Notify the result to the lte sample application task */
+  /* Notify the result to the lte_http_get sample application task */
 
   app_mq_notify_result(result);
 }
@@ -296,7 +296,7 @@ static void app_detach_net_cb(uint32_t result)
 {
   printf("%s called: result:%d\n", __func__, result);
 
-  /* Notify the result to the lte sample application task */
+  /* Notify the result to the lte_http_get sample application task */
 
   app_mq_notify_result(result);
 }
@@ -322,13 +322,13 @@ static void app_wget_cb(FAR char **buffer, int offset, int datend,
  ****************************************************************************/
 
 /****************************************************************************
- * lte_main
+ * lte_http_get_main
  ****************************************************************************/
 
 #ifdef CONFIG_BUILD_KERNEL
 int main(int argc, FAR char *argv[])
 #else
-int lte_main(int argc, char *argv[])
+int lte_http_get_main(int argc, char *argv[])
 #endif
 {
   int       ret;

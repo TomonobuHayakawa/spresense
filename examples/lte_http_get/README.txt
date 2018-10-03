@@ -1,5 +1,5 @@
-examples/lte
-^^^^^^^^^^^^
+examples/lte_http_get
+^^^^^^^^^^^^^^^^^^^^^
 
   This application is a sample that connect to the LTE network
   and obtain the requested file from the HTTP server using the GET method.
@@ -14,13 +14,13 @@ examples/lte
 
   $ make buildkernel KERNCONF=release_net
 
-  This application can be used by lte default config.
+  This application can be used by lte_http_get default config.
 
-  $ ./tools/config.py examples/lte
+  $ ./tools/config.py examples/lte_http_get
   $ make
 
   Execute under nsh:
 
-  Type 'lte <url>' on nsh like this.
-  nsh> lte http://example.com/index.html
+  Type 'lte_http_get <url>' on nsh like this.
+  nsh> lte_http_get http://example.com/index.html
 
