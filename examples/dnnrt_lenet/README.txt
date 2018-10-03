@@ -35,8 +35,8 @@ http://developer.sony.com/develop/spresense/developer-tools/get-started-using-nu
 
 First, copy a directory, `examples/dnnrt_lenet/lenet-5/`, onto the root of SD card as below.  
 The `lenet-5` directory holds 10 hand-written digit images, `[0-9].pgm`, under `lenet-5/data/`.  
-These images were drawn by dnnrt developers and their filenames are labels for each image (i.e. 1 is drawn in `1.pgm`).  
-You can confirm actual images by `display` command in ImageMagick(http://www.imagemagick.org), etc.
+These images were drawn by _dnnrt_ developers and their filenames are labels for each image (i.e. 1 is drawn in `1.pgm`).  
+You can confirm actual images by `display` command in ImageMagick, etc.
 
 ```
 $ cd Spresense.git/examples/dnnrt_lenet/
@@ -57,24 +57,36 @@ This command usage is as below:
 
 ```
 SYNOPSIS
-       dnnrt_lenet [nnb] [pgm]
+       dnnrt_lenet [-s] [nnb] [pgm]
+
 DESCRIPTION
-       dnnrt_lenet instantiates a neural network defined by nnb,
-       and feeds an pgm image into it. Default values of nnb and pgm
-       are `/mnt/sd0/lenet-5/model/lenet-5.nnb` and
-       `/mnt/sd0/lenet-5/data/0.pgm`, respectively.
+       dnnrt_lenet instantiates a neural network
+       defined by nnb (default value: /mnt/sd0/lenet-5/model/lenet-5.nnb),
+       and feeds an image of pgm (default value: /mnt/sd0/lenet-5/data/0.pgm).
+
+OPTIONS
+       -s: skip image normalization before feeding into the network.
+           if no -s option is given, image data is divided by 255.0.
 ```
 
 ### expected output:
 
-`dnnrt_lenet` prints a 1D-array which `lenet-5.nnb` outputs.  
-If classification succeeds, an element which it's index correspond to an image filename should be the largest.  
-For example, if `lenet-5/data/3.pgm` is given into `lenet-5.nnb`, you can expect output like below:
+`dnnrt_lenet` prints a 1D-array which `lenet-5.nnb` outputs as `output[0-9]`.  
+Users are supposed to have a slight different interpretation about this `output[0-9]`   
+depending on which tool -- NNC or NNabla -- was used in training.  
+Expected usage of `dnnrt_lenet` differs as well like below.  
+
+### Neural Network Console:
+
+For example, execute `dnnrt_lenet` like below if you give `lenet-5.nnb` derived from NNC.  
+Then, you can refer to `output[0-9]` as probabilities that each digit is drawn.  
+In this example, since you feed `3.pgm`, the corresponding `output[3]` should be almost 1.0.  
 
 ```
 nsh> dnnrt_lenet /mnt/sd0/lenet-5/model/lenet-5.nnb /mnt/sd0/lenet-5/data/3.pgm
 load nnb file: /mnt/sd0/lenet-5/model/lenet-5.nnb
 load pnm image: /mnt/sd0/lenet-5/data/3.pgm # 3 is hand-written
+normalization: divide image data by 255.0 # normalization is done in the application-side
 ...
 start dnn_runtime_forward()
 output[0]=0.000000
@@ -87,5 +99,36 @@ output[6]=0.000000
 output[7]=0.000000
 output[8]=0.000006
 output[9]=0.000000
+...
+```
+
+### NNabla:
+
+On the other hand, **add -s option** if you use `lenet-5.nnb` derived from NNabla.  
+Otherwise, you will see that an pgm image would be misclassified.  
+This is because `classification.py` embeds the normalization process in `lenet_result.nnp` as a "MulScalar" function.  
+As a result, dnnrt divides image data by 255.0 inside `dnn_runtime_forward()` instead of the application-side.  
+Also notice that `outputs[3]` exceeds 1.0 and some of the other elements become less than 0.  
+This difference is because `classification.py` excludes a "Softmax" function,
+which normalizes outputs as probabilities.  
+These outputs are difficult for humans to understand at a glance,  
+but you can regard an index of the largest element as a classification result as well as the above case.
+
+```
+nsh> dnnrt_lenet -s /mnt/sd0/lenet-5/model/lenet-5.nnb /mnt/sd0/lenet-5/data/3.pgm
+load nnb file: /mnt/sd0/lenet-5/model/lenet-5.nnb
+load pnm image: /mnt/sd0/lenet-5/data/3.pgm # 3 is hand-written
+normalization: skipped # the application-side is NOT involved in normalization
+...
+output[0]=-21.355482
+output[1]=-6.984842
+output[2]=-5.412174
+output[3]=20.801638 # largest, but this value might become greater than 1
+output[4]=-9.799733
+output[5]=7.299200
+output[6]=-21.248144
+output[7]=4.409724
+output[8]=7.356676
+output[9]=7.378049
 ...
 ```
