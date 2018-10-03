@@ -1294,7 +1294,8 @@ int video_uninitialize(void)
   return OK;
 }
 
-int video_common_notify_dma_done(uint32_t buf_type,
+int video_common_notify_dma_done(uint8_t  err_code,
+                                 uint32_t buf_type,
                                  uint32_t datasize,
                                  FAR void *priv)
 {
@@ -1306,6 +1307,8 @@ int video_common_notify_dma_done(uint32_t buf_type,
     {
       return -EINVAL;
     }
+
+  /* TODO: In err_code != OK, notify error to application */
 
   type_inf->bufinf.vbuf_dma->buf.bytesused = datasize;
   video_framebuff_dma_done(&type_inf->bufinf);

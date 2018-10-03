@@ -675,7 +675,7 @@ void isx012_callback(uint8_t code, uint32_t size, uint32_t addr)
       type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     }
 
-  video_common_notify_dma_done(type, size, priv->video_priv);
+  video_common_notify_dma_done(code, type, size, priv->video_priv);
  
   return;
 }

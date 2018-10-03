@@ -86,7 +86,8 @@ extern "C"
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
-int video_common_notify_dma_done(uint32_t buf_type,
+int video_common_notify_dma_done(uint8_t  err_code,
+                                 uint32_t buf_type,
                                  uint32_t datasize,
                                  FAR void *priv);
 
