@@ -53,7 +53,7 @@
 
 #include "cxd56_clock.h"
 #include "chip/cxd56_cisif.h"
-#include "cxd56_cisif.h"
+#include "arch/chip/cisif.h"
 #include "video/video.h"
 
 /****************************************************************************
