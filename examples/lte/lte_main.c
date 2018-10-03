@@ -88,7 +88,7 @@
 #  define APP_APN_PASSWD   ""
 #endif
 
-#define APP_WGET_URL       "http://example.com/"
+#define APP_WGET_URL       "http://example.com/index.html"
 
 /****************************************************************************
  * Private Data
@@ -174,10 +174,10 @@ static void app_mq_notify_result(int result)
 }
 
 /****************************************************************************
- * Name: app_mq_recv_async_callback
+ * Name: app_wait_lte_callback
  ****************************************************************************/
 
-static int app_mq_recv_async_callback(int *result)
+static int app_wait_lte_callback(int *result)
 {
   int   ret;
   mqd_t mqd;
@@ -213,6 +213,10 @@ static int app_mq_recv_async_callback(int *result)
 
 /****************************************************************************
  * Name: app_poweron_cb
+ *
+ * Description:
+ *   This callback is called when the startup is completed
+ *   after power on the modem.
  ****************************************************************************/
 
 static void app_poweron_cb(uint32_t result)
@@ -226,6 +230,10 @@ static void app_poweron_cb(uint32_t result)
 
 /****************************************************************************
  * Name: app_poweroff_cb
+ *
+ * Description:
+ *   This callback is called when shutdown is completed
+ *   after power off the modem.
  ****************************************************************************/
 
 static void app_poweroff_cb(uint32_t result)
@@ -239,6 +247,9 @@ static void app_poweroff_cb(uint32_t result)
 
 /****************************************************************************
  * Name: app_set_apn_cb
+ *
+ * Description:
+ *   This callback is called when the APN setting is completed.
  ****************************************************************************/
 
 static void app_set_apn_cb(uint32_t result)
@@ -252,6 +263,9 @@ static void app_set_apn_cb(uint32_t result)
 
 /****************************************************************************
  * Name: app_attach_net_cb
+ *
+ * Description:
+ *   This callback is called when connect to the LTE network is completed.
  ****************************************************************************/
 
 static void app_attach_net_cb(uint32_t result, uint32_t errcause)
@@ -273,6 +287,9 @@ static void app_attach_net_cb(uint32_t result, uint32_t errcause)
 
 /****************************************************************************
  * Name: app_detach_net_cb
+ *
+ * Description:
+ *   This callback is called when disconnect to the LTE network is completed.
  ****************************************************************************/
 
 static void app_detach_net_cb(uint32_t result)
@@ -286,6 +303,10 @@ static void app_detach_net_cb(uint32_t result)
 
 /****************************************************************************
  * Name: app_wget_cb
+ *
+ * Description:
+ *   As data is obtained from the host, this function is to output of
+ *   each block of file data as it is received.
  ****************************************************************************/
 
 static void app_wget_cb(FAR char **buffer, int offset, int datend,
@@ -319,7 +340,7 @@ int lte_main(int argc, char *argv[])
    * The URL is specified by the second argument.
    * If URL is not specified, use the default URL.
    * The URL starts with "http://"
-   * (eg, http://example.com/, or http://192.0.2.1:80/). */
+   * (eg, http://example.com/index.html, or http://192.0.2.1:80/index.html) */
 
   if (argc > 1)
     {
@@ -357,7 +378,7 @@ int lte_main(int argc, char *argv[])
    * comes from the callback(app_poweron_cb)
    * registered by lte_power_control. */
 
-  ret = app_mq_recv_async_callback(&result);
+  ret = app_wait_lte_callback(&result);
   if ((ret < 0) || (result != LTE_RESULT_OK))
     {
       goto errout_with_lte_fin;
@@ -379,7 +400,7 @@ int lte_main(int argc, char *argv[])
    * comes from the callback(app_set_apn_cb)
    * registered by lte_set_apn. */
 
-  ret = app_mq_recv_async_callback(&result);
+  ret = app_wait_lte_callback(&result);
   if ((ret < 0) || (result == LTE_RESULT_ERROR))
     {
       goto errout_with_lte_fin;
@@ -398,7 +419,7 @@ int lte_main(int argc, char *argv[])
    * comes from the callback(app_attach_net_cb)
    * registered by lte_attach_network. */
 
-  ret = app_mq_recv_async_callback(&result);
+  ret = app_wait_lte_callback(&result);
   if ((ret < 0) || (result == LTE_RESULT_ERROR))
     {
       goto errout_with_lte_fin;
@@ -421,7 +442,7 @@ int lte_main(int argc, char *argv[])
    * comes from the callback(app_detach_net_cb)
    * registered by lte_detach_network. */
 
-  ret = app_mq_recv_async_callback(&result);
+  ret = app_wait_lte_callback(&result);
   if ((ret < 0) || (result == LTE_RESULT_ERROR))
     {
       goto errout_with_lte_fin;
@@ -441,7 +462,7 @@ int lte_main(int argc, char *argv[])
    * comes from the callback(app_poweroff_cb)
    * registered by lte_power_control. */
 
-  ret = app_mq_recv_async_callback(&result);
+  ret = app_wait_lte_callback(&result);
   if ((ret < 0) || (result != LTE_RESULT_OK))
     {
       goto errout_with_lte_fin;

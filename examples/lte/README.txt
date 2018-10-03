@@ -1,20 +1,20 @@
 examples/lte
 ^^^^^^^^^^^^
 
-  This application is a sample that connect to the LTE network,
-  get a file with wget, and disconnect the LTE network.
+  This application is a sample that connect to the LTE network
+  and obtain the requested file from the HTTP server using the GET method.
+  The obtained file is output to standard output.
 
   Supported LTE modem is ALT1250.
 
   Build kernel and SDK:
 
+  You have to specify "KERNCONF=release_net" for kernel configuration
+  as below. This application can not be used if you specified "KERNCONF=release".
+
   $ make buildkernel KERNCONF=release_net
 
-  When using this kernel configuration, application can
-  access standard socket API, with socket descriptors
-  that can be used with NuttX system calls.
-
-  This example can be used by lte default config.
+  This application can be used by lte default config.
 
   $ ./tools/config.py examples/lte
   $ make
@@ -22,5 +22,5 @@ examples/lte
   Execute under nsh:
 
   Type 'lte <url>' on nsh like this.
-  nsh> lte http://example.com/
+  nsh> lte http://example.com/index.html
 
