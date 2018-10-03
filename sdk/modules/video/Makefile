@@ -42,7 +42,7 @@ CXXEXT ?= .cpp
 
 # C_SRCS
 ASRCS =
-CSRCS = video.c
+CSRCS = video.c video_framebuff.c
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))

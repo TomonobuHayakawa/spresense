@@ -45,17 +45,15 @@
  * Public Types
  ****************************************************************************/
 
-struct video_ops_s
+struct video_devops_s
 {
   CODE int (*open)(FAR void *video_priv);
   CODE int (*close)(void);
   
   CODE int (*do_halfpush)(bool enable);
-  CODE int (*start_getimage)(enum v4l2_buf_type type,
-                             uint32_t buffer,
-                             uint32_t size,
-                             uint8_t interval);
-  CODE int (*stop_getimage)(enum v4l2_buf_type type, bool halfpush);
+  CODE int (*set_buftype)(enum v4l2_buf_type type); 
+  CODE int (*set_buf)(uint32_t bufaddr, uint32_t bufsize);
+  CODE int (*cancel_dma)(void);
   CODE int (*get_range_of_fmt)(FAR struct v4l2_fmtdesc *format);
   CODE int (*get_range_of_framesize)(FAR struct v4l2_frmsizeenum *frmsize);
   CODE int (*try_format)(FAR struct v4l2_format *format);
@@ -88,12 +86,10 @@ extern "C"
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
-int video_common_get_nextbuffer(uint32_t buf_type,
-                                uint32_t datasize,
-                                uint32_t data, 
-                                FAR uint32_t *nextbuf_size,
-                                FAR uint32_t *nextbuf,
-                                FAR void *priv);
+int video_common_notify_dma_done(uint8_t  err_code,
+                                 uint32_t buf_type,
+                                 uint32_t datasize,
+                                 FAR void *priv);
 
 #undef EXTERN
 #ifdef __cplusplus
