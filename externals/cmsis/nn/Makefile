@@ -93,14 +93,14 @@ depend: .depend
 context: .context
 
 clean_context:
-	$(Q) patch -d .. -p3 -R < cmsis-nn-support_nnabla.patch
+	$(Q) [ -e .context ] && patch -d .. -p3 -R < cmsis-nn-support_nnabla.patch
+	$(call DELFILE, .context)
 
 clean:
 	$(call DELFILE, $(BIN))
 	$(call CLEAN)
 
 distclean: clean clean_context
-	$(call DELFILE, .context)
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
 
