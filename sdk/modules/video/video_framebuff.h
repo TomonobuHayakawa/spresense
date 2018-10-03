@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/include/nuttx/video/isx012.h
+ * drivers/video/video_framebuff.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,43 +33,46 @@
  *
  ****************************************************************************/
 
-#ifndef __BSP_INCLUDE_NUTTX_VIDEO_ISX012_H
-#define __BSP_INCLUDE_NUTTX_VIDEO_ISX012_H
+#ifndef __SPRESENSE_VIDEO_FRAMEBUFF_H__
+#define __SPRESENSE_VIDEO_FRAMEBUFF_H__
 
-/****************************************************************************
- * Included Files
- ****************************************************************************/
 #include "video/video.h"
+#include <semaphore.h>
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-/****************************************************************************
- * Public Types
- ****************************************************************************/
-
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-#ifdef __cplusplus
-#  define EXTERN extern "C"
-extern "C"
+struct vbuf_container_s
 {
-#else
-#  define EXTERN extern
-#endif
+  struct v4l2_buffer       buf;    /* Buffer information */
+  struct vbuf_container_s *next;  /* pointer to next buffer */
+};
+typedef struct vbuf_container_s vbuf_container_t;
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-FAR struct video_devops_s *isx012_initialize(void);
-int isx012_uninitialize(void);
+struct video_framebuff_s
+{
+  enum v4l2_buf_mode  mode;
+  sem_t lock_empty;
+  int container_size;
+  vbuf_container_t *vbuf_alloced;
+  vbuf_container_t *vbuf_empty;
+  vbuf_container_t *vbuf_top;
+  vbuf_container_t *vbuf_tail;
+  vbuf_container_t *vbuf_dma;
+  vbuf_container_t *vbuf_next_dma;
+};
+typedef struct video_framebuff_s video_framebuff_t;
 
-#undef EXTERN
-#ifdef __cplusplus
-}
-#endif
+/* Buffer access interface. */
+void              video_framebuff_init              (video_framebuff_t *fbuf);
+void              video_framebuff_uninit            (video_framebuff_t *fbuf);
+int               video_framebuff_realloc_container (video_framebuff_t *fbuf, int sz);
+vbuf_container_t *video_framebuff_get_container     (video_framebuff_t *fbuf);
+void              video_framebuff_free_container    (video_framebuff_t *fbuf, vbuf_container_t *cnt);
+void              video_framebuff_queue_container   (video_framebuff_t *fbuf, vbuf_container_t *tgt);
+vbuf_container_t *video_framebuff_dq_valid_container(video_framebuff_t *fbuf);
+vbuf_container_t *video_framebuff_get_dma_container (video_framebuff_t *fbuf);
+vbuf_container_t *video_framebuff_pop_curr_container(video_framebuff_t *fbuf);
+void              video_framebuff_dma_done          (video_framebuff_t *fbuf);
+void              video_framebuff_change_mode       (video_framebuff_t *fbuf, enum v4l2_buf_mode mode);
 
-#endif /* __BSP_INCLUDE_NUTTX_VIDEO_ISX012_H */
+
+#endif  // __SPRESENSE_VIDEO_FRAMEBUFF_H__
+
