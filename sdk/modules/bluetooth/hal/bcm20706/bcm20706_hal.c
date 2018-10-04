@@ -48,6 +48,10 @@
 
 struct bt_hal_common_ops_s bt_hal_common_ops;
 
+/* BT A2DP HAL I/F */
+
+struct bt_hal_a2dp_ops_s bt_hal_a2dp_ops;
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -59,6 +63,10 @@ int bcm20706_probe(void)
   /* Register BT common HAL */
 
   ret = bt_common_register_hal(&bt_hal_common_ops);
+
+  /* Register BT A2DP HAL */
+
+  ret = bt_a2dp_register_hal(&bt_hal_a2dp_ops);
 
   return ret;
 }
