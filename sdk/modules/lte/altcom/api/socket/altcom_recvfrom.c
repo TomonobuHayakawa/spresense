@@ -334,6 +334,10 @@ int altcom_recvfrom(int sockfd, void *buf, size_t len, int flags,
               altcom_seterrno(ALTCOM_EFAULT);
             }
 
+          if (altcom_errno() == ALTCOM_ETIMEDOUT)
+            {
+              altcom_seterrno(ALTCOM_EAGAIN);
+            }
           DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
           return -1;
         }
