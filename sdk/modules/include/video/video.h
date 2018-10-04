@@ -247,6 +247,13 @@ extern "C" {
 
 #define VIDIOC_S_EXT_CTRLS            _VIDIOC(0x0015)
 
+/** Cancel DQBUF
+ *  @param[in] arg
+ *  enum #v4l2_buf_type
+ */
+
+#define VIDIOC_CANCEL_DQBUF           _VIDIOC(0x0016)
+
 /** @} video_ioctl */
 
 /**
