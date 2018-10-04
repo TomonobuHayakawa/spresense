@@ -58,8 +58,8 @@ typedef struct
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-#define DNN_PNM_PATH    "/mnt/sd0/lenet-5/data/0.pgm"
-#define DNN_NNB_PATH    "/mnt/sd0/lenet-5/model/lenet-5.nnb"
+#define DNN_PNM_PATH    "/mnt/sd0/0.pgm"
+#define DNN_NNB_PATH    "/mnt/sd0/lenet-5.nnb"
 #define MNIST_SIZE_PX (28*28)
 
 /****************************************************************************
