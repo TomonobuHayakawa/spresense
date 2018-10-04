@@ -61,6 +61,7 @@ BT_C_SRCS_APP +=  bcm20706_bt_a2dp.c
 BT_C_SRCS_APP +=  bcm20706_bt_avrcp.c
 BT_C_SRCS_APP +=  bcm20706_bt_common.c
 BT_C_SRCS_APP +=  bcm20706_bt_hfp.c
+BT_C_SRCS_APP +=  bcm20706_bt_spp.c
 BT_C_SRCS_APP +=  manager/bt_freq_lock.c
 BT_C_SRCS_APP +=  manager/bt_hci_manager.c
 BT_C_SRCS_APP +=  manager/bt_recv_task.c
