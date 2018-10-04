@@ -102,6 +102,25 @@ int board_bcm20706_pin_cfg(void)
 }
 
 /****************************************************************************
+ * Name: board_bcm20706_uart_pin_cfg
+ *
+ * Description:
+ *   Setup UART pin configuration for bcm20706.
+ *
+ ****************************************************************************/
+
+int board_bcm20706_uart_pin_cfg(void)
+{
+  int ret = 0;
+
+  /* Set float for UART2 CTS */
+
+  ret = board_gpio_config(PIN_UART2_CTS, 1, 1, 0, 0);
+
+  return ret;
+}
+
+/****************************************************************************
  * Name: board_bcm20706_reset
  *
  * Description:

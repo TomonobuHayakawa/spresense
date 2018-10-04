@@ -221,6 +221,16 @@ enum board_power_device {
 int board_bcm20706_pin_cfg(void);
 
 /****************************************************************************
+ * Name: board_bcm20706_uart_pin_cfg
+ *
+ * Description:
+ *   Setup UART pin configuration for bcm20706.
+ *
+ ****************************************************************************/
+
+int board_bcm20706_uart_pin_cfg(void);
+
+/****************************************************************************
  * Name: board_bcm20706_reset
  *
  * Description:

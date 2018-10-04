@@ -57,10 +57,8 @@
  *                                                  i                   d  Z  m  l
  *                                                  n                   e  I  A  l
  */
-#ifndef CONFIG_BCM20706
-  #undef PINCONF_UART2_CTS
-  #define PINCONF_UART2_CTS                   PINCONF(PIN_UART2_CTS,      1, 1, 0, PINCONF_PULLDOWN)
-#endif
+#undef PINCONF_UART2_CTS
+#define PINCONF_UART2_CTS                   PINCONF(PIN_UART2_CTS,      1, 1, 0, PINCONF_PULLDOWN)
 
 #undef PINCONF_SPI4_CS_X
 #undef PINCONF_SPI4_SCK

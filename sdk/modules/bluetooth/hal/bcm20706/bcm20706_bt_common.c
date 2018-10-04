@@ -329,6 +329,15 @@ static int bcm20706_bt_enable(bool enable)
           ret = -ENXIO;
           goto err;
         }
+
+      /* UART post pin configuration */
+      ret = board_bcm20706_uart_pin_cfg();
+      if (ret)
+        {
+          ret = -ENXIO;
+          goto err;
+        }
+
       DBG_LOG_DEBUG("uart init success\n");
 
       ret = bt_hci_start_boot();
