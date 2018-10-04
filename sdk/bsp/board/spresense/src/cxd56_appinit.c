@@ -116,6 +116,10 @@
 #  include <nuttx/leds/userled.h>
 #endif
 
+#ifdef CONFIG_BCM20706
+#  include "cxd56_bcm20706.h"
+#endif
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -335,6 +339,10 @@ int board_app_initialize(uintptr_t arg)
     {
       _err("ERROR: Failed to initialze Altair modem. \n");
     }
+#endif
+
+#ifdef CONFIG_BCM20706
+    bcm20706_probe();
 #endif
 
 #ifdef CONFIG_CPUFREQ_RELEASE_LOCK
