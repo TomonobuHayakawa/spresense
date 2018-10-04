@@ -72,6 +72,8 @@
 #  define AF_FAMILY AF_IEEE802154
 #elif defined(CONFIG_NET_USRSOCK)
 #  define AF_FAMILY  AF_INET
+#elif defined(CONFIG_NET_DEV_SPEC_SOCK)
+#  define AF_FAMILY  AF_INET
 #endif
 
 /****************************************************************************
