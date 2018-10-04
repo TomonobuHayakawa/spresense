@@ -51,7 +51,7 @@
 typedef struct
   {
     char *nnb_path;
-    char *pnm_path;
+    char *pgm_path;
     bool skip_norm;
   } my_setting_t;
 
@@ -114,13 +114,13 @@ static void parse_args(int argc, char *argv[], my_setting_t * setting)
         }
     }
 
-  /* set my_setting_t::{nnb_path,pnm_path} to argv[] if necessary */
+  /* set my_setting_t::{nnb_path,pgm_path} to argv[] if necessary */
   setting->nnb_path = (optind < argc) ? argv[optind++] : DNN_NNB_PATH;
-  setting->pnm_path = (optind < argc) ? argv[optind]   : DNN_PNM_PATH;
+  setting->pgm_path = (optind < argc) ? argv[optind]   : DNN_PNM_PATH;
 
   /* print my_setting_t */
-  printf("load nnb file: %s\n",  setting->nnb_path);
-  printf("load pnm image: %s\n", setting->pnm_path);
+  printf("Load nnb file: %s\n",  setting->nnb_path);
+  printf("Load pgm image: %s\n", setting->pgm_path);
   if (setting->skip_norm)
     {
       printf("Image Normalization (1.0/255.0): skipped\n");
@@ -154,11 +154,11 @@ int dnnrt_lenet_main(int argc, char *argv[])
   /* load an hand-written digit image into s_img_buffer,
      and then divide the pixels by 255.0 for normalization */
   norm_factor = setting.skip_norm ? 1.0f : 255.0f;
-  ret = pnm_load(setting.pnm_path, norm_factor, s_img_buffer);
+  ret = pnm_load(setting.pgm_path, norm_factor, s_img_buffer);
   if (ret)
     {
-      printf("load pnm image failed due to %d\n", ret);
-      goto pnm_error;
+      printf("load pgm image failed due to %d\n", ret);
+      goto pgm_error;
     }
 
   /* load an nnb file, which holds a network structure and weight values,
@@ -167,7 +167,7 @@ int dnnrt_lenet_main(int argc, char *argv[])
   if (network == NULL)
     {
       printf("load nnb file failed\n");
-      goto pnm_error;
+      goto pgm_error;
     }
 
   /* Step-A: initialize the whole dnnrt subsystem */
@@ -222,6 +222,6 @@ rt_error:
 dnn_error:
   /* just call free() */
   destroy_nnb_network(network);
-pnm_error:
+pgm_error:
   return ret;
 }
