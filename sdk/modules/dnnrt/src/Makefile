@@ -117,7 +117,7 @@ $(LIB): $(OBJS)
 install:
 
 context:
-	# make apps refer to the same version of network.h
+# make apps refer to the same version of network.h
 	$(Q) install -m 0664 \
 		$(RUNTIME_EXTERN_DIR)/include/nnablart/network.h \
 		$(SDKDIR)/modules/include/dnnrt/nnablart/network.h
@@ -142,7 +142,7 @@ $(NNABLA_LIBS):$(NNABLA_C_RUNTIME_MAKEFILE)
 
 libmakedep: Makefile
 	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) > Make.dep
-	
+
 .depend: libmakedep 
 	$(Q) touch $@
 
@@ -155,7 +155,7 @@ clean:
 	$(call DELFILE, *.o)
 	$(call DELFILE, *.d)
 	$(call DELFILE, $(LIB))
-	rm -rf $(NNABLA_CMAKE_PATH)
+	$(Q) rm -rf $(NNABLA_CMAKE_PATH)
 
 distclean: clean
 	$(call DELFILE, Make.dep)
