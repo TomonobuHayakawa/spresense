@@ -59,6 +59,7 @@ CFLAGS += $(INCLUDES)
 BT_C_SRCS_APP  =  bcm20706_hal.c
 BT_C_SRCS_APP +=  bcm20706_ble_common.c
 BT_C_SRCS_APP +=  bcm20706_ble_gap.c
+BT_C_SRCS_APP +=  bcm20706_ble_gatts.c
 BT_C_SRCS_APP +=  bcm20706_bt_a2dp.c
 BT_C_SRCS_APP +=  bcm20706_bt_avrcp.c
 BT_C_SRCS_APP +=  bcm20706_bt_common.c
