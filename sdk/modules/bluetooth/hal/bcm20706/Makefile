@@ -56,7 +56,7 @@ endif # ($(WINTOOL),y)
 CFLAGS += $(INCLUDES)
 
 # C_SRCS
-BT_C_SRCS_APP  =  
+BT_C_SRCS_APP  =  bcm20706_hal.c
 
 ASRCS =
 CSRCS = $(BT_C_SRCS_APP)
