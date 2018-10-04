@@ -117,6 +117,16 @@ static void btRecvDeviceStatus(uint8_t *p, uint16_t len, int group)
     }
 }
 
+static void btSaveBondInfo(BT_ADDR *addr)
+{
+  BLE_GapBondInfo info = {0};
+
+  info.addrType = 0; /* Only use in BLE */
+  memcpy(info.addr, addr, BT_ADDR_LEN);
+
+  BLE_GapSaveBondInfo(&info);
+}
+
 static void btRecvBondInfo(uint8_t *p, uint16_t len)
 {
   uint8_t *rp = NULL;
@@ -128,6 +138,9 @@ static void btRecvBondInfo(uint8_t *p, uint16_t len)
 
   bond_info_evt.group_id = BT_GROUP_COMMON;
   bond_info_evt.event_id = BT_COMMON_EVENT_BOND_INFO;
+
+  /* Save bonding information to filesystem */
+  btSaveBondInfo(&bond_info_evt.addr);
 
   bt_common_event_handler((struct bt_event_t *) &bond_info_evt);
 }
