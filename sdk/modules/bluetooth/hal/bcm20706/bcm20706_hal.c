@@ -64,6 +64,10 @@ struct bt_hal_hfp_ops_s bt_hal_hfp_ops;
 
 struct bt_hal_spp_ops_s bt_hal_spp_ops;
 
+/* BT SPP HAL I/F */
+
+struct ble_hal_common_ops_s ble_hal_common_ops;
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -91,6 +95,10 @@ int bcm20706_probe(void)
   /* Register BT SPP HAL */
 
   ret = bt_spp_register_hal(&bt_hal_spp_ops);
+
+  /* Register BLE common HAL */
+
+  ret = ble_common_register_hal(&ble_hal_common_ops);
 
   return ret;
 }
