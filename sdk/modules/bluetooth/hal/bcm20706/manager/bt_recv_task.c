@@ -617,7 +617,7 @@ static void btRecvControlPacket(uint16_t opcode, uint8_t *p, uint16_t len)
         break;
 
       case BT_CONTROL_GROUP_GATT:
-        //bleRecvGattControlPacket(evtCode, p, len);
+        bleRecvGattControlPacket(evtCode, p, len);
         break;
 
       case BT_CONTROL_GROUP_SPP:
