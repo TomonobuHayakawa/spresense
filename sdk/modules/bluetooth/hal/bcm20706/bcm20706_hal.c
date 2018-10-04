@@ -56,6 +56,10 @@ struct bt_hal_a2dp_ops_s bt_hal_a2dp_ops;
 
 struct bt_hal_avrcp_ops_s bt_hal_avrcp_ops;
 
+/* BT HFP HAL I/F */
+
+struct bt_hal_hfp_ops_s bt_hal_hfp_ops;
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -75,6 +79,10 @@ int bcm20706_probe(void)
   /* Register BT AVRCP HAL */
 
   ret = bt_avrcp_register_hal(&bt_hal_avrcp_ops);
+
+  /* Register BT HFP HAL */
+
+  ret = bt_hfp_register_hal(&bt_hal_hfp_ops);
 
   return ret;
 }
