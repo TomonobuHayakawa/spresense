@@ -65,7 +65,7 @@ SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS)
 LIB_OBJS = $(AOBJS) $(COBJS) $(CXXOBJS)
 
 all: $(BIN)
-.PHONY: context depend preconfig clean distclean
+.PHONY: context depend preconfig clean distclean clean_context
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
@@ -93,7 +93,7 @@ depend: .depend
 context: .context
 
 clean_context:
-	$(Q) [ -e .context ] && patch -d .. -p3 -R < cmsis-nn-support_nnabla.patch
+	$(Q) if [ -e .context ]; then patch -d .. -p3 -R < cmsis-nn-support_nnabla.patch >/dev/null; fi
 	$(call DELFILE, .context)
 
 clean:
