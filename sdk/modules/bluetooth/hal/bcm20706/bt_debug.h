@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/bluetooth/hal/bcm20706/bcm20706_hal.c
+ * modules/bluetooth/hal/bcm20706/bt_debug.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,32 +33,26 @@
  *
  ****************************************************************************/
 
-/****************************************************************************
- * Included Files
- ****************************************************************************/
-
-#include <stdio.h>
-#include <bluetooth/hal/bt_if.h>
-
-/****************************************************************************
- * Public Datas
- ****************************************************************************/
-
-/* BT Common HAL I/F */
-
-struct bt_hal_common_ops_s bt_hal_common_ops;
+/**
+ * @file       bt_debug.h
+ */
+#ifndef __MODULES_BLUETOOTH_HAL_BCM20706_BT_DEBUG_H
+#define __MODULES_BLUETOOTH_HAL_BCM20706_BT_DEBUG_H
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
  ****************************************************************************/
 
-int bcm20706_probe(void)
-{
-  int ret = 0;
+#ifdef CONFIG_DEBUG_BLUETOOTH
+# define btdbg(format, ...)    _err(format, ##__VA_ARGS__)
+# define btlldbg(format, ...)  lldbg(format, ##__VA_ARGS__)
+# define btvdbg(format, ...)   vdbg(format, ##__VA_ARGS__)
+# define btllvdbg(format, ...) llvdbg(format, ##__VA_ARGS__)
+#else
+# define btdbg(format, ...)  printf(format, ##__VA_ARGS__)
+# define btlldbg(format, ...)  printf(format, ##__VA_ARGS__)
+# define btvdbg(format, ...)  printf(format, ##__VA_ARGS__)
+# define btllvdbg(format, ...)  printf(format, ##__VA_ARGS__)
+#endif
 
-  /* Register BT common HAL */
-
-  ret = bt_common_register_hal(&bt_hal_common_ops);
-
-  return ret;
-}
+#endif /* __MODULES_BLUETOOTH_HAL_BCM20706_BT_DEBUG_H */

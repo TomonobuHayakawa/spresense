@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/bluetooth/hal/bcm20706/bcm20706_hal.c
+ * modules/bluetooth/hal/bcm20706/manager/bt_uart_manager.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,32 +33,55 @@
  *
  ****************************************************************************/
 
+#ifndef __MODULES_BLUETOOTH_HAL_BCM20706_BCM20706_BT_INTERNAL_H
+#define __MODULES_BLUETOOTH_HAL_BCM20706_BCM20706_BT_INTERNAL_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdio.h>
-#include <bluetooth/hal/bt_if.h>
-
 /****************************************************************************
- * Public Datas
+ * Pre-processor Definitions
  ****************************************************************************/
 
-/* BT Common HAL I/F */
-
-struct bt_hal_common_ops_s bt_hal_common_ops;
+#define MS_ONE_SLOT   0.625
 
 /****************************************************************************
- * Public Functions
+ * Private Types
  ****************************************************************************/
 
-int bcm20706_probe(void)
+typedef enum
 {
-  int ret = 0;
+  TRANS_TYPE_CLASSIC = 1,
+  TRNAS_TYPE_BLE,
+} BT_TRANS_TYPE;
 
-  /* Register BT common HAL */
+typedef enum
+{
+  ADDR_TYPE_PUBLIC = 0,
+  ADDR_TYPE_RANDOM,
+} BT_ADDR_TYPE;
 
-  ret = bt_common_register_hal(&bt_hal_common_ops);
+struct bt_common_context_s  
+{
+  BT_ADDR bt_addr;  /* Common address for BT/BLE */
+  char bt_name[BT_NAME_LEN];
+  char ble_name[BT_NAME_LEN];
+};
 
-  return ret;
-}
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+struct bt_common_context_s bt_common_context;
+
+/****************************************************************************
+ * Public Functions prototype
+ ****************************************************************************/
+
+int btSetBtAddress(BT_ADDR *addr);
+int btSetBtName(char *name);
+int btSetPairingEnable(uint8_t isEnable);
+
+#endif /* __MODULES_BLUETOOTH_HAL_BCM20706_BCM20706_BT_INTERNAL_H */
+
