@@ -2591,9 +2591,30 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                           ISX012_MAX_AUTOWB,
                           ISX012_STEP_AUTOWB);
 
+              regval = isx012_getreg(priv,
+                                     ISX012_REG_AUTOWB,
+                                     ISX012_SIZE_AUTOWB);
+
+              if (control->value)
+                {
+                  /* Because true means setting auto white balance
+                   * turn off the stop bit
+                   */
+
+                  regval &= ~REGVAL_CPUEXT_BIT_AWBSTOP;
+                }
+              else
+                {
+                  /* Because false means stopping auto white balance,
+                   * turn on the stop bit.
+                   */
+
+                  regval |= REGVAL_CPUEXT_BIT_AWBSTOP;
+                }
+
               ret = isx012_putreg(priv,
                                   ISX012_REG_AUTOWB,
-                                  control->value,
+                                  regval,
                                   ISX012_SIZE_AUTOWB);
 
               break;
