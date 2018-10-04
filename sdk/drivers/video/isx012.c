@@ -49,14 +49,13 @@
 #include <nuttx/i2c/i2c_master.h>
 #include <arch/board/board.h>
 #include <arch/chip/cisif.h>
+#include <arch/irq.h>
 
-#include "nuttx/video/isx012.h"
-#include "video/video.h"
-#include "video/video_halif.h"
+#include <nuttx/video/isx012.h>
+#include <video/video.h>
+#include <video/video_halif.h>
 #include "isx012_reg.h"
 #include "isx012_range.h"
-
-#include <arch/irq.h>
 
 /****************************************************************************
  * Pre-processor Definitions

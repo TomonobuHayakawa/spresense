@@ -53,9 +53,10 @@
 
 #include <arch/board/board.h>
 
-#include "video/video.h"
-#include "video/video_halif.h"
-#include "nuttx/video/isx012.h"
+#include <video/video.h>
+#include <video/video_halif.h>
+#include <nuttx/video/isx012.h>
+
 #include "video_framebuff.h"
 
 /****************************************************************************

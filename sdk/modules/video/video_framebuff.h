@@ -36,7 +36,7 @@
 #ifndef __SPRESENSE_VIDEO_FRAMEBUFF_H__
 #define __SPRESENSE_VIDEO_FRAMEBUFF_H__
 
-#include "video/video.h"
+#include <video/video.h>
 #include <semaphore.h>
 
 struct vbuf_container_s
