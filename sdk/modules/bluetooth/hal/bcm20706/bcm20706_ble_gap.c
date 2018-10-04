@@ -1,8 +1,7 @@
 /****************************************************************************
- * apps/bluetooth/bcm20707/ble_gap.c
+ * modules/bluetooth/hal/bcm20706/manager/bcm20706_ble_gap.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Yuchi.Wen <Yuchi.Wen@sony.com>
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -14,9 +13,10 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name NuttX nor Sony nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+ *    the names of its contributors may be used to endorse or promote
+ *    products derived from this software without specific prior written
+ *    permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -36,6 +36,7 @@
 /******************************************************************************
  * Include
  *****************************************************************************/
+
 #include <nuttx/config.h>
 #include <string.h>
 #include <ble/ble_comm.h>
@@ -52,22 +53,15 @@
 /******************************************************************************
  * externs
  *****************************************************************************/
+
 extern int bleConvertErrorCode(uint32_t errCode);
 extern int btSetBtAddress(BT_ADDR *addr);
 extern int btSetPairingEnable(uint8_t isEnable);
 
- /******************************************************************************
- * Structre define
- *****************************************************************************/
-enum{
-  UINT_0_625_MS = 625,
-  UNIT_1_25_MS = 1250,
-  UNIT_10_MS = 10000,
-};
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
 
-/******************************************************************************
- * Define
- *****************************************************************************/
 #define ADV_DATA_TYPE_FLAGS_SIZE                    0x02
 #define ADV_DATA_TYPE_TX_POWER_SIZE                 0x02
 #define ADV_DATA_TYPE_COMPLETE_32_UUIDS_SIZE        0x05
@@ -92,28 +86,43 @@ enum{
 #define BLE_GAP_ADDR_LENGTH_5    5
 #define BLE_KEY_MASK             0x7F
 
- /******************************************************************************
- * Function prototype declaration
- *****************************************************************************/
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+enum
+{
+  UINT_0_625_MS = 625,
+  UNIT_1_25_MS = 1250,
+  UNIT_10_MS = 10000,
+};
+
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
+
 bleGapMem *bleGetGapMem(void);
 uint32_t generateSaveHandle(BLE_GapBondInfo *info);
 
-/******************************************************************************
- * Variable
- *****************************************************************************/
-static bleGapMem gapMem = {
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static bleGapMem gapMem =
+{
   .sizeKey = 0,
   .infoKey = 0,
 };
-static BLE_GapPairingFeature gapPairingFeature;
+
 uint8_t sdsBaseuuid[BASE_UUID_LEN] = {0xfb, 0x34, 0x9b, 0x5f,  \
                                       0x80, 0x00, 0x00, 0x80,  \
                                       0x00, 0x10, 0x00, 0x00,  \
                                       0x00, 0x00, 0x00, 0x00};
 
-/******************************************************************************
- * Function
- *****************************************************************************/
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
 bleGapMem *bleGetGapMem(void)
 {
   return &gapMem;
@@ -121,10 +130,11 @@ bleGapMem *bleGetGapMem(void)
 
 void generateKey(void)
 {
-  if((0 == gapMem.sizeKey) || (0 == gapMem.infoKey)) {
-    gapMem.sizeKey = BSO_GenerateRegistryKey(BOND_SIZE_KEY_NAME,0);
-    gapMem.infoKey = BSO_GenerateRegistryKey(BOND_INFO_KEY_NAME,0);
-  }
+  if((0 == gapMem.sizeKey) || (0 == gapMem.infoKey))
+    {
+      gapMem.sizeKey = BSO_GenerateRegistryKey(BOND_SIZE_KEY_NAME,0);
+      gapMem.infoKey = BSO_GenerateRegistryKey(BOND_INFO_KEY_NAME,0);
+    }
 }
 
 uint32_t generateSaveHandle(BLE_GapBondInfo *info)
@@ -134,61 +144,11 @@ uint32_t generateSaveHandle(BLE_GapBondInfo *info)
   memcpy(keyName, info->addr, FLASH_KEY_NAME_SIZE);
   keyName[FLASH_KEY_NAME_2] |= info->addr[BLE_GAP_ADDR_LENGTH_4];
   keyName[FLASH_KEY_NAME_3] |= info->addr[BLE_GAP_ADDR_LENGTH_5];
-  for (index = 0; index < FLASH_KEY_NAME_SIZE; index++) {
-    keyName[index] &= BLE_KEY_MASK;
-  }
+  for (index = 0; index < FLASH_KEY_NAME_SIZE; index++)
+    {
+      keyName[index] &= BLE_KEY_MASK;
+    }
   return BSO_GenerateRegistryKey((const char* )keyName,0);
-}
-
-static int getAddress(BLE_GapAddr *bleGapAddr)
-{
-  int ret = BLE_SUCCESS;
-#if 0
-  BT_CONTROL_BLOCK *tcb = btSsGetSessionControlBlock();
-  if (tcb == NULL) {
-    btdbg("can't find session.\n");
-    return -EINVAL;
-  }
-  if (!bleGapAddr) {
-    return -EINVAL;
-  }
-  memcpy(bleGapAddr->addr,&tcb->localAddr,BT_ADDR_LEN);
-#endif
-  return ret;
-}
-
-static int setAddress(BLE_GapAddr *bleGapAddr)
-{
-  if (!bleGapAddr) {
-    return -EINVAL;
-  }
-  //memcpy(&tcb->localAddr,bleGapAddr->addr,BT_ADDR_LEN);
-  return btSetBtAddress((BT_ADDR*)bleGapAddr->addr);
-}
-
-static int getName(BLE_GapName *bleGapName)
-{
-  int ret      = BLE_SUCCESS;
-#if 0
-  int nameSize = 0;
-  int bufSize  = 0;
-  BT_CONTROL_BLOCK *tcb = btSsGetSessionControlBlock();
-  if (tcb == NULL) {
-    btdbg("can't find session.\n");
-    return -EINVAL;
-  }
-  if (!bleGapName || !bleGapName->name) {
-    return -EINVAL;
-  }
-  nameSize = strlen((char*)tcb->bleName);
-  bufSize  = bleGapName->size;
-  strncpy((char*)bleGapName->name, tcb->bleName,
-      ((bufSize < nameSize)        ? bufSize  :
-      (nameSize < BT_MAX_NAME_LEN) ? nameSize :
-      BT_MAX_NAME_LEN));
-  bleGapName->size = strlen((char*)tcb->bleName);
-#endif
-  return ret;
 }
 
 int bleGattsSetBleNamePermission(BLE_SEC_MODE pWritePerm)
@@ -213,89 +173,6 @@ int bleGattsSetServiceChangedEnable(void)
   return 0;
 }
 
-static int setName(BLE_GapName *bleGapName)
-{
-#define BLE_GAP_NAME_ATTR_HANDLE  0x0016
-#if 0
-  BT_CONTROL_BLOCK *tcb = btSsGetSessionControlBlock();
-  size_t nameSize = 0;
-  uint16_t connHandle = 0;
-  ble_gatts_value_t gattsValue = {0};
-  int ret = 0;
-
-  if (tcb == NULL) {
-    btdbg("can't find session.\n");
-    return -EINVAL;
-  }
-  if (!bleGapName || !bleGapName->name) {
-    return -EINVAL;
-  }
-  nameSize = strlen((char*)bleGapName->name);
-  if (nameSize > BT_MAX_NAME_LEN) {
-    return -EINVAL;
-  }
-  strncpy(tcb->bleName, (char*)bleGapName->name, nameSize);
-  tcb->bleName[nameSize] = '\0';
-  gattsValue.len = nameSize;
-  gattsValue.p_value = bleGapName->name;
-  ret = tcb->gattsSetBleNamePermission(bleGapName->pNameWritePerm);
-  if (ret != 0) {
-    return ret;
-  }
-  return tcb->gattsUpdateAttrValue(connHandle, BLE_GAP_NAME_ATTR_HANDLE, &gattsValue);
-#endif
-  return 0;
-}
-
-static int setCustomBaseuuid(uint8_t uuid[])
-{
-  int ret = BLE_SUCCESS;
-  memcpy(sdsBaseuuid, uuid, BASE_UUID_LEN);
-  return ret;
-}
-
-static int setServiceChangedEnable(void)
-{
-  int ret = BLE_SUCCESS;
-  ret = bleGattsSetServiceChangedEnable();
-  if (ret != 0) {
-    return ret;
-  }
-  return ret;
-}
-
-static int setAppearanceValue(BLE_GAP_APPEARANCE *bleApprValue)
-{
-#define BLE_APPEARANCE_ATTR_HANDLE  0x18
-  ble_gatts_value_t gattsValue = {0};
-  uint16_t bleConnHandle = 0;
-
-  if( bleApprValue == NULL) {
-    return -EINVAL;
-  }
-
-  gattsValue.len      = sizeof(BLE_GAP_APPEARANCE);
-  gattsValue.p_value  = (uint8_t*)bleApprValue;
-
-  return bleGattsUpdateAttrValue(bleConnHandle, BLE_APPEARANCE_ATTR_HANDLE, &gattsValue);
-}
-
-static int setPpcpValue(BLE_GapConnParams *bleConnParams)
-{
-#define BLE_PPCP_ATTR_HANDLE  0x20
-  ble_gatts_value_t gattsValue = {0};
-  uint16_t bleConnHandle = 0;
-
-  if( bleConnParams == NULL) {
-    return -EINVAL;
-  }
-
-  gattsValue.len      = sizeof(BLE_GapConnParams);
-  gattsValue.p_value  = (uint8_t*)bleConnParams;
-
-  return bleGattsUpdateAttrValue(bleConnHandle, BLE_PPCP_ATTR_HANDLE, &gattsValue);
-}
-
 int bleSetAdvData(uint8_t* advData, uint8_t size)
 {
   uint8_t buff[BT_MID_COMMAND_LEN] = {0};
@@ -308,7 +185,6 @@ int bleSetAdvData(uint8_t* advData, uint8_t size)
   btdbg("ble send adv data,size = %d\n", size);
   return btUartSendData(buff, p - buff);
 }
-
 
 int bleGapSetConnectPara(uint16_t connHandle, BLE_GapConnParams *connParams)
 {
@@ -434,66 +310,6 @@ int bleDeleteNvData(uint16_t nvDataId)
   return btUartSendData(buff, p - buff);
 }
 
-int BLE_GapGetDeviceConfig(BLE_GapDeviceConfig *deviceConfig)
-{
-  int type = 0;
-  int ret = BLE_SUCCESS;
-
-  if ((deviceConfig == NULL) || (deviceConfig->data == NULL)) {
-    return -EINVAL;
-  }
-
-  type = deviceConfig->type;
-  switch (type) {
-  case BLE_GAP_DEVICE_CONFIG_ADDR:
-    ret = getAddress((BLE_GapAddr *)deviceConfig->data);
-    break;
-  case BLE_GAP_DEVICE_CONFIG_NAME:
-    ret = getName((BLE_GapName *)deviceConfig->data);
-    break;
-  default:
-    ret = -EINVAL;
-    break;
-  }
-  return ret;
-}
-
-int BLE_GapSetDeviceConfig(BLE_GapDeviceConfig *deviceConfig)
-{
-  int type = 0;
-  int ret = BLE_SUCCESS;
-
-  if ((deviceConfig == NULL)) {
-    return -EINVAL;
-  }
-
-  type = deviceConfig->type;
-  switch( type ) {
-  case BLE_GAP_DEVICE_CONFIG_ADDR:
-    ret = setAddress((BLE_GapAddr *)deviceConfig->data);
-    break;
-  case BLE_GAP_DEVICE_CONFIG_NAME:
-    ret = setName((BLE_GapName *)deviceConfig->data);
-    break;
-  case BLE_GAP_DEVICE_CONFIG_UUID:
-    ret = setCustomBaseuuid((uint8_t *)deviceConfig->data);
-    break;
-  case BLE_GAP_DEVICE_CONFIG_SERV_CHNG_ENABLE:
-    ret = setServiceChangedEnable();
-    break;
-  case BLE_GAP_DEVICE_CONFIG_APPR_VALUE:
-    ret = setAppearanceValue((BLE_GAP_APPEARANCE *)deviceConfig->data);
-    break;
-  case BLE_GAP_DEVICE_CONFIG_PPCP_VALUE:
-    ret = setPpcpValue((BLE_GapConnParams *)deviceConfig->data);
-    break;
-  default:
-    ret = -EINVAL;
-    break;
-  }
-  return ret;
-}
-
 int BLE_GapSetAdvData(BLE_GapAdvData *advData)
 {
 #define MIN_TX_POWER  -127
@@ -503,68 +319,78 @@ int BLE_GapSetAdvData(BLE_GapAdvData *advData)
   uint8_t advLen = 0;
   uint8_t *data = NULL;
 
-  if(advData == NULL) {
-    btdbg("advData = NULL\n");
-    return -EINVAL;
-  }
-  if(advData->flags != 0) {
-    gapMem.gapAdvData[index++] = ADV_DATA_TYPE_FLAGS_SIZE;
-    gapMem.gapAdvData[index++] = ADV_DATA_TYPE_FLAGS;
-    gapMem.gapAdvData[index++] = advData->flags;
-  }
-  if (advData->txPower < MAX_TX_POWER && advData->txPower > MIN_TX_POWER) {
-    gapMem.gapAdvData[index++] = ADV_DATA_TYPE_TX_POWER_SIZE;
-    gapMem.gapAdvData[index++] = ADV_DATA_TYPE_TX_POWER;
-    gapMem.gapAdvData[index++] = (uint8_t)advData->txPower;
-  }
-  if(advData->complete32Uuid != 0) {
-    gapMem.gapAdvData[index++] = ADV_DATA_TYPE_COMPLETE_32_UUIDS_SIZE;
-    gapMem.gapAdvData[index++] = ADV_DATA_TYPE_COMPLETE_32_UUIDS;
-    gapMem.gapAdvData[index++] = (uint8_t)(advData->complete32Uuid >> 0);
-    gapMem.gapAdvData[index++] = (uint8_t)(advData->complete32Uuid >> 8);
-    gapMem.gapAdvData[index++] = (uint8_t)(advData->complete32Uuid >> 16);
-    gapMem.gapAdvData[index++] = (uint8_t)(advData->complete32Uuid >> 24);
-  }
+  if(advData == NULL)
+    {
+      btdbg("advData = NULL\n");
+      return -EINVAL;
+    }
+  if(advData->flags != 0)
+    {
+      gapMem.gapAdvData[index++] = ADV_DATA_TYPE_FLAGS_SIZE;
+      gapMem.gapAdvData[index++] = ADV_DATA_TYPE_FLAGS;
+      gapMem.gapAdvData[index++] = advData->flags;
+    }
+  if (advData->txPower < MAX_TX_POWER && advData->txPower > MIN_TX_POWER)
+    {
+      gapMem.gapAdvData[index++] = ADV_DATA_TYPE_TX_POWER_SIZE;
+      gapMem.gapAdvData[index++] = ADV_DATA_TYPE_TX_POWER;
+      gapMem.gapAdvData[index++] = (uint8_t)advData->txPower;
+    }
+  if(advData->complete32Uuid != 0)
+    {
+      gapMem.gapAdvData[index++] = ADV_DATA_TYPE_COMPLETE_32_UUIDS_SIZE;
+      gapMem.gapAdvData[index++] = ADV_DATA_TYPE_COMPLETE_32_UUIDS;
+      gapMem.gapAdvData[index++] = (uint8_t)(advData->complete32Uuid >> 0);
+      gapMem.gapAdvData[index++] = (uint8_t)(advData->complete32Uuid >> 8);
+      gapMem.gapAdvData[index++] = (uint8_t)(advData->complete32Uuid >> 16);
+      gapMem.gapAdvData[index++] = (uint8_t)(advData->complete32Uuid >> 24);
+    }
   advLen = advData->completeLocalName.advLength;
   btdbg("advlen = %d.\n", advLen);
   data = advData->completeLocalName.advData;
-  if((advLen != 0)&&(data != NULL)) {
-    gapMem.gapAdvData[index++] = advLen + 1;
-    gapMem.gapAdvData[index++] = ADV_DATA_TYPE_COMPLETE_LOCAL_NAME;
-    memcpy(&gapMem.gapAdvData[index], data, advLen);
-    index += advLen;
-  }
+  if((advLen != 0)&&(data != NULL))
+    {
+      gapMem.gapAdvData[index++] = advLen + 1;
+      gapMem.gapAdvData[index++] = ADV_DATA_TYPE_COMPLETE_LOCAL_NAME;
+      memcpy(&gapMem.gapAdvData[index], data, advLen);
+      index += advLen;
+    }
   advLen = advData->manufacturerSpecificData.advLength;
   btdbg("advlen = %d.\n", advLen);
   data = advData->manufacturerSpecificData.advData;
-  if((advLen != 0)&&(data != NULL)) {
-    gapMem.gapAdvData[index++] = advLen + 1;
-    gapMem.gapAdvData[index++] = ADV_DATA_TYPE_MANUFACTURER_SPECIFIC_DATA;
-    memcpy(&gapMem.gapAdvData[index], data, advLen);
-    index += advLen;
-  }
-  if ((advData->serviceDataCount != 0) && (advData->serviceData != NULL)) {
-    int i;
-
-    for (i = 0; i < advData->serviceDataCount; i++) {
-      BLE_GapAdvStructure *pServiceData = &(advData->serviceData[i]);
-
-      advLen = pServiceData->advLength;
-      data = pServiceData->advData;
-      if ((advLen != 0) && (data != NULL)) {
-        gapMem.gapAdvData[index++] = advLen + 1;
-        gapMem.gapAdvData[index++] = ADV_DATA_TYPE_SERVICE_DATA;
-        memcpy(&gapMem.gapAdvData[index], data, advLen);
-        index += advLen;
-      }
+  if((advLen != 0)&&(data != NULL))
+    {
+      gapMem.gapAdvData[index++] = advLen + 1;
+      gapMem.gapAdvData[index++] = ADV_DATA_TYPE_MANUFACTURER_SPECIFIC_DATA;
+      memcpy(&gapMem.gapAdvData[index], data, advLen);
+      index += advLen;
     }
-  }
+  if ((advData->serviceDataCount != 0) && (advData->serviceData != NULL))
+    {
+      int i;
+
+      for (i = 0; i < advData->serviceDataCount; i++)
+        {
+          BLE_GapAdvStructure *pServiceData = &(advData->serviceData[i]);
+
+          advLen = pServiceData->advLength;
+          data = pServiceData->advData;
+          if ((advLen != 0) && (data != NULL))
+            {
+              gapMem.gapAdvData[index++] = advLen + 1;
+              gapMem.gapAdvData[index++] = ADV_DATA_TYPE_SERVICE_DATA;
+              memcpy(&gapMem.gapAdvData[index], data, advLen);
+              index += advLen;
+            }
+        }
+    }
   size = index + 1;
   btdbg("adv size = %d.\n", size);
-  if(size > BLE_GAP_ADV_MAX_SIZE) {
-    btdbg("size > BLE_GAP_ADV_MAX_SIZE\n");
-    return -EINVAL;
-  }
+  if(size > BLE_GAP_ADV_MAX_SIZE)
+    {
+      btdbg("size > BLE_GAP_ADV_MAX_SIZE\n");
+      return -EINVAL;
+    }
 
   return bleSetAdvData(gapMem.gapAdvData, size);
 }
@@ -585,37 +411,29 @@ int BLE_GapSetSecParam(BLE_GapSecCfg *param)
   uint8_t *p = NULL;
   uint32_t pinCode = 0;
 
-  if((param == NULL) || (param->data == NULL)) {
-    return -EINVAL;
-  }
-  switch(param->type) {
-    case SEC_CFG_PASSKEY:
-      {
-        p = (uint8_t *)param->data;
-        pinCode += p[5] - '0';
-        pinCode += (p[4] - '0') * 10;
-        pinCode += (p[3] - '0') * 100;
-        pinCode += (p[2] - '0') * 1000;
-        pinCode += (p[1] - '0') * 10000;
-        pinCode += (p[0] - '0') * 100000;
-        ret = bleGapSetPinCode(pinCode);
+  if((param == NULL) || (param->data == NULL))
+    {
+      return -EINVAL;
+    }
+  switch(param->type)
+    {
+      case SEC_CFG_PASSKEY:
+        {
+          p = (uint8_t *)param->data;
+          pinCode += p[5] - '0';
+          pinCode += (p[4] - '0') * 10;
+          pinCode += (p[3] - '0') * 100;
+          pinCode += (p[2] - '0') * 1000;
+          pinCode += (p[1] - '0') * 10000;
+          pinCode += (p[0] - '0') * 100000;
+          ret = bleGapSetPinCode(pinCode);
+          break;
+        }
+
+      default:
+        ret = -EINVAL;
         break;
-      }
-    default:
-      ret = -EINVAL;
-      break;
-  }
-  return ret;
-}
-
-int BLE_GapExchangePairingFeature(BLE_GapConnHandle connHandle, BLE_GapPairingFeature *pairingFeature)
-{
-  int ret = 0;
-
-  //ret = bleGapReplySecurity(tble->addr, BLE_ENABLE, *pairingFeature);
-  if (ret) {
-    return -EINVAL;
-  }
+    }
   return ret;
 }
 
@@ -635,13 +453,15 @@ int BLE_GapConnect(BLE_GapAddr *addr)
 {
   int ret = 0;
 
-  if (!addr) {
-    return -EINVAL;
-  }
+  if (!addr)
+    {
+      return -EINVAL;
+    }
   ret = btSetPairingEnable(BLE_DISABLE);
-  if (ret != BLE_SUCCESS) {
-    return ret;
-  }
+  if (ret != BLE_SUCCESS)
+    {
+      return ret;
+    }
   return bleGapConnect(addr);
 }
 
@@ -670,51 +490,6 @@ int BLE_GapDisconnectLink(BLE_GapConnHandle connHandle)
   return bleGapDisconnect(connHandle);
 }
 
-int BLE_GapAuthenticate(BLE_GapConnHandle connHandle, BLE_GapPairingFeature *pairingFeature)
-{
-  int ret = 0;
-  //BT_TRANS_TYPE trans = TRNAS_TYPE_BLE;
-  //BT_ADDR_TYPE addrtype = ADDR_TYPE_PUBLIC;
-
-  btdbg("device role = %d\n", gapMem.deviceRole);
-
-  btdbg("connect handle = %d\n", connHandle);
-
-  memcpy(&gapPairingFeature, pairingFeature, sizeof(BLE_GapPairingFeature));
-  //ret = btStartBond(&tble->addr, trans, addrtype);
-  //uint8_t *p = (uint8_t*)&tble->addr;
-  //(void)p;
-  //btdbg("set startBond, addr = %x,%x,%x,%x,%x,%x\n", p[0], p[1], p[2], p[3], p[4], p[5]);
-  return ret;
-}
-
-int BLE_GapReplyPairingFeature(BLE_GapConnHandle connHandle)
-{
-  return 0;//bleGapReplyPairingFeature(tble->addr, BLE_ENABLE, gapPairingFeature);
-}
-
-int BLE_GapReplyAuthKey(BLE_GapAuthKey *authKey)
-{
-  uint8_t *p = NULL;
-  uint8_t i = 0;
-  p = authKey->key;
-
-  BT_REPLY_PASSKEY blePasskey;
-  for(i = 0; i < BT_ADDR_LEN; i++) {
-    blePasskey.addr.address[BT_ADDR_LEN - 1 - i] = 0x00;//tble->addr.address[i];
-  }
-  blePasskey.btAccept = BT_TRUE;
-  blePasskey.passKey += p[5] - '0';
-  blePasskey.passKey += (p[4] - '0') * 10;
-  blePasskey.passKey += (p[3] - '0') * 100;
-  blePasskey.passKey += (p[2] - '0') * 1000;
-  blePasskey.passKey += (p[1] - '0') * 10000;
-  blePasskey.passKey += (p[0] - '0') * 100000;
-  btdbg("AuthKey passkey = %d\n", blePasskey.passKey);
-
-  return btReplyPasskey(blePasskey);
-}
-
 int BLE_GapSaveBondInfo(BLE_GapBondInfo *info)
 {
   int ret = BLE_SUCCESS;
@@ -729,60 +504,75 @@ int BLE_GapSaveBondInfo(BLE_GapBondInfo *info)
   size = sizeof(bondInfo.bondNum);
   ret = BSO_GetRegistryValue(gapMem.sizeKey, (void *)&bondInfo.bondNum, size);
   btdbg("bondNum = %d\n", bondInfo.bondNum);
-  if(0 != ret) {
-    if (-ENOENT == ret) {
-      ret = BSO_SetRegistryValue(gapMem.sizeKey, (void *)&bondInfo.bondNum, size);
-      if(0 != ret) {
-        goto exit_bond_failure;
-      }
+  if(0 != ret)
+    {
+      if (-ENOENT == ret)
+        {
+          ret = BSO_SetRegistryValue(gapMem.sizeKey, (void *)&bondInfo.bondNum, size);
+          if(0 != ret)
+            {
+              goto exit_bond_failure;
+            }
+        }
+      else
+        {
+          goto exit_bond_failure;
+        }
     }
-    else {
+  if(FLASH_DEFAULT_VALUE == bondInfo.bondNum)
+    {
+      bondInfo.bondNum = 0;
+    }
+  if(BLE_SAVE_BOND_DEVICE_MAX_NUM <= bondInfo.bondNum)
+    {
+      ret = ENOMEM;
       goto exit_bond_failure;
     }
-  }
-  if(FLASH_DEFAULT_VALUE == bondInfo.bondNum) {
-    bondInfo.bondNum = 0;
-  }
-  if(BLE_SAVE_BOND_DEVICE_MAX_NUM <= bondInfo.bondNum) {
-    ret = ENOMEM;
-    goto exit_bond_failure;
-  }
-  if(0 != bondInfo.bondNum) {
-    ret = BSO_GetRegistryValue(gapMem.infoKey, (void *)bondInfo.bondInfoId, bondInfoSize);
-    if(0 != ret) {
-      if (-ENOENT == ret) {
-        ret = 0;
-      }
-      else {
-        goto exit_bond_failure;
-      }
+  if(0 != bondInfo.bondNum)
+    {
+      ret = BSO_GetRegistryValue(gapMem.infoKey, (void *)bondInfo.bondInfoId, bondInfoSize);
+      if(0 != ret)
+        {
+          if (-ENOENT == ret)
+            {
+              ret = 0;
+            }
+          else
+            {
+              goto exit_bond_failure;
+            }
+        }
+      for(index = 0; index < bondInfo.bondNum; index++)
+        {
+          if(!memcmp(bondInfo.bondInfoId[index], info->addr, BLE_GAP_ADDR_LENGTH))
+            {
+              goto start_bonding;
+            }
+        }
     }
-    for(index = 0; index < bondInfo.bondNum; index++) {
-      if(!memcmp(bondInfo.bondInfoId[index], info->addr, BLE_GAP_ADDR_LENGTH)) {
-        goto start_bonding;
-      }
-    }
-  }
   memcpy(bondInfo.bondInfoId[bondInfo.bondNum], info->addr, BLE_GAP_ADDR_LENGTH);
   memcpy(bondInfo.didInfo[bondInfo.bondNum], &gapMem.btDidInfo, BT_DID_INFO_LEN);
   bondInfo.bondNum++;
   ret = BSO_SetRegistryValue(gapMem.infoKey, (const void*)bondInfo.bondInfoId, bondInfoSize);
-  if(0 != ret) {
-    goto exit_bond_failure;
-  }
+  if(0 != ret)
+    {
+      goto exit_bond_failure;
+    }
   btdbg("bond infomation success\n");
   size = sizeof(bondInfo.bondNum);
   ret = BSO_SetRegistryValue(gapMem.sizeKey, (const void*)&bondInfo.bondNum, size);
-  if(0 != ret) {
-    goto exit_bond_failure;
-  }
+  if(0 != ret)
+    {
+      goto exit_bond_failure;
+    }
   btdbg("bond num success\n");
 start_bonding:
   saveHandle = generateSaveHandle(info);
   ret = BSO_SetRegistryValue(saveHandle, (const void*)&gapMem.wrapperBondInfo, sizeof(bleGapWrapperBondInfo));
-  if(0 != ret) {
-    goto exit_bond_failure;
-  }
+  if(0 != ret)
+    {
+      goto exit_bond_failure;
+    }
   btdbg("bond complete information success\n");
 exit_bond_failure:
   return ret;
@@ -802,57 +592,68 @@ int BLE_GapClearBondInfo(BLE_GapBondInfo *info)
   generateKey();
   size = sizeof(bondInfo.bondNum);
   ret = BSO_GetRegistryValue(gapMem.sizeKey, (void *)&bondInfo.bondNum, size);
-  if(0 != ret) {
-    goto exit_clear_failure;
-  }
-  if(0 == bondInfo.bondNum) {
-    ret = -ENOENT;
-    goto exit_clear_failure;
-  }
+  if(0 != ret)
+    {
+      goto exit_clear_failure;
+    }
+  if(0 == bondInfo.bondNum)
+    {
+      ret = -ENOENT;
+      goto exit_clear_failure;
+    }
   btdbg("bond num = %d\n", bondInfo.bondNum);
   ret = BSO_GetRegistryValue(gapMem.infoKey, (void *)bondInfo.bondInfoId, bondInfoSize);
-  if(0 != ret) {
-    goto exit_clear_failure;
-  }
-  for(index = 0; index < bondInfo.bondNum; index++) {
-    if(!memcmp(bondInfo.bondInfoId[index], info->addr, BLE_GAP_ADDR_LENGTH)) {
-      btdbg("Find bond address\n");
-      goto start_clear_bond_info;
+  if(0 != ret)
+    {
+      goto exit_clear_failure;
     }
-  }
+  for(index = 0; index < bondInfo.bondNum; index++)
+    {
+      if(!memcmp(bondInfo.bondInfoId[index], info->addr, BLE_GAP_ADDR_LENGTH))
+        {
+          btdbg("Find bond address\n");
+          goto start_clear_bond_info;
+        }
+    }
   ret = -ENOENT;
   goto exit_clear_failure;
 start_clear_bond_info:
   saveHandle = generateSaveHandle(info);
   memset(&gapMem.wrapperBondInfo, 0x00, sizeof(bleGapWrapperBondInfo));
   ret = BSO_GetRegistryValue(saveHandle, (void*)&gapMem.wrapperBondInfo, sizeof(bleGapWrapperBondInfo));
-  if(0 != ret) {
-    goto exit_clear_failure;
-  }
+  if(0 != ret)
+    {
+      goto exit_clear_failure;
+    }
   memcpy(&nvDataId, gapMem.wrapperBondInfo.bondData, sizeof(nvDataId));
   ret = bleDeleteNvData(nvDataId);
-  if(0 != ret) {
-    goto exit_clear_failure;
-  }
+  if(0 != ret)
+    {
+      goto exit_clear_failure;
+    }
   ret = BSO_DeleteRegistryKey(saveHandle);
-  if(0 != ret) {
-    goto exit_clear_failure;
-  }
-  while(index < bondInfo.bondNum - 1) {
-    memcpy(bondInfo.bondInfoId[index], bondInfo.bondInfoId[index + 1], BLE_GAP_ADDR_LENGTH);
-    memcpy(bondInfo.didInfo[index], bondInfo.didInfo[index + 1], BT_DID_INFO_LEN);
-    index++;
-  }
+  if(0 != ret)
+    {
+      goto exit_clear_failure;
+    }
+  while(index < bondInfo.bondNum - 1)
+    {
+      memcpy(bondInfo.bondInfoId[index], bondInfo.bondInfoId[index + 1], BLE_GAP_ADDR_LENGTH);
+      memcpy(bondInfo.didInfo[index], bondInfo.didInfo[index + 1], BT_DID_INFO_LEN);
+      index++;
+    }
   ret = BSO_SetRegistryValue(gapMem.infoKey, (const void*)bondInfo.bondInfoId, bondInfoSize);
-  if(0 != ret) {
-    goto exit_clear_failure;
-  }
+  if(0 != ret)
+    {
+      goto exit_clear_failure;
+    }
   bondInfo.bondNum--;
   size = sizeof(bondInfo.bondNum);
   ret = BSO_SetRegistryValue(gapMem.sizeKey, (const void*)&bondInfo.bondNum, size);
-  if(0 != ret) {
-    goto exit_clear_failure;
-  }
+  if(0 != ret)
+    {
+      goto exit_clear_failure;
+    }
 exit_clear_failure:
   return ret;
 }
@@ -867,47 +668,56 @@ int BLE_GapGetBondInfoIdList(BLE_GapBondInfoList *bondInfo)
   uint16_t bondInfoSize = 0;
 
   bondInfoSize = (BLE_GAP_ADDR_LENGTH + BT_DID_INFO_LEN) * BT_SAVE_BOND_DEVICE_MAX_NUM;
-  if (bondInfo == NULL) {
-    return -EINVAL;
-  }
+  if (bondInfo == NULL)
+    {
+      return -EINVAL;
+    }
   memset(bondInfo, 0, sizeof(BLE_GapBondInfoList));
   generateKey();
   size = sizeof(bondInfo->bondNum);
   ret = BSO_GetRegistryValue(gapMem.sizeKey, (void *)&bondInfo->bondNum, size);
-  if(0 != ret) {
-    if (-ENOENT == ret) {
+  if(0 != ret)
+    {
+      if (-ENOENT == ret)
+        {
+          bondInfo->bondNum = 0;
+          ret = 0;
+          return ret;
+        }
+      else
+        {
+          return -ENOENT;
+        }
+    }
+  if (bondInfo->bondNum == 0)
+    {
+      return 0;
+    }
+  if(FLASH_DEFAULT_VALUE == bondInfo->bondNum)
+    {
       bondInfo->bondNum = 0;
-      ret = 0;
-      return ret;
+      return 0;
     }
-    else {
-      return -ENOENT;
+  if(BLE_SAVE_BOND_DEVICE_MAX_NUM < bondInfo->bondNum)
+    {
+      bondInfo->bondNum = BLE_SAVE_BOND_DEVICE_MAX_NUM;
     }
-  }
-  if (bondInfo->bondNum == 0) {
-    return 0;
-  }
-  if(FLASH_DEFAULT_VALUE == bondInfo->bondNum) {
-    bondInfo->bondNum = 0;
-    return 0;
-  }
-  if(BLE_SAVE_BOND_DEVICE_MAX_NUM < bondInfo->bondNum) {
-    bondInfo->bondNum = BLE_SAVE_BOND_DEVICE_MAX_NUM;
-  }
   infoList.bondNum = bondInfo->bondNum;
   ret = BSO_GetRegistryValue(gapMem.infoKey, (void *)infoList.bondInfoId, bondInfoSize);
-  if(0 != ret) {
-    bondInfo->bondNum = 0;
-    BSO_SetRegistryValue(gapMem.sizeKey, (const void*)&bondInfo->bondNum, sizeof(bondInfo->bondNum));
-    return ret;
-  }
+  if(0 != ret)
+    {
+      bondInfo->bondNum = 0;
+      BSO_SetRegistryValue(gapMem.sizeKey, (const void*)&bondInfo->bondNum, sizeof(bondInfo->bondNum));
+      return ret;
+    }
   memcpy(bondInfo, &infoList, sizeof(BLE_GapBondInfoList));
 
   bondNum = bondInfo->bondNum;
-  for(index = 0; index < bondNum; index++) {
-    memcpy(bondInfo->bondInfoId[index], infoList.bondInfoId[bondNum - 1 - index], BLE_GAP_ADDR_LENGTH);
-    memcpy(bondInfo->didInfo[index], infoList.didInfo[bondNum - 1 - index], BLE_GAP_ADDR_LENGTH);
-  }
+  for(index = 0; index < bondNum; index++)
+    {
+      memcpy(bondInfo->bondInfoId[index], infoList.bondInfoId[bondNum - 1 - index], BLE_GAP_ADDR_LENGTH);
+      memcpy(bondInfo->didInfo[index], infoList.didInfo[bondNum - 1 - index], BLE_GAP_ADDR_LENGTH);
+    }
   return ret;
 }
 
@@ -919,8 +729,9 @@ int BLE_GapEncrypt(BLE_GapConnHandle connHandle)
 
 int BLE_GapUpdateConnectionParams(BLE_GapConnHandle connHandle, BLE_GapConnParams *connParams)
 {
-   if (!connParams) {
-       return -EINVAL;
-   }
+  if (!connParams)
+    {
+      return -EINVAL;
+    }
    return bleGapSetConnectPara(connHandle, connParams);
 }
