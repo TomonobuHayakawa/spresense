@@ -293,7 +293,7 @@ bool ble_gatt_is_supported(void);
  * @retval error code
  */
 
-int ble_create_service(struct ble_gatt_service_s *service);
+int ble_create_service(struct ble_gatt_service_s **service);
 
 /**
  * @brief BLE Register GATT Service

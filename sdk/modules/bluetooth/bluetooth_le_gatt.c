@@ -252,11 +252,11 @@ bool ble_gatt_is_supported(void)
  *
  ****************************************************************************/
 
-int ble_create_service(struct ble_gatt_service_s *service)
+int ble_create_service(struct ble_gatt_service_s **service)
 {
   if (g_ble_gatt_state.num < BLE_MAX_SERVICES)
     {
-      service = &g_ble_gatt_state.services[g_ble_gatt_state.num];
+      *service = &g_ble_gatt_state.services[g_ble_gatt_state.num];
       g_ble_gatt_state.num ++;
     }
   else
