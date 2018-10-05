@@ -3052,7 +3052,9 @@ static int isx012_refresh(void)
 
   if (priv->state != STATE_ISX012_ACTIVE)
     {
-      return -EPERM;
+      /* In inactive state, setting is reflected in activated timing */
+
+      return OK;
     }
 
   if (priv->mode != REGVAL_MODESEL_MON)
