@@ -216,7 +216,8 @@ static int32_t getaddrinfo_request(FAR struct getaddrinfo_req_s* req)
          ai->ai_canonname = NULL;
          if (cname_len != 0)
            {
-             cname = (FAR char*)((FAR uint8_t*)ss + cname_len);
+             cname = (FAR char*)((FAR uint8_t*)ss +
+                                 sizeof(struct altcom_sockaddr_storage));
              memcpy(cname, res->ai[i].ai_canonname, cname_len);
              ai->ai_canonname = cname;
            }
