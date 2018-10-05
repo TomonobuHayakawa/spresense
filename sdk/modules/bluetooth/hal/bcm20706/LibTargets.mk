@@ -1,5 +1,5 @@
 ############################################################################
-# modules/bluetooth/LibTargets.mk
+# modules/bluetooth/hal/bcm20707/LibTargets.mk
 #
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
@@ -43,19 +43,16 @@
 #                If you want to do prepare for build, add it and write context target in the Makefile.
 # 
 
-ifeq ($(CONFIG_BLUETOOTH),y)
-SDKLIBS += lib$(DELIM)libbluetooth$(LIBEXT)
-SDKMODDIRS += modules$(DELIM)bluetooth
-#CONTEXTDIRS += modules$(DELIM)bluetooth
+ifeq ($(CONFIG_BCM20706),y)
+SDKLIBS += lib$(DELIM)libbcm20706$(LIBEXT)
+SDKMODDIRS += modules$(DELIM)bluetooth$(DELIM)hal$(DELIM)bcm20706
 endif
-SDKCLEANDIRS += modules$(DELIM)bluetooth
+SDKCLEANDIRS += modules$(DELIM)bluetooth$(DELIM)hal$(DELIM)bcm20706
 
 # Below 2 rules are mandatory, replace all of 'bluetooth' to your library name or directory.
 
-modules$(DELIM)bluetooth$(DELIM)libbluetooth$(LIBEXT): context
-	$(Q) $(MAKE) -C modules$(DELIM)bluetooth TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libbluetooth$(LIBEXT)
+modules$(DELIM)bluetooth$(DELIM)hal$(DELIM)bcm20706$(DELIM)libbcm20706$(LIBEXT): context
+	$(Q) $(MAKE) -C modules$(DELIM)bluetooth$(DELIM)hal$(DELIM)bcm20706 TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libbcm20706$(LIBEXT)
 
-lib$(DELIM)libbluetooth$(LIBEXT): modules$(DELIM)bluetooth$(DELIM)libbluetooth$(LIBEXT)
+lib$(DELIM)libbcm20706$(LIBEXT): modules$(DELIM)bluetooth$(DELIM)hal$(DELIM)bcm20706$(DELIM)libbcm20706$(LIBEXT)
 	$(Q) install $< $@
-
-include $(wildcard modules/bluetooth/hal/*/LibTargets.mk)

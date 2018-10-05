@@ -20,4 +20,7 @@ config BLUETOOTH_A2DP_USE_THREAD
 	---help---
 		This option is for use thread while transfering media packet to application.
 endif
+
+source modules/bluetooth/hal/Kconfig
 endmenu
+

@@ -76,6 +76,14 @@
 #define BLE_MAX_CHAR_SIZE 20
 /** @} */
 
+
+/**
+ *@name Invalid service handle ID
+ *@{
+ */
+#define BLE_GATT_INVALID_SERVICE_HANDLE UINT16_MAX
+/** @} */
+
 /****************************************************************************
  * Public Types prototype
  ****************************************************************************/

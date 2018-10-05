@@ -54,6 +54,7 @@
 #include <bluetooth/bt_a2dp_codecs.h>
 #include <bluetooth/bt_avrcp_cmds.h>
 #include <bluetooth/bt_hfp_features.h>
+#include <bluetooth/ble_gatt.h>
 #include <bluetooth/ble_params.h>
 #include <bluetooth/hal/bt_event.h>
 

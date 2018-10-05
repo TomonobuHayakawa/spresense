@@ -106,7 +106,7 @@ static void bondInfo(BT_ADDR addr)
    * Print new bonding information.
    */
 
-  printf("[BT_SPP] Bonding information ADDR:%02X:02X:02X:02X:02X:02X\n",
+  printf("[BT_SPP] Bonding information ADDR:%02X:%02X:%02X:%02X:%02X:%02X\n",
           addr.address[0], addr.address[1], addr.address[2],
           addr.address[3], addr.address[4], addr.address[5]);
 }

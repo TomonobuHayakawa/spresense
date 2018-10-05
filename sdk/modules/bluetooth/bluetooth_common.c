@@ -41,6 +41,8 @@
 #include <bluetooth/bt_common.h>
 #include <bluetooth/hal/bt_if.h>
 
+#include "bluetooth_hal_init.h"
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -259,14 +261,27 @@ static int ble_event_connect_dev_name(struct ble_event_dev_name_t *dev_name_evt)
  * Name: bt_init
  *
  * Description:
- *   Initialize BT module(File system, Pin config, UART config, etc).
+ *   Initialize BT module(HAL, File system, Pin config, UART config, etc).
  *
  ****************************************************************************/
 
 int bt_init(void)
 {
   int ret = BT_SUCCESS;
-  struct bt_hal_common_ops_s *bt_hal_common_ops = g_bt_common_state.bt_hal_common_ops;
+  struct bt_hal_common_ops_s *bt_hal_common_ops;
+
+  /* Initialize HAL module */
+
+  ret = bt_hal_init();
+  if (ret != BT_SUCCESS)
+    {
+      _err("%s [BT][Common] Initialization failed(HAL initialize failed).\n", __func__);
+      return ret;
+    }
+
+  /* Pick HAL callbacks */
+
+  bt_hal_common_ops = g_bt_common_state.bt_hal_common_ops;
 
   if (bt_hal_common_ops && bt_hal_common_ops->init)
     {

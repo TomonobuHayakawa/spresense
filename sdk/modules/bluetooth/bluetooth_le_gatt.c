@@ -63,29 +63,52 @@ static struct ble_gatt_char_s *ble_search_characteristic(uint16_t serv_handle, u
 {
   struct ble_gatt_service_s *ble_gatt_service;
   struct ble_gatt_char_s *ble_gatt_char = NULL;
-  int n;
+  int n, m;
 
-  /* Seach service from GATT context */
-
-  for (n = 0; n < g_ble_gatt_state.num; n ++)
+  if (serv_handle != BLE_GATT_INVALID_SERVICE_HANDLE)
     {
-      if (g_ble_gatt_state.services[n].handle == serv_handle)
+      /* If HAL return Service handle ID */
+
+      /* Seach service from GATT context */
+
+      for (n = 0; n < g_ble_gatt_state.num; n ++)
         {
-          ble_gatt_service = &g_ble_gatt_state.services[n];
-          break;
+          if (g_ble_gatt_state.services[n].handle == serv_handle)
+            {
+              ble_gatt_service = &g_ble_gatt_state.services[n];
+              break;
+            }
+        }
+
+      if (ble_gatt_service)
+        {
+          /*Search characteristic from service */
+
+          for (n = 0; n < ble_gatt_service->num; n ++)
+            {
+              if (ble_gatt_service->chars[n]->handle == char_handle)
+                {
+                  ble_gatt_char = ble_gatt_service->chars[n];
+                  break;
+                }
+            }
         }
     }
-
-  if (ble_gatt_service)
+  else
     {
-      /*Search characteristic from service */
+      /* If HAL not return Service handle ID */
 
-      for (n = 0; n < ble_gatt_service->num; n ++)
+      for (m = 0; m < g_ble_gatt_state.num; m++)
         {
-          if (ble_gatt_service->chars[n]->handle == char_handle)
+          ble_gatt_service = &g_ble_gatt_state.services[m];
+
+          for (n = 0; n < ble_gatt_service->num; n ++)
             {
-              ble_gatt_char = ble_gatt_service->chars[n];
-              break;
+              if (ble_gatt_service->chars[n]->handle == char_handle)
+                {
+                  ble_gatt_char = ble_gatt_service->chars[n];
+                  break;
+                }
             }
         }
     }
