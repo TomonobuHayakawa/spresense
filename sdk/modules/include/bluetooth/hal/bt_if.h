@@ -89,7 +89,7 @@ struct bt_hal_common_ops_s
  */
 struct bt_hal_a2dp_ops_s
 {
-  int (*connect)(BT_ADDR *addr, bool connect, uint16_t handle); /**< Connect/Disconnect A2DP by BT_ADDR */
+  int (*connect)(BT_ADDR *addr, uint16_t handle, bool connect); /**< Connect/Disconnect A2DP by BT_ADDR */
   int (*aacEnable)(bool enable);                                /**< Enable/Disable AAC */
   int (*vendorCodecEnable)(bool enable);                        /**< Enable/Disable vendor codec */
   int (*set_codec)(BT_AUDIO_CODEC_INFO *codec_info);            /**< Set codec parameters */
@@ -101,8 +101,8 @@ struct bt_hal_a2dp_ops_s
  */
 struct bt_hal_avrcp_ops_s
 {
-  int (*avrcc_connect)(BT_ADDR *addr, bool connect, uint16_t handle);                            /**< Connect/Disconnect AVRCP controller by BT_ADDR */
-  int (*avrct_connect)(BT_ADDR *addr, bool connect, uint16_t handle);                            /**< Connect/Disconnect AVRCP target by BT_ADDR */
+  int (*avrcc_connect)(BT_ADDR *addr, uint16_t handle, bool connect);                            /**< Connect/Disconnect AVRCP controller by BT_ADDR */
+  int (*avrct_connect)(BT_ADDR *addr, uint16_t handle, bool connect);                            /**< Connect/Disconnect AVRCP target by BT_ADDR */
   int (*send_avrcp_command)(BT_ADDR *addr, BT_AVRCP_CMD_ID cmd_id, bool press, uint16_t handle); /**< Send AVRCP command @ref BT_AVRCP_CMD_ID */
   int (*configure_notification)(BT_AVRC_SUPPORT_NOTIFY_EVENT *notification_list);                /**< Configure notification event @ref BT_AVRC_SUPPORT_NOTIFY_EVENT */
 };
@@ -113,8 +113,8 @@ struct bt_hal_avrcp_ops_s
  */
 struct bt_hal_hfp_ops_s
 {
-  int (*connect)(BT_ADDR *addr, bool connect, uint16_t handle);         /**< Connect/Disconnect HFP by BT_ADDR */
-  int (*audio_connect)(BT_ADDR *addr, bool connect, uint16_t handle);   /**< Connect/Disconnect HFP audio by BT_ADDR */
+  int (*connect)(BT_ADDR *addr, uint16_t handle, bool connect);         /**< Connect/Disconnect HFP by BT_ADDR */
+  int (*audio_connect)(BT_ADDR *addr, uint16_t handle, bool connect);   /**< Connect/Disconnect HFP audio by BT_ADDR */
   int (*set_hf_feature)(BT_HFP_HF_FEATURE_FLAG hf_heature);             /**< Setup HFP HF feature @ref BT_HFP_HF_FEATURE_FLAG */
   int (*send_at_command)(BT_ADDR *addr, char *at_str, uint16_t handle); /**< Send AT comand */
 };
@@ -125,7 +125,7 @@ struct bt_hal_hfp_ops_s
  */
 struct bt_hal_spp_ops_s
 {
-  int (*connect)(BT_ADDR *addr, bool connect, uint16_t handle);              /**< Connect/Disconnect SPP by BT_ADDR */
+  int (*connect)(BT_ADDR *addr, uint16_t handle, bool connect);              /**< Connect/Disconnect SPP by BT_ADDR */
   int (*setUuid)(BT_UUID *uuid);                                             /**< Setup UUID @ref BT_UUID */
   int (*sendTxData)(BT_ADDR *addr, uint8_t *data, int len, uint16_t handle); /**< Send SPP Tx data */
 };
