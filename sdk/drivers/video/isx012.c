@@ -2518,7 +2518,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                                 FAR struct v4l2_ext_control *control)
 {
   FAR struct isx012_dev_s *priv = &g_isx012_private;
-  int       ret;
+  int       ret = -EINVAL;
   uint8_t   cnt;
   uint8_t   *write_src;
   uint16_t  write_dst;
@@ -2828,13 +2828,14 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                 {
                   if (g_isx012_supported_colorfx[cnt].v4l2 == control->value)
                     {
+                      ret = OK;
                       break;
                     } 
                 }
 
-              if (cnt > ISX012_MAX_COLOREFFECT)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               ret = isx012_putreg(priv,
@@ -2898,13 +2899,14 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                   if (g_isx012_supported_iso[cnt].v4l2
                        == control->value)
                     {
+                      ret = OK;
                       break;
                     }
                 }
 
-              if (cnt > ISX012_MAX_ISO)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               ret = isx012_putreg(priv,
@@ -2940,13 +2942,14 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                   if (g_isx012_supported_photometry[cnt].v4l2
                        == control->value)
                     {
+                      ret = OK;
                       break;
                     }
                 }
 
-              if (cnt > ISX012_MAX_PHOTOMETRY)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               ret = isx012_putreg(priv,
@@ -2961,13 +2964,14 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                 {
                   if (g_isx012_supported_presetwb[cnt].v4l2 == control->value)
                     {
+                      ret = OK;
                       break;
                     }
                 }
 
-              if (cnt > ISX012_MAX_PRESETWB)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               ret = isx012_putreg(priv,
