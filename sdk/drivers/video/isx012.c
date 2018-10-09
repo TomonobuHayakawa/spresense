@@ -332,6 +332,7 @@ static const isx012_reg_t g_isx012_def_init[] = {
   {AESPEED_FAST,      0x0F, 0x01},
   {FASTMOVE_TIMEOUT,  0x2D, 0x01},
   {YGAMMA_MODE,       0x01, 0x01},
+  {INT_QLTY2,         0x50, 0x01},
 };
 #define ISX012_RESET_NENTRIES ARRAY_NENTRIES(g_isx012_def_init)
 
