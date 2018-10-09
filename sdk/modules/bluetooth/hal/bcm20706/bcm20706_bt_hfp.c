@@ -113,7 +113,7 @@ static int btHfSetSupportedFeature(uint32_t *btHfFeature)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_hfp_connect(BT_ADDR *addr, bool connect)
+static int bcm20706_bt_hfp_connect(BT_ADDR *addr, bool connect, uint16_t handle)
 {
   int ret = BT_SUCCESS;
 
@@ -127,7 +127,7 @@ static int bcm20706_bt_hfp_connect(BT_ADDR *addr, bool connect)
     {
       /* Disconnect */
 
-      ret = btHfDisconnect(0);
+      ret = btHfDisconnect(handle);
     }
 
   return ret;
@@ -143,7 +143,7 @@ static int bcm20706_bt_hfp_connect(BT_ADDR *addr, bool connect)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_hfp_audio_connect(BT_ADDR *addr, bool connect)
+static int bcm20706_bt_hfp_audio_connect(BT_ADDR *addr, uint16_t handle, bool connect)
 {
   int ret = BT_SUCCESS;
 
@@ -151,13 +151,13 @@ static int bcm20706_bt_hfp_audio_connect(BT_ADDR *addr, bool connect)
     {
       /* Connect */
 
-      ret = btHfConnectAudio(0);
+      ret = btHfConnectAudio(handle);
     }
   else
     {
       /* Disconnect */
 
-      ret = btHfDisconnectAudio(0);
+      ret = btHfDisconnectAudio(handle);
     }
 
   return ret;
@@ -194,7 +194,7 @@ static int bcm20706_bt_hfp_hf_feature(BT_HFP_HF_FEATURE_FLAG hf_heature)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_hfp_send_at_command(BT_ADDR *addr, char *at_str)
+static int bcm20706_bt_hfp_send_at_command(BT_ADDR *addr, char *at_str, uint16_t handle)
 {
   int ret = BT_SUCCESS;
 

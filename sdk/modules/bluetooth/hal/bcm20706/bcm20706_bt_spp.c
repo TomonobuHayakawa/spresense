@@ -104,7 +104,7 @@ static int sppSendData(uint16_t handle,uint8_t *data,uint16_t len)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_spp_connect(BT_ADDR *addr, bool connect)
+static int bcm20706_bt_spp_connect(BT_ADDR *addr, uint16_t handle, bool connect)
 {
   int ret = BT_SUCCESS;
 
@@ -118,7 +118,7 @@ static int bcm20706_bt_spp_connect(BT_ADDR *addr, bool connect)
     {
       /* Disconnect */
 
-      ret = btSppDisconnect(0);
+      ret = btSppDisconnect(handle);
     }
 
   return ret;
@@ -160,11 +160,11 @@ static int bcm20706_bt_spp_set_uuid(BT_UUID *uuid)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_spp_send_tx_data(BT_ADDR *addr, uint8_t *data, int len)
+static int bcm20706_bt_spp_send_tx_data(BT_ADDR *addr, uint8_t *data, int len, uint16_t handle)
 {
   int ret = BT_SUCCESS;
 
-  ret = sppSendData(0, data, len);
+  ret = sppSendData(handle, data, len);
 
   return ret;
 }

@@ -101,7 +101,7 @@ static int btAvrcTargetDisconnect(void)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_avrcp_controller_connect(BT_ADDR *addr, bool connect)
+static int bcm20706_bt_avrcp_controller_connect(BT_ADDR *addr, bool connect, uint16_t handle)
 {
   int ret = BT_SUCCESS;
 
@@ -115,7 +115,7 @@ static int bcm20706_bt_avrcp_controller_connect(BT_ADDR *addr, bool connect)
     {
       /* Disconnect */
 
-      ret = btAvrcControllerDisconnect(0);
+      ret = btAvrcControllerDisconnect(handle);
     }
 
   return ret;
@@ -130,7 +130,7 @@ static int bcm20706_bt_avrcp_controller_connect(BT_ADDR *addr, bool connect)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_avrcp_target_connect(BT_ADDR *addr, bool connect)
+static int bcm20706_bt_avrcp_target_connect(BT_ADDR *addr, uint16_t handle, bool connect)
 {
   int ret = BT_SUCCESS;
 
@@ -159,7 +159,7 @@ static int bcm20706_bt_avrcp_target_connect(BT_ADDR *addr, bool connect)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_avrcp_send_avrcp_command(BT_ADDR *addr, BT_AVRCP_CMD_ID cmd_id, bool press)
+static int bcm20706_bt_avrcp_send_avrcp_command(BT_ADDR *addr, BT_AVRCP_CMD_ID cmd_id, bool press, uint16_t handle)
 {
   int ret = BT_SUCCESS;
 
