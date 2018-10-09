@@ -448,7 +448,7 @@ int ble_peripheral_main(int argc, char *argv[])
 
   /* BLE start advertise */
 
-  ret = bt_start_advertise();
+  ret = ble_start_advertise();
   if (ret != BT_SUCCESS)
     {
       printf("%s [BLE] Start advertise failed. ret = %d\n", __func__, ret);
