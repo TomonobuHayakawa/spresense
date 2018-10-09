@@ -121,6 +121,7 @@ int stubsock_accept(FAR struct socket *psock, FAR struct sockaddr *addr,
   socklen_t                       output_addrlen;
   struct sockaddr_in6             tmpaddr;
   struct altcom_sockaddr_storage  storage;
+  int                             val = 0;
 
   DBGIF_ASSERT(conn, "conn == NULL\n");
 
@@ -149,6 +150,16 @@ int stubsock_accept(FAR struct socket *psock, FAR struct sockaddr *addr,
   memset(&tmpaddr, 0, sizeof(struct sockaddr_in6));
 
   sockfd = conn->stubsockid;
+
+  if (_SS_ISNONBLOCK(psock->s_flags))
+    {
+      val |= ALTCOM_O_NONBLOCK;
+    }
+
+  /* Whether it is blocking or not,
+   * change the behavior of sokcet with fcntl */
+
+  altcom_fcntl(sockfd, ALTCOM_SETFL, val);
 
   newsockfd = altcom_accept(sockfd, (FAR struct altcom_sockaddr*)&storage,
                             &altcom_addrlen);
