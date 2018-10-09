@@ -117,6 +117,16 @@ static void btRecvDeviceStatus(uint8_t *p, uint16_t len, int group)
     }
 }
 
+static void btSaveBondInfo(BT_ADDR *addr)
+{
+  BLE_GapBondInfo info = {0};
+
+  info.addrType = 0; /* Only use in BLE */
+  memcpy(info.addr, addr, BT_ADDR_LEN);
+
+  BLE_GapSaveBondInfo(&info);
+}
+
 static void btRecvBondInfo(uint8_t *p, uint16_t len)
 {
   uint8_t *rp = NULL;
@@ -129,13 +139,15 @@ static void btRecvBondInfo(uint8_t *p, uint16_t len)
   bond_info_evt.group_id = BT_GROUP_COMMON;
   bond_info_evt.event_id = BT_COMMON_EVENT_BOND_INFO;
 
+  /* Save bonding information to filesystem */
+  btSaveBondInfo(&bond_info_evt.addr);
+
   bt_common_event_handler((struct bt_event_t *) &bond_info_evt);
 }
 
 static void recevNvramData(uint8_t evtCode, uint8_t *p, uint16_t len)
 {
   uint8_t *wp = NULL;
-  BLE_Evt *bleEvent = &((BLE_EvtCtx*)appEvtBuff)->evt;
   ble_evt_t *pBleBcmEvt = (ble_evt_t*)p;
   wp = appEvtBuff;
   UINT16_TO_STREAM(wp,(BT_CONTROL_GROUP_DEVICE<< 8) | evtCode);
@@ -147,14 +159,14 @@ static void recevNvramData(uint8_t evtCode, uint8_t *p, uint16_t len)
           %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n",
           p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16], p[17], p[18],
           p[19], p[20], p[21], p[22], p[23], p[24]);
-      bleRecvNvramData(bleEvent, pBleBcmEvt, len);
+      bleRecvNvramData(pBleBcmEvt, len);
       btdbg("receive NV data.\n");
       btRecvBondInfo(p, len);
       btdbg("receive bond information.\n");
     }
   else if (p[len - 1] == BT_TRANSPORT_LE)
     {
-      bleRecvNvramData(bleEvent, pBleBcmEvt, len);
+      bleRecvNvramData(pBleBcmEvt, len);
       btdbg("BLE ltk = %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, \
           %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n",
           p[52], p[53], p[54], p[55], p[56], p[57], p[58], p[59], p[60], p[61],
@@ -198,6 +210,7 @@ static void btRecvInquiryComplete(uint8_t *p, uint16_t len)
 static void pairingComplete(uint8_t evtCode, uint8_t *p)
 {
   struct bt_event_pair_cmplt_t pair_cmplt_evt;
+  ble_evt_t *pBleBcmEvt = (ble_evt_t*)p;
 
   btdbg("pair complete,status = %x, addr = %x,%x, %x, %x, %x, %x, transport = %x\n",
       p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
@@ -208,17 +221,10 @@ static void pairingComplete(uint8_t evtCode, uint8_t *p)
       p += sizeof(uint8_t);
       STREAM_TO_BDADDR(&pair_cmplt_evt.addr, p);
     }
-  /* Will support in future */
-#if 0
   else if (((pair_result_t*)p)->transport == BT_TRANSPORT_LE)
     {
-      btChangePairStatus((uint8_t*)bleEvent);
-      bleRecvAuthStatus(bleEvent, pBleBcmEvt);
-      if (tcb && tcb->bleEvtCb) {
-        tcb->bleEvtCb((BLE_EvtCtx*)appEvtBuff);
-      }
+      bleRecvAuthStatus(pBleBcmEvt);
     }
-#endif
 
   pair_cmplt_evt.group_id = BT_GROUP_COMMON;
   pair_cmplt_evt.event_id = BT_COMMON_EVENT_PAIRING_COMPLETE;
@@ -323,6 +329,28 @@ static void btRecvAclConnStatus(uint8_t *p, uint16_t len)
     connect, type, reason);
 
   bt_common_event_handler((struct bt_event_t *) &con_stat_evt);
+}
+
+static void bleRecvSecurityRequest(BLE_Evt *pBleEvent, ble_evt_t *pBleBcmEvt)
+{
+  uint8_t *rp     = pBleBcmEvt->evtData;
+  BT_ADDR bleAddr = {{0}};
+  BLE_GapPairingFeature pfeature;
+
+  /* Setup security feature */
+
+  pfeature.oob        = BLE_GAP_OOB_AUTH_DATA_NOT_PRESENT;
+  pfeature.ioCap      = BLE_GAP_IO_CAP_NO_INPUT_NO_OUTPUT;
+  pfeature.authReq    = BLE_GAP_AUTH_REQ_NO_MITM_BOND;
+  pfeature.minKeySize = BLE_GAP_MIN_KEY_SIZE;
+  pfeature.maxKeySize = BLE_GAP_MAX_KEY_SIZE;
+
+  btdbg("notify addr = %x,%x,%x,%x,%x,%x\n",rp[0],rp[1],rp[2],rp[3],rp[4],rp[5]);
+  memcpy(&bleAddr, rp, BT_ADDR_LEN);
+
+  /* Reply security feature */
+
+  bleGapReplySecurity(bleAddr, BLE_ENABLE, pfeature);
 }
 
 static void btRecvSppEvtConnected(uint8_t *p)
@@ -446,6 +474,9 @@ static void btRecvDeviceControlPacket(uint8_t evtCode, uint8_t *p,
     uint16_t len)
 {
   uint8_t *wp = NULL;
+  BLE_Evt *bleEvent = &(((BLE_EvtCtx*)appEvtBuff)->evt);
+  ble_evt_t *pBleBcmEvt = (ble_evt_t*)p;
+
   wp = appEvtBuff;
   UINT16_TO_STREAM(wp,(BT_CONTROL_GROUP_DEVICE<< 8) | evtCode);
 
@@ -482,13 +513,17 @@ static void btRecvDeviceControlPacket(uint8_t evtCode, uint8_t *p,
         btRecvAclConnStatus(p, len);
         break;
 
+      case BT_CONTROL_EVENT_SECURITY_REQUEST:
+        btdbg("security request\n");
+        bleRecvSecurityRequest(bleEvent, pBleBcmEvt);
+        break;
+
       case BT_CONTROL_EVENT_USER_PASSKEY:
       case BT_CONTROL_EVENT_REPLY_BT_VERSION:
       case BT_CONTROL_EVENT_DEVICE_STARTED:
       case BT_CONTROL_EVENT_WICED_TRACE:
       case BT_CONTROL_EVENT_HCI_TRACE:
       case BT_CONTROL_EVENT_ENCRYPTION_CHANGED:
-      case BT_CONTROL_EVENT_SECURITY_REQUEST:
       case BT_CONTROL_EVENT_PASSKEY_NOTIFICATION:
       case BT_CONTROL_EVENT_POWER_MANAGER_STATUS:
       case BT_CONTROL_EVENT_REQUEST_FEATURE:

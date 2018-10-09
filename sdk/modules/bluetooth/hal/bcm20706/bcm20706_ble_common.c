@@ -350,7 +350,19 @@ int bleGapScan(BLE_BOOL bleBool)
   return btUartSendData(buff, p - buff);
 }
 
-void bleRecvNvramData(BLE_Evt *pBleEvent, ble_evt_t *pBleBcmEvt, uint16_t len)
+void bleRecvAuthStatus(ble_evt_t *pBleBcmEvt)
+{
+  uint8_t *rp = NULL;
+  BLE_GapBondInfo info;
+
+  rp = pBleBcmEvt->evtData + 1;
+  btdbg("auth status addr = %x,%x,%x,%x,%x,%x\n",rp[0],rp[1],rp[2],rp[3],rp[4],rp[5]);
+  memcpy(&info.addr, rp, BT_ADDR_LEN);
+
+  BLE_GapSaveBondInfo(&info);
+}
+
+void bleRecvNvramData(ble_evt_t *pBleBcmEvt, uint16_t len)
 {
   uint8_t *rp = NULL;
 
