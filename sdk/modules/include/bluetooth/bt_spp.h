@@ -74,6 +74,7 @@ struct bt_spp_ops_s
 struct bt_spp_state_s
 {
   BT_CONNECT_STATUS        bt_spp_connection; /**< Status of SPP connection @ref BT_CONNECT_STATUS */
+  uint16_t                 bt_spp_handle;     /**< Handle ID of SPP connection */
   struct bt_acl_state_s    *bt_acl_state;     /**< Bluetooth ACL context @ref bt_acl_state_s */
   struct bt_hal_spp_ops_s  *bt_hal_spp_ops;   /**< SPP HAL interfaces @ref bt_hal_spp_ops_s */
   struct bt_spp_ops_s      *bt_spp_ops;       /**< SPP connection callbacks @ref bt_spp_ops_s */
