@@ -760,6 +760,20 @@ int btRecvTaskEntry(void)
 int btRecvTaskEnd(void)
 {
   int ret = 0;
+
+  ret = pthread_cancel(gRecvTask);
+
+  if (ret != 0)
+    {
+      btdbg("Receive task cancel error.\n");
+    }
+
   ret = pthread_join(gRecvTask, NULL);
+
+  if (ret != 0)
+    {
+      btdbg("Receive task finalize error.\n");
+    }
+
   return ret;
 }
