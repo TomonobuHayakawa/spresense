@@ -226,11 +226,12 @@ errout_with_cmdfree:
 int altcom_accept(int sockfd, struct altcom_sockaddr *addr,
                   altcom_socklen_t *addrlen)
 {
-  int32_t                    ret;
-  int32_t                    result;
+  int32_t                     ret;
+  int32_t                     result;
   FAR struct altcom_socket_s *fsock;
-  struct altcom_fd_set_s     readset;
-  struct accept_req_s        req;
+  struct altcom_fd_set_s      readset;
+  struct accept_req_s         req;
+  FAR struct altcom_timeval  *recvtimeo;
 
   if (!altcom_isinit())
     {
@@ -300,7 +301,13 @@ int altcom_accept(int sockfd, struct altcom_sockaddr *addr,
       ALTCOM_FD_ZERO(&readset);
       ALTCOM_FD_SET(sockfd, &readset);
 
-      ret = altcom_select_block((sockfd + 1), &readset, NULL, NULL, NULL);
+      recvtimeo = &fsock->recvtimeo;
+      if ((fsock->recvtimeo.tv_sec == 0) && (fsock->recvtimeo.tv_usec == 0))
+        {
+          recvtimeo = NULL;
+        }
+
+      ret = altcom_select_block((sockfd + 1), &readset, NULL, NULL, recvtimeo);
       if (ret <= 0)
         {
           if (ret == 0)
@@ -308,6 +315,10 @@ int altcom_accept(int sockfd, struct altcom_sockaddr *addr,
               altcom_seterrno(ALTCOM_EFAULT);
             }
 
+          if (altcom_errno() == ALTCOM_ETIMEDOUT)
+            {
+              altcom_seterrno(ALTCOM_EAGAIN);
+            }
           DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
           return -1;
         }
