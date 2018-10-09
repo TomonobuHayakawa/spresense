@@ -121,6 +121,8 @@ struct bt_avrcp_state_s
 {
   BT_CONNECT_STATUS            bt_avrcc_connection;  /**< Status of AVRCP(controller) connection @ref BT_CONNECT_STATUS */
   BT_CONNECT_STATUS            bt_avrct_connection;  /**< Status of AVRCP(target) connection @ref BT_CONNECT_STATUS */
+  uint16_t                     bt_avrcc_handle;      /**< Handle ID of AVRCP Controller connection */
+  uint16_t                     bt_avrct_handle;      /**< Handle ID of AVRCP Target connection */
   struct bt_acl_state_s        *bt_acl_state;        /**< Bluetooth ACL context @ref bt_acl_state_s */
   struct bt_hal_avrcp_ops_s    *bt_hal_avrcp_ops;    /**< AVRCP HAL interfaces @ref bt_hal_avrcp_ops_s */
   struct bt_avrcp_ops_s        *bt_avrcp_ops;        /**< AVRCP connection callbacks @ref bt_avrcp_ops_s */

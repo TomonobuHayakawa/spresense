@@ -76,7 +76,6 @@
  ****************************************************************************/
 
 static uint16_t gatts_handle = 0x31;
-static BLE_GapConnHandle connection_handle = CONN_HANDLE_INVALED;
 
 /****************************************************************************
  * Private Functions
@@ -260,7 +259,7 @@ static int bcm20706_ble_add_characteristic(uint16_t serv_handle, struct ble_gatt
  *
  ****************************************************************************/
 
-static int bcm20706_ble_write(struct ble_gatt_char_s *ble_gatt_char)
+static int bcm20706_ble_write(struct ble_gatt_char_s *ble_gatt_char, uint16_t handle)
 {
   int ret = BT_SUCCESS;
 
@@ -278,7 +277,7 @@ static int bcm20706_ble_write(struct ble_gatt_char_s *ble_gatt_char)
  *
  ****************************************************************************/
 
-static int bcm20706_ble_read(struct ble_gatt_char_s *ble_gatt_char)
+static int bcm20706_ble_read(struct ble_gatt_char_s *ble_gatt_char, uint16_t handle)
 {
   int ret = BT_SUCCESS;
 
@@ -296,7 +295,7 @@ static int bcm20706_ble_read(struct ble_gatt_char_s *ble_gatt_char)
  *
  ****************************************************************************/
 
-static int bcm20706_ble_notify(struct ble_gatt_char_s *ble_gatt_char)
+static int bcm20706_ble_notify(struct ble_gatt_char_s *ble_gatt_char, uint16_t handle)
 {
   int ret = BT_SUCCESS;
   BLE_GattsHandleValueNfyIndParams param = {0};
@@ -309,7 +308,7 @@ static int bcm20706_ble_notify(struct ble_gatt_char_s *ble_gatt_char)
       param.attrValData = ble_gatt_char->value.data;
       param.attrValLen = size;
 
-      ret = BLE_GattsHandleValueNfyInd(connection_handle, &param);
+      ret = BLE_GattsHandleValueNfyInd(handle, &param);
 
       if (ret)
         {

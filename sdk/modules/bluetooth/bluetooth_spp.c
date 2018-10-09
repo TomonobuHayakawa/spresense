@@ -74,6 +74,8 @@ static int event_connect(struct bt_spp_event_connect_t *event_connect)
       /* Need to search ACL context by BT_ADDR for multipoint. Will be implement. */
 
       bt_spp_ops->connect(g_bt_spp_state.bt_acl_state);
+
+      g_bt_spp_state.bt_spp_handle = event_connect->handle;
     }
   else
     {
@@ -202,7 +204,7 @@ int bt_spp_connect(struct bt_acl_state_s *bt_acl_state)
 
   if (bt_hal_spp_ops && bt_hal_spp_ops->connect)
     {
-      ret = bt_hal_spp_ops->connect(&bt_acl_state->bt_target_addr, true);
+      ret = bt_hal_spp_ops->connect(&bt_acl_state->bt_target_addr, g_bt_spp_state.bt_spp_handle, true);
       g_bt_spp_state.bt_acl_state = bt_acl_state;
       g_bt_spp_state.bt_spp_connection = BT_CONNECTING;
     }
@@ -242,7 +244,7 @@ int bt_spp_disconnect(struct bt_acl_state_s *bt_acl_state)
 
   if (bt_hal_spp_ops && bt_hal_spp_ops->connect)
     {
-      ret = bt_hal_spp_ops->connect(&bt_acl_state->bt_target_addr, false);
+      ret = bt_hal_spp_ops->connect(&bt_acl_state->bt_target_addr, g_bt_spp_state.bt_spp_handle, false);
       g_bt_spp_state.bt_spp_connection = BT_DISCONNECTING;
     }
   else
@@ -302,7 +304,7 @@ int bt_spp_send_tx_data(struct bt_acl_state_s *bt_acl_state, uint8_t *data, int 
 
   if (bt_hal_spp_ops && bt_hal_spp_ops->sendTxData)
     {
-      ret = bt_hal_spp_ops->sendTxData(&bt_acl_state->bt_target_addr, data, len);
+      ret = bt_hal_spp_ops->sendTxData(&bt_acl_state->bt_target_addr, data, len, g_bt_spp_state.bt_spp_handle);
     }
   else
     {

@@ -244,6 +244,19 @@ bool ble_gatt_is_supported(void)
 }
 
 /****************************************************************************
+ * Name: ble_gatt_init
+ *
+ * Description:
+ *   Set BLE instance into GATT module.
+ *
+ ****************************************************************************/
+
+void ble_gatt_init(struct ble_state_s *ble_state)
+{
+  g_ble_gatt_state.ble_state = ble_state;
+}
+
+/****************************************************************************
  * Name: ble_create_service
  *
  * Description:
@@ -252,11 +265,11 @@ bool ble_gatt_is_supported(void)
  *
  ****************************************************************************/
 
-int ble_create_service(struct ble_gatt_service_s *service)
+int ble_create_service(struct ble_gatt_service_s **service)
 {
   if (g_ble_gatt_state.num < BLE_MAX_SERVICES)
     {
-      service = &g_ble_gatt_state.services[g_ble_gatt_state.num];
+      *service = &g_ble_gatt_state.services[g_ble_gatt_state.num];
       g_ble_gatt_state.num ++;
     }
   else
@@ -389,7 +402,7 @@ int ble_characteristic_notify(struct ble_gatt_char_s *charc, uint8_t *data, int 
 
       value->length = len;
 
-      ret = ble_hal_gatt_ops->notify(charc);
+      ret = ble_hal_gatt_ops->notify(charc, g_ble_gatt_state.ble_state->ble_connect_handle);
     }
   else
     {

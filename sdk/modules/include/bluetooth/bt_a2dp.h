@@ -75,6 +75,7 @@ struct bt_a2dp_ops_s
 struct bt_a2dp_state_s
 {
   BT_CONNECT_STATUS        bt_a2dp_connection; /**< Status of A2DP connection @ref BT_CONNECT_STATUS */
+  uint16_t                 bt_a2dp_handle;     /**< Handle ID of A2DP connection */
   struct bt_acl_state_s    *bt_acl_state;      /**< Bluetooth ACL context @ref bt_acl_state_s */
   struct bt_hal_a2dp_ops_s *bt_hal_a2dp_ops;   /**< A2DP HAL interfaces @ref bt_hal_a2dp_ops_s */
   struct bt_a2dp_ops_s     *bt_a2dp_ops;       /**< A2DP connection callbacks @ref bt_a2dp_ops_s */

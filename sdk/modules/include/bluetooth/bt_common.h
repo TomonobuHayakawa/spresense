@@ -101,6 +101,7 @@ struct bt_acl_state_s
 struct ble_state_s
 {
   BT_CONNECT_STATUS          ble_connection;              /**< Status of BLE connection @ref BT_CONNECT_STATUS */
+  uint16_t                   ble_connect_handle;          /**< Handle ID for BLE connection */
   struct bt_common_state_s   *bt_common_state;            /**< BT base context @ref bt_common_state_s */
   BT_ADDR                    bt_target_addr;              /**< BT target device address @ref BT_ADDR */
   char                       bt_target_name[BT_NAME_LEN]; /**< BT target device name */
@@ -369,40 +370,40 @@ int ble_connect(struct ble_state_s *ble_state);
 int ble_disconnect(struct ble_state_s *ble_state);
 
 /**
- * @brief Bluetooth start advertise
+ * @brief Bluetooth LE start advertise
  *        Start BLE advertise mode.
  *
  * @retval error code
  */
 
-int bt_start_advertise(void);
+int ble_start_advertise(void);
 
 /**
- * @brief Bluetooth cancel advertise
+ * @brief Bluetooth LE cancel advertise
  *        Cancel BLE advertise mode.
  *
  * @retval error code
  */
 
-int bt_cancel_advertise(void);
+int ble_cancel_advertise(void);
 
 /**
- * @brief Bluetooth start scan
+ * @brief Bluetooth LE start scan
  *        Start BLE scan mode.
  *
  * @retval error code
  */
 
-int bt_start_scan(void);
+int ble_start_scan(void);
 
 /**
- * @brief Bluetooth cancel scan
+ * @brief Bluetooth LE cancel scan
  *        Cancel BLE scan mode.
  *
  * @retval error code
  */
 
-int bt_cancel_scan(void);
+int ble_cancel_scan(void);
 
 /**
  * @brief Bluetooth LE register common callbacks

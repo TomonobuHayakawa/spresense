@@ -79,6 +79,8 @@ struct bt_hfp_state_s
 {
   BT_CONNECT_STATUS        bt_hfp_connection;       /**< Status of HFP connection @ref BT_CONNECT_STATUS */
   BT_CONNECT_STATUS        bt_hfp_audio_connection; /**< Status of HFP audio connection @ref BT_CONNECT_STATUS */
+  uint16_t                 bt_hfp_handle;           /**< Handle ID of HFP connection */
+  uint16_t                 bt_hfp_audio_handle;     /**< Handle ID of HFP audio connection */
   struct bt_acl_state_s    *bt_acl_state;           /**< Bluetooth ACL context @ref bt_acl_state_s */
   struct bt_hal_hfp_ops_s  *bt_hal_hfp_ops;         /**< HFP HAL interfaces @ref bt_hal_hfp_ops_s */
   struct bt_hfp_ops_s      *bt_hfp_ops;             /**< HFP connection callbacks @ref bt_hfp_ops_s */

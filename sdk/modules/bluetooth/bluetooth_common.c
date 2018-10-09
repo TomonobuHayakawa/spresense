@@ -44,6 +44,12 @@
 #include "bluetooth_hal_init.h"
 
 /****************************************************************************
+ * Function prototypes
+ ****************************************************************************/
+
+extern void ble_gatt_init(struct ble_state_s *ble_state);
+
+/****************************************************************************
  * Private Types
  ****************************************************************************/
 
@@ -213,8 +219,9 @@ static int ble_event_connect_stat_change(struct ble_event_conn_stat_t *conn_stat
 
   if (conn_stat_evt->connected)
     {
-      g_ble_state.bt_target_addr = conn_stat_evt->addr;
-      g_ble_state.ble_connection = BT_CONNECTED;
+      g_ble_state.bt_target_addr     = conn_stat_evt->addr;
+      g_ble_state.ble_connect_handle = conn_stat_evt->handle;
+      g_ble_state.ble_connection     = BT_CONNECTED;
     }
   else
     {
@@ -913,6 +920,10 @@ int ble_enable(void)
           _err("%s [BLE][Common] BLE set PPCP failed.\n", __func__);
           return ret;
         }
+
+      /* Initialize BLE GATT */
+
+      ble_gatt_init(&g_ble_state);
     }
   else
     {
@@ -968,7 +979,7 @@ int ble_disconnect(struct ble_state_s *ble_state)
 }
 
 /****************************************************************************
- * Name: bt_start_advertise
+ * Name: ble_start_advertise
  *
  * Description:
  *   Start BLE advertise mode.
@@ -976,7 +987,7 @@ int ble_disconnect(struct ble_state_s *ble_state)
  *
  ****************************************************************************/
 
-int bt_start_advertise(void)
+int ble_start_advertise(void)
 {
   int ret = BT_SUCCESS;
   struct ble_hal_common_ops_s *ble_hal_common_ops = g_bt_common_state.ble_hal_common_ops;
@@ -995,7 +1006,7 @@ int bt_start_advertise(void)
 }
 
 /****************************************************************************
- * Name: bt_cancel_advertise
+ * Name: ble_cancel_advertise
  *
  * Description:
  *   Cancel BLE advertise mode.
@@ -1003,7 +1014,7 @@ int bt_start_advertise(void)
  *
  ****************************************************************************/
 
-int bt_cancel_advertise(void)
+int ble_cancel_advertise(void)
 {
   int ret = BT_SUCCESS;
   struct ble_hal_common_ops_s *ble_hal_common_ops = g_bt_common_state.ble_hal_common_ops;
@@ -1022,7 +1033,7 @@ int bt_cancel_advertise(void)
 }
 
 /****************************************************************************
- * Name: bt_start_scan
+ * Name: ble_start_scan
  *
  * Description:
  *   Start BLE scan mode.
@@ -1030,14 +1041,14 @@ int bt_cancel_advertise(void)
  *
  ****************************************************************************/
 
-int bt_start_scan(void)
+int ble_start_scan(void)
 {
   _err("%s [BLE][Common] BLE scan failed(Central not supported yet).\n", __func__);
   return BT_FAIL;
 }
 
 /****************************************************************************
- * Name: bt_cancel_scan
+ * Name: ble_cancel_scan
  *
  * Description:
  *   Cancel BLE scan mode.
@@ -1045,7 +1056,7 @@ int bt_start_scan(void)
  *
  ****************************************************************************/
 
-int bt_cancel_scan(void)
+int ble_cancel_scan(void)
 {
   _err("%s [BLE][Common] BLE scan failed(Central not supported yet).\n", __func__);
   return BT_FAIL;

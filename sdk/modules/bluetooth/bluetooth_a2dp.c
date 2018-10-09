@@ -124,6 +124,8 @@ static int event_connect(struct bt_a2dp_event_connect_t *event_connect)
       /* Need to search ACL context by BT_ADDR for multipoint. Will be implement. */
 
       bt_a2dp_ops->connect(g_bt_a2dp_state.bt_acl_state, event_connect->codecInfo);
+
+      g_bt_a2dp_state.bt_a2dp_handle = event_connect->handle;
     }
   else
     {
@@ -245,7 +247,7 @@ int bt_a2dp_connect(struct bt_acl_state_s *bt_acl_state)
 
   if (bt_hal_a2dp_ops && bt_hal_a2dp_ops->connect)
     {
-      ret = bt_hal_a2dp_ops->connect(&bt_acl_state->bt_target_addr, true);
+      ret = bt_hal_a2dp_ops->connect(&bt_acl_state->bt_target_addr, g_bt_a2dp_state.bt_a2dp_handle, true);
       g_bt_a2dp_state.bt_acl_state = bt_acl_state;
       g_bt_a2dp_state.bt_a2dp_connection = BT_CONNECTING;
     }
@@ -285,7 +287,7 @@ int bt_a2dp_disconnect(struct bt_acl_state_s *bt_acl_state)
 
   if (bt_hal_a2dp_ops && bt_hal_a2dp_ops->connect)
     {
-      ret = bt_hal_a2dp_ops->connect(&bt_acl_state->bt_target_addr, false);
+      ret = bt_hal_a2dp_ops->connect(&bt_acl_state->bt_target_addr, g_bt_a2dp_state.bt_a2dp_handle, false);
       g_bt_a2dp_state.bt_a2dp_connection = BT_DISCONNECTING;
     }
   else

@@ -244,7 +244,7 @@ static uint8_t bt_a2dp_aac_channel(BT_A2DP_CHANNEL_MODE chnl)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_a2dp_connect(BT_ADDR *addr, bool connect)
+static int bcm20706_bt_a2dp_connect(BT_ADDR *addr, uint16_t handle, bool connect)
 {
   int ret = BT_SUCCESS;
 
