@@ -361,6 +361,10 @@ static void btRecvSppEvtConnected(uint8_t *p)
 
   memcpy(&connect_evt.addr, p, BT_ADDR_LEN);
 
+  /* Copy Handle ID */
+
+  STREAM_TO_UINT16(connect_evt.bt_spp_handle, p);
+
   connect_evt.group_id = BT_GROUP_SPP;
   connect_evt.event_id = BT_SPP_EVENT_CONNECT;
 
@@ -404,11 +408,10 @@ void bleRecvLeConnected(BLE_Evt *bleEvent, ble_evt_t *pBleBcmEvt)
 {
   struct ble_event_conn_stat_t conn_stat_evt;
   uint8_t *rp = NULL;
-  uint16_t handle = 0;
 
   rp = pBleBcmEvt->evtData + BT_ADDR_LEN + 1;
-  STREAM_TO_UINT16(handle, rp);
-  btdbg("connect handle = %d\n", handle);
+  STREAM_TO_UINT16(conn_stat_evt.ble_connect_handle, rp);
+  btdbg("connect handle = %d\n", conn_stat_evt.ble_connect_handle);
   rp = pBleBcmEvt->evtData + 1;
   btdbg("connect addr = %x,%x,%x,%x,%x,%x\n",rp[0],rp[1],rp[2],rp[3],rp[4],rp[5]);
   memcpy(&conn_stat_evt.addr, rp, sizeof(BT_ADDR));
