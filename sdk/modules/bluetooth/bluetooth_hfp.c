@@ -243,7 +243,7 @@ int bt_hfp_connect(struct bt_acl_state_s *bt_acl_state)
 
   if (bt_hal_hfp_ops && bt_hal_hfp_ops->connect)
     {
-      ret = bt_hal_hfp_ops->connect(&bt_acl_state->bt_target_addr, true);
+      ret = bt_hal_hfp_ops->connect(&bt_acl_state->bt_target_addr, g_bt_hfp_state.bt_hfp_handle, true);
       g_bt_hfp_state.bt_acl_state = bt_acl_state;
       g_bt_hfp_state.bt_hfp_connection = BT_CONNECTING;
     }
@@ -283,7 +283,7 @@ int bt_hfp_disconnect(struct bt_acl_state_s *bt_acl_state)
 
   if (bt_hal_hfp_ops && bt_hal_hfp_ops->connect)
     {
-      ret = bt_hal_hfp_ops->connect(&bt_acl_state->bt_target_addr, false);
+      ret = bt_hal_hfp_ops->connect(&bt_acl_state->bt_target_addr, g_bt_hfp_state.bt_hfp_handle, false);
       g_bt_hfp_state.bt_hfp_connection = BT_DISCONNECTING;
     }
   else
@@ -322,7 +322,7 @@ int bt_hfp_audio_connect(struct bt_acl_state_s *bt_acl_state)
 
   if (bt_hal_hfp_ops && bt_hal_hfp_ops->audio_connect)
     {
-      ret = bt_hal_hfp_ops->audio_connect(&bt_acl_state->bt_target_addr, true);
+      ret = bt_hal_hfp_ops->audio_connect(&bt_acl_state->bt_target_addr, g_bt_hfp_state.bt_hfp_audio_handle, true);
       g_bt_hfp_state.bt_hfp_audio_connection = BT_CONNECTING;
     }
   else
@@ -361,7 +361,7 @@ int bt_hfp_audio_disconnect(struct bt_acl_state_s *bt_acl_state)
 
   if (bt_hal_hfp_ops && bt_hal_hfp_ops->audio_connect)
     {
-      ret = bt_hal_hfp_ops->audio_connect(&bt_acl_state->bt_target_addr, false);
+      ret = bt_hal_hfp_ops->audio_connect(&bt_acl_state->bt_target_addr, g_bt_hfp_state.bt_hfp_audio_handle, false);
       g_bt_hfp_state.bt_hfp_audio_connection = BT_DISCONNECTING;
     }
   else
@@ -400,7 +400,7 @@ int bt_hfp_send_at_command(struct bt_acl_state_s *bt_acl_state, char *at_cmd_str
 
   if (bt_hal_hfp_ops && bt_hal_hfp_ops->send_at_command)
     {
-      ret = bt_hal_hfp_ops->send_at_command(&bt_acl_state->bt_target_addr, at_cmd_str);
+      ret = bt_hal_hfp_ops->send_at_command(&bt_acl_state->bt_target_addr, at_cmd_str, g_bt_hfp_state.bt_hfp_handle);
     }
   else
     {

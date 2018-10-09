@@ -181,8 +181,8 @@ int bt_avrcp_connect(struct bt_acl_state_s *bt_acl_state)
   if (bt_hal_avrcp_ops && bt_hal_avrcp_ops->avrcc_connect &&
       bt_hal_avrcp_ops->avrct_connect)
     {
-      ret = bt_hal_avrcp_ops->avrcc_connect(&bt_acl_state->bt_target_addr, true);
-      ret |= bt_hal_avrcp_ops->avrct_connect(&bt_acl_state->bt_target_addr, true);
+      ret = bt_hal_avrcp_ops->avrcc_connect(&bt_acl_state->bt_target_addr, g_bt_avrcp_state.bt_avrcc_handle, true);
+      ret |= bt_hal_avrcp_ops->avrct_connect(&bt_acl_state->bt_target_addr, g_bt_avrcp_state.bt_avrct_handle, true);
       g_bt_avrcp_state.bt_acl_state = bt_acl_state;
       g_bt_avrcp_state.bt_avrcc_connection = BT_CONNECTING;
       g_bt_avrcp_state.bt_avrct_connection = BT_CONNECTING;
@@ -225,8 +225,8 @@ int bt_avrcp_disconnect(struct bt_acl_state_s *bt_acl_state)
   if (bt_hal_avrcp_ops && bt_hal_avrcp_ops->avrcc_connect &&
       bt_hal_avrcp_ops->avrct_connect)
     {
-      ret = bt_hal_avrcp_ops->avrcc_connect(&bt_acl_state->bt_target_addr, false);
-      ret |= bt_hal_avrcp_ops->avrct_connect(&bt_acl_state->bt_target_addr, false);
+      ret = bt_hal_avrcp_ops->avrcc_connect(&bt_acl_state->bt_target_addr, g_bt_avrcp_state.bt_avrcc_handle, false);
+      ret |= bt_hal_avrcp_ops->avrct_connect(&bt_acl_state->bt_target_addr, g_bt_avrcp_state.bt_avrct_handle, false);
       g_bt_avrcp_state.bt_avrcc_connection = BT_DISCONNECTING;
       g_bt_avrcp_state.bt_avrct_connection = BT_DISCONNECTING;
     }
@@ -266,7 +266,7 @@ int bt_avrcp_send_command(struct bt_acl_state_s *bt_acl_state, BT_AVRCP_CMD_ID c
 
   if (bt_hal_avrcp_ops && bt_hal_avrcp_ops->send_avrcp_command)
     {
-      ret = bt_hal_avrcp_ops->send_avrcp_command(&bt_acl_state->bt_target_addr, cmd_id, press);
+      ret = bt_hal_avrcp_ops->send_avrcp_command(&bt_acl_state->bt_target_addr, cmd_id, press, g_bt_avrcp_state.bt_avrcc_handle);
     }
   else
     {

@@ -402,7 +402,7 @@ int ble_characteristic_notify(struct ble_gatt_char_s *charc, uint8_t *data, int 
 
       value->length = len;
 
-      ret = ble_hal_gatt_ops->notify(charc);
+      ret = ble_hal_gatt_ops->notify(charc, g_ble_gatt_state.ble_state->ble_connect_handle);
     }
   else
     {
