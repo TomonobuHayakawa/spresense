@@ -101,7 +101,7 @@ static int btAvrcTargetDisconnect(void)
  *
  ****************************************************************************/
 
-static int bcm20706_bt_avrcp_controller_connect(BT_ADDR *addr, bool connect, uint16_t handle)
+static int bcm20706_bt_avrcp_controller_connect(BT_ADDR *addr, uint16_t handle, bool connect)
 {
   int ret = BT_SUCCESS;
 
