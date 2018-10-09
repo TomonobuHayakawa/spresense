@@ -177,7 +177,10 @@ static void recevNvramData(uint8_t evtCode, uint8_t *p, uint16_t len)
 static void btRecvInquiryResult(uint8_t *p, uint16_t len)
 {
 #define RSSI_LEN 1
+#define TYPE_COMPLETE_NAME 0x09
   uint8_t *rp = NULL;
+  uint8_t value_length = 0;
+  uint8_t type_id = 0;
   struct bt_event_inquiry_rslt_t inq_rslt_evt;
 
   /* Get target device address */
@@ -189,7 +192,28 @@ static void btRecvInquiryResult(uint8_t *p, uint16_t len)
   rp += BT_CLASS_LEN;
   rp += RSSI_LEN;
 
-  memcpy(inq_rslt_evt.name, rp, BT_NAME_LEN);
+  /* Value length(contain '0') */
+
+  STREAM_TO_UINT8(value_length, rp);
+
+  /* Value type */
+
+  STREAM_TO_UINT8(type_id, rp);
+
+  if (type_id == TYPE_COMPLETE_NAME)
+    {
+      memcpy(inq_rslt_evt.name, rp, value_length);
+
+      /* Insert '\0' at the end of name */
+
+      inq_rslt_evt.name[value_length - 1] = '\0';
+    }
+  else
+    {
+      /* If type ID is not Complete name ID, return null */
+
+      inq_rslt_evt.name[0] = '\0';
+    }
 
   inq_rslt_evt.group_id = BT_GROUP_COMMON;
   inq_rslt_evt.event_id = BT_COMMON_EVENT_INQUIRY_RESULT;
