@@ -103,10 +103,17 @@ enum video_state_e
   VIDEO_STATE_START       = 3  /* Start */
 };
 
+enum video_waitend_cause_e
+{
+  VIDEO_WAITEND_CAUSE_DMADONE  = 0,
+  VIDEO_WAITEND_CAUSE_DQCANCEL = 1,
+};
+
 struct video_wait_dma_s
 {
-  FAR sem_t            *dqbuf_wait;     /* NULL means not-wait */
+  FAR sem_t            dqbuf_wait_flg;
   FAR vbuf_container_t *done_container; /* Save container which dma done */
+  enum video_waitend_cause_e waitend_cause;
 };
 
 typedef struct video_wait_dma_s video_wait_dma_t;
@@ -155,6 +162,7 @@ static bool is_bufsize_sufficient(FAR video_mng_t *vmng, uint32_t bufsize);
 static enum video_state_e start_dma(enum v4l2_buf_type    type,
                                     FAR video_framebuff_t *fbuf);
 static void cleanup_resources(FAR video_mng_t *vmng);
+static bool is_sem_waited(FAR sem_t *sem);
 
 /* internal function for each cmds of ioctl */
 
@@ -164,6 +172,8 @@ static int video_qbuf(FAR struct video_mng_s *vmng,
                       FAR struct v4l2_buffer *buf);
 static int video_dqbuf(FAR struct video_mng_s *vmng,
                        FAR struct v4l2_buffer *buf);
+static int video_cancel_dqbuf(FAR struct video_mng_s *vmng,
+                              enum v4l2_buf_type type);
 static int video_enum_fmt(FAR struct v4l2_fmtdesc *fmt);
 static int video_enum_framesizes(FAR struct v4l2_frmsizeenum *frmsize);
 static int video_s_fmt(FAR struct video_mng_s *priv,
@@ -336,6 +346,22 @@ static void cleanup_resources(FAR video_mng_t *vmng)
   return;
 }
 
+static bool is_sem_waited(FAR sem_t *sem)
+{
+  int ret;
+  int semcount;
+
+  ret = sem_getvalue(sem, &semcount);
+  if ((ret == OK) && (semcount < 0))
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
 static int video_open(FAR struct file *filep)
 {
   FAR struct inode *inode = filep->f_inode;
@@ -492,7 +518,7 @@ static int video_dqbuf(FAR struct video_mng_s *vmng,
 {
   FAR video_type_inf_t *type_inf;
   FAR vbuf_container_t *container;
-  sem_t                dqbuf_wait;
+  sem_t                *dqbuf_wait_flg;
 
   if ((vmng == NULL) || (buf == NULL))
     {
@@ -510,17 +536,58 @@ static int video_dqbuf(FAR struct video_mng_s *vmng,
     {
       /* Not yet done DMA. Wait done */
 
-      sem_init(&dqbuf_wait, 0, 0);
-      type_inf->wait_dma.dqbuf_wait = &dqbuf_wait;
-      sem_wait(&dqbuf_wait);
-      sem_destroy(&dqbuf_wait);
+      dqbuf_wait_flg = &type_inf->wait_dma.dqbuf_wait_flg;
+      sem_init(dqbuf_wait_flg, 0, 0);
+      sem_wait(dqbuf_wait_flg);
+      sem_destroy(dqbuf_wait_flg);
       container = type_inf->wait_dma.done_container;
+
+      if (!container)
+        {
+          /* Waking up without DMA data means abort.
+           * Therefore, Check cause.
+           */
+
+          if (type_inf->wait_dma.waitend_cause
+               == VIDEO_WAITEND_CAUSE_DQCANCEL)
+            {
+              memset(&type_inf->wait_dma, 0, sizeof(video_wait_dma_t));
+              return -ECANCELED;
+            }
+        }
       memset(&type_inf->wait_dma, 0, sizeof(video_wait_dma_t)); 
     }
 
   memcpy(buf, &container->buf, sizeof(struct v4l2_buffer));
 
   video_framebuff_free_container(&type_inf->bufinf, container);
+
+  return OK;
+}
+
+static int video_cancel_dqbuf(FAR struct video_mng_s *vmng,
+                              enum v4l2_buf_type type)
+{
+  FAR video_type_inf_t *type_inf;
+
+  type_inf = get_video_type_inf(vmng, type);
+  if (type_inf == NULL)
+    {
+      return -EINVAL;
+    }
+
+  if (!is_sem_waited(&type_inf->wait_dma.dqbuf_wait_flg))
+    {
+      /* In not waiting DQBUF case, return OK */
+
+      return OK;
+    }
+
+  type_inf->wait_dma.waitend_cause = VIDEO_WAITEND_CAUSE_DQCANCEL;
+
+  /* If DMA is done before sem_post, cause is overwritten */
+
+  sem_post(&type_inf->wait_dma.dqbuf_wait_flg);
 
   return OK;
 }
@@ -1021,6 +1088,11 @@ static int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 
         break;
 
+      case VIDIOC_CANCEL_DQBUF:
+        ret = video_cancel_dqbuf(priv, (FAR enum v4l2_buf_type)arg);
+
+        break;
+
       case VIDIOC_STREAMON:
         ret = video_streamon(priv, (FAR enum v4l2_buf_type *)arg);
 
@@ -1314,7 +1386,7 @@ int video_common_notify_dma_done(uint8_t  err_code,
   type_inf->bufinf.vbuf_dma->buf.bytesused = datasize;
   video_framebuff_dma_done(&type_inf->bufinf);
 
-  if (type_inf->wait_dma.dqbuf_wait)
+  if (is_sem_waited(&type_inf->wait_dma.dqbuf_wait_flg))
     {
       /* If waiting DMA done in DQBUF,
        * get/save container and unlock wait
@@ -1322,8 +1394,9 @@ int video_common_notify_dma_done(uint8_t  err_code,
  
       type_inf->wait_dma.done_container
         = video_framebuff_pop_curr_container(&type_inf->bufinf);
-
-      sem_post(type_inf->wait_dma.dqbuf_wait);
+      type_inf->wait_dma.waitend_cause
+        = VIDEO_WAITEND_CAUSE_DMADONE; 
+      sem_post(&type_inf->wait_dma.dqbuf_wait_flg);
 
       /* TODO:  in poll wait, unlock wait */
     }
