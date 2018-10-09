@@ -523,20 +523,6 @@ static bool app_create_audio_sub_system(void)
 {
   bool result = false;
 
-  /* Create manager of AudioSubSystem. */
-
-  AudioSubSystemIDs ids;
-  ids.app         = MSGQ_AUD_APP;
-  ids.mng         = MSGQ_AUD_MNG;
-  ids.player_main = MSGQ_AUD_PLY;
-  ids.player_sub  = 0xFF;
-  ids.mixer       = MSGQ_AUD_OUTPUT_MIX;
-  ids.recorder    = 0xFF;
-  ids.effector    = 0xFF;
-  ids.recognizer  = 0xFF;
-
-  AS_CreateAudioManager(ids, app_attention_callback);
-
   AsCreatePlayerParam_t player_create_param;
   player_create_param.msgq_id.player = MSGQ_AUD_PLY;
   player_create_param.msgq_id.mng    = MSGQ_AUD_MNG;
@@ -546,7 +532,7 @@ static bool app_create_audio_sub_system(void)
   player_create_param.pool_id.pcm    = REND_PCM_BUF_POOL;
   player_create_param.pool_id.dsp    = DEC_APU_CMD_POOL;
 
-  result = AS_CreatePlayer(AS_PLAYER_ID_0, &player_create_param);
+  result = AS_CreatePlayerMulti(AS_PLAYER_ID_0, &player_create_param, app_attention_callback);
 
   if (!result)
     {
@@ -565,7 +551,7 @@ static bool app_create_audio_sub_system(void)
   output_mix_act_param.pool_id.render_path0_filter_dsp = PF0_APU_CMD_POOL;
   output_mix_act_param.pool_id.render_path1_filter_dsp = PF1_APU_CMD_POOL;
 
-  result = AS_CreateOutputMixer(&output_mix_act_param);
+  result = AS_CreateOutputMixer(&output_mix_act_param, app_attention_callback);
   if (!result)
     {
       printf("Error: AS_CreateOutputMixer() failed. system memory insufficient!\n");
@@ -592,7 +578,6 @@ static bool app_create_audio_sub_system(void)
 
 static void app_deact_audio_sub_system(void)
 {
-  AS_DeleteAudioManager();
   AS_DeletePlayer(AS_PLAYER_ID_0);
   AS_DeleteOutputMix();
   AS_DeleteRenderer();

@@ -49,7 +49,7 @@
 #include "wien2_internal_packet.h"
 #include "debug/dbg_log.h"
 
-__WIEN2_BEGIN_NAMESPACE
+__USING_WIEN2
 using namespace MemMgrLite;
 
 /****************************************************************************
@@ -1661,11 +1661,19 @@ bool MediaRecorderObjectTask::checkAndSetMemPool(void)
  * Public Functions
  ****************************************************************************/
 
-extern "C"
-{
 /*--------------------------------------------------------------------------*/
 bool AS_CreateMediaRecorder(FAR AsCreateRecorderParam_t *param)
 {
+  return AS_CreateMediaRecorder(param, NULL);
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_CreateMediaRecorder(FAR AsCreateRecorderParam_t *param, AudioAttentionCb attcb)
+{
+  /* Register attention callback */
+
+  MEDIA_RECORDER_REG_ATTCB(attcb);
+
   /* Parameter check */
 
   if (param == NULL)
@@ -1804,9 +1812,13 @@ bool AS_DeleteMediaRecorder(void)
   task_delete(s_rcd_pid);
   delete s_rcd_obj;
   s_rcd_obj = NULL;
+
+  /* Unregister attention callback */
+
+  MEDIA_RECORDER_UNREG_ATTCB();
+
   return true;
 }
-} /* extern "C" */
 
 /*--------------------------------------------------------------------------*/
 void MediaRecorderObjectTask::create(MsgQueId self_dtq,
@@ -1824,5 +1836,3 @@ void MediaRecorderObjectTask::create(MsgQueId self_dtq,
       return;
     }
 }
-
-__WIEN2_END_NAMESPACE

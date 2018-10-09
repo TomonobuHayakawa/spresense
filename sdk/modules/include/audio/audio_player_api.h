@@ -643,10 +643,6 @@ typedef struct
  * Public Function Prototypes
  ****************************************************************************/
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 /**
  * @brief Create audio main player
  *
@@ -663,12 +659,25 @@ bool AS_CreatePlayer(AsPlayerId id, FAR AsCreatePlayerParam_t *param);
  * @brief Create audio main player using memory pool in work area of src
  *
  * @param[in] param: Parameters of resources used by audio main player
+ * @param[in] attcb: Attention callback of Player. NULL means no callback.
  *
  * @retval     true  : success
  * @retval     false : failure
  * @note New create interface. The use size of the heap area is small.
  */
 
+bool AS_CreatePlayerMulti(AsPlayerId id,
+                          FAR AsCreatePlayerParam_t *param,
+                          AudioAttentionCb attcb);
+
+__attribute__((deprecated(
+                 "\n \
+                  \n Deprecated create API is used. \
+                  \n Use \"AS_CreatePlayerMulti(AsPlayerId, \
+                  \n                           AsCreatePlayerParam_t *, \
+                  \n                           AudioAttentionCb)\". \
+                  \n \
+                  \n")))
 bool AS_CreatePlayerMulti(AsPlayerId id, FAR AsCreatePlayerParam_t *param);
 
 /**
@@ -756,11 +765,6 @@ bool AS_DeactivatePlayer(AsPlayerId id, FAR AsDeactivatePlayer *deactparam);
  */
 
 bool AS_DeletePlayer(AsPlayerId id);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif  /* __SONY_APPS_INCLUDE_AUDIOUTIL_AUDIO_PLAYER_API_H */
 /**

@@ -1638,8 +1638,6 @@ bool PlayerObj::judgeMultiCore(uint32_t sampling_rate, uint8_t bit_length)
  * Public Functions
  ****************************************************************************/
 
-extern "C"
-{
 /*--------------------------------------------------------------------------*/
 int AS_PlayerObjEntry(int argc, char *argv[])
 {
@@ -1674,12 +1672,22 @@ bool AS_CreatePlayer(AsPlayerId id, FAR AsCreatePlayerParam_t *param)
    */
 
   param->pool_id.src_work = INVALID_POOL_ID;
-  return AS_CreatePlayerMulti(id, param);
+  return AS_CreatePlayerMulti(id, param, NULL);
 }
 
 /*--------------------------------------------------------------------------*/
 bool AS_CreatePlayerMulti(AsPlayerId id, FAR AsCreatePlayerParam_t *param)
 {
+  return AS_CreatePlayerMulti(id, param, NULL);
+}
+
+/*--------------------------------------------------------------------------*/
+bool AS_CreatePlayerMulti(AsPlayerId id, FAR AsCreatePlayerParam_t *param, AudioAttentionCb attcb)
+{
+  /* Register attention callback */
+
+  MEDIA_PLAYER_REG_ATTCB(attcb);
+
   /* Parameter check */
 
   if (param == NULL)
@@ -1971,9 +1979,15 @@ bool AS_DeletePlayer(AsPlayerId id)
         }
     }
 
+  /* Unregister attention callback */
+
+  if (s_play_obj == NULL && s_sub_play_obj == NULL)
+    {
+      MEDIA_PLAYER_UNREG_ATTCB();
+    }
+
   return true;
 }
-} /* extern "C" */
 
 void PlayerObj::create(FAR void **obj,
                        MsgQueId self_dtq,
