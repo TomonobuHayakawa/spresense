@@ -10,6 +10,24 @@ examples/bluetooth_le_peripheral
 
     CONFIG_EXAMPLES_BLUETOOTH_LE_PERIPHERAL - Enable this example
 
-  Operation:
+  Build(In <spresense>/sdk):
+    $ ./tools/config.py --kernel release
+    $ ./tools/config.py board/spresense feature/bluetooth device/bcm20706 examples/ble_peripheral
+    $ make buildkernel
+    $ make
 
-    No console operation is needed.
+  Flash(In <spresense>/sdk):
+    $ ./tools/flash.sh nuttx.spk
+
+  Operation:
+    1. Launch "ble_peripheral" application by NuttShell
+      $ ble_peripheral
+
+    2 Connect "SONY_BLE" by PC or Andrlid (ex. "nRF Connect" as Android application)
+
+    3. Write characteristic data by Android or PC application
+
+    4. bt_spp application will output
+              "onWrite [BLE] data[0] = 0x12, Length = 2"
+
+    5. After 2 seconds ble_peripheral will notify "0x06 0x14" to characteristic.
