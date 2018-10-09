@@ -122,6 +122,9 @@ int stubsock_accept(FAR struct socket *psock, FAR struct sockaddr *addr,
   struct sockaddr_in6             tmpaddr;
   struct altcom_sockaddr_storage  storage;
   int                             val = 0;
+#ifdef CONFIG_NET_SOCKOPTS
+  struct timeval                  tv_val;
+#endif
 
   DBGIF_ASSERT(conn, "conn == NULL\n");
 
@@ -160,6 +163,14 @@ int stubsock_accept(FAR struct socket *psock, FAR struct sockaddr *addr,
    * change the behavior of sokcet with fcntl */
 
   altcom_fcntl(sockfd, ALTCOM_SETFL, val);
+
+#ifdef CONFIG_NET_SOCKOPTS
+  tv_val.tv_sec  = psock->s_rcvtimeo / DSEC_PER_SEC;
+  tv_val.tv_usec = (psock->s_rcvtimeo % DSEC_PER_SEC) * USEC_PER_DSEC;
+
+  altcom_setsockopt(sockfd, ALTCOM_SOL_SOCKET, ALTCOM_SO_RCVTIMEO, &tv_val,
+                    sizeof(tv_val));
+#endif
 
   newsockfd = altcom_accept(sockfd, (FAR struct altcom_sockaddr*)&storage,
                             &altcom_addrlen);
