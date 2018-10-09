@@ -244,6 +244,19 @@ bool ble_gatt_is_supported(void)
 }
 
 /****************************************************************************
+ * Name: ble_gatt_init
+ *
+ * Description:
+ *   Set BLE instance into GATT module.
+ *
+ ****************************************************************************/
+
+void ble_gatt_init(struct ble_state_s *ble_state)
+{
+  g_ble_gatt_state.ble_state = ble_state;
+}
+
+/****************************************************************************
  * Name: ble_create_service
  *
  * Description:

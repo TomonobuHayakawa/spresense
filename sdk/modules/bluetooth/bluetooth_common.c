@@ -44,6 +44,12 @@
 #include "bluetooth_hal_init.h"
 
 /****************************************************************************
+ * Function prototypes
+ ****************************************************************************/
+
+extern void ble_gatt_init(struct ble_state_s *ble_state);
+
+/****************************************************************************
  * Private Types
  ****************************************************************************/
 
@@ -913,6 +919,10 @@ int ble_enable(void)
           _err("%s [BLE][Common] BLE set PPCP failed.\n", __func__);
           return ret;
         }
+
+      /* Initialize BLE GATT */
+
+      ble_gatt_init(&g_ble_state);
     }
   else
     {
