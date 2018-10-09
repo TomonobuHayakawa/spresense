@@ -2824,7 +2824,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
               break;
 
             case V4L2_CID_COLORFX:
-              for (cnt = 0; cnt < ISX012_MAX_COLOREFFECT + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_COLOREFFECT; cnt++)
                 {
                   if (g_isx012_supported_colorfx[cnt].v4l2 == control->value)
                     {
@@ -2832,7 +2832,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                     } 
                 }
 
-              if (cnt >= ISX012_MAX_COLOREFFECT)
+              if (cnt > ISX012_MAX_COLOREFFECT)
                 {
                   return -EINVAL;
                 }
@@ -2893,7 +2893,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
               break;
 
             case V4L2_CID_ISO_SENSITIVITY:
-              for (cnt = 0; cnt < ISX012_MAX_ISO + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_ISO; cnt++)
                 {
                   if (g_isx012_supported_iso[cnt].v4l2
                        == control->value)
@@ -2902,7 +2902,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                     }
                 }
 
-              if (cnt >= ISX012_MAX_ISO)
+              if (cnt > ISX012_MAX_ISO)
                 {
                   return -EINVAL;
                 }
@@ -2935,7 +2935,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
               break;
 
             case V4L2_CID_EXPOSURE_METERING:
-              for (cnt = 0; cnt < ISX012_MAX_PHOTOMETRY + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_PHOTOMETRY; cnt++)
                 {
                   if (g_isx012_supported_photometry[cnt].v4l2
                        == control->value)
@@ -2944,7 +2944,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                     }
                 }
 
-              if (cnt >= ISX012_MAX_PHOTOMETRY)
+              if (cnt > ISX012_MAX_PHOTOMETRY)
                 {
                   return -EINVAL;
                 }
@@ -2957,7 +2957,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
               break;
 
             case V4L2_CID_AUTO_N_PRESET_WHITE_BALANCE:
-              for (cnt = 0; cnt < ISX012_MAX_PRESETWB + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_PRESETWB; cnt++)
                 {
                   if (g_isx012_supported_presetwb[cnt].v4l2 == control->value)
                     {
@@ -2965,7 +2965,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                     }
                 }
 
-              if (cnt >= ISX012_MAX_PRESETWB)
+              if (cnt > ISX012_MAX_PRESETWB)
                 {
                   return -EINVAL;
                 }
