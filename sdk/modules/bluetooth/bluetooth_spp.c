@@ -74,6 +74,8 @@ static int event_connect(struct bt_spp_event_connect_t *event_connect)
       /* Need to search ACL context by BT_ADDR for multipoint. Will be implement. */
 
       bt_spp_ops->connect(g_bt_spp_state.bt_acl_state);
+
+      g_bt_spp_state.bt_spp_handle = event_connect->handle;
     }
   else
     {

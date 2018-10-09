@@ -279,6 +279,7 @@ struct bt_a2dp_event_connect_t
 {
   uint8_t group_id; /**< Event group ID @ref BT_GROUP_ID */
   uint8_t event_id; /**< Event sub ID @ref BT_A2DP_EVENT_ID */
+  uint16_t handle;  /**< Handle ID for A2DP connection */
   BT_ADDR addr;     /**< Connected device address @ref BT_ADDR */
   BT_AUDIO_CODEC_INFO codecInfo;
 };
@@ -304,6 +305,7 @@ struct bt_avrcp_event_connect_t
 {
   uint8_t group_id; /**< Event group ID @ref BT_GROUP_ID */
   uint8_t event_id; /**< Event sub ID @ref BT_AVRCP_EVENT_ID */
+  uint16_t handle;  /**< Handle ID for AVRCP connection */
   BT_ADDR addr;     /**< Connected device address @ref BT_ADDR */
 };
 
@@ -315,6 +317,7 @@ struct bt_hfp_event_connect_t
 {
   uint8_t group_id;         /**< Event group ID @ref BT_GROUP_ID */
   uint8_t event_id;         /**< Event sub ID @ref BT_HFP_EVENT_ID */
+  uint16_t handle;          /**< Handle ID for HFP connection */
   BT_ADDR addr;             /**< Connected device address @ref BT_ADDR */
   BT_PROFILE_TYPE hfp_type; /**< Connected profile type @ref BT_PROFILE_TYPE */
 };
@@ -351,6 +354,7 @@ struct bt_spp_event_connect_t
 {
   uint8_t group_id;                 /**< Event group ID @ref BT_GROUP_ID */
   uint8_t event_id;                 /**< Event sub ID @ref BT_SPP_EVENT_ID */
+  uint16_t handle;                  /**< Handle ID for SPP connection */
   BT_ADDR addr;                     /**< Connected device address @ref BT_ADDR */
   BT_CONNECT_FAIL_REASON_ID reason; /**< Connection fail reason @ref BT_CONNECT_FAIL_REASON_ID */
 };
@@ -376,6 +380,7 @@ struct ble_event_conn_stat_t
 {
   uint8_t group_id; /**< Event group ID @ref BT_GROUP_ID */
   uint8_t event_id; /**< Event sub ID @ref BLE_COMMON_EVENT_ID */
+  uint16_t handle;  /**< Handle ID for BLE connection */
   BT_ADDR addr;     /**< Target address @ref BT_ADDR */
   bool connected;   /**< Connection status */
 };

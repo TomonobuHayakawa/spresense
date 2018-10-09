@@ -219,8 +219,9 @@ static int ble_event_connect_stat_change(struct ble_event_conn_stat_t *conn_stat
 
   if (conn_stat_evt->connected)
     {
-      g_ble_state.bt_target_addr = conn_stat_evt->addr;
-      g_ble_state.ble_connection = BT_CONNECTED;
+      g_ble_state.bt_target_addr     = conn_stat_evt->addr;
+      g_ble_state.ble_connect_handle = conn_stat_evt->handle;
+      g_ble_state.ble_connection     = BT_CONNECTED;
     }
   else
     {

@@ -83,6 +83,8 @@ static int event_hf_connect(struct bt_hfp_event_connect_t *event_connect)
       /* Need to search ACL context by BT_ADDR for multipoint. Will be implement. */
 
       bt_hfp_ops->connect(g_bt_hfp_state.bt_acl_state, event_connect->hfp_type);
+
+      g_bt_hfp_state.bt_hfp_handle = event_connect->handle;
     }
   else
     {
@@ -125,6 +127,8 @@ static int event_audio_connect(struct bt_hfp_event_connect_t *event_connect)
       /* Need to search ACL context by BT_ADDR for multipoint. Will be implement. */
 
       bt_hfp_ops->audio_connect(g_bt_hfp_state.bt_acl_state);
+
+      g_bt_hfp_state.bt_hfp_audio_handle = event_connect->handle;
     }
   else
     {

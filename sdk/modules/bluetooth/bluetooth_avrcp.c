@@ -81,10 +81,12 @@ static int event_connect(struct bt_avrcp_event_connect_t *event_connect)
   if (role == BT_AVRCP_CONTROLLER)
     {
       g_bt_avrcp_state.bt_avrcc_connection = BT_CONNECTED;
+      g_bt_avrcp_state.bt_avrcc_handle = event_connect->handle;
     }
   else
     {
       g_bt_avrcp_state.bt_avrct_connection = BT_CONNECTED;
+      g_bt_avrcp_state.bt_avrct_handle = event_connect->handle;
     }
 
   if (bt_avrcp_ops && bt_avrcp_ops->connect)

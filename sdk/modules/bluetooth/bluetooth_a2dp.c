@@ -124,6 +124,8 @@ static int event_connect(struct bt_a2dp_event_connect_t *event_connect)
       /* Need to search ACL context by BT_ADDR for multipoint. Will be implement. */
 
       bt_a2dp_ops->connect(g_bt_a2dp_state.bt_acl_state, event_connect->codecInfo);
+
+      g_bt_a2dp_state.bt_a2dp_handle = event_connect->handle;
     }
   else
     {
