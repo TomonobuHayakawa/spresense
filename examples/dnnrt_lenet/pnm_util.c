@@ -205,6 +205,11 @@ load_pnm_internal(const char *pnm_path, float norm_factor, float *output_buffer)
 
       /* read binary data of this image */
       exp_bsize = calc_data_bsize(&header);
+      if (exp_bsize > MY_BUFSIZ)
+        {
+          err = -EINVAL;
+          goto invalid_file;
+        }
       act_bsize = fread(char_buf, 1, exp_bsize, pnm_file);
       if (exp_bsize == act_bsize)
         {
@@ -233,10 +238,14 @@ file_open_err:
   return err;
 }
 
-int pnm_load(const char *pnm_path, float norm_factor, float *output_buffer)
+int pnm_load(const char *pnm_path, float norm_factor, float *output_buffer,
+             size_t output_bsize)
 {
   int err;
-  if (pnm_path != NULL && output_buffer != NULL)
+  int valid_args = 1;
+  valid_args &= (pnm_path != NULL && output_buffer != NULL);
+  valid_args &= (output_bsize <= sizeof(float) * MY_BUFSIZ);
+  if (valid_args)
     {
       if ((err = load_pnm_internal(pnm_path, norm_factor, output_buffer)) == 0)
         {

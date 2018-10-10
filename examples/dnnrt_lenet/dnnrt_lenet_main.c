@@ -154,7 +154,7 @@ int dnnrt_lenet_main(int argc, char *argv[])
   /* load an hand-written digit image into s_img_buffer,
      and then divide the pixels by 255.0 for normalization */
   norm_factor = setting.skip_norm ? 1.0f : 255.0f;
-  ret = pnm_load(setting.pgm_path, norm_factor, s_img_buffer);
+  ret = pnm_load(setting.pgm_path, norm_factor, s_img_buffer, sizeof(s_img_buffer));
   if (ret)
     {
       printf("load pgm image failed due to %d\n", ret);

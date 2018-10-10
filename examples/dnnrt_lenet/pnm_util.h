@@ -34,6 +34,8 @@
 
 #ifndef _PNM_UTIL_H_
 #  define _PNM_UTIL_H_
+#include <stddef.h>
 
-int pnm_load(const char *path, float norm_parm, float *output_buffer);
+int pnm_load(const char *pnm_path, float norm_factor, float *output_buffer,
+             size_t output_bsize);
 #endif                                 /* _PNM_UTIL_H_ */
