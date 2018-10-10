@@ -233,25 +233,35 @@ int altcom_send(int sockfd, const void *buf, size_t len, int flags)
       ALTCOM_FD_SET(sockfd, &writeset);
 
       ret = altcom_select_nonblock((sockfd + 1), NULL, &writeset, NULL);
-      if (ret <= 0)
+      if (ret > 0)
         {
-          DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
+          if (!ALTCOM_FD_ISSET(sockfd, &writeset))
+            {
+              altcom_seterrno(ALTCOM_EFAULT);
+              DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
+              return -1;
+            }
+
+          /* Send send request */
+
+          result = send_request(fsock, &req);
+          if (result == SEND_REQ_FAILURE)
+            {
+              return -1;
+            }
+        }
+      else
+        {
+          if (ret == 0)
+            {
+              altcom_seterrno(ALTCOM_EAGAIN);
+            }
+          else
+            {
+              DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
+            }
           return -1;
         }
-
-      if (!ALTCOM_FD_ISSET(sockfd, &writeset))
-        {
-          altcom_seterrno(ALTCOM_EFAULT);
-          DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
-          return -1;
-        }
-
-      result = send_request(fsock, &req);
-
-      if (result == SEND_REQ_FAILURE)
-       {
-         return -1;
-       }
     }
   else
     {

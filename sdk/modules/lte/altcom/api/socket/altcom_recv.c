@@ -239,25 +239,35 @@ int altcom_recv(int sockfd, void *buf, size_t len, int flags)
       ALTCOM_FD_SET(sockfd, &readset);
 
       ret = altcom_select_nonblock((sockfd + 1), &readset, NULL, NULL);
-      if (ret <= 0)
+      if (ret > 0)
         {
-          DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
+          if (!ALTCOM_FD_ISSET(sockfd, &readset))
+            {
+              altcom_seterrno(ALTCOM_EFAULT);
+              DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
+              return -1;
+            }
+
+          /* Send recv request */
+
+          result = recv_request(fsock, &req);
+          if (result == RECV_REQ_FAILURE)
+            {
+              return -1;
+            }
+        }
+      else
+        {
+          if (ret == 0)
+            {
+              altcom_seterrno(ALTCOM_EAGAIN);
+            }
+          else
+            {
+              DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
+            }
           return -1;
         }
-
-      if (!ALTCOM_FD_ISSET(sockfd, &readset))
-        {
-          altcom_seterrno(ALTCOM_EFAULT);
-          DBGIF_LOG1_ERROR("select failed: %d\n", altcom_errno());
-          return -1;
-        }
-
-      result = recv_request(fsock, &req);
-
-      if (result == RECV_REQ_FAILURE)
-       {
-         return -1;
-       }
     }
   else
     {
