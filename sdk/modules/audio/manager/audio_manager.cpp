@@ -582,6 +582,12 @@ MsgQueId AS_GetSelfDtq(void)
 }
 
 /*--------------------------------------------------------------------------*/
+bool AS_IsValidDtq(MsgQueId id)
+{
+  return (id != MSGQID_UNUSED) ? true : false;
+}
+
+/*--------------------------------------------------------------------------*/
 void AudioManager::create(MsgQueId selfDtq,
                           MsgQueId playerDtq,
                           MsgQueId subplayerDtq,

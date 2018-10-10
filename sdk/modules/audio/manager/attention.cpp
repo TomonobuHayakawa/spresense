@@ -39,6 +39,7 @@
 #include "common/audio_internal_message_types.h"
 
 extern MsgQueId AS_GetSelfDtq(void);
+extern bool AS_IsValidDtq(MsgQueId id);
 
 extern "C"
 {
@@ -80,12 +81,15 @@ void _Attention(uint8_t module_id,
 
   MsgQueId msgq_aud_mgr = AS_GetSelfDtq();
 
-  err_t er = MsgLib::send(msgq_aud_mgr,
-                          MsgPriNormal,
-                          MSG_AUD_MGR_CALL_ATTENTION,
-                          0,
-                          info);
-  F_ASSERT(er == ERR_OK);
+  if (AS_IsValidDtq(msgq_aud_mgr))
+    {
+      err_t er = MsgLib::send(msgq_aud_mgr,
+                              MsgPriNormal,
+                              MSG_AUD_MGR_CALL_ATTENTION,
+                              0,
+                              info);
+      F_ASSERT(er == ERR_OK);
+    }
 }
 
 #else /* ATTENTION_USE_FILENAME_LINE */
@@ -119,12 +123,15 @@ void _Attention(uint8_t module_id,
 
   MsgQueId msgq_aud_mgr = AS_GetSelfDtq();
 
-  err_t er = MsgLib::send(msgq_aud_mgr,
-                          MsgPriNormal,
-                          MSG_AUD_MGR_CALL_ATTENTION,
-                          0,
-                          info);
-  F_ASSERT(er == ERR_OK);
+  if (AS_IsValidDtq(msgq_aud_mgr))
+    {
+      err_t er = MsgLib::send(msgq_aud_mgr,
+                              MsgPriNormal,
+                              MSG_AUD_MGR_CALL_ATTENTION,
+                              0,
+                              info);
+      F_ASSERT(er == ERR_OK);
+    }
 }
 
 #endif /* ATTENTION_USE_FILENAME_LINE */
