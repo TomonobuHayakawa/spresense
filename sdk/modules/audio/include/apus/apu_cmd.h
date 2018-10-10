@@ -132,6 +132,13 @@ enum audio_pcm_format_type_e
 };
 typedef enum audio_pcm_format_type_e AudioPcmFormatType;
 
+/* SRC channel mode(24bit only) */
+enum AudioSRCChMode {
+	AudSRCChModeAll = 0,  /**< All channel mode */
+	AudSRCChModeEven,     /**< Even channel only mode */
+	AudSRCChModeOdd       /**< Odd channel only mode */
+};
+
 /* xLOUD mode */
 enum audio_xloud_mode_e
 {
@@ -244,6 +251,7 @@ struct apu_init_dec_cmd_s
 public:
   AudioCodec         codec_type;      /**< Codec type of input data */
   uint8_t            channel_num;     /**< Channel number of input data */
+  bool               use_slave_cpu;   /**< whether to process with slave core */
   uint8_t            slave_cpu_id;    /**< CPU id of slave DSP */
   uint32_t           bit_rate;        /**< Bit rate of input data */
   uint32_t           sampling_rate;   /**< Sampling rate of input data */
@@ -311,6 +319,7 @@ public:
   uint32_t  attenuation;           /**< Attenuation[dB] */
   uint16_t  in_word_len;           /**< Word length of input data[Byte] */
   uint16_t  out_word_len;          /**< Word length of output data[Byte] */
+  AudioSRCChMode ch_mode;          /**< mode of SRC target channel */
 
 };
 
@@ -355,7 +364,6 @@ struct ApuInitFilterCmd
 public:
   ApuFilterType  filter_type;  /**< Type of filter */
   uint8_t        channel_num;  /**< Channel number of input data */
-  uint8_t        slave_cpu_id; /**< CPU id of slave DSP */
   uint32_t       sample;       /**< Sample number of input data */
   union
   {
