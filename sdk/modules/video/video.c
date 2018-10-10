@@ -222,6 +222,8 @@ static const struct file_operations g_video_fops =
 
 static FAR const struct video_devops_s *g_video_devops;
 
+static bool is_initialized = false;
+
 /****************************************************************************
  * Public Data
  ****************************************************************************/
@@ -1322,6 +1324,11 @@ static FAR void *video_handler;
 
 int video_initialize(FAR const char *devpath)
 {
+  if (is_initialized)
+    {
+      return OK;
+    }
+
   g_video_devops = NULL;
 
 #ifdef CONFIG_VIDEO_ISX012
@@ -1343,6 +1350,8 @@ int video_initialize(FAR const char *devpath)
 
   video_handler = video_register(devpath);
 
+  is_initialized = true;
+
   return OK;
 }
 
@@ -1363,6 +1372,8 @@ int video_uninitialize(void)
     }
 
 #endif /* CONFIG_VIDEO_ISX012 */
+
+  is_initialized = false;
 
   return OK;
 }
