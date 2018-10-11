@@ -301,10 +301,12 @@ uint32_t DecoderComponent::init_apu(const InitDecCompParam& param,
   p_apu_cmd->init_dec_cmd.work_buffer  = param.work_buffer;
   if (param.dsp_multi_core)
     {
+      p_apu_cmd->init_dec_cmd.use_slave_cpu = true;
       p_apu_cmd->init_dec_cmd.slave_cpu_id = m_slave_cpu_id;
     }
   else
     {
+      p_apu_cmd->init_dec_cmd.use_slave_cpu = false;
       p_apu_cmd->init_dec_cmd.slave_cpu_id = APU_INVALID_CPU_ID;
     }
 
@@ -606,7 +608,6 @@ uint32_t DecoderComponent::activate(FAR ActDecCompParam *param)
 
   if (param->dsp_multi_core)
     {
-      snprintf(filepath, sizeof(filepath), "%s/SRC24", param->path);
       ret = DD_Load(filepath, cbRcvDspRes, (void*)this, &m_dsp_slave_handler);
       if (ret != DSPDRV_NOERROR)
         {
@@ -622,7 +623,7 @@ uint32_t DecoderComponent::activate(FAR ActDecCompParam *param)
 
       /* Slave DSP version check */
 
-      if (DSP_SLAVE_SRC_VERSION != DSP_VERSION_GET_VER(slave_dsp_inf))
+      if (decoder_dsp_version != DSP_VERSION_GET_VER(slave_dsp_inf))
         {
           logerr("Slave DSP version unmatch. expect %08x / actual %08x",
                   DSP_SLAVE_SRC_VERSION, DSP_VERSION_GET_VER(slave_dsp_inf));
