@@ -54,7 +54,15 @@ static int read_magic_number(const char *char_buf, pnm_header * header_ptr)
   if (strnlen(char_buf, MY_BUFSIZ) == 3)
     {
       header_ptr->magic_num = char_buf[1] - '0';
-      return 0;
+      if (header_ptr->magic_num == 5u || header_ptr->magic_num == 6u)
+        {
+          /* normal case */
+          return 0;
+        }
+      else
+        {
+          return -EFTYPE;
+        }
     }
   else
     {
