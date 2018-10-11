@@ -2201,8 +2201,9 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                                 FAR struct v4l2_ext_control *control)
 {
   FAR struct isx012_dev_s *priv = &g_isx012_private;
-  int16_t readvalue;
-  uint8_t   cnt;
+  int16_t    readvalue;
+  uint8_t    cnt;
+  int        ret = -EINVAL;
 
   if (control == NULL)
     {
@@ -2350,17 +2351,18 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                                         ISX012_REG_COLOREFFECT,
                                         ISX012_SIZE_COLOREFFECT);
 
-              for (cnt = 0; cnt < ISX012_MAX_COLOREFFECT + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_COLOREFFECT; cnt++)
                 {
                   if (g_isx012_supported_colorfx[cnt].regval == readvalue)
                     {
+                      ret = OK;
                       break;
                     }
                 }
 
-              if (cnt >= ISX012_MAX_COLOREFFECT)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               control->value = g_isx012_supported_colorfx[cnt].v4l2; 
@@ -2406,6 +2408,22 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                                         ISX012_REG_PRESETWB,
                                         ISX012_SIZE_PRESETWB);
 
+              for (cnt = 0; cnt <= ISX012_MAX_PRESETWB; cnt++)
+                {
+                  if (g_isx012_supported_presetwb[cnt].regval == readvalue)
+                    {
+                      ret = OK;
+                      break;
+                    }
+                }
+
+              if (ret != OK)
+                {
+                  return ret;
+                }
+
+              control->value = g_isx012_supported_presetwb[cnt].v4l2;
+
               break;
 
             case V4L2_CID_WIDE_DYNAMIC_RANGE:
@@ -2428,17 +2446,18 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                                         ISX012_REG_ISO,
                                         ISX012_SIZE_ISO);
 
-              for (cnt = 0; cnt < ISX012_MAX_ISO + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_ISO; cnt++)
                 {
                   if (g_isx012_supported_iso[cnt].regval == readvalue)
                     {
+                      ret = OK;
                       break;
                     }
                 }
 
-              if (cnt >= ISX012_MAX_ISO)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               control->value = g_isx012_supported_iso[cnt].v4l2;
@@ -2464,17 +2483,18 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                                         ISX012_REG_PHOTOMETRY,
                                         ISX012_SIZE_PHOTOMETRY);
 
-              for (cnt = 0; cnt < ISX012_MAX_PHOTOMETRY + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_PHOTOMETRY; cnt++)
                 {
                   if (g_isx012_supported_photometry[cnt].regval == readvalue)
                     {
+                      ret = OK;
                       break;
                     }
                 }
 
-              if (cnt >= ISX012_MAX_PHOTOMETRY)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               control->value = g_isx012_supported_photometry[cnt].v4l2;
@@ -2518,7 +2538,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                                 FAR struct v4l2_ext_control *control)
 {
   FAR struct isx012_dev_s *priv = &g_isx012_private;
-  int       ret;
+  int       ret = -EINVAL;
   uint8_t   cnt;
   uint8_t   *write_src;
   uint16_t  write_dst;
@@ -2824,17 +2844,18 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
               break;
 
             case V4L2_CID_COLORFX:
-              for (cnt = 0; cnt < ISX012_MAX_COLOREFFECT + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_COLOREFFECT; cnt++)
                 {
                   if (g_isx012_supported_colorfx[cnt].v4l2 == control->value)
                     {
+                      ret = OK;
                       break;
                     } 
                 }
 
-              if (cnt >= ISX012_MAX_COLOREFFECT)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               ret = isx012_putreg(priv,
@@ -2893,18 +2914,19 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
               break;
 
             case V4L2_CID_ISO_SENSITIVITY:
-              for (cnt = 0; cnt < ISX012_MAX_ISO + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_ISO; cnt++)
                 {
                   if (g_isx012_supported_iso[cnt].v4l2
                        == control->value)
                     {
+                      ret = OK;
                       break;
                     }
                 }
 
-              if (cnt >= ISX012_MAX_ISO)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               ret = isx012_putreg(priv,
@@ -2935,18 +2957,19 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
               break;
 
             case V4L2_CID_EXPOSURE_METERING:
-              for (cnt = 0; cnt < ISX012_MAX_PHOTOMETRY + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_PHOTOMETRY; cnt++)
                 {
                   if (g_isx012_supported_photometry[cnt].v4l2
                        == control->value)
                     {
+                      ret = OK;
                       break;
                     }
                 }
 
-              if (cnt >= ISX012_MAX_PHOTOMETRY)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               ret = isx012_putreg(priv,
@@ -2957,17 +2980,18 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
               break;
 
             case V4L2_CID_AUTO_N_PRESET_WHITE_BALANCE:
-              for (cnt = 0; cnt < ISX012_MAX_PRESETWB + 1; cnt++)
+              for (cnt = 0; cnt <= ISX012_MAX_PRESETWB; cnt++)
                 {
                   if (g_isx012_supported_presetwb[cnt].v4l2 == control->value)
                     {
+                      ret = OK;
                       break;
                     }
                 }
 
-              if (cnt >= ISX012_MAX_PRESETWB)
+              if (ret != OK)
                 {
-                  return -EINVAL;
+                  return ret;
                 }
 
               ret = isx012_putreg(priv,
