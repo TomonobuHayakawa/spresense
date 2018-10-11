@@ -1095,3 +1095,190 @@ int32_t sys_stop_timer(FAR sys_timer_t *timer)
 
   return 0;
 }
+
+/****************************************************************************
+ * Name: sys_thread_cond_init
+ *
+ * Description:
+ *   The sys_thread_cond_init() function shall initialize the condition
+ *   variable referenced by cond with attributes referenced by attr.
+ *   If attr is NULL, the default condition variable attributes shall be
+ *   used.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   cond_attr   Condition attributes.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_init(FAR sys_thread_cond_t *cond,
+                             FAR sys_thread_condattr_t *cond_attr)
+{
+  int32_t ret;
+
+  ret = pthread_cond_init(cond, cond_attr);
+  if (ret != 0)
+    {
+      DBGIF_LOG1_ERROR("Failed to initialize thread condition:%d\n", ret);
+      return -ret;
+    }
+
+  return 0;
+}
+
+/****************************************************************************
+ * Name: sys_thread_cond_destroy
+ *
+ * Description:
+ *   The sys_thread_cond_destroy() function shall destroy the given
+ *   condition variable specified by cond.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_destroy(FAR sys_thread_cond_t *cond)
+{
+  int32_t ret;
+
+  ret = pthread_cond_destroy(cond);
+  if (ret != 0)
+    {
+      DBGIF_LOG1_ERROR("Failed to destroy thread condition:%d\n", ret);
+      return -ret;
+    }
+
+  return 0;
+}
+
+/****************************************************************************
+ * Name: sys_thread_cond_wait
+ *
+ * Description:
+ *   The sys_thread_cond_destroy() functions shall block on a condition
+ *   variable.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   mutex       The handle of the mutex.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_wait(FAR sys_thread_cond_t *cond,
+                             FAR sys_mutex_t *mutex)
+{
+  return sys_thread_cond_timedwait(cond, mutex, SYS_TIMEO_FEVR);
+}
+
+/****************************************************************************
+ * Name: sys_thread_cond_wait
+ *
+ * Description:
+ *   The pthread_cond_timedwait() functions shall block on a condition
+ *   variable.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   mutex       The handle of the mutex.
+ *   timeout_ms  The time in milliseconds to wait.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_timedwait(FAR sys_thread_cond_t *cond,
+                                  FAR sys_mutex_t *mutex,
+                                  int32_t timeout_ms)
+{
+  int32_t         ret;
+  int32_t         l_errno;
+  struct timespec abs_time;
+  struct timespec curr_time;
+
+  if (timeout_ms == SYS_TIMEO_FEVR)
+    {
+      ret = pthread_cond_wait(cond, mutex);
+    }
+  else
+    {
+      /* Get current time. */
+
+      ret = clock_gettime(CLOCK_REALTIME, &curr_time);
+      if (ret != OK)
+        {
+          l_errno = errno;
+          DBGIF_LOG2_ERROR("Failed to get time:%d errno:%d\n", ret, errno);
+          return -l_errno;
+        }
+
+      abs_time.tv_sec  = timeout_ms / 1000;
+      abs_time.tv_nsec =
+        (timeout_ms - (abs_time.tv_sec * 1000)) * 1000 * 1000;
+
+      abs_time.tv_sec  += curr_time.tv_sec;
+      abs_time.tv_nsec += curr_time.tv_nsec;
+
+      /* Check more than 1 sec. */
+
+      if (abs_time.tv_nsec >= (1000 * 1000 * 1000))
+        {
+          abs_time.tv_sec  += 1;
+          abs_time.tv_nsec -= (1000 * 1000 * 1000);
+        }
+
+      ret = pthread_cond_timedwait(cond, mutex, &abs_time);
+    }
+
+  if (ret != 0)
+    {
+      DBGIF_LOG1_ERROR("Failed to wait thread condition:%d.\n", ret);
+      return -ret;
+    }
+
+  return 0;
+}
+
+/****************************************************************************
+ * Name: sys_thread_cond_signal
+ *
+ * Description:
+ *   The pthread_cond_signal() function shall unblock at least one of the
+ *   threads that are blocked on the specified condition variable cond.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_signal(FAR sys_thread_cond_t *cond)
+{
+  int32_t ret;
+
+  ret = pthread_cond_signal(cond);
+  if (ret != 0)
+    {
+      DBGIF_LOG1_ERROR("Failed to signal thread condition:%d\n", ret);
+      return -ret;
+    }
+
+  return 0;
+}

@@ -601,4 +601,234 @@ int32_t sys_start_timer(FAR sys_timer_t *timer,
 
 int32_t sys_stop_timer(FAR sys_timer_t *timer);
 
+/****************************************************************************
+ * Name: sys_thread_cond_init
+ *
+ * Description:
+ *   The sys_thread_cond_init() function shall initialize the condition
+ *   variable referenced by cond with attributes referenced by attr.
+ *   If attr is NULL, the default condition variable attributes shall be
+ *   used.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   cond_attr   Condition attributes.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_init(FAR sys_thread_cond_t *cond,
+                             FAR sys_thread_condattr_t *cond_attr);
+
+/****************************************************************************
+ * Name: sys_thread_cond_destroy
+ *
+ * Description:
+ *   The sys_thread_cond_destroy() function shall destroy the given
+ *   condition variable specified by cond.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_destroy(FAR sys_thread_cond_t *cond);
+
+/****************************************************************************
+ * Name: sys_thread_cond_wait
+ *
+ * Description:
+ *   The sys_thread_cond_wait() functions shall block on a condition
+ *   variable.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   mutex       The handle of the mutex.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_wait(FAR sys_thread_cond_t *cond,
+                             FAR sys_mutex_t *mutex);
+
+/****************************************************************************
+ * Name: sys_thread_cond_timedwait
+ *
+ * Description:
+ *   The sys_thread_cond_timedwait() functions shall block on a condition
+ *   variable.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   mutex       The handle of the mutex.
+ *   timeout_ms  The time in milliseconds to wait.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_timedwait(FAR sys_thread_cond_t *cond,
+                                  FAR sys_mutex_t *mutex,
+                                  int32_t timeout_ms);
+
+/****************************************************************************
+ * Name: sys_thread_cond_signal
+ *
+ * Description:
+ *   The sys_thread_cond_signal() function shall unblock at least one of the
+ *   threads that are blocked on the specified condition variable cond.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t sys_thread_cond_signal(FAR sys_thread_cond_t *cond);
+
+
+/****************************************************************************
+ * Inline Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: sys_create_thread_cond_mutex
+ *
+ * Description:
+ *   Create thread condition and mutex resorces. This function is utility
+ *   wrapper for using sys_thread_cond_init.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   mutex       The handle of the mutex.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+static inline int32_t sys_create_thread_cond_mutex(
+  FAR sys_thread_cond_t *cond, FAR sys_mutex_t *mutex)
+{
+  int32_t      ret;
+  sys_cremtx_s mtx_param = {0};
+
+  ret = sys_create_mutex(mutex, &mtx_param);
+  if (ret == 0)
+    {
+      ret = sys_thread_cond_init(cond, NULL);
+      if (ret != 0)
+        {
+          sys_delete_mutex(mutex);
+        }
+    }
+
+  return ret;
+}
+
+/****************************************************************************
+ * Name: sys_delete_thread_cond_mutex
+ *
+ * Description:
+ *   Delete thread condition and mutex resorces. This function is utility
+ *   wrapper for using sys_thread_cond_destroy.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   mutex       The handle of the mutex.
+ *
+ * Returned Value:
+ *   None.
+ *
+ ****************************************************************************/
+
+static inline void sys_delete_thread_cond_mutex(FAR sys_thread_cond_t *cond,
+                                                FAR sys_mutex_t *mutex)
+{
+  sys_delete_mutex(mutex);
+  sys_thread_cond_destroy(cond);
+}
+
+/****************************************************************************
+ * Name: sys_wait_thread_cond
+ *
+ * Description:
+ *   The sys_thread_cond_timedwait() functions shall block on a condition
+ *   variable. This function is utility wrapper for
+ *   using sys_thread_cond_wait.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   mutex       The handle of the mutex.
+ *   timeout_ms  The time in milliseconds to wait.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+static inline int32_t sys_wait_thread_cond(FAR sys_thread_cond_t *cond,
+                                           FAR sys_mutex_t *mutex,
+                                           int32_t timeout_ms)
+{
+  int32_t ret;
+
+  sys_lock_mutex(mutex);
+
+  ret = sys_thread_cond_timedwait(cond, mutex, timeout_ms);
+
+  sys_unlock_mutex(mutex);
+
+  return ret;
+}
+
+/****************************************************************************
+ * Name: sys_signal_thread_cond
+ *
+ * Description:
+ *   The sys_signal_thread_cond() function shall unblock at least one of the
+ *   threads that are blocked on the specified condition variable cond.
+ *   This function is utility wrapper for using sys_thread_cond_signal.
+ *
+ * Input Parameters:
+ *   cond        Condition variable.
+ *   mutex       The handle of the mutex.
+ *
+ * Returned Value:
+ *   If successful, shall return zero.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+static inline int32_t sys_signal_thread_cond(FAR sys_thread_cond_t *cond,
+                                             FAR sys_mutex_t *mutex)
+{
+  int32_t ret;
+
+  sys_lock_mutex(mutex);
+
+  ret = sys_thread_cond_signal(cond);
+
+  sys_unlock_mutex(mutex);
+
+  return ret;
+}
+
 #endif /* __MODULES_LTE_INCLUDE_OSAL_OSAL_H */

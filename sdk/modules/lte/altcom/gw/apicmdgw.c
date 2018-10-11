@@ -80,9 +80,6 @@
 #define APICMDGW_GET_DATA_LEN(hdr_ptr) \
   (ntohs(((FAR struct apicmd_cmdhdr_s *)hdr_ptr)->dtlen))
 
-#define APICMDGW_CONDSIGNAL(sem) (sys_post_semaphore(&(sem)))
-#define APICMDGW_CONDWAIT(sem, timeout) (sys_wait_semaphore(&(sem), timeout))
-
 #define APICMDGW_GET_RESCMDID(cmdid) (cmdid | 0x01 << 15)
 
 /****************************************************************************
@@ -96,7 +93,8 @@ struct apicmdgw_blockinf_s
   uint16_t                        cmdid;
   uint16_t                        transid;
   uint16_t                        bufflen;
-  sys_sem_t                       waitsem;
+  sys_thread_cond_t               waitcond;
+  sys_mutex_t                     waitcondmtx;
   int32_t                         result;
   FAR struct apicmdgw_blockinf_s  *next;
 };
@@ -110,7 +108,8 @@ static FAR struct apicmdgw_blockinf_s *g_blkinfotbl   = NULL;
 static sys_mutex_t                    g_blkinfotbl_mtx;
 static sys_task_t                     g_rcvtask;
 static uint8_t                        g_seqid_counter = 0;
-static sys_sem_t                      g_delwaitsem;
+static sys_thread_cond_t              g_delwaitcond;
+static sys_mutex_t                    g_delwaitcondmtx;
 static FAR struct hal_if_s            *g_hal_if       = NULL;
 static FAR struct evtdisp_s           *g_evtdisp      = NULL;
 static sys_cremtx_s                   g_mtxparam;
@@ -400,7 +399,7 @@ static void apicmdgw_remtable(FAR struct apicmdgw_blockinf_s *tbl)
     }
 
   DBGIF_ASSERT(tmptbl == tbl, "Can not find a table from the table list.");
-  sys_delete_semaphore(&tmptbl->waitsem);
+  sys_delete_thread_cond_mutex(&tmptbl->waitcond, &tmptbl->waitcondmtx);
   BUFFPOOL_FREE(tmptbl);
 
   apicmdgw_blkinfotbl_unlock();
@@ -459,8 +458,8 @@ static bool apicmdgw_writetable(uint16_t cmdid,
           DBGIF_LOG2_ERROR("Unexpected length. datalen: %d, bufflen: %d\n", datalen, tbl->bufflen);
         }
 
-      ret = APICMDGW_CONDSIGNAL(tbl->waitsem);
-      DBGIF_ASSERT(0 == ret, "sys_delete_mutex().\n");
+      ret = sys_signal_thread_cond(&tbl->waitcond, &tbl->waitcondmtx);
+      DBGIF_ASSERT(0 == ret, "sys_signal_thread_cond().\n");
     }
 
   apicmdgw_blkinfotbl_unlock();
@@ -469,10 +468,10 @@ static bool apicmdgw_writetable(uint16_t cmdid,
 }
 
 /****************************************************************************
- * Name: apicmdgw_postsemall
+ * Name: apicmdgw_relcondwaitall
  *
  * Description:
- *   Post semaphore from all table.
+ *   Release all waiting tasks.
  *
  * Input Parameters:
  *   None.
@@ -482,7 +481,7 @@ static bool apicmdgw_writetable(uint16_t cmdid,
  *
  ****************************************************************************/
 
-static void apicmdgw_postsemall(void)
+static void apicmdgw_relcondwaitall(void)
 {
   int32_t ret;
   FAR struct apicmdgw_blockinf_s *tmptbl;
@@ -492,8 +491,8 @@ static void apicmdgw_postsemall(void)
   tmptbl = g_blkinfotbl;
   while(tmptbl)
     {
-      ret = APICMDGW_CONDSIGNAL(tmptbl->waitsem);
-      DBGIF_ASSERT(0 == ret, "sys_delete_mutex().\n");
+      ret = sys_signal_thread_cond(&tmptbl->waitcond, &tmptbl->waitcondmtx);
+      DBGIF_ASSERT(0 == ret, "sys_signal_thread_cond().\n");
 
       tmptbl = tmptbl->next;
     }
@@ -692,8 +691,8 @@ static void apicmdgw_recvtask(void *arg)
       g_hal_if->freebuff(g_hal_if, (void *)rcvbuff);
     }
 
-  ret = APICMDGW_CONDSIGNAL(g_delwaitsem);
-  DBGIF_ASSERT(0 == ret, "sys_delete_mutex().\n");
+  ret = sys_signal_thread_cond(&g_delwaitcond, &g_delwaitcondmtx);
+  DBGIF_ASSERT(0 == ret, "sys_signal_thread_cond().\n");
 
   ret = sys_delete_task(SYS_OWN_TASK);
   DBGIF_ASSERT(0 == ret, "sys_delete_task()\n");
@@ -722,7 +721,6 @@ int32_t apicmdgw_init(FAR struct apicmdgw_set_s *set)
 {
   int32_t       ret;
   sys_cretask_s taskset;
-  sys_cresem_s  semset   = {0, 1};
   char          thname[] = "apicmdgw_main";
 
   if (!set || !set->halif || !set->dispatcher)
@@ -740,8 +738,8 @@ int32_t apicmdgw_init(FAR struct apicmdgw_set_s *set)
   g_hal_if  = set->halif;
   g_evtdisp = set->dispatcher;
 
-  ret = sys_create_semaphore(&g_delwaitsem, &semset);
-  DBGIF_ASSERT(0 == ret, "sys_create_semaphore().\n");
+  ret = sys_create_thread_cond_mutex(&g_delwaitcond, &g_delwaitcondmtx);
+  DBGIF_ASSERT(0 == ret, "sys_create_thread_cond_mutex().\n");
 
   taskset.function   = apicmdgw_recvtask;
   taskset.name       = (FAR int8_t *)thname;
@@ -783,14 +781,18 @@ int32_t apicmdgw_fin(void)
 
   g_isinit = false;
 
+  sys_lock_mutex(&g_delwaitcondmtx);
+
   ret = g_hal_if->abortrecv(g_hal_if);
   DBGIF_ASSERT(0 <= ret, "abortrecv()\n");
 
-  ret = APICMDGW_CONDWAIT(g_delwaitsem, SYS_TIMEO_FEVR);
-  DBGIF_ASSERT(0 <= ret, "APICMDGW_CONDWAIT()\n");
+  ret = sys_thread_cond_wait(&g_delwaitcond, &g_delwaitcondmtx);
+  DBGIF_ASSERT(0 <= ret, "sys_wait_thread_cond()\n");
 
-  sys_delete_semaphore(&g_delwaitsem);
-  apicmdgw_postsemall();
+  sys_unlock_mutex(&g_delwaitcondmtx);
+
+  sys_delete_thread_cond_mutex(&g_delwaitcond, &g_delwaitcondmtx);
+  apicmdgw_relcondwaitall();
 
   g_hal_if       = NULL;
   g_evtdisp      = NULL;
@@ -828,7 +830,6 @@ int32_t apicmdgw_send(FAR uint8_t *cmd, FAR uint8_t *respbuff,
   uint32_t                        sendlen;
   FAR struct apicmd_cmdhdr_s      *hdr_ptr;
   FAR struct apicmdgw_blockinf_s  *blocktbl = NULL;
-  sys_cresem_s                    semparam = {0, 1};
 
   if (!g_isinit)
     {
@@ -861,7 +862,8 @@ int32_t apicmdgw_send(FAR uint8_t *cmd, FAR uint8_t *respbuff,
       blocktbl->cmdid    =
         APICMDGW_GET_RESCMDID(APICMDGW_GET_CMDID(hdr_ptr));
       blocktbl->recvlen  = resplen;
-      ret = sys_create_semaphore(&blocktbl->waitsem, &semparam);
+      ret = sys_create_thread_cond_mutex(&blocktbl->waitcond,
+                                         &blocktbl->waitcondmtx);
       if (0 > ret)
         {
           BUFFPOOL_FREE(blocktbl);
@@ -892,7 +894,8 @@ int32_t apicmdgw_send(FAR uint8_t *cmd, FAR uint8_t *respbuff,
     {
       /* Recv message wait here. */
       
-      ret = APICMDGW_CONDWAIT(blocktbl->waitsem, timeout_ms);
+      ret = sys_wait_thread_cond(&blocktbl->waitcond, &blocktbl->waitcondmtx,
+                                 timeout_ms);
 
       if (0 > ret)
         {
