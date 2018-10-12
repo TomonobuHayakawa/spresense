@@ -12,3 +12,4 @@ source modules/lte/Kconfig
 source modules/video/Kconfig
 source modules/bluetooth/Kconfig
 source modules/dnnrt/Kconfig
+source modules/imageproc/Kconfig
