@@ -66,6 +66,10 @@
 #include <nuttx/nx/nx.h>
 #include <nuttx/nx/nxglib.h>
 #include "nximage.h"
+
+#  ifdef CONFIG_IMAGEPROC
+#    include <imageproc/imageproc.h>
+#  endif
 #endif
 
 /****************************************************************************
@@ -209,6 +213,7 @@ static inline int nximage_initialize(void)
   return 0;
 }
 
+#  ifndef CONFIG_IMAGEPROC
 static inline void ycbcr2rgb(uint8_t y,  uint8_t cb, uint8_t cr,
                              uint8_t *r, uint8_t *g, uint8_t *b)
 {
@@ -261,6 +266,7 @@ static void yuv2rgb(void *buf, uint32_t size)
       *dest++ = ycbcrtorgb565(uyvy.y1, uyvy.u0, uyvy.v0);
     }
 }
+#  endif /* !CONFIG_IMAGEPROC */
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
 
 static int  write_file(uint8_t *data, size_t len, uint32_t format)
@@ -470,6 +476,9 @@ int camera_main(int argc, char *argv[])
       printf("camera_main: Failed to get NX handle: %d\n", errno);
       return ERROR;
     }
+#  ifdef CONFIG_IMAGEPROC
+  imageproc_initialize();
+#  endif
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
 
   if (argc>=2 && strncmp(argv[1], "cap", 4)==0)
@@ -562,12 +571,17 @@ int camera_main(int argc, char *argv[])
       write_file((uint8_t *)buf.m.userptr, (size_t)buf.bytesused, format);
 
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
-      if (mode == V4L2_PIX_FMT_UYVY)
+      if (format == V4L2_PIX_FMT_UYVY)
         {
           /* Convert YUV color format to RGB565 */
 
+#  ifdef CONFIG_IMAGEPROC
+          imageproc_convert_yuv2rgb((void *)buf.m.userptr,
+                       VIDEO_HSIZE_QVGA,
+                       VIDEO_VSIZE_QVGA);
+#  else
           yuv2rgb((void *)buf.m.userptr, buf.bytesused);
-
+#  endif
           nximage_image(g_nximage.hbkgd, (void *)buf.m.userptr);
         }
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
@@ -606,6 +620,9 @@ errout_with_isx:
 
 errout_with_nx:
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
+#  ifdef CONFIG_IMAGEPROC
+  imageproc_finalize();
+#  endif
   nx_close(g_nximage.hnx);
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
 
