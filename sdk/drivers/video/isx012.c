@@ -1227,6 +1227,7 @@ static int isx012_get_range_of_fmt(FAR struct v4l2_fmtdesc *format)
               break;
 
             case 1:
+#if 0 /* To Be Supported */
               /* JPEG + YUV 4:2:2 */
 
               strncpy(format->description,
@@ -1238,6 +1239,7 @@ static int isx012_get_range_of_fmt(FAR struct v4l2_fmtdesc *format)
               break;
 
             case 2:
+#endif
               /* YUV 4:2:2 */
 
               strncpy(format->description, "YUV 4:2:2", V4L2_FMT_DSC_MAX);
@@ -1301,7 +1303,7 @@ static int isx012_get_range_of_framesize(FAR struct v4l2_frmsizeenum *frmsize)
         frmsize->stepwise.step_height        = ISX012_SIZE_STEP;
 
         break;
-
+#if 0 /* To Be Supported */
       case V4L2_PIX_FMT_JPEG_WITH_SUBIMG:    /* JPEG + YUV 4:2:2 */
         if (frmsize->subimg_pixel_format != V4L2_PIX_FMT_UYVY)
           {
@@ -1327,7 +1329,7 @@ static int isx012_get_range_of_framesize(FAR struct v4l2_frmsizeenum *frmsize)
         frmsize->subimg.stepwise.step_height = ISX012_SIZE_STEP;
  
         break;
-
+#endif
       default:
         /* Unsupported pixel format */
 
@@ -1825,7 +1827,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-
+#if 0 /* To Be Supported */
             case V4L2_CID_RED_BALANCE:
               range->type          = ISX012_TYPE_REDBALANCE;
               range->minimum       = ISX012_MIN_REDBALANCE;
@@ -1849,7 +1851,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-
+#endif
             case V4L2_CID_GAMMA_CURVE:
               range->type          = ISX012_TYPE_GAMMACURVE;
               range->minimum       = ISX012_MIN_GAMMACURVE;
@@ -1969,6 +1971,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
       case V4L2_CTRL_CLASS_CAMERA:
         switch (range->id)
           {
+#if 0 /* To Be Supported */
             case V4L2_CID_EXPOSURE_AUTO:
               range->type          = ISX012_TYPE_EXPOSUREAUTO;
               range->minimum       = ISX012_MIN_EXPOSUREAUTO;
@@ -1980,7 +1983,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-
+#endif
             case V4L2_CID_EXPOSURE_ABSOLUTE:
               range->type          = ISX012_TYPE_EXPOSURETIME;
               range->minimum       = ISX012_MIN_EXPOSURETIME;
@@ -2247,7 +2250,7 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
               control->value = (~readvalue) & REGVAL_CPUEXT_BIT_AWBSTOP;
 
               break;
-
+#if 0 /* To Be Supported */
             case V4L2_CID_RED_BALANCE:
               control->value = isx012_getreg(priv,
                                              ISX012_REG_REDBALANCE,
@@ -2259,7 +2262,7 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                                              ISX012_REG_BLUEBALANCE,
                                              ISX012_SIZE_BLUEBALANCE);
               break;
-
+#endif
             case V4L2_CID_EXPOSURE:
               control->value = isx012_getreg(priv,
                                              ISX012_REG_EXPOSURE,
@@ -2380,6 +2383,7 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
       case V4L2_CTRL_CLASS_CAMERA:
         switch (control->id)
           {
+#if 0 /* To Be Supported */
             case V4L2_CID_EXPOSURE_AUTO:
               readvalue = isx012_getreg(priv,
                                         ISX012_REG_EXPOSUREAUTO,
@@ -2395,7 +2399,7 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                 }
 
               break;
-
+#endif
             case V4L2_CID_EXPOSURE_ABSOLUTE:
               control->value = isx012_getreg(priv,
                                              ISX012_REG_EXPOSURETIME,
@@ -2639,7 +2643,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                                   ISX012_SIZE_AUTOWB);
 
               break;
-
+#if 0 /* To Be Supported */
             case V4L2_CID_RED_BALANCE:
               CHECK_RANGE(control->value,
                           ISX012_MIN_REDBALANCE,
@@ -2665,8 +2669,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                                   ISX012_SIZE_BLUEBALANCE);
 
               break;
-
-
+#endif
             case V4L2_CID_GAMMA_CURVE:
               if (control->p_u8 == NULL)
                 {
@@ -2876,9 +2879,10 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
       case V4L2_CTRL_CLASS_CAMERA:
         switch (control->id)
           {
+#if 0 /* To Be Supported */
             case V4L2_CID_EXPOSURE_AUTO:
               break;
-
+#endif
             case V4L2_CID_EXPOSURE_ABSOLUTE:
               CHECK_RANGE(control->value,
                           ISX012_MIN_EXPOSURETIME,
