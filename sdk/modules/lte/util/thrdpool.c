@@ -64,8 +64,7 @@
 enum thrdpool_thrdstate_e
 {
   THRDPOOL_WAITING = 0,
-  THRDPOOL_RUNNABLE,
-  THRDPOOL_TERMINATED
+  THRDPOOL_RUNNABLE
 };
 
 struct thrdpool_queelements_s
@@ -76,8 +75,9 @@ struct thrdpool_queelements_s
 
 struct thrdpool_share_s
 {
-  sys_mq_t  quehandle;
-  sys_sem_t delwaitsem;
+  sys_mq_t          quehandle;
+  sys_thread_cond_t delwaitcond;
+  sys_mutex_t       delwaitcondmtx;
 };
 
 struct thrdpool_info_s
@@ -235,8 +235,8 @@ static void thrdpool_thrdmain(FAR void *arg)
       info->state = THRDPOOL_WAITING;
     }
 
-  info->state = THRDPOOL_TERMINATED;
-  THRDPOOL_CONDSIGNAL(info->share->delwaitsem);
+  sys_signal_thread_cond(&info->share->delwaitcond,
+                         &info->share->delwaitcondmtx);
   sys_delete_task(SYS_OWN_TASK);
 }
 
@@ -266,7 +266,6 @@ FAR struct thrdpool_s *thrdpool_create(FAR struct thrdpool_set_s *set)
   sys_cretask_s                   thread_param;
   sys_cremq_s                     que_param;
   char                            thrdname[THRDPOOL_THRDNAME_MAX_LEN];
-  sys_cresem_s                    sem_param;
 
   if (!set || set->maxthrdnum <= 0 || set->maxquenum <= 0)
     {
@@ -304,13 +303,10 @@ FAR struct thrdpool_s *thrdpool_create(FAR struct thrdpool_set_s *set)
       goto errout_with_tablefree;
     }
 
-  /* Create semaphore */
-
-  THRDPOOL_INIT_BIN_SEM_SET(sem_param);
-  if (sys_create_semaphore(&table->share.delwaitsem, &sem_param)
-    < 0)
+  if (sys_create_thread_cond_mutex(&table->share.delwaitcond,
+                                   &table->share.delwaitcondmtx) < 0)
     {
-      DBGIF_LOG_ERROR("Semaphore create failed.\n");
+      DBGIF_LOG_ERROR("sys_create_thread_cond_mutex failed.\n");
       goto errout_with_quedelete;
     }
 
@@ -355,7 +351,8 @@ errout_with_thrddelete:
 
   SYS_FREE(table->thrdinfolist);
 errout_with_semdelete:
-  sys_delete_semaphore(&table->share.delwaitsem);
+  sys_delete_thread_cond_mutex(&table->share.delwaitcond,
+                               &table->share.delwaitcondmtx);
 errout_with_quedelete:
   sys_delete_mqueue(&table->share.quehandle);
 errout_with_tablefree:
@@ -384,7 +381,6 @@ int32_t thrdpool_delete(FAR struct thrdpool_s *thiz)
 {
   FAR struct thrdpool_datatable_s *table = NULL;
   uint16_t                        num    = 0;
-  uint16_t                        count  = 0;
   struct thrdpool_queelements_s   element;
   int32_t                         ret    = 0;
 
@@ -399,27 +395,23 @@ int32_t thrdpool_delete(FAR struct thrdpool_s *thiz)
 
   for (num = 0; num < table->maxthrdnum; num++)
     {
+      sys_lock_mutex(&table->share.delwaitcondmtx);
+
+      /* Send delete request to thread main */
+
       ret = sys_send_mqueue(&table->share.quehandle, (FAR int8_t *)&element,
         sizeof(struct thrdpool_queelements_s), SYS_TIMEO_FEVR);
       DBGIF_ASSERT(0 == ret, "Queue send failed.");
-    }
 
-  while(count != table->maxthrdnum)
-    {
-      THRDPOOL_CONDWAIT(table->share.delwaitsem, SYS_TIMEO_FEVR);
-      for (num = 0, count = 0; num < table->maxthrdnum; num++)
-        {
-          if (table->thrdinfolist[num].state != THRDPOOL_TERMINATED)
-            {
-              break;
-            }
-          
-          count++;
-        }
+      sys_thread_cond_wait(&table->share.delwaitcond,
+                           &table->share.delwaitcondmtx);
+
+      sys_unlock_mutex(&table->share.delwaitcondmtx);
     }
 
   DBGIF_LOG_DEBUG("All thread delete success.\n");
-  sys_delete_semaphore(&table->share.delwaitsem);
+  sys_delete_thread_cond_mutex(&table->share.delwaitcond,
+                               &table->share.delwaitcondmtx);
   sys_delete_mqueue(&table->share.quehandle);
   SYS_FREE(table->thrdinfolist);
   SYS_FREE(table);

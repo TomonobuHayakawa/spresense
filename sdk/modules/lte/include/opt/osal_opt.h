@@ -71,5 +71,7 @@ typedef int32_t             sys_evflag_t;
 typedef uint32_t            sys_evflag_ptn_t;
 typedef uint32_t            sys_evflag_mode_t;
 typedef timer_t             sys_timer_t;
+typedef pthread_cond_t      sys_thread_cond_t;
+typedef pthread_condattr_t  sys_thread_condattr_t;
 
 #endif /* __MODULES_LTE_INCLUDE_OPT_OSAL_OPT_H */

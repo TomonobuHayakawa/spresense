@@ -47,18 +47,8 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define BUFFPOOL_NONTIMEOUT     (SYS_TIMEO_FEVR)
 #define BUFFPOOL_LOCK(handle)   do { sys_lock_mutex(&(handle)); } while (0)
 #define BUFFPOOL_UNLOCK(handle) do { sys_unlock_mutex(&(handle)); } while (0)
-#define BUFFPOOL_CONDWAIT(handle, timeout) \
-  (sys_wait_semaphore(&(handle), timeout))
-#define BUFFPOOL_CONDSIGNAL(handle) \
-  do { sys_post_semaphore(&(handle)); } while (0)
-#define BUFFPOOL_INIT_BIN_SEM_SET(param) \
-  { \
-    (param).initial_count = 0; \
-    (param).max_count     = 1; \
-  }
 #define BUFFPOOL_PULL_BUFFINFO(info, pullpos) \
   do { info = pullpos; pullpos = (pullpos)->next; } while (0)
 #define BUFFPOOL_PUSH_BUFFINFO(info, pushpos) \
@@ -87,7 +77,8 @@ struct buffpool_blockinfo_s
 struct buffpool_table_s
 {
   sys_mutex_t                     buffmtx;
-  sys_sem_t                       getwaitsem;
+  sys_thread_cond_t               getwaitcond;
+  sys_mutex_t                     getwaitcondmtx;
   FAR struct buffpool_blockinfo_s *startblkinfo;
 };
 
@@ -401,7 +392,6 @@ buffpool_t buffpool_create(
   FAR struct buffpool_blockinfo_s *blkinfo  = NULL;
   int8_t                          num       = 0;
   sys_cremtx_s                    mtx_param;
-  sys_cresem_s                    sem_param;
   
   if (!set || !setnum)
     {
@@ -448,13 +438,12 @@ buffpool_t buffpool_create(
       goto errout_with_tablefree;
     }
 
-  /* Create semaphore */
+  /* Initialize thread condition */
 
-  BUFFPOOL_INIT_BIN_SEM_SET(sem_param);
-  if (sys_create_semaphore(&table->getwaitsem, &sem_param)
+  if (sys_create_thread_cond_mutex(&table->getwaitcond, &table->getwaitcondmtx)
     < 0)
     {
-      DBGIF_LOG_ERROR("Semaphore create failed.\n");
+      DBGIF_LOG_ERROR("Initialize thread condition failed.\n");
       errno = ENOMEM;
       goto errout_with_mtxdelete;
     }
@@ -488,7 +477,7 @@ errout_with_blkinfodelete:
       buffpool_deleteblockinfo(table);
     }
 
-  sys_delete_semaphore(&table->getwaitsem);
+  sys_delete_thread_cond_mutex(&table->getwaitcond, &table->getwaitcondmtx);
 errout_with_mtxdelete:
   sys_delete_mutex(&table->buffmtx);
 errout_with_tablefree:
@@ -524,7 +513,7 @@ int32_t buffpool_delete(buffpool_t thiz)
 
   table = (FAR struct buffpool_table_s *)thiz;
   buffpool_deleteblockinfo(table);
-  sys_delete_semaphore(&table->getwaitsem);
+  sys_delete_thread_cond_mutex(&table->getwaitcond, &table->getwaitcondmtx);
   sys_delete_mutex(&table->buffmtx);
   SYS_FREE(table);
 
@@ -579,8 +568,8 @@ FAR void *buffpool_alloc(buffpool_t thiz, uint32_t reqsize)
           break;
         }
     }
-  while (BUFFPOOL_CONDWAIT(table->getwaitsem, BUFFPOOL_NONTIMEOUT)
-    == 0);
+  while (sys_wait_thread_cond(&table->getwaitcond, &table->getwaitcondmtx,
+                              SYS_TIMEO_FEVR) == 0);
 
   return result;
 }
@@ -661,6 +650,6 @@ int32_t buffpool_free(buffpool_t thiz, FAR void *buff)
     }
 
   BUFFPOOL_UNLOCK(table->buffmtx);
-  BUFFPOOL_CONDSIGNAL(table->getwaitsem);
+  sys_signal_thread_cond(&table->getwaitcond, &table->getwaitcondmtx);
   return 0;
 }
