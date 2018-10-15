@@ -187,7 +187,7 @@ static int video_streamoff(FAR struct video_mng_s *vmng,
                            FAR enum v4l2_buf_type *type);
 static int video_do_halfpush(bool enable);
 static int video_takepict_start(FAR struct video_mng_s *vmng,
-                                uint32_t interval);
+                                int32_t                capture_num);
 static int video_takepict_stop(FAR struct video_mng_s *vmng,
                                bool halfpush);
 static int video_queryctrl(FAR struct v4l2_queryctrl *ctrl);
@@ -790,12 +790,19 @@ static int video_do_halfpush(bool enable)
 }
 
 static int video_takepict_start(FAR struct video_mng_s *vmng,
-                                uint32_t               interval)
+                                int32_t                capture_num)
 {
   irqstate_t           flags;
 
   if (vmng == NULL)
     {
+      return -EINVAL;
+    }
+
+  if (capture_num > 0)
+    {
+      /* TODO: to be supported */
+
       return -EINVAL;
     }
 
@@ -1111,7 +1118,7 @@ static int video_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
         break;
 
       case VIDIOC_TAKEPICT_START:
-        ret = video_takepict_start(priv, arg);
+        ret = video_takepict_start(priv, (int32_t)arg);
 
         break;
 

@@ -175,7 +175,11 @@ extern "C" {
  * Start taking picture
  *
  * @param[in] arg
- * Address pointing to uint32_t
+ * The number of times the picture is taken.
+ * Type is int32_t, not address pointer.\n
+ * 0 or negative value means continuing until VIDIOC_TAKEPICT_STOP. \n
+ * Positive value(to be supported) means continuing
+ * up to a specified number of times  or until VIDIOC_TAKEPICT_STOP.
  */
 
 #define VIDIOC_TAKEPICT_START         _VIDIOC(0x000D)
