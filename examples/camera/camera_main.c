@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <dirent.h>
+#include <sys/stat.h>
 #include <errno.h>
 #include <debug.h>
 #include <fcntl.h>
@@ -467,7 +467,7 @@ int camera_main(int argc, char *argv[])
   int ret;
   int exitcode = ERROR;
   int v_fd;
-  DIR *dirp;
+  struct stat stat_buf;
   uint32_t loop;
   uint32_t buf_type;
   uint32_t format;
@@ -491,10 +491,9 @@ int camera_main(int argc, char *argv[])
    * Otherwise, use SPI flash.
    */
 
-  dirp = opendir("/mnt/sd0");
-  if (!dirp)
+  ret = stat("/mnt/sd0", &stat_buf);
+  if (ret < 0)
     {
-      closedir(dirp);
       strncpy(save_dir, "/mnt/spif", IMAGE_SAVEDIR_LEN);
     }
   else
