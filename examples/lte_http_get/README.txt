@@ -9,10 +9,7 @@ examples/lte_http_get
 
   Build kernel and SDK:
 
-  You have to specify "KERNCONF=release_net" for kernel configuration
-  as below. This application can not be used if you specified "KERNCONF=release".
-
-  $ make buildkernel KERNCONF=release_net
+  $ make buildkernel KERNCONF=release
 
   This application can be used by lte_http_get default config.
 
