@@ -801,7 +801,7 @@ static int video_takepict_start(FAR struct video_mng_s *vmng,
 
   if (capture_num > 0)
     {
-      /* To Be Supported */
+      /* TODO: to be supported */
 
       return -EINVAL;
     }
