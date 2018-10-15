@@ -42,6 +42,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <dirent.h>
 #include <errno.h>
 #include <debug.h>
 #include <fcntl.h>
@@ -88,6 +89,9 @@
 
 #define DEFAULT_REPEAT_NUM (10)
 
+#define IMAGE_FILENAME_LEN (32)
+#define IMAGE_SAVEDIR_LEN  (10)
+
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
 #ifndef CONFIG_EXAMPLES_CAMERA_LCD_DEVNO
 #  define CONFIG_EXAMPLES_CAMERA_LCD_DEVNO 0
@@ -128,7 +132,8 @@ static struct v_buffer  *buffers_still;
 static unsigned int     n_buffers;
 
 static uint8_t camera_main_file_count = 0;
-static char    camera_main_filename[32];
+static char    camera_main_filename[IMAGE_FILENAME_LEN];
+static char    save_dir[IMAGE_SAVEDIR_LEN];
 
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
 struct nximage_data_s g_nximage =
@@ -285,14 +290,14 @@ static int  write_file(uint8_t *data, size_t len, uint32_t format)
   if (format == V4L2_PIX_FMT_JPEG)
     {
       sprintf(camera_main_filename,
-              "/mnt/spif/VIDEO%03d.JPG",
-              camera_main_file_count);
+              "%s/VIDEO%03d.JPG",
+              save_dir, camera_main_file_count);
     }
   else
     {
       sprintf(camera_main_filename,
-              "/mnt/spif/VIDEO%03d.YUV",
-              camera_main_file_count);
+              "%s/VIDEO%03d.YUV",
+              save_dir, camera_main_file_count);
     }
 
   printf("FILENAME:%s\n", camera_main_filename);
@@ -462,6 +467,7 @@ int camera_main(int argc, char *argv[])
   int ret;
   int exitcode = ERROR;
   int v_fd;
+  DIR *dirp;
   uint32_t loop;
   uint32_t buf_type;
   uint32_t format;
@@ -480,6 +486,21 @@ int camera_main(int argc, char *argv[])
   imageproc_initialize();
 #  endif
 #endif /* CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD */
+
+  /* In SD card is available, use SD card.
+   * Otherwise, use SPI flash.
+   */
+
+  dirp = opendir("/mnt/sd0");
+  if (!dirp)
+    {
+      closedir(dirp);
+      strncpy(save_dir, "/mnt/spif", IMAGE_SAVEDIR_LEN);
+    }
+  else
+    {
+      strncpy(save_dir, "/mnt/sd0",  IMAGE_SAVEDIR_LEN);
+    }
 
   if (argc>=2 && strncmp(argv[1], "cap", 4)==0)
     {
