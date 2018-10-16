@@ -289,15 +289,17 @@ static int  write_file(uint8_t *data, size_t len, uint32_t format)
 
   if (format == V4L2_PIX_FMT_JPEG)
     {
-      sprintf(camera_main_filename,
-              "%s/VIDEO%03d.JPG",
-              save_dir, camera_main_file_count);
+      snprintf(camera_main_filename,
+               IMAGE_FILENAME_LEN,
+               "%s/VIDEO%03d.JPG",
+               save_dir, camera_main_file_count);
     }
   else
     {
-      sprintf(camera_main_filename,
-              "%s/VIDEO%03d.YUV",
-              save_dir, camera_main_file_count);
+      snprintf(camera_main_filename,
+               IMAGE_FILENAME_LEN,
+               "%s/VIDEO%03d.YUV",
+               save_dir, camera_main_file_count);
     }
 
   printf("FILENAME:%s\n", camera_main_filename);
