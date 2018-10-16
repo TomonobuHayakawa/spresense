@@ -258,6 +258,8 @@ static int isx012_do_halfpush(bool enable);
 static int isx012_set_buftype(enum v4l2_buf_type type);
 static int isx012_set_buf(uint32_t bufaddr, uint32_t bufsize);
 static int isx012_cancel_dma(void);
+static int isx012_check_fmt(enum v4l2_buf_type buf_type,
+                            uint32_t           pixel_format);
 static int isx012_get_range_of_fmt(FAR struct v4l2_fmtdesc *format);
 static int isx012_get_range_of_framesize(FAR struct v4l2_frmsizeenum
                                          *frmsize);
@@ -1188,6 +1190,44 @@ static int isx012_cancel_dma(void)
   return ret;
 }
 
+static int isx012_check_fmt(enum v4l2_buf_type buf_type,
+                            uint32_t           pixel_format)
+{
+  switch (buf_type)
+    {
+      case V4L2_BUF_TYPE_VIDEO_CAPTURE:
+        if (pixel_format != V4L2_PIX_FMT_UYVY)
+          {
+            /* Unsupported format */
+
+            return -EINVAL;
+          }
+
+        break;
+
+      case V4L2_BUF_TYPE_STILL_CAPTURE:
+        if ((pixel_format != V4L2_PIX_FMT_JPEG) &&
+#if 0 /* To Be Supported */
+            (pixel_format != V4L2_PIX_FMT_JPEG_WITH_SUBIMG) &&
+#endif
+            (pixel_format != V4L2_PIX_FMT_UYVY))
+          {
+            /* Unsupported format */
+
+            return -EINVAL;
+          }
+
+        break;
+
+      default:
+        /* Unsupported type */
+
+        return -EINVAL;
+    }
+
+  return OK;
+}
+
 static int isx012_get_range_of_fmt(FAR struct v4l2_fmtdesc *format)
 {
   if (format == NULL)
@@ -1264,6 +1304,8 @@ static int isx012_get_range_of_fmt(FAR struct v4l2_fmtdesc *format)
 
 static int isx012_get_range_of_framesize(FAR struct v4l2_frmsizeenum *frmsize)
 {
+  int ret;
+
   if (frmsize == NULL)
     {
       return -EINVAL;
@@ -1274,10 +1316,10 @@ static int isx012_get_range_of_framesize(FAR struct v4l2_frmsizeenum *frmsize)
       return -EINVAL;
     }
 
-  if ((frmsize->buf_type != V4L2_BUF_TYPE_VIDEO_CAPTURE) &&
-      (frmsize->buf_type != V4L2_BUF_TYPE_STILL_CAPTURE))
+  ret = isx012_check_fmt(frmsize->buf_type, frmsize->pixel_format);
+  if (ret != OK)
     {
-      return -EINVAL;
+      return ret;
     }
 
   switch (frmsize->pixel_format)
@@ -1514,6 +1556,7 @@ static int isx012_set_supported_frminterval(uint32_t fps_index,
 
 static int8_t isx012_get_maximum_fps(FAR struct v4l2_frmivalenum *frmival)
 {
+  int     ret;
   uint8_t max_fps = REGVAL_FPSTYPE_120FPS;
 
   if (frmival == NULL)
@@ -1521,10 +1564,10 @@ static int8_t isx012_get_maximum_fps(FAR struct v4l2_frmivalenum *frmival)
       return -EINVAL;
     }
 
-  if ((frmival->buf_type != V4L2_BUF_TYPE_VIDEO_CAPTURE) &&
-      (frmival->buf_type != V4L2_BUF_TYPE_STILL_CAPTURE))
+  ret = isx012_check_fmt(frmival->buf_type, frmival->pixel_format);
+  if (ret != OK)
     {
-      return -EINVAL;
+      return ret;
     }
 
   switch (frmival->pixel_format)
