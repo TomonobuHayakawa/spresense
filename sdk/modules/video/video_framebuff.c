@@ -174,6 +174,10 @@ void video_framebuff_queue_container(video_framebuff_t *fbuf, vbuf_container_t *
     {
       fbuf->vbuf_tail->next = tgt;
       fbuf->vbuf_tail = tgt;
+      if (fbuf->vbuf_next_dma == NULL)
+        {
+          fbuf->vbuf_next_dma = tgt;
+        }
     }
   else
     {
