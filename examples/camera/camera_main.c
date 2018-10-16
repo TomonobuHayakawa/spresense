@@ -90,7 +90,6 @@
 #define DEFAULT_REPEAT_NUM (10)
 
 #define IMAGE_FILENAME_LEN (32)
-#define IMAGE_SAVEDIR_LEN  (10)
 
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
 #ifndef CONFIG_EXAMPLES_CAMERA_LCD_DEVNO
@@ -131,9 +130,9 @@ static struct v_buffer  *buffers_video;
 static struct v_buffer  *buffers_still;
 static unsigned int     n_buffers;
 
-static uint8_t camera_main_file_count = 0;
-static char    camera_main_filename[IMAGE_FILENAME_LEN];
-static char    save_dir[IMAGE_SAVEDIR_LEN];
+static uint8_t    camera_main_file_count = 0;
+static char       camera_main_filename[IMAGE_FILENAME_LEN];
+static const char *save_dir;
 
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
 struct nximage_data_s g_nximage =
@@ -496,11 +495,13 @@ int camera_main(int argc, char *argv[])
   ret = stat("/mnt/sd0", &stat_buf);
   if (ret < 0)
     {
-      strncpy(save_dir, "/mnt/spif", IMAGE_SAVEDIR_LEN);
+      save_dir = "/mnt/spif";
+//      strncpy(save_dir, "/mnt/spif", IMAGE_SAVEDIR_LEN);
     }
   else
     {
-      strncpy(save_dir, "/mnt/sd0",  IMAGE_SAVEDIR_LEN);
+      save_dir = "/mnt/sd0";
+//      strncpy(save_dir, "/mnt/sd0",  IMAGE_SAVEDIR_LEN);
     }
 
   if (argc>=2 && strncmp(argv[1], "cap", 4)==0)
