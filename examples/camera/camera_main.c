@@ -496,12 +496,10 @@ int camera_main(int argc, char *argv[])
   if (ret < 0)
     {
       save_dir = "/mnt/spif";
-//      strncpy(save_dir, "/mnt/spif", IMAGE_SAVEDIR_LEN);
     }
   else
     {
       save_dir = "/mnt/sd0";
-//      strncpy(save_dir, "/mnt/sd0",  IMAGE_SAVEDIR_LEN);
     }
 
   if (argc>=2 && strncmp(argv[1], "cap", 4)==0)
