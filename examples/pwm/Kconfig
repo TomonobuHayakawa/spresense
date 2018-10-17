@@ -6,7 +6,7 @@
 config EXAMPLES_PWM
 	bool "Pulse width modulation (PWM) example"
 	default n
-	depends on PWM && NSH_BUILTIN_APPS
+	depends on CXD56_PWM
 	---help---
 		Enable the Pulse width modulation (PWM) example
 
