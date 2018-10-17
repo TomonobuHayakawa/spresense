@@ -33,6 +33,9 @@
  *
  ****************************************************************************/
 
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
 #include "video_framebuff.h"
 
 #include <stdio.h>
@@ -42,20 +45,22 @@
 #include <nuttx/irq.h>
 #include <nuttx/kmalloc.h>
 
-/******************************************************************
- * Static functions.
- *****************************************************************/
-
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
 static void init_buf_chain(video_framebuff_t *fbuf)
 {
   int i;
   vbuf_container_t *tmp;
 
-  fbuf->vbuf_empty = fbuf->vbuf_alloced;
-  fbuf->vbuf_next_dma = fbuf->vbuf_dma = fbuf->vbuf_top = fbuf->vbuf_tail = NULL;
+  fbuf->vbuf_empty    = fbuf->vbuf_alloced;
+  fbuf->vbuf_next_dma = NULL;
+  fbuf->vbuf_dma      = NULL;
+  fbuf->vbuf_top      = NULL;
+  fbuf->vbuf_tail     = NULL;
 
   tmp = fbuf->vbuf_alloced;
-  for (i=0; i<fbuf->container_size-1; i++)
+  for (i = 0; i < fbuf->container_size - 1; i++)
     {
       tmp->next = &tmp[1];
       tmp++;
@@ -66,7 +71,9 @@ static void cleanup_container(video_framebuff_t *fbuf)
 {
   if (fbuf->vbuf_alloced)
     {
-      memset(fbuf->vbuf_alloced, 0, sizeof(vbuf_container_t)*fbuf->container_size);
+      memset(fbuf->vbuf_alloced,
+             0,
+             sizeof(vbuf_container_t)*fbuf->container_size);
       init_buf_chain(fbuf);
     }
 }
@@ -79,9 +86,11 @@ static inline int is_last_one(video_framebuff_t *fbuf)
 static inline vbuf_container_t *dequeue_vbuf_unsafe(video_framebuff_t *fbuf)
 {
   vbuf_container_t *ret = fbuf->vbuf_top;
-  if ( is_last_one(fbuf) )
+  if (is_last_one(fbuf))
     {
-      fbuf->vbuf_top = fbuf->vbuf_tail = fbuf->vbuf_next_dma = NULL;
+      fbuf->vbuf_top      = NULL;
+      fbuf->vbuf_tail     = NULL;
+      fbuf->vbuf_next_dma = NULL;
     }
   else
     {
@@ -94,16 +103,19 @@ static inline vbuf_container_t *dequeue_vbuf_unsafe(video_framebuff_t *fbuf)
   return ret;
 }
 
-/******************************************************************
- * Dynamic functions.
- *****************************************************************/
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
 void video_framebuff_init(video_framebuff_t *fbuf)
 {
   fbuf->mode = V4L2_BUF_MODE_RING;
-  fbuf->vbuf_empty = fbuf->vbuf_top = fbuf->vbuf_tail = fbuf->vbuf_next_dma = NULL;
+  fbuf->vbuf_empty    = NULL;
+  fbuf->vbuf_top      = NULL;
+  fbuf->vbuf_tail     = NULL;
+  fbuf->vbuf_next_dma = NULL;
+
   sem_init(&fbuf->lock_empty, 0, 1);
 }
-
 
 void video_framebuff_uninit(video_framebuff_t *fbuf)
 {
@@ -126,12 +138,13 @@ int video_framebuff_realloc_container(video_framebuff_t *fbuf, int sz)
               {
                 kmm_free(fbuf->vbuf_alloced);
               }
-            fbuf->vbuf_alloced = NULL;
+            fbuf->vbuf_alloced   = NULL;
             fbuf->container_size = 0;
           }
         if (sz > 0)
           {
-            fbuf->vbuf_alloced = (vbuf_container_t *)kmm_malloc(sizeof(vbuf_container_t)*sz);
+            fbuf->vbuf_alloced
+             = (vbuf_container_t *)kmm_malloc(sizeof(vbuf_container_t)*sz);
             if (fbuf->vbuf_alloced == NULL)
               {
                 return -ENOMEM;
@@ -154,14 +167,15 @@ vbuf_container_t *video_framebuff_get_container(video_framebuff_t *fbuf)
   if (ret)
     {
       fbuf->vbuf_empty = ret->next;
-      ret->next = NULL;
+      ret->next        = NULL;
     }
   sem_post(&fbuf->lock_empty);
 
   return ret;
 }
 
-void video_framebuff_free_container(video_framebuff_t *fbuf, vbuf_container_t *cnt)
+void video_framebuff_free_container(video_framebuff_t *fbuf,
+                                    vbuf_container_t  *cnt)
 {
   sem_wait(&fbuf->lock_empty);
   cnt->next = fbuf->vbuf_empty;
@@ -169,7 +183,8 @@ void video_framebuff_free_container(video_framebuff_t *fbuf, vbuf_container_t *c
   sem_post(&fbuf->lock_empty);
 }
 
-void video_framebuff_queue_container(video_framebuff_t *fbuf, vbuf_container_t *tgt)
+void video_framebuff_queue_container(video_framebuff_t *fbuf,
+                                     vbuf_container_t  *tgt)
 {
   irqstate_t flags;
 
@@ -241,7 +256,8 @@ void video_framebuff_dma_done(video_framebuff_t *fbuf)
     }
 }
 
-void video_framebuff_change_mode(video_framebuff_t *fbuf, enum v4l2_buf_mode mode)
+void video_framebuff_change_mode(video_framebuff_t  *fbuf,
+                                 enum v4l2_buf_mode mode)
 {
   irqstate_t flags;
   
@@ -281,5 +297,4 @@ vbuf_container_t *video_framebuff_pop_curr_container(video_framebuff_t *fbuf)
 
   return ret;
 }
-
 
