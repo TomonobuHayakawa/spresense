@@ -240,7 +240,7 @@ struct ble_gatt_char_s
   {
     struct ble_gatt_central_ops_s    *ble_gatt_central_ops;    /**< Central role application callbacks @ref ble_gatt_central_ops_s */
     struct ble_gatt_peripheral_ops_s *ble_gatt_peripheral_ops; /**< Peripheral role application callbacks @ref ble_gatt_peripheral_ops_s */
-  }
+  };
 };
 
 /**
