@@ -1894,7 +1894,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-#endif
+
             case V4L2_CID_GAMMA_CURVE:
               range->type          = ISX012_TYPE_GAMMACURVE;
               range->minimum       = ISX012_MIN_GAMMACURVE;
@@ -1906,7 +1906,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-
+#endif
             case V4L2_CID_EXPOSURE:
               range->type          = ISX012_TYPE_EXPOSURE;
               range->minimum       = ISX012_MIN_EXPOSURE;
@@ -2026,7 +2026,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-#endif
+
             case V4L2_CID_EXPOSURE_ABSOLUTE:
               range->type          = ISX012_TYPE_EXPOSURETIME;
               range->minimum       = ISX012_MIN_EXPOSURETIME;
@@ -2038,7 +2038,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-
+#endif
             case V4L2_CID_EXPOSURE_METERING:
               range->type          = ISX012_TYPE_PHOTOMETRY;
               range->minimum       = ISX012_MIN_PHOTOMETRY;
@@ -2442,14 +2442,14 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                 }
 
               break;
-#endif
+
             case V4L2_CID_EXPOSURE_ABSOLUTE:
               control->value = isx012_getreg(priv,
                                              ISX012_REG_EXPOSURETIME,
                                              ISX012_SIZE_EXPOSURETIME);
 
               break;
-
+#endif
             case V4L2_CID_AUTO_N_PRESET_WHITE_BALANCE:
               readvalue = isx012_getreg(priv,
                                         ISX012_REG_PRESETWB,
@@ -2712,7 +2712,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                                   ISX012_SIZE_BLUEBALANCE);
 
               break;
-#endif
+
             case V4L2_CID_GAMMA_CURVE:
               if (control->p_u8 == NULL)
                 {
@@ -2736,7 +2736,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                 }
 
               break;
-
+#endif
             case V4L2_CID_EXPOSURE:
               CHECK_RANGE(control->value,
                           ISX012_MIN_EXPOSURE,
@@ -2925,7 +2925,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
 #if 0 /* To Be Supported */
             case V4L2_CID_EXPOSURE_AUTO:
               break;
-#endif
+
             case V4L2_CID_EXPOSURE_ABSOLUTE:
               CHECK_RANGE(control->value,
                           ISX012_MIN_EXPOSURETIME,
@@ -2937,7 +2937,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                                   control->value,
                                   ISX012_SIZE_EXPOSURETIME);
               break;
-
+#endif
             case V4L2_CID_WIDE_DYNAMIC_RANGE:
               CHECK_RANGE(control->value,
                           ISX012_MIN_YGAMMA,
