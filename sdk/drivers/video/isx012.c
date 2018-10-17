@@ -2587,8 +2587,10 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
   FAR struct isx012_dev_s *priv = &g_isx012_private;
   int       ret = -EINVAL;
   uint8_t   cnt;
+#if 0 /* Used in temporarily unsupported function(V4L2_CID_GAMMA_CURVE) */
   uint8_t   *write_src;
   uint16_t  write_dst;
+#endif
   uint16_t  regval;
 
   if (control == NULL)
