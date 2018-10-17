@@ -20,9 +20,9 @@ config EXAMPLES_PWM_DEVPATH
 
 config EXAMPLES_PWM_FREQUENCY
 	int "Default PWM frequency"
-	default 100
+	default 125
 	---help---
-		The default PWM frequency.  Default: 100 Hz
+		The default PWM frequency.  Default: 125 Hz
 
 config EXAMPLES_PWM_DURATION
 	int "Default PWM duration"
