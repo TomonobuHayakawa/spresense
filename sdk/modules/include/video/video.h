@@ -304,11 +304,15 @@ extern "C" {
 
 /** MAX length of v4l2_fmtdesc description string */
 
-#define V4L2_FMT_DSC_MAX 32
+#define V4L2_FMT_DSC_MAX       (32)
 
 /** MAX length of v4l2_query_ext_ctrl dims array */
 
-#define V4L2_CTRL_MAX_DIMS 4
+#define V4L2_CTRL_MAX_DIMS     (4)
+
+/** MAX value of VIDIOC_REQBUFS count parameter */
+
+#define V4L2_REQBUFS_COUNT_MAX (256)
 
 /** @} video_defs */
 
@@ -386,10 +390,11 @@ enum v4l2_buf_mode {
  */
 
 struct v4l2_requestbuffers {
-  uint32_t count;       /**< The number of buffers requested */
-  uint32_t type;        /**< enum #v4l2_buf_type */
-  uint32_t memory;      /**< enum #v4l2_memory */
-  uint32_t mode;        /**< enum #v4l2_buf_mode */
+  uint32_t count;    /**< The number of buffers requested. Supported maximum
+                          value is V4L2_REQBUFS_COUNT_MAX(=256) */
+  uint32_t type;     /**< enum #v4l2_buf_type */
+  uint32_t memory;   /**< enum #v4l2_memory */
+  uint32_t mode;     /**< enum #v4l2_buf_mode */
 };
 typedef struct v4l2_requestbuffers v4l2_requestbuffers_t;
 
