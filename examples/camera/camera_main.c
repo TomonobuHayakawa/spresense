@@ -276,7 +276,6 @@ static void yuv2rgb(void *buf, uint32_t size)
 static int  write_file(uint8_t *data, size_t len, uint32_t format)
 {
   FILE *fp;
-  int  fd;
 
   camera_main_file_count++;
   if(camera_main_file_count >= 1000)
@@ -315,9 +314,6 @@ static int  write_file(uint8_t *data, size_t len, uint32_t format)
       printf("fwrite error : %d\n", errno);
     }
 
-  fflush(fp);
-  fd = fileno(fp);
-  fsync(fd);
   fclose(fp);
   return 0;
 }
