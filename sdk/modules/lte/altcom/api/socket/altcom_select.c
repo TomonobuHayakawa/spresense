@@ -57,6 +57,7 @@
 #define SELECT_RES_DATALEN (sizeof(struct apicmd_selectres_s))
 
 #define SELECT_REQ_FAILURE -1
+#define SELECT_ID_GEN_AUTO -1
 
 /****************************************************************************
  * Private Types
@@ -64,71 +65,55 @@
 
 struct select_req_s
 {
+  int32_t           select_id;
   int               maxfdp1;
   uint32_t          request;
   FAR altcom_fd_set *readset;
   FAR altcom_fd_set *writeset;
   FAR altcom_fd_set *exceptset;
   int32_t           timeout;
-  bool              is_async;
 };
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
-static uint32_t g_select_id;
+static int32_t g_select_id = 0;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: select_request
+ * Name: generate_selectid
  *
  * Description:
- *   Send ALTCOM_SELECT_REQ.
+ *   Generate select ID.
  *
  ****************************************************************************/
 
-static int32_t select_request(FAR struct select_req_s *req)
+static int32_t generate_selectid(void)
 {
-  int32_t                       ret;
-  int32_t                       err;
-  uint32_t                      select_id;
-  uint16_t                      reslen = 0;
-  FAR struct apicmd_select_s    *cmd = NULL;
-  FAR struct apicmd_selectres_s *res = NULL;
+  g_select_id++;
 
-  if (req->is_async)
-    {
-      /* Allocate send command buffer only */
+  return (g_select_id & 0x7fffffff);
+}
 
-      if (!ALTCOM_SOCK_ALLOC_CMDBUFF(cmd, APICMDID_SOCK_SELECT,
-                                      SELECT_REQ_DATALEN))
-        {
-          err = ALTCOM_ENOMEM;
-          goto errout;
-        }
-    }
-  else
-    {
-      /* Allocate send and response command buffer */
+/****************************************************************************
+ * Name: fill_select_request_command
+ *
+ * Description:
+ *   Fill the ALTCOM_SELECT_REQ command.
+ *
+ ****************************************************************************/
 
-      if (!altcom_sock_alloc_cmdandresbuff(
-        (FAR void **)&cmd, APICMDID_SOCK_SELECT, SELECT_REQ_DATALEN,
-        (FAR void **)&res, SELECT_RES_DATALEN))
-        {
-          return SELECT_REQ_FAILURE;
-        }
-    }
-
-  /* Fill the data */
-
-  select_id = ++g_select_id;
+static void fill_select_request_command(FAR struct apicmd_select_s *cmd,
+                                        FAR struct select_req_s *req)
+{
   memset(cmd, 0, sizeof(struct apicmd_select_s));
+
   cmd->request = htonl(req->request);
-  cmd->id      = htonl(select_id);
+  cmd->id      = htonl(req->select_id);
   cmd->maxfds  = htonl(req->maxfdp1);
   if (req->readset)
     {
@@ -150,7 +135,7 @@ static int32_t select_request(FAR struct select_req_s *req)
     }
   cmd->used_setbit = htons(cmd->used_setbit);
 
-  DBGIF_LOG3_DEBUG("[select-req]request: %d, id: %d, maxfdp1: %d\n", APICMD_SELECT_REQUEST_BLOCK, select_id, req->maxfdp1);
+  DBGIF_LOG3_DEBUG("[select-req]request: %d, id: %d, maxfdp1: %d\n", req->request, req->select_id, req->maxfdp1);
   DBGIF_LOG1_DEBUG("[select-req]used_setbit: %x\n", ntohs(cmd->used_setbit));
   if (req->readset)
     {
@@ -164,6 +149,44 @@ static int32_t select_request(FAR struct select_req_s *req)
     {
       DBGIF_LOG2_DEBUG("[select-req]exceptset: %x,%x\n", req->exceptset->fd_bits[0], req->exceptset->fd_bits[1]);
     }
+}
+
+/****************************************************************************
+ * Name: select_request
+ *
+ * Description:
+ *   Send ALTCOM_SELECT_REQ.
+ *
+ ****************************************************************************/
+
+static int32_t select_request(FAR struct select_req_s *req)
+{
+  int32_t                       ret;
+  int32_t                       err;
+  uint16_t                      reslen = 0;
+  FAR struct apicmd_select_s    *cmd = NULL;
+  FAR struct apicmd_selectres_s *res = NULL;
+
+  /* Allocate send and response command buffer */
+
+  if (!altcom_sock_alloc_cmdandresbuff((FAR void **)&cmd,
+                                       APICMDID_SOCK_SELECT,
+                                       SELECT_REQ_DATALEN,
+                                       (FAR void **)&res,
+                                       SELECT_RES_DATALEN))
+    {
+      err = ALTCOM_ENOMEM;
+      goto errout;
+    }
+
+  if (req->select_id == SELECT_ID_GEN_AUTO)
+    {
+      req->select_id = generate_selectid();
+    }
+
+  /* Fill the data */
+
+  fill_select_request_command(cmd, req);
 
   /* Send command and block until receive a response or timeout */
 
@@ -179,9 +202,9 @@ static int32_t select_request(FAR struct select_req_s *req)
         {
           memset(cmd, 0, sizeof(struct apicmd_select_s));
           cmd->request = htonl(APICMD_SELECT_REQUEST_BLOCKCANCEL);
-          cmd->id      = htonl(select_id);
+          cmd->id      = htonl(req->select_id);
 
-          DBGIF_LOG2_DEBUG("[select-req]request: %d, id: %d\n", APICMD_SELECT_REQUEST_BLOCK, select_id);
+          DBGIF_LOG2_DEBUG("[select-req]request: %d, id: %d\n", APICMD_SELECT_REQUEST_BLOCKCANCEL, req->select_id);
 
           /* Send command */
 
@@ -197,42 +220,35 @@ static int32_t select_request(FAR struct select_req_s *req)
         }
     }
 
-  if (!req->is_async)
+  if (reslen != SELECT_RES_DATALEN)
     {
-      if (reslen != SELECT_RES_DATALEN)
-        {
-          DBGIF_LOG1_ERROR("Unexpected response data length: %d\n", reslen);
-          err = ALTCOM_EFAULT;
-          goto errout_with_cmdfree;
-        }
-
-      ret = ntohl(res->ret_code);
-      err = ntohl(res->err_code);
-
-      DBGIF_LOG2_DEBUG("[select-res]ret: %d, err: %d\n", ret, err);
-
-      if (APICMD_SELECT_RES_RET_CODE_ERR == ret)
-        {
-          DBGIF_LOG1_ERROR("API command response is err :%d.\n", err);
-          goto errout_with_cmdfree;
-        }
-
-      if (req->readset)
-        {
-          memcpy(req->readset, &res->readset, sizeof(altcom_fd_set));
-        }
-      if (req->writeset)
-        {
-          memcpy(req->writeset, &res->writeset, sizeof(altcom_fd_set));
-        }
-      if (req->exceptset)
-        {
-          memcpy(req->exceptset, &res->exceptset, sizeof(altcom_fd_set));
-        }
+      DBGIF_LOG1_ERROR("Unexpected response data length: %d\n", reslen);
+      err = ALTCOM_EFAULT;
+      goto errout_with_cmdfree;
     }
-  else
+
+  ret = ntohl(res->ret_code);
+  err = ntohl(res->err_code);
+
+  DBGIF_LOG2_DEBUG("[select-res]ret: %d, err: %d\n", ret, err);
+
+  if (APICMD_SELECT_RES_RET_CODE_ERR == ret)
     {
-      ret = select_id;
+      DBGIF_LOG1_ERROR("API command response is err :%d.\n", err);
+      goto errout_with_cmdfree;
+    }
+
+  if (req->readset)
+    {
+      memcpy(req->readset, &res->readset, sizeof(altcom_fd_set));
+    }
+  if (req->writeset)
+    {
+      memcpy(req->writeset, &res->writeset, sizeof(altcom_fd_set));
+    }
+  if (req->exceptset)
+    {
+      memcpy(req->exceptset, &res->exceptset, sizeof(altcom_fd_set));
     }
 
   altcom_sock_free_cmdandresbuff(cmd, res);
@@ -241,6 +257,64 @@ static int32_t select_request(FAR struct select_req_s *req)
 
 errout_with_cmdfree:
   altcom_sock_free_cmdandresbuff(cmd, res);
+
+errout:
+  altcom_seterrno(err);
+  return SELECT_REQ_FAILURE;
+}
+
+/****************************************************************************
+ * Name: select_request_async
+ *
+ * Description:
+ *   Send ALTCOM_SELECT_REQ. Just send and do not wait for a response.
+ *
+ ****************************************************************************/
+
+static int32_t select_request_async(FAR struct select_req_s *req)
+{
+  int32_t                       ret;
+  int32_t                       err;
+  FAR struct apicmd_select_s    *cmd = NULL;
+
+  /* Allocate send command buffer only */
+
+  if (!ALTCOM_SOCK_ALLOC_CMDBUFF(cmd, APICMDID_SOCK_SELECT,
+                                 SELECT_REQ_DATALEN))
+    {
+      err = ALTCOM_ENOMEM;
+      goto errout;
+    }
+
+  if (req->select_id == SELECT_ID_GEN_AUTO)
+    {
+      req->select_id = generate_selectid();
+    }
+
+  /* Fill the data */
+
+  fill_select_request_command(cmd, req);
+
+  /* Send command and block until receive a response */
+
+  ret = apicmdgw_send((FAR uint8_t *)cmd, NULL, 0, NULL, SYS_TIMEO_FEVR);
+
+  if (ret < 0)
+    {
+      DBGIF_LOG1_ERROR("apicmdgw_send error: %d\n", ret);
+
+      err = -ret;
+      goto errout_with_cmdfree;
+    }
+
+  ret = req->select_id;
+
+  altcom_free_cmd((FAR uint8_t *)cmd);
+
+  return ret;
+
+errout_with_cmdfree:
+  altcom_free_cmd((FAR uint8_t *)cmd);
 
 errout:
   altcom_seterrno(err);
@@ -284,15 +358,15 @@ int altcom_select_request_asyncsend(int maxfdp1, altcom_fd_set *readset,
       return -1;
     }
 
+  req.select_id = SELECT_ID_GEN_AUTO;
   req.maxfdp1   = maxfdp1;
   req.request   = APICMD_SELECT_REQUEST_BLOCK;
   req.readset   = readset;
   req.writeset  = writeset;
   req.exceptset = exceptset;
-  req.timeout   = SYS_TIMEO_FEVR; /* ignore when is_async is true */
-  req.is_async  = true;
+  req.timeout   = SYS_TIMEO_FEVR; /* ignore when do select_request_async */
 
-  result = select_request(&req);
+  result = select_request_async(&req);
 
   if (result == SELECT_REQ_FAILURE)
     {
@@ -329,15 +403,15 @@ int altcom_select_cancel_request_send(int id)
       return -1;
     }
 
+  req.select_id = id;
   req.maxfdp1   = 0;
   req.request   = APICMD_SELECT_REQUEST_BLOCKCANCEL;
   req.readset   = NULL;
   req.writeset  = NULL;
   req.exceptset = NULL;
-  req.timeout   = SYS_TIMEO_FEVR; /* ignore when is_async is true */
-  req.is_async  = true;
+  req.timeout   = SYS_TIMEO_FEVR; /* ignore when do select_request_async */
 
-  result = select_request(&req);
+  result = select_request_async(&req);
 
   if (result == SELECT_REQ_FAILURE)
     {
@@ -382,13 +456,13 @@ int altcom_select_nonblock(int maxfdp1, altcom_fd_set *readset,
       return -1;
     }
 
+  req.select_id = SELECT_ID_GEN_AUTO;
   req.maxfdp1   = maxfdp1;
   req.request   = APICMD_SELECT_REQUEST_NONBLOCK;
   req.readset   = readset;
   req.writeset  = writeset;
   req.exceptset = exceptset;
   req.timeout   = SYS_TIMEO_FEVR;
-  req.is_async  = false;
 
   result = select_request(&req);
 
@@ -436,12 +510,12 @@ int altcom_select_block(int maxfdp1, altcom_fd_set *readset,
       return -1;
     }
 
+  req.select_id = SELECT_ID_GEN_AUTO;
   req.maxfdp1   = maxfdp1;
   req.request   = APICMD_SELECT_REQUEST_BLOCK;
   req.readset   = readset;
   req.writeset  = writeset;
   req.exceptset = exceptset;
-  req.is_async  = false;
   if (timeout)
     {
       req.timeout = ALTCOM_SOCK_TIMEVAL2MS(timeout);
