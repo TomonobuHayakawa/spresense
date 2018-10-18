@@ -61,7 +61,7 @@ static struct ble_gatt_state_s g_ble_gatt_state =
 
 static struct ble_gatt_char_s *ble_search_characteristic(uint16_t serv_handle, uint16_t char_handle)
 {
-  struct ble_gatt_service_s *ble_gatt_service;
+  struct ble_gatt_service_s *ble_gatt_service = NULL;
   struct ble_gatt_char_s *ble_gatt_char = NULL;
   int n, m;
 
