@@ -531,7 +531,7 @@ static bool app_create_audio_sub_system(void)
    * When calling AS_CreatePlayer(), use the heap area.
    */
 
-  result = AS_CreatePlayerMulti(AS_PLAYER_ID_0, &player_create_param);
+  result = AS_CreatePlayerMulti(AS_PLAYER_ID_0, &player_create_param, NULL);
 
   if (!result)
     {
@@ -550,7 +550,7 @@ static bool app_create_audio_sub_system(void)
   output_mix_act_param.pool_id.render_path0_filter_dsp = PF0_APU_CMD_POOL;
   output_mix_act_param.pool_id.render_path1_filter_dsp = PF1_APU_CMD_POOL;
 
-  result = AS_CreateOutputMixer(&output_mix_act_param);
+  result = AS_CreateOutputMixer(&output_mix_act_param, NULL);
   if (!result)
     {
       printf("Error: AS_CreateOutputMixer() failed. system memory insufficient!\n");
