@@ -152,8 +152,8 @@ static void add_callbacklist(FAR struct select_asynccb_s *list)
       while(list_ptr->next)
         {
           list_ptr = list_ptr->next;
-          list_ptr->next = list;
         }
+      list_ptr->next = list;
     }
   else
     {
