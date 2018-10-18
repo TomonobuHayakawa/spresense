@@ -533,7 +533,7 @@ int camera_main(int argc, char *argv[])
   if (v_fd < 0)
     {
       printf("ERROR: Failed to open video.errno = %d\n", errno);
-      goto errout_with_isx;
+      goto errout_with_video_init;
     }
 
   /* Prepare VIDEO_CAPTURE */
@@ -547,7 +547,7 @@ int camera_main(int argc, char *argv[])
                        VIDEO_BUFNUM);
   if (ret < 0)
     {
-      return ret;
+      goto errout_with_buffer;
     }
 
   /* Prepare STILL_CAPTURE */
@@ -562,7 +562,6 @@ int camera_main(int argc, char *argv[])
   if (ret < 0)
     {
       goto errout_with_buffer;
-      return ret;
     }
 
   if (buf_type == V4L2_BUF_TYPE_STILL_CAPTURE)
@@ -635,7 +634,7 @@ errout_with_buffer:
   free_buffer(buffers_video, VIDEO_BUFNUM);
   free_buffer(buffers_still, STILL_BUFNUM);
 
-errout_with_isx:
+errout_with_video_init:
 
   video_uninitialize();
 
