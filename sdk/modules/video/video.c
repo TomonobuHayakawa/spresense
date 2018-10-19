@@ -1399,7 +1399,14 @@ int video_common_notify_dma_done(uint8_t  err_code,
       return -EINVAL;
     }
 
-  /* TODO: In err_code != OK, notify error to application */
+  if (err_code == 0)
+    {
+      type_inf->bufinf.vbuf_dma->buf.flags = 0;
+    }
+  else
+    {
+      type_inf->bufinf.vbuf_dma->buf.flags = V4L2_BUF_FLAG_ERROR;
+    }
 
   type_inf->bufinf.vbuf_dma->buf.bytesused = datasize;
   video_framebuff_dma_done(&type_inf->bufinf);

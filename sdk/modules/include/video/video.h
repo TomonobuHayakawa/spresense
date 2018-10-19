@@ -314,6 +314,10 @@ extern "C" {
 
 #define V4L2_REQBUFS_COUNT_MAX (256)
 
+/** Buffer error flag */
+
+#define V4L2_BUF_FLAG_ERROR    (0x0001)
+
 /** @} video_defs */
 
 /****************************************************************************
@@ -432,7 +436,9 @@ struct v4l2_buffer {
   uint16_t             index;     /**< buffer id */ 
   uint16_t             type;      /**< enum #v4l2_buf_type */
   uint32_t             bytesused; /**< Driver sets the image size */
-  uint16_t             flags;     /**< buffer flags */
+  uint16_t             flags;     /**< buffer flags.
+                                       V4L2_BUF_FLAG_ERROR is set
+                                       in error case. */
   uint16_t             field;     /**< the field order of the image */
   struct v4l2_timecode timecode;  /**< frame timecode */
   uint16_t             sequence;  /**< frame sequence number */
