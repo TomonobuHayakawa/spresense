@@ -132,6 +132,7 @@ notify_callback_t g_ycc_notify_callback_func;
 comp_callback_t   g_comp_callback_func;
 
 static bool     g_jpgint_receive;
+static bool     g_errint_receive;
 
 #ifdef CISIF_INTR_TRACE
 static uint32_t g_cisif_vint_count = 0;
@@ -255,9 +256,11 @@ static void cisif_vs_int(uint8_t code)
         break;
 
       case STATE_READY:
+        g_errint_receive = false;
         break;
 
       case STATE_CAPTURE:
+        g_errint_receive = false;
         break;
 
       default:
@@ -315,6 +318,14 @@ static void cisif_ycc_axi_trdn_int(uint8_t code)
   cisif_trace_time_stop("cisif_ycc_axi_trdn_int");
 #endif /* CISIF_INTR_TRACE */
 
+  if (g_errint_receive)
+    {
+      /* In error occured case in the same frame, ignore */
+
+      cisif_reg_write(CISIF_YCC_DREAD_CONT, 0);
+      return;
+    }
+
   cisif_mode = cisif_reg_read(CISIF_MODE);
   if (cisif_mode == MODE_INTLEV_TRS_EN)
     {
@@ -354,6 +365,14 @@ static void cisif_jpg_axi_trdn_int(uint8_t code)
 #ifdef CISIF_INTR_TRACE
   cisif_trace_time_stop("cisif_jpg_axi_trdn_int");
 #endif /* CISIF_INTR_TRACE */
+
+  if (g_errint_receive)
+    {
+      /* In error occured case in the same frame, ignore */
+
+      cisif_reg_write(CISIF_JPG_DREAD_CONT, 0);
+      return;
+    }
 
   cisif_mode = cisif_reg_read(CISIF_MODE);
 
@@ -398,6 +417,7 @@ static void cisif_ycc_err_int(uint8_t code)
   size = cisif_reg_read(CISIF_YCC_DSTRG_CONT);
   g_comp_callback_func(code, size, g_storage_addr);
   cisif_reg_write(CISIF_YCC_DREAD_CONT, 0);
+  g_errint_receive = true;
 }
 
 /****************************************************************************
@@ -417,6 +437,7 @@ static void cisif_jpg_err_int(uint8_t code)
   size = cisif_reg_read(CISIF_JPG_DSTRG_CONT);
   g_comp_callback_func(code, size, addr);
   cisif_reg_write(CISIF_JPG_DREAD_CONT, 0);
+  g_errint_receive = true;
 }
 
 /****************************************************************************
