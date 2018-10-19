@@ -309,6 +309,8 @@
 #define ISX012_STEP_ISOAUTO          (1)
 #define ISX012_REG_ISOAUTO           ISO_TYPE1
 #define ISX012_SIZE_ISOAUTO          (1)
+#define ISX012_REG_ISOAUTOVALUE      ISOSENS_OUT
+#define ISX012_SIZE_ISOAUTOVALUE     (1)
 
 /* Definition for control 3A lock */
 

@@ -2991,17 +2991,25 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                           ISX012_MAX_ISOAUTO,
                           ISX012_STEP_ISOAUTO);
 
-              if (control->value != V4L2_CID_ISO_SENSITIVITY_AUTO)
+              if (control->value == V4L2_ISO_SENSITIVITY_AUTO)
                 {
-                  break;
+                  ret = isx012_putreg(priv,
+                                      ISX012_REG_ISOAUTO,
+                                      REGVAL_ISO_AUTO,
+                                      ISX012_SIZE_ISOAUTO);
                 }
+              else
+                {
+                  /* In manual case, read auto adjust value and set it */
 
-              regval = REGVAL_ISO_AUTO;
-
-              ret = isx012_putreg(priv,
-                                  ISX012_REG_ISOAUTO,
-                                  regval,
-                                  ISX012_SIZE_ISOAUTO);
+                  regval = isx012_getreg(priv,
+                                         ISX012_REG_ISOAUTOVALUE,
+                                         ISX012_SIZE_ISOAUTOVALUE);
+                  ret = isx012_putreg(priv,
+                                      ISX012_REG_ISO,
+                                      regval,
+                                      ISX012_SIZE_ISO);
+                }
 
               break;
 
