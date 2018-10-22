@@ -429,6 +429,9 @@ static void cleanup_resources(FAR video_mng_t *vmng)
   video_framebuff_uninit(&vmng->video_inf.bufinf);
   video_framebuff_uninit(&vmng->still_inf.bufinf);
 
+  sem_destroy(&vmng->video_inf.lock_state);
+  sem_destroy(&vmng->still_inf.lock_state);
+
   memset(&vmng->video_inf, 0, sizeof(video_type_inf_t));
   memset(&vmng->still_inf, 0, sizeof(video_type_inf_t));
 
