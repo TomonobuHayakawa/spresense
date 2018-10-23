@@ -1351,7 +1351,7 @@ endchoice
 
 choice
 	prompt "Speaker drive mode selection"
-	default CXD56_AUDIO_SP_DRV_4DRIVERT
+	default CXD56_AUDIO_SP_DRV_LINEOUT
 
 config CXD56_AUDIO_SP_DRV_4DRIVERT
 	bool "4Driver(SPK)"
