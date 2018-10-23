@@ -837,7 +837,7 @@ static int video_streamoff(FAR struct video_mng_s *vmng,
   FAR video_type_inf_t *type_inf;
   enum video_state_e   next_video_state;
   irqstate_t           flags;
-  int                  ret;
+  int                  ret = OK;
 
   if ((vmng == NULL) || (type == NULL))
     {
