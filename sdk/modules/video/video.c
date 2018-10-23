@@ -392,19 +392,8 @@ static void change_video_state(FAR video_mng_t    *vmng,
 
 static bool is_taking_still_picture(FAR video_mng_t *vmng)
 {
-#if 0
   return ((vmng->still_inf.state == VIDEO_STATE_STREAMON) ||
           (vmng->still_inf.state == VIDEO_STATE_DMA));
-#endif
-  if ((vmng->still_inf.state == VIDEO_STATE_STREAMON) ||
-      (vmng->still_inf.state == VIDEO_STATE_DMA))
-    {
-return true;
-    }
-else
-{
-  return false;
-}
 }
 
 static bool is_bufsize_sufficient(FAR video_mng_t *vmng, uint32_t bufsize)
@@ -947,6 +936,7 @@ static int video_takepict_start(FAR struct video_mng_s *vmng,
 
 static int video_takepict_stop(FAR struct video_mng_s *vmng, bool halfpush)
 {
+  int        ret = OK;
   irqstate_t flags;
   enum video_state_e next_video_state;
 
@@ -955,29 +945,35 @@ static int video_takepict_stop(FAR struct video_mng_s *vmng, bool halfpush)
       return -EINVAL;
     }
 
-  flags = enter_critical_section();
+  video_lock(&vmng->still_inf.lock_state);
 
   if (vmng->still_inf.state == VIDEO_STATE_STREAMOFF)
     {
-      return -EPERM;
+      ret = -EPERM;
     }
-
-  if (vmng->still_inf.state == VIDEO_STATE_DMA)
+  else
     {
-      g_video_devops->cancel_dma();
+      flags = enter_critical_section();
+      if (vmng->still_inf.state == VIDEO_STATE_DMA)
+        {
+          g_video_devops->cancel_dma();
+        }
+      leave_critical_section(flags);
+
+      vmng->still_inf.state = VIDEO_STATE_STREAMOFF;
+
+      /* Control video stream */
+
+      video_lock(&vmng->video_inf.lock_state);
+      next_video_state = estimate_next_video_state(vmng,
+                                                   CAUSE_STILL_STOP);
+      change_video_state(vmng, next_video_state);
+      video_unlock(&vmng->video_inf.lock_state);
     }
 
-  vmng->still_inf.state = VIDEO_STATE_STREAMOFF;
+  video_unlock(&vmng->still_inf.lock_state);
 
-  /* Control video stream */
-
-  next_video_state = estimate_next_video_state(vmng,
-                                               CAUSE_STILL_STOP);
-  change_video_state(vmng, next_video_state);
-
-  leave_critical_section(flags);
-
-  return OK;
+  return ret;
 }
 
 static int video_queryctrl(FAR struct v4l2_queryctrl *ctrl)
