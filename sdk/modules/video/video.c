@@ -603,7 +603,6 @@ static int video_qbuf(FAR struct video_mng_s *vmng,
     }
 
   video_unlock(&type_inf->lock_state);
-  leave_critical_section(flags);
 
   return OK;
 }
