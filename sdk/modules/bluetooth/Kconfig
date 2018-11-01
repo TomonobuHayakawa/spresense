@@ -14,6 +14,22 @@ config BLUETOOTH
 		want to use.
 
 if BLUETOOTH
+config BLUETOOTH_NAME
+	string "Bluetooth default device name"
+	default "SONY-BT-CLASSIC"
+	---help---
+		The name of the default bluetooth device name for classic.
+		If not defined, BLUETOOTH_NAME defaults to "SONY-BT-CLASSIC".
+
+if BLUETOOTH_LE
+config BLUETOOTH_LE_NAME
+	string "Bluetooth Low Energy default device name"
+	default "SONY-BLE-CLASSIC"
+	---help---
+		The name of the default bluetooth device name for low energy.
+		If not defined, BLUETOOTH_LE_NAME defaults to "SONY-BLE-CLASSIC".
+endif
+
 config BLUETOOTH_A2DP
 	bool "A2DP support"
 	default y
