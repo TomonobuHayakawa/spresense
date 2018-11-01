@@ -153,6 +153,10 @@
 
 #define AS_BITLENGTH_24  24
 
+/** 24bit Unpacked (32bit) */
+
+#define AS_BITLENGTH_32  32
+
 /** @} */
 
 /** @name Channel number */

@@ -99,13 +99,13 @@ static void capture_comp_done_callback(CaptureDataParam param)
 }
 
 /*--------------------------------------------------------------------------*/
-static bool src_done_callback(DspDrvComPrm_t* p_param)
+static bool filter_done_callback(DspDrvComPrm_t* p_param)
 {
   D_ASSERT2(DSP_COM_DATA_TYPE_STRUCT_ADDRESS == p_param->type,
             AssertParamLog(AssertIdTypeUnmatch, p_param->type));
 
   err_t er;
-  SrcFilterCompCmpltParam cmplt;
+  FilterCompCmpltParam cmplt;
   Apu::Wien2ApuCmd* packet = reinterpret_cast<Apu::Wien2ApuCmd*>
     (p_param->data.pParam);
 
@@ -116,19 +116,17 @@ static bool src_done_callback(DspDrvComPrm_t* p_param)
     {
       case Apu::ExecEvent:
         {
-          cmplt.exec_src_param.input_buffer  =
-            packet->exec_filter_cmd.input_buffer;
-          cmplt.exec_src_param.output_buffer =
+          cmplt.output_buffer =
             packet->exec_filter_cmd.output_buffer;
 
           MEDIA_RECORDER_VDBG("Src s %d\n",
-                              cmplt.exec_src_param.output_buffer.size);
+                              cmplt.output_buffer.size);
 
-          er = MsgLib::send<SrcFilterCompCmpltParam>(s_self_dtq,
-                                                     MsgPriNormal,
-                                                     MSG_AUD_VRC_RST_FILTER,
-                                                     s_self_dtq,
-                                                     cmplt);
+          er = MsgLib::send<FilterCompCmpltParam>(s_self_dtq,
+                                                  MsgPriNormal,
+                                                  MSG_AUD_VRC_RST_FILTER,
+                                                  s_self_dtq,
+                                                  cmplt);
 
           F_ASSERT(er == ERR_OK);
         }
@@ -136,17 +134,17 @@ static bool src_done_callback(DspDrvComPrm_t* p_param)
 
       case Apu::FlushEvent:
         {
-          cmplt.stop_src_param.output_buffer =
+          cmplt.output_buffer =
             packet->flush_filter_cmd.flush_src_cmd.output_buffer;
 
           MEDIA_RECORDER_VDBG("FlsSrc s %d\n",
-                              cmplt.stop_src_param.output_buffer.size);
+                              cmplt.output_buffer.size);
 
-          er = MsgLib::send<SrcFilterCompCmpltParam>(s_self_dtq,
-                                                     MsgPriNormal,
-                                                     MSG_AUD_VRC_RST_FILTER,
-                                                     s_self_dtq,
-                                                     cmplt);
+          er = MsgLib::send<FilterCompCmpltParam>(s_self_dtq,
+                                                  MsgPriNormal,
+                                                  MSG_AUD_VRC_RST_FILTER,
+                                                  s_self_dtq,
+                                                  cmplt);
           F_ASSERT(er == ERR_OK);
         }
         break;
@@ -222,6 +220,7 @@ static bool encoder_done_callback(void* p_response)
 uint32_t MediaRecorderObjectTask::loadCodec(AudioCodec codec,
                                             char *path,
                                             int32_t sampling_rate,
+                                            int32_t bit_length,
                                             uint32_t* dsp_inf)
 {
   uint32_t rst = AS_ECODE_OK;
@@ -239,9 +238,23 @@ uint32_t MediaRecorderObjectTask::loadCodec(AudioCodec codec,
     }
   else if (codec == AudCodecLPCM)
     {
+      FilterComponentType type = FilterComponentTypeNum;
+
       if (isNeedUpsampling(sampling_rate))
         {
-          rst = AS_filter_activate(SRCOnly,
+          type = SRCOnly;
+        }
+      else
+        {
+          if (bit_length == AS_BITLENGTH_24)
+            {
+              type = BitWidthConv;
+            }
+        }
+
+      if (type != FilterComponentTypeNum)
+        {
+          rst = AS_filter_activate(type,
                                    (path) ? path : CONFIG_AUDIOUTILS_DSP_MOUNTPT,
                                    s_apu_dtq,
                                    s_apu_pool_id,
@@ -273,10 +286,23 @@ bool MediaRecorderObjectTask::unloadCodec(void)
           return false;
         }
     }
-  else if ((m_codec_type == AudCodecLPCM) &&
-           (isNeedUpsampling(m_sampling_rate)))
+  else if (m_codec_type == AudCodecLPCM)
     {
-      if(!AS_filter_deactivate(SRCOnly))
+      bool ret = true;
+
+      if (isNeedUpsampling(m_sampling_rate))
+        {
+          ret = AS_filter_deactivate(SRCOnly);
+        }
+      else
+        {
+          if (m_pcm_bit_width == AudPcm24Bit)
+            {
+              ret = AS_filter_deactivate(BitWidthConv);
+            }
+        }
+
+      if (!ret)
         {
           return false;
         }
@@ -555,9 +581,10 @@ void MediaRecorderObjectTask::init(MsgPacket *msg)
 
   m_channel_num   = cmd.init_param.channel_number;
   m_pcm_bit_width =
-    ((cmd.init_param.bit_length == AS_BITLENGTH_16) ?
-      AudPcm16Bit : AudPcm24Bit);
-  m_pcm_byte_len  = ((m_pcm_bit_width == AudPcm16Bit) ? 2 : 4);
+    ((cmd.init_param.bit_length == AS_BITLENGTH_16)
+      ? AudPcm16Bit : (cmd.init_param.bit_length == AS_BITLENGTH_24)
+                        ? AudPcm24Bit : AudPcm32Bit);
+  m_cap_byte_len  = ((m_pcm_bit_width == AudPcm16Bit) ? 2 : 4);
   m_bit_rate      = cmd.init_param.bitrate;
   m_complexity    = cmd.init_param.computational_complexity;
   AudioCodec cmd_codec_type = InvalidCodecType;
@@ -594,6 +621,7 @@ void MediaRecorderObjectTask::init(MsgPacket *msg)
       rst = loadCodec(cmd_codec_type,
                       cmd.init_param.dsp_path,
                       cmd.init_param.sampling_rate,
+                      cmd.init_param.bit_length,
                       &dsp_inf);
       if (rst != AS_ECODE_OK)
         {
@@ -634,6 +662,7 @@ void MediaRecorderObjectTask::init(MsgPacket *msg)
           rst = loadCodec(cmd_codec_type,
                           cmd.init_param.dsp_path,
                           cmd.init_param.sampling_rate,
+                          cmd.init_param.bit_length,
                           &dsp_inf);
           if (rst != AS_ECODE_OK)
             {
@@ -660,11 +689,6 @@ void MediaRecorderObjectTask::startOnReady(MsgPacket *msg)
   MEDIA_RECORDER_DBG("START:\n");
 
   InitAudioRecSinkParam_s init_sink;
-  init_sink.fs            = m_sampling_rate;
-  init_sink.ch            = m_channel_num;
-  init_sink.byte_length   = m_pcm_byte_len;
-  init_sink.codec_type    = m_codec_type;
-  init_sink.output_device = m_output_device;
   if (m_output_device == AS_SETRECDR_STS_OUTPUTDEVICE_RAM)
     {
       init_sink.init_audio_ram_sink.output_device_hdlr =
@@ -690,28 +714,38 @@ void MediaRecorderObjectTask::startOnReady(MsgPacket *msg)
   if (m_codec_type == AudCodecLPCM)
     {
       FilterComponentParam filter_param;
-      filter_param.filter_type = Apu::SRC;
-      filter_param.init_src_param.sample_num = getPcmCaptureSample();
-      cxd56_audio_clkmode_t clock_mode = cxd56_audio_get_clkmode();
-      if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
+
+      filter_param.filter_type = Apu::InvalidApuFilterType;
+
+      if (isNeedUpsampling(m_sampling_rate))
         {
+          filter_param.filter_type = Apu::SRC;
+          filter_param.init_src_param.sample_num = getPcmCaptureSample();
           filter_param.init_src_param.input_sampling_rate =
-            AS_SAMPLINGRATE_192000;
+            (cxd56_audio_get_clkmode() == CXD56_AUDIO_CLKMODE_HIRES)
+              ? AS_SAMPLINGRATE_192000 : AS_SAMPLINGRATE_48000;
+          filter_param.init_src_param.output_sampling_rate   = m_sampling_rate;
+          filter_param.init_src_param.channel_num            = m_channel_num;
+          filter_param.init_src_param.input_pcm_byte_length  = m_cap_byte_len;
+          filter_param.init_src_param.output_pcm_byte_length = /* byte */
+            (m_pcm_bit_width == AudPcm16Bit) ? 2 : (m_pcm_bit_width == AudPcm24Bit) ? 3 : 4;
+          filter_param.callback                              = filter_done_callback;
         }
       else
         {
-          filter_param.init_src_param.input_sampling_rate =
-            AS_SAMPLINGRATE_48000;
+          if (m_pcm_bit_width == AudPcm24Bit)
+            {
+              filter_param.filter_type = Apu::BitWidthConv;
+              filter_param.callback    = filter_done_callback;
+              filter_param.init_packing_param.in_bitwidth  = BitWidth32bit;
+              filter_param.init_packing_param.out_bitwidth = BitWidth24bit;
+            }
         }
-      filter_param.init_src_param.output_sampling_rate   = m_sampling_rate;
-      filter_param.init_src_param.channel_num            = m_channel_num;
-      filter_param.init_src_param.input_pcm_byte_length  = m_pcm_byte_len;
-      filter_param.init_src_param.output_pcm_byte_length = m_pcm_byte_len;
-      filter_param.callback                              = src_done_callback;
-      if (isNeedUpsampling(m_sampling_rate))
+
+      if (filter_param.filter_type != Apu::InvalidApuFilterType)
         {
           apu_result = AS_filter_init(filter_param, &dsp_inf);
-          result = AS_filter_recv_done();
+          result = AS_filter_recv_done(filter_param.filter_type);
           if (!result)
             {
               D_ASSERT(0);
@@ -825,35 +859,49 @@ void MediaRecorderObjectTask::stopOnWait(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void MediaRecorderObjectTask::illegalFilterDone(MsgPacket *msg)
 {
-  msg->moveParam<SrcFilterCompCmpltParam>();
+  msg->moveParam<FilterCompCmpltParam>();
   MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_ILLEGAL_REQUEST);
 }
 
 /*--------------------------------------------------------------------------*/
 void MediaRecorderObjectTask::filterDoneOnRec(MsgPacket *msg)
 {
-  SrcFilterCompCmpltParam filter_result =
-    msg->moveParam<SrcFilterCompCmpltParam>();
+  FilterCompCmpltParam filter_result =
+    msg->moveParam<FilterCompCmpltParam>();
   if (isNeedUpsampling(m_sampling_rate))
     {
-      AS_filter_recv_done();
+      AS_filter_recv_done(Apu::SRC);
+    }
+  else
+    {
+      if (m_pcm_bit_width == AudPcm24Bit)
+        {
+          AS_filter_recv_done(Apu::BitWidthConv);
+        }
     }
 
   freeCnvInBuf();
 
   writeToDataSinker(m_output_buf_mh_que.top(),
-                   filter_result.exec_src_param.output_buffer.size);
+                    filter_result.output_buffer.size);
   freeOutputBuf();
 }
 
 /*--------------------------------------------------------------------------*/
 void MediaRecorderObjectTask::filterDoneOnStop(MsgPacket *msg)
 {
-  SrcFilterCompCmpltParam filter_result =
-    msg->moveParam<SrcFilterCompCmpltParam>();
+  FilterCompCmpltParam filter_result =
+    msg->moveParam<FilterCompCmpltParam>();
   if (isNeedUpsampling(m_sampling_rate))
     {
-      AS_filter_recv_done();
+      AS_filter_recv_done(Apu::SRC);
+    }
+  else
+    {
+      if (m_pcm_bit_width == AudPcm24Bit)
+        {
+          AS_filter_recv_done(Apu::BitWidthConv);
+        }
     }
 
   if (filter_result.event_type == Apu::ExecEvent)
@@ -863,16 +911,16 @@ void MediaRecorderObjectTask::filterDoneOnStop(MsgPacket *msg)
           freeCnvInBuf();
 
           writeToDataSinker(m_output_buf_mh_que.top(),
-                           filter_result.exec_src_param.output_buffer.size);
+                           filter_result.output_buffer.size);
           freeOutputBuf();
         }
     }
   else if (filter_result.event_type == Apu::FlushEvent)
     {
-      if (filter_result.stop_src_param.output_buffer.size > 0)
+      if (filter_result.output_buffer.size > 0)
         {
           writeToDataSinker(m_output_buf_mh_que.top(),
-                           filter_result.stop_src_param.output_buffer.size);
+                            filter_result.output_buffer.size);
         }
       freeOutputBuf();
 
@@ -902,11 +950,18 @@ void MediaRecorderObjectTask::filterDoneOnStop(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void MediaRecorderObjectTask::filterDoneOnOverflow(MsgPacket *msg)
 {
-  SrcFilterCompCmpltParam filter_result =
-    msg->moveParam<SrcFilterCompCmpltParam>();
+  FilterCompCmpltParam filter_result =
+    msg->moveParam<FilterCompCmpltParam>();
   if (isNeedUpsampling(m_sampling_rate))
     {
-      AS_filter_recv_done();
+      AS_filter_recv_done(Apu::SRC);
+    }
+  else
+    {
+      if (m_pcm_bit_width == AudPcm24Bit)
+        {
+          AS_filter_recv_done(Apu::BitWidthConv);
+        }
     }
 
   if (filter_result.event_type == Apu::ExecEvent)
@@ -916,17 +971,17 @@ void MediaRecorderObjectTask::filterDoneOnOverflow(MsgPacket *msg)
           freeCnvInBuf();
 
           writeToDataSinker(m_output_buf_mh_que.top(),
-                           filter_result.exec_src_param.output_buffer.size);
+                           filter_result.output_buffer.size);
 
           freeOutputBuf();
         }
     }
   else if (filter_result.event_type == Apu::FlushEvent)
     {
-      if (filter_result.stop_src_param.output_buffer.size > 0)
+      if (filter_result.output_buffer.size > 0)
         {
           writeToDataSinker(m_output_buf_mh_que.top(),
-                           filter_result.stop_src_param.output_buffer.size);
+                           filter_result.output_buffer.size);
         }
 
       freeOutputBuf();
@@ -1067,7 +1122,7 @@ void MediaRecorderObjectTask::captureDoneOnRec(MsgPacket *msg)
 
   execEnc(capture_result.buf.cap_mh,
           capture_result.buf.sample *
-          m_pcm_byte_len * m_channel_num);
+          m_cap_byte_len * m_channel_num);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1079,7 +1134,7 @@ void MediaRecorderObjectTask::captureDoneOnStop(MsgPacket *msg)
 
   execEnc(capture_result.buf.cap_mh,
           capture_result.buf.sample *
-          m_pcm_byte_len * m_channel_num);
+          m_cap_byte_len * m_channel_num);
 
   /* Check end of capture */
 
@@ -1120,12 +1175,14 @@ void MediaRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_siz
 {
   if (m_codec_type == AudCodecLPCM)
     {
+      FilterComponentParam param;
+
+      param.filter_type = Apu::InvalidApuFilterType;
+
       if (isNeedUpsampling(m_sampling_rate))
         {
-          FilterComponentParam param;
           param.filter_type = Apu::SRC;
-          param.callback = src_done_callback;
-
+          param.callback = filter_done_callback;
           param.exec_src_param.input_buffer.p_buffer  =
             reinterpret_cast<unsigned long *>(mh.getPa());
           param.exec_src_param.input_buffer.size      = pcm_size;
@@ -1133,33 +1190,48 @@ void MediaRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_siz
             reinterpret_cast<unsigned long *>(getOutputBufAddr());
           param.exec_src_param.output_buffer.size     =
             m_max_output_pcm_size;
-          AS_filter_exec(param);
-
-          m_cnv_in_buf_mh_que.push(mh);
         }
       else
         {
-          err_t er;
-          SrcFilterCompCmpltParam cmplt;
-          cmplt.event_type = Apu::ExecEvent;
-          cmplt.exec_src_param.input_buffer.p_buffer  =
-            reinterpret_cast<unsigned long *>(mh.getPa());
-          cmplt.exec_src_param.input_buffer.size      = pcm_size;
-          cmplt.exec_src_param.output_buffer.p_buffer =
-            reinterpret_cast<unsigned long *>(getOutputBufAddr());
-          cmplt.exec_src_param.output_buffer.size     = pcm_size;
-          memcpy(cmplt.exec_src_param.output_buffer.p_buffer,
-                 cmplt.exec_src_param.input_buffer.p_buffer,
-                 pcm_size);
+          if (m_pcm_bit_width == AudPcm24Bit)
+            {
+              param.filter_type = Apu::BitWidthConv;
+              param.exec_packing_param.in_buffer.p_buffer  =
+                reinterpret_cast<unsigned long *>(mh.getPa());
+              param.exec_packing_param.in_buffer.size      = pcm_size;
+              param.exec_packing_param.out_buffer.p_buffer =
+                reinterpret_cast<unsigned long *>(getOutputBufAddr());
+              param.exec_packing_param.out_buffer.size     =
+                m_max_output_pcm_size;
+            }
+          else
+            {
+              err_t er;
+              FilterCompCmpltParam cmplt;
+              cmplt.event_type = Apu::ExecEvent;
+              cmplt.output_buffer.p_buffer =
+                reinterpret_cast<unsigned long *>(getOutputBufAddr());
+              cmplt.output_buffer.size     = pcm_size;
+              memcpy(cmplt.output_buffer.p_buffer,
+                     mh.getPa(),
+                     pcm_size);
+
+              m_cnv_in_buf_mh_que.push(mh);
+
+              er = MsgLib::send<FilterCompCmpltParam>(s_self_dtq,
+                                                      MsgPriNormal,
+                                                      MSG_AUD_VRC_RST_FILTER,
+                                                      NULL,
+                                                      cmplt);
+              F_ASSERT(er == ERR_OK);
+            }
+        }
+
+      if (param.filter_type != Apu::InvalidApuFilterType)
+        {
+          AS_filter_exec(param);
 
           m_cnv_in_buf_mh_que.push(mh);
-
-          er = MsgLib::send<SrcFilterCompCmpltParam>(s_self_dtq,
-                                                     MsgPriNormal,
-                                                     MSG_AUD_VRC_RST_FILTER,
-                                                     NULL,
-                                                     cmplt);
-          F_ASSERT(er == ERR_OK);
         }
     }
   else if ((m_codec_type == AudCodecMP3) || (m_codec_type == AudCodecOPUS))
@@ -1182,29 +1254,46 @@ void MediaRecorderObjectTask::stopEnc(void)
 {
   if (m_codec_type == AudCodecLPCM)
     {
+      FilterComponentParam param;
+
+      param.filter_type = Apu::InvalidApuFilterType;
+
       if (isNeedUpsampling(m_sampling_rate))
         {
-          FilterComponentParam param;
           param.filter_type = Apu::SRC;
           param.stop_src_param.output_buffer.p_buffer =
             reinterpret_cast<unsigned long *>(getOutputBufAddr());
           param.stop_src_param.output_buffer.size = m_max_output_pcm_size;
-          AS_filter_stop(param);
         }
       else
         {
-          err_t er;
-          SrcFilterCompCmpltParam cmplt;
-          cmplt.event_type = Apu::FlushEvent;
-          cmplt.stop_src_param.output_buffer.p_buffer =
-            reinterpret_cast<unsigned long *>(getOutputBufAddr());
-          cmplt.stop_src_param.output_buffer.size = 0;
-          er = MsgLib::send<SrcFilterCompCmpltParam>(s_self_dtq,
-                                                     MsgPriNormal,
-                                                     MSG_AUD_VRC_RST_FILTER,
-                                                     NULL,
-                                                     cmplt);
-          F_ASSERT(er == ERR_OK);
+          if (m_pcm_bit_width == AudPcm24Bit)
+            {
+              param.filter_type = Apu::BitWidthConv;
+              param.stop_packing_param.out_buffer.p_buffer =
+                reinterpret_cast<unsigned long *>(getOutputBufAddr());
+              param.stop_packing_param.out_buffer.size = m_max_output_pcm_size;
+            }
+          else
+            {
+              err_t er;
+              FilterCompCmpltParam cmplt;
+              cmplt.event_type = Apu::FlushEvent;
+              cmplt.output_buffer.p_buffer =
+                reinterpret_cast<unsigned long *>(getOutputBufAddr());
+              cmplt.output_buffer.size = 0;
+              er = MsgLib::send<FilterCompCmpltParam>(s_self_dtq,
+                                                      MsgPriNormal,
+                                                      MSG_AUD_VRC_RST_FILTER,
+                                                      NULL,
+                                                      cmplt);
+              F_ASSERT(er == ERR_OK);
+            }
+        }
+
+      if (param.filter_type != Apu::InvalidApuFilterType)
+        {
+          AS_filter_stop(param);
         }
     }
   else if ((m_codec_type == AudCodecMP3) || (m_codec_type == AudCodecOPUS))
@@ -1446,9 +1535,13 @@ uint32_t MediaRecorderObjectTask::isValidInitParamLPCM(
         break;
 
       case AS_BITLENGTH_24:
+      case AS_BITLENGTH_32:
         {
           cxd56_audio_clkmode_t clock_mode = cxd56_audio_get_clkmode();
-          if (CXD56_AUDIO_CLKMODE_HIRES == clock_mode)
+          if ((CXD56_AUDIO_CLKMODE_HIRES == clock_mode
+            && cmd.init_param.sampling_rate == AS_SAMPLINGRATE_192000)
+           || (CXD56_AUDIO_CLKMODE_NORMAL == clock_mode
+            && cmd.init_param.sampling_rate == AS_SAMPLINGRATE_48000))
             {
               break;
             }

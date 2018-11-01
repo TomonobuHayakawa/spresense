@@ -78,7 +78,7 @@ private:
     m_state(AS_MODULE_ID_MEDIA_RECORDER_OBJ, "", RecorderStateInactive),
     m_channel_num(2),
     m_pcm_bit_width(AudPcm16Bit),
-    m_pcm_byte_len(2),  /* This value depends on the value of
+    m_cap_byte_len(2),  /* This value depends on the value of
                          * m_pcm_bit_width.
                          */
     m_sampling_rate(48000),
@@ -104,7 +104,7 @@ private:
   AudioState<RecorderState_e> m_state;
   int8_t  m_channel_num;
   AudioPcmBitWidth m_pcm_bit_width;
-  int8_t  m_pcm_byte_len;
+  int8_t  m_cap_byte_len;
   int32_t m_sampling_rate;
   int32_t m_max_capture_pcm_size;
   int32_t m_max_output_pcm_size;
@@ -168,7 +168,7 @@ private:
   void* getMicInBufAddr();
   void* getOutputBufAddr();
 
-  uint32_t loadCodec(AudioCodec, char *, int32_t, uint32_t *);
+  uint32_t loadCodec(AudioCodec, char *, int32_t, int32_t, uint32_t *);
   bool unloadCodec(void);
 
   bool freeCnvInBuf()
