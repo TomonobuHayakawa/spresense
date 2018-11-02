@@ -2014,7 +2014,6 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
       case V4L2_CTRL_CLASS_CAMERA:
         switch (range->id)
           {
-#if 0 /* To Be Supported */
             case V4L2_CID_EXPOSURE_AUTO:
               range->type          = ISX012_TYPE_EXPOSUREAUTO;
               range->minimum       = ISX012_MIN_EXPOSUREAUTO;
@@ -2038,7 +2037,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-#endif
+
             case V4L2_CID_EXPOSURE_METERING:
               range->type          = ISX012_TYPE_PHOTOMETRY;
               range->minimum       = ISX012_MIN_PHOTOMETRY;
@@ -2426,7 +2425,6 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
       case V4L2_CTRL_CLASS_CAMERA:
         switch (control->id)
           {
-#if 0 /* To Be Supported */
             case V4L2_CID_EXPOSURE_AUTO:
               readvalue = isx012_getreg(priv,
                                         ISX012_REG_EXPOSUREAUTO,
@@ -2449,7 +2447,7 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                                              ISX012_SIZE_EXPOSURETIME);
 
               break;
-#endif
+
             case V4L2_CID_AUTO_N_PRESET_WHITE_BALANCE:
               readvalue = isx012_getreg(priv,
                                         ISX012_REG_PRESETWB,
@@ -2592,6 +2590,8 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
   uint16_t  write_dst;
 #endif
   uint16_t  regval;
+  uint16_t  exposure_time_lsb;
+  uint16_t  exposure_time_msb;
 
   if (control == NULL)
     {
@@ -2924,8 +2924,43 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
       case V4L2_CTRL_CLASS_CAMERA:
         switch (control->id)
           {
-#if 0 /* To Be Supported */
             case V4L2_CID_EXPOSURE_AUTO:
+              CHECK_RANGE(control->value,
+                          ISX012_MIN_EXPOSUREAUTO,
+                          ISX012_MAX_EXPOSUREAUTO,
+                          ISX012_STEP_EXPOSUREAUTO);
+
+              if (control->value == V4L2_EXPOSURE_AUTO)
+                {
+                  ret = isx012_putreg(priv,
+                                      ISX012_REG_EXPOSUREAUTO,
+                                      REGVAL_EXPOSURETIME_AUTO,
+                                      ISX012_SIZE_EXPOSUREAUTO);
+                }
+              else
+                {
+                  /* In manual case, read auto adjust value and set it.
+                   * The unit of auto adjust value differ from manual value.
+                   */
+
+                  exposure_time_lsb = isx012_getreg
+                                      (priv,
+                                       ISX012_REG_EXPOSUREAUTOVALUE_LSB,
+                                       ISX012_SIZE_EXPOSUREAUTOVALUE);
+                  exposure_time_msb = isx012_getreg
+                                      (priv,
+                                       ISX012_REG_EXPOSUREAUTOVALUE_MSB,
+                                       ISX012_SIZE_EXPOSUREAUTOVALUE);
+                  regval = (uint16_t)(((exposure_time_msb << 16)
+                                        | exposure_time_lsb)
+                                       * ISX012_UNIT_EXPOSUREAUTOVALUE_US
+                                       / ISX012_UNIT_EXPOSURETIME_US);
+                  ret = isx012_putreg(priv,
+                                      ISX012_REG_EXPOSUREAUTO,
+                                      regval,
+                                      ISX012_SIZE_EXPOSUREAUTO);
+                }
+
               break;
 
             case V4L2_CID_EXPOSURE_ABSOLUTE:
@@ -2939,7 +2974,7 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                                   control->value,
                                   ISX012_SIZE_EXPOSURETIME);
               break;
-#endif
+
             case V4L2_CID_WIDE_DYNAMIC_RANGE:
               CHECK_RANGE(control->value,
                           ISX012_MIN_YGAMMA,
