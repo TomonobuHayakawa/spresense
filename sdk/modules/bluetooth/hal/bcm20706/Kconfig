@@ -11,6 +11,34 @@ config BCM20706
 		Enable Cypress BCM20706 HALs.
 
 if BCM20706
+choice
+	prompt "Firmware location"
+	default BCM20706_FIRMWARE_IN_FILESYSTEM
+	config BCM20706_FIRMWARE_IN_FILESYSTEM
+		bool "File system"
+		---help---
+			Firmware is store in file system.
+
+	config BCM20706_FIRMWARE_IN_EXT_ROM
+		bool "External ROM"
+		---help---
+			Firmware is store in external ROM.
+endchoice
+
+if BCM20706_FIRMWARE_IN_FILESYSTEM
+config BCM20706_FIRMWARE_PATH
+	string "BCM20706 firmware binary file path"
+	default "/mnt/spif/bcm20706fw"
+	---help---
+		This option is for using file system to load firmware.
+endif
+
+config BCM20706_UART_DEV_PATH
+	string "BCM20706 UART device file path"
+	default "/dev/ttyS2"
+	---help---
+		This is UART device file path for communicate BCM20706 with Host.
+
 config BCM20706_A2DP
 	bool
 	default BLUETOOTH_A2DP
