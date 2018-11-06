@@ -1326,4 +1326,16 @@ cxd56_audio_state_t cxd56_audio_get_status(void)
 {
   return g_status;
 }
+/*--------------------------------------------------------------------------*/
+CXD56_AUDIO_ECODE cxd56_audio_set_spdriver(cxd56_audio_sp_drv_t sp_driver)
+{
+  cxd56_audio_config_set_spdriver(sp_driver);
 
+  return CXD56_AUDIO_ECODE_OK;
+}
+
+/*--------------------------------------------------------------------------*/
+cxd56_audio_sp_drv_t cxd56_audio_get_spdriver(void)
+{
+  return cxd56_audio_config_get_spdriver();
+}

@@ -391,6 +391,15 @@ enum cxd56_audio_micdev_e
 };
 typedef enum cxd56_audio_micdev_e cxd56_audio_micdev_t;
 
+enum cxd56_audio_sp_drv_e
+{
+  CXD56_AUDIO_SP_DRV_LINEOUT = 0,
+  CXD56_AUDIO_SP_DRV_1DRIVER,
+  CXD56_AUDIO_SP_DRV_2DRIVER,
+  CXD56_AUDIO_SP_DRV_4DRIVER
+};
+typedef enum cxd56_audio_sp_drv_e cxd56_audio_sp_drv_t;
+
 struct cxd56_audio_i2s_param_s
 {
   uint32_t data_rate;
@@ -935,6 +944,24 @@ CXD56_AUDIO_ECODE cxd56_audio_dis_i2s_io(void);
  * @retval cxd56_audio_state_t value : current status
  */
 cxd56_audio_state_t cxd56_audio_get_status(void);
+
+/**
+ * @brief Set audio speaker driver mode
+ *
+ * @param[in] cxd56_audio_sp_drv_t  speaker driver mode
+ *
+ * @retval CXD56_AUDIO_ECODE return code
+ */
+CXD56_AUDIO_ECODE cxd56_audio_set_spdriver(cxd56_audio_sp_drv_t sp_driver);
+
+/**
+ * @brief Get audio speaker driver mode
+ *
+ * @param none
+ *
+ * @retval cxd56_audio_sp_drv_t  speaker driver mode
+ */
+cxd56_audio_sp_drv_t cxd56_audio_get_spdriver(void);
 
 #ifdef __cplusplus
 } /* end of extern "C" */
