@@ -419,6 +419,36 @@ static bool is_bufsize_sufficient(FAR video_mng_t *vmng, uint32_t bufsize)
   return true;
 }
 
+static void initialize_streamresources(FAR video_type_inf_t *type_inf)
+{
+  memset(type_inf, 0, sizeof(video_type_inf_t));
+  type_inf->remaining_capnum = VIDEO_REMAINING_CAPNUM_INFINITY;
+  sem_init(&type_inf->lock_state, 0, 1);
+  sem_init(&type_inf->wait_dma.dqbuf_wait_flg, 0, 0);
+  video_framebuff_init(&type_inf->bufinf);
+
+  return;
+}
+
+static void initialize_resources(FAR video_mng_t *vmng)
+{
+  initialize_streamresources(&vmng->video_inf);
+  initialize_streamresources(&vmng->still_inf);
+
+  return;
+}
+
+static void cleanup_streamresources(FAR video_type_inf_t *type_inf)
+{
+  video_framebuff_uninit(&type_inf->bufinf);
+  sem_destroy(&type_inf->wait_dma.dqbuf_wait_flg);
+  sem_destroy(&type_inf->lock_state);
+  memset(type_inf, 0, sizeof(video_type_inf_t));
+  type_inf->remaining_capnum = VIDEO_REMAINING_CAPNUM_INFINITY;
+
+  return;
+}
+
 static void cleanup_resources(FAR video_mng_t *vmng)
 {
   /* clean up resource */
@@ -431,17 +461,8 @@ static void cleanup_resources(FAR video_mng_t *vmng)
       g_video_devops->cancel_dma();
     }
 
-  video_framebuff_uninit(&vmng->video_inf.bufinf);
-  video_framebuff_uninit(&vmng->still_inf.bufinf);
-
-  sem_destroy(&vmng->video_inf.lock_state);
-  sem_destroy(&vmng->still_inf.lock_state);
-
-  memset(&vmng->video_inf, 0, sizeof(video_type_inf_t));
-  memset(&vmng->still_inf, 0, sizeof(video_type_inf_t));
-
-  vmng->video_inf.remaining_capnum = VIDEO_REMAINING_CAPNUM_INFINITY;
-  vmng->still_inf.remaining_capnum = VIDEO_REMAINING_CAPNUM_INFINITY;
+  cleanup_streamresources(&vmng->video_inf);
+  cleanup_streamresources(&vmng->still_inf);
 
   return;
 }
@@ -476,12 +497,7 @@ static int video_open(FAR struct file *filep)
       ret = g_video_devops->open(priv);
       if (ret == OK)
         {
-          sem_init(&priv->video_inf.lock_state, 0, 1);
-          sem_init(&priv->still_inf.lock_state, 0, 1);
-          priv->video_inf.remaining_capnum = VIDEO_REMAINING_CAPNUM_INFINITY;
-          priv->still_inf.remaining_capnum = VIDEO_REMAINING_CAPNUM_INFINITY;
-          video_framebuff_init(&priv->video_inf.bufinf);
-          video_framebuff_init(&priv->still_inf.bufinf);
+          initialize_resources(priv);
         }
     }
 
@@ -670,9 +686,7 @@ static int video_dqbuf(FAR struct video_mng_s *vmng,
               leave_critical_section(flags);
             }
 
-          sem_init(dqbuf_wait_flg, 0, 0);
           sem_wait(dqbuf_wait_flg);
-          sem_destroy(dqbuf_wait_flg);
         }
       while (type_inf->wait_dma.waitend_cause == VIDEO_WAITEND_CAUSE_STILLSTOP);
 
@@ -687,11 +701,11 @@ static int video_dqbuf(FAR struct video_mng_s *vmng,
           if (type_inf->wait_dma.waitend_cause
                == VIDEO_WAITEND_CAUSE_DQCANCEL)
             {
-              memset(&type_inf->wait_dma, 0, sizeof(video_wait_dma_t));
               return -ECANCELED;
             }
         }
-      memset(&type_inf->wait_dma, 0, sizeof(video_wait_dma_t)); 
+
+      type_inf->wait_dma.done_container = NULL;
     }
 
   memcpy(buf, &container->buf, sizeof(struct v4l2_buffer));
