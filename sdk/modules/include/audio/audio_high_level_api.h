@@ -196,6 +196,10 @@
 
 #define LENGTH_SET_THROUGH_PATH     4
 
+/*! \brief SetSpDrvMode command ("AUDCMD_SETSPDRVMODE)packet length */
+
+#define LENGTH_SETSPDRVMODE         2
+
 /** @} */
 
 /** @defgroup attention_sub_code Attention Code */
@@ -672,6 +676,14 @@
 
 #define AS_ECODE_SET_RENDERINGCLK_ERROR          0x3A
 
+/*! \brief Parameter SetSpDrvMode Error */
+
+#define AS_ECODE_COMMAND_PARAM_SETSPDRVMODE      0x3B
+
+/*! \brief Set Speaker Driver Mode Error */
+
+#define AS_ECODE_SET_SPDRVMODE_ERROR             0x3C
+
 /** @} */
 
 #define AS_ERROR_CODE_INFORMATION INFORMATION_ATTENTION_CODE
@@ -953,6 +965,21 @@ typedef struct
   uint8_t  reserved3;
 } SetRenderingClkParam;
 
+/** SetSpDrvMode Command (#AUDCMD_SETSPDRVMODE) parameter */
+
+typedef struct
+{
+  /*! \brief [in] set speaker driver mode
+   *
+   * Use #AsSpDrvMode enum type.
+   */
+
+  uint8_t  mode;
+  uint8_t  reserved1;
+  uint8_t  reserved2;
+  uint8_t  reserved3;
+} SetSpDrvModeParam;
+
 /** SetRenderingClk Command (#AUDCMD_SETRENDERINGCLK) parameter */
 
 typedef enum
@@ -1010,6 +1037,17 @@ typedef enum
   AS_THROUGH_PATH_OUT_I2S2,
   AS_THROUGH_PATH_OUT_NUM
 } AsThroughPathOut;
+
+/** Speaker driver mode */
+
+typedef enum
+{
+  AS_SP_DRV_MODE_LINEOUT = 0,
+  AS_SP_DRV_MODE_1DRIVER,
+  AS_SP_DRV_MODE_2DRIVER,
+  AS_SP_DRV_MODE_4DRIVER,
+  AS_SP_DRV_MODE_NUM
+} AsSpDrvMode;
 
 /** Through path of audio data (used in AsSetThroughPathParam) parameter */
 
@@ -1208,6 +1246,12 @@ typedef struct
      */
 
     SetRenderingClkParam set_renderingclk_param;
+
+    /*! \brief [in] for SetSpDrvMode
+     * (header.command_code==#AUDCMD_SETSPDRVMODE)
+     */
+
+    SetSpDrvModeParam set_sp_drv_mode;
   };
 
 #ifdef __cplusplus
