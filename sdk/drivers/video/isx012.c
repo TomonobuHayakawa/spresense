@@ -1207,9 +1207,7 @@ static int isx012_check_fmt(enum v4l2_buf_type buf_type,
 
       case V4L2_BUF_TYPE_STILL_CAPTURE:
         if ((pixel_format != V4L2_PIX_FMT_JPEG) &&
-#if 0 /* To Be Supported */
             (pixel_format != V4L2_PIX_FMT_JPEG_WITH_SUBIMG) &&
-#endif
             (pixel_format != V4L2_PIX_FMT_UYVY))
           {
             /* Unsupported format */
@@ -1267,7 +1265,6 @@ static int isx012_get_range_of_fmt(FAR struct v4l2_fmtdesc *format)
               break;
 
             case 1:
-#if 0 /* To Be Supported */
               /* JPEG + YUV 4:2:2 */
 
               strncpy(format->description,
@@ -1279,7 +1276,6 @@ static int isx012_get_range_of_fmt(FAR struct v4l2_fmtdesc *format)
               break;
 
             case 2:
-#endif
               /* YUV 4:2:2 */
 
               strncpy(format->description, "YUV 4:2:2", V4L2_FMT_DSC_MAX);
@@ -1345,7 +1341,7 @@ static int isx012_get_range_of_framesize(FAR struct v4l2_frmsizeenum *frmsize)
         frmsize->stepwise.step_height        = ISX012_SIZE_STEP;
 
         break;
-#if 0 /* To Be Supported */
+
       case V4L2_PIX_FMT_JPEG_WITH_SUBIMG:    /* JPEG + YUV 4:2:2 */
         if (frmsize->subimg_pixel_format != V4L2_PIX_FMT_UYVY)
           {
@@ -1371,7 +1367,7 @@ static int isx012_get_range_of_framesize(FAR struct v4l2_frmsizeenum *frmsize)
         frmsize->subimg.stepwise.step_height = ISX012_SIZE_STEP;
  
         break;
-#endif
+
       default:
         /* Unsupported pixel format */
 
@@ -1653,7 +1649,7 @@ static int8_t isx012_get_maximum_fps(FAR struct v4l2_frmivalenum *frmival)
             (frmival->subimg_width  < OUT_YUV_HSIZE_MIN) ||
             (frmival->subimg_height < OUT_YUV_VSIZE_MIN) ||
             (frmival->subimg_width  > OUT_YUVINT_30FPS_HSIZE_MAX) ||
-            (frmival->subimg_width  > OUT_YUVINT_30FPS_VSIZE_MAX))
+            (frmival->subimg_height > OUT_YUVINT_30FPS_VSIZE_MAX))
           {
             /* IN frame size is out of range */
 
