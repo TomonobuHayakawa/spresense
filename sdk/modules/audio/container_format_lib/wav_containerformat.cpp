@@ -38,8 +38,9 @@
 
 /*--------------------------------------------------------------------------*/
 bool WavContainerFormat::init(uint16_t format_id,
-                             uint16_t channel_number,
-                             uint32_t sampling_rate)
+                              uint16_t channel_number,
+                              uint32_t sampling_rate,
+                              uint8_t bitwidth)
 {
   switch (format_id)
     {
@@ -87,6 +88,19 @@ bool WavContainerFormat::init(uint16_t format_id,
     }
   m_sampling_rate = sampling_rate;
 
+  switch (bitwidth)
+    {
+      case BIT_WIDTH_16:
+      case BIT_WIDTH_24:
+      case BIT_WIDTH_32:
+        break;
+
+      default:
+        return false;
+    }
+
+  m_bitwidth = bitwidth;
+
   return true;
 }
 
@@ -108,7 +122,7 @@ bool WavContainerFormat::getHeader(WAVHEADER *wav_header, uint32_t data_size)
   wav_header->rate       = m_sampling_rate;
   wav_header->avgbyte    = m_sampling_rate * m_channel_number * 2;
   wav_header->block      = m_channel_number * 2;
-  wav_header->bit        = 2 * 8;
+  wav_header->bit        = m_bitwidth;
   if (data_size == 0)
     {
       wav_header->total_size = 0;
