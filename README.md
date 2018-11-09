@@ -5,7 +5,7 @@ Clone this repository and update submodules. You can choose from 2 ways in below
 ## Shallow clone (Faster, for SDK developers)
 
 ```
-$ git clone git@code.sonymobile.net:spritzer-sdk/spresense.git
+$ git clone git@github.com:SonySemiconductorSolutions/spresense.git
 $ cd spresense
 $ git submodule update --init -- nuttx
 $ git submodule update --init --depth 1 -- proprietary
@@ -19,7 +19,7 @@ refer to other remote branches and old logs.
 ## Clone completely (Slower)
 
 ```
-$ git clone --recursive git@code.sonymobile.net:spritzer-sdk/spresense.git
+$ git clone --recursive git@github.com:SonySemiconductorSolutions/spresense.git
 ```
 
 After repositories cloned, each submodules are in 'Detached HEAD'.
@@ -40,4 +40,4 @@ $ git submodule foreach git checkout master
 
 # Build
 
-Build instructions are documented at [sdk repository](http://code.sonymobile.net/spritzer-sdk/sdk).
+Build instructions are documented at [sdk repository](https://github.com/SonySemiconductorSolutions/spresense/tree/master/sdk).
