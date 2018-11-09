@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/objects/output_mixer/output_mix_obj.h
+ * modules/include/audio/audio_object_common_api.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,50 +33,71 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_AUDIO_OBJECTS_OUTPUT_MIXER_OUTPUT_MIX_OBJ_H
-#define __MODULES_AUDIO_OBJECTS_OUTPUT_MIXER_OUTPUT_MIX_OBJ_H
+#ifndef __MODULES_INCLUDE_AUDIO_AUDIO_OBJECT_COMMON_API_H
+#define __MODULES_INCLUDE_AUDIO_AUDIO_OBJECT_COMMON_API_H
+
+/**
+ * @defgroup audioutils Audio Utility
+ * @{
+ */
+
+/**
+ * @defgroup audioutils_audio_object_api Audio Object Layer API
+ * @{
+ *
+ * @file       audio_object_common_api.h
+ * @brief      CXD5602 Audio Object Layer API
+ * @author     CXD5602 Audio SW Team
+ */
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include "memutils/message/Message.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 #include "memutils/message/MsgPacket.h"
-#include "memutils/memory_manager/MemHandle.h"
-#include "audio/audio_message_types.h"
-#include "output_mix_sink_device.h"
-#include "wien2_common_defs.h"
-
-__WIEN2_BEGIN_NAMESPACE
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
+enum AudioObjReplyType_e
+{
+  AS_OBJ_REPLY_TYPE_REQ = 0,
+  AS_OBJ_REPLY_TYPE_EVT,
+  AS_OBJ_REPLY_TYPE_FREE,
+};
+
 /****************************************************************************
  * Public Types
  ****************************************************************************/
 
-class OutputMixObjectTask
+struct AudioObjReply
 {
-public:
-  static void create(AsOutputMixMsgQueId_t msgq_id,
-                     AsOutputMixPoolId_t pool_id);
+  uint32_t            id;         /**< command id */
+  AudioObjReplyType_e type;       /**< id type */
+  uint8_t             module_id;  /**< module id of Objects */
+  uint32_t            result;     /**< result code */
 
-  OutputMixObjectTask(AsOutputMixMsgQueId_t msgq_id,
-                      AsOutputMixPoolId_t pool_id);
+  AudioObjReply():
+    id(0xFFFFFFFF),
+    type(AS_OBJ_REPLY_TYPE_FREE),
+    module_id(0xFF),
+    result(0xFFFFFFFF)
+  {}
 
-private:
-  AsOutputMixMsgQueId_t m_msgq_id;
-  static const int HPI2SoutChNum = 2;
-
-  OutputMixToHPI2S m_output_mix_to_hpi2s[HPI2SoutChNum];
-
-  AsOutputMixDevice m_output_device;
-
-  void run();
-  int getHandle(MsgPacket* msg);
-  void parse(MsgPacket* msg);
+  AudioObjReply(uint32_t arg_id,
+                AudioObjReplyType_e arg_type,
+                uint8_t  arg_module_id,
+                uint32_t arg_result):
+    id(arg_id),
+    type(arg_type),
+    module_id(arg_module_id),
+    result(arg_result)
+  {}
 };
 
 /****************************************************************************
@@ -91,7 +112,40 @@ private:
  * Public Function Prototypes
  ****************************************************************************/
 
-__WIEN2_END_NAMESPACE
+/**
+ * @brief Wait until an asynchronous event is received from the object layer
+ *
+ * @param[in]  msgq_id : ID of message queue to receive
+ * @param[out] reply   : information of replay message
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
 
-#endif /* __MODULES_AUDIO_OBJECTS_OUTPUT_MIXER_OUTPUT_MIX_OBJ_H */
+bool AS_ReceiveObjectReply(MsgQueId msgq_id,
+                           AudioObjReply *reply);
 
+/**
+ * @brief Wait for the specified time until an asynchronous event
+ *        is received from the object layer
+ *
+ * @param[in]  msgq_id : ID of message queue to receive
+ * @param[in]  ms      : Wait time(ms)
+ * @param[out] reply   : information of replay message
+ *
+ * @retval     true  : success
+ * @retval     false : failure
+ */
+
+bool AS_ReceiveObjectReply(MsgQueId msgq_id,
+                           uint32_t ms,
+                           AudioObjReply *reply);
+
+#endif  /* __MODULES_INCLUDE_AUDIO_AUDIO_OBJECT_COMMON_API_H */
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */

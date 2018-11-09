@@ -68,13 +68,9 @@ using namespace MemMgrLite;
  * Private Data
  ****************************************************************************/
 
-static pid_t    s_rcd_pid;
-static MsgQueId s_self_dtq;
-static MsgQueId s_manager_dtq;
-static MsgQueId s_apu_dtq;
-static PoolId   s_apu_pool_id;
-static PoolId   s_in_pool_id;
-static PoolId   s_out_pool_id;
+static pid_t s_rcd_pid;
+static AsRecorderMsgQueId_t s_msgq_id;
+static AsRecorderPoolId_t   s_pool_id;
 
 static MediaRecorderObjectTask *s_rcd_obj = NULL;
 
@@ -90,10 +86,10 @@ static void capture_comp_done_callback(CaptureDataParam param)
 {
   err_t er;
 
-  er = MsgLib::send<CaptureDataParam>(s_self_dtq,
+  er = MsgLib::send<CaptureDataParam>(s_msgq_id.recorder,
                                       MsgPriNormal,
                                       MSG_AUD_VRC_RST_CAPTURE,
-                                      s_self_dtq,
+                                      NULL,
                                       param);
   F_ASSERT(er == ERR_OK);
 }
@@ -122,10 +118,10 @@ static bool filter_done_callback(DspDrvComPrm_t* p_param)
           MEDIA_RECORDER_VDBG("Src s %d\n",
                               cmplt.output_buffer.size);
 
-          er = MsgLib::send<FilterCompCmpltParam>(s_self_dtq,
+          er = MsgLib::send<FilterCompCmpltParam>(s_msgq_id.recorder,
                                                   MsgPriNormal,
                                                   MSG_AUD_VRC_RST_FILTER,
-                                                  s_self_dtq,
+                                                  NULL,
                                                   cmplt);
 
           F_ASSERT(er == ERR_OK);
@@ -140,10 +136,10 @@ static bool filter_done_callback(DspDrvComPrm_t* p_param)
           MEDIA_RECORDER_VDBG("FlsSrc s %d\n",
                               cmplt.output_buffer.size);
 
-          er = MsgLib::send<FilterCompCmpltParam>(s_self_dtq,
+          er = MsgLib::send<FilterCompCmpltParam>(s_msgq_id.recorder,
                                                   MsgPriNormal,
                                                   MSG_AUD_VRC_RST_FILTER,
-                                                  s_self_dtq,
+                                                  NULL,
                                                   cmplt);
           F_ASSERT(er == ERR_OK);
         }
@@ -183,10 +179,10 @@ static bool encoder_done_callback(void* p_response)
           MEDIA_RECORDER_VDBG("Enc s %d\n",
                               cmplt.exec_enc_cmplt.output_buffer.size);
 
-          er = MsgLib::send<EncCmpltParam>(s_self_dtq,
+          er = MsgLib::send<EncCmpltParam>(s_msgq_id.recorder,
                                            MsgPriNormal,
                                            MSG_AUD_VRC_RST_ENC,
-                                           s_self_dtq,
+                                           NULL,
                                            cmplt);
           F_ASSERT(er == ERR_OK);
         }
@@ -200,10 +196,10 @@ static bool encoder_done_callback(void* p_response)
           MEDIA_RECORDER_VDBG("FlsEnc s %d\n",
                               cmplt.stop_enc_cmplt.output_buffer.size);
 
-          er = MsgLib::send<EncCmpltParam>(s_self_dtq,
+          er = MsgLib::send<EncCmpltParam>(s_msgq_id.recorder,
                                            MsgPriNormal,
                                            MSG_AUD_VRC_RST_ENC,
-                                           s_self_dtq,
+                                           NULL,
                                            cmplt);
           F_ASSERT(er == ERR_OK);
         }
@@ -228,8 +224,8 @@ uint32_t MediaRecorderObjectTask::loadCodec(AudioCodec codec,
     {
       rst = AS_encode_activate(codec,
                                (path) ? path : CONFIG_AUDIOUTILS_DSP_MOUNTPT,
-                               s_apu_dtq,
-                               s_apu_pool_id,
+                               m_msgq_id.dsp,
+                               m_pool_id.dsp,
                                dsp_inf);
       if(rst != AS_ECODE_OK)
         {
@@ -256,8 +252,8 @@ uint32_t MediaRecorderObjectTask::loadCodec(AudioCodec codec,
         {
           rst = AS_filter_activate(type,
                                    (path) ? path : CONFIG_AUDIOUTILS_DSP_MOUNTPT,
-                                   s_apu_dtq,
-                                   s_apu_pool_id,
+                                   m_msgq_id.dsp,
+                                   m_pool_id.dsp,
                                    dsp_inf);
           if (rst != AS_ECODE_OK)
             {
@@ -320,8 +316,8 @@ bool MediaRecorderObjectTask::unloadCodec(void)
 /*--------------------------------------------------------------------------*/
 int AS_MediaRecorderObjEntry(int argc, char *argv[])
 {
-  MediaRecorderObjectTask::create(s_self_dtq,
-                                  s_manager_dtq);
+  MediaRecorderObjectTask::create(s_msgq_id,
+                                  s_pool_id);
   return 0;
 }
 
@@ -332,7 +328,7 @@ void MediaRecorderObjectTask::run(void)
   MsgQueBlock* que;
   MsgPacket*   msg;
 
-  err_code = MsgLib::referMsgQueBlock(m_self_dtq, &que);
+  err_code = MsgLib::referMsgQueBlock(m_msgq_id.recorder, &que);
   F_ASSERT(err_code == ERR_OK);
 
   while(1)
@@ -463,6 +459,33 @@ void MediaRecorderObjectTask::parse(MsgPacket *msg)
       F_ASSERT((event < AUD_VRC_MSG_NUM));
 
       (this->*MsgProcTbl[event][m_state.get()])(msg);
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+void MediaRecorderObjectTask::reply(AsRecorderEvent evtype,
+                                    MsgType msg_type,
+                                    uint32_t result)
+{
+  if (m_callback != NULL)
+    {
+      m_callback(evtype, result, 0);
+    }
+  else if (m_msgq_id.mng != MSG_QUE_NULL)
+    {
+      AudioObjReply cmplt((uint32_t)msg_type,
+                           AS_OBJ_REPLY_TYPE_REQ,
+                           AS_MODULE_ID_MEDIA_RECORDER_OBJ,
+                           result);
+      err_t er = MsgLib::send<AudioObjReply>(m_msgq_id.mng,
+                                             MsgPriNormal,
+                                             MSG_TYPE_AUD_RES,
+                                             m_msgq_id.recorder,
+                                             cmplt);
+      if (ERR_OK != er)
+        {
+          F_ASSERT(0);
+        }
     }
 }
 
@@ -1218,7 +1241,7 @@ void MediaRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_siz
 
               m_cnv_in_buf_mh_que.push(mh);
 
-              er = MsgLib::send<FilterCompCmpltParam>(s_self_dtq,
+              er = MsgLib::send<FilterCompCmpltParam>(s_msgq_id.recorder,
                                                       MsgPriNormal,
                                                       MSG_AUD_VRC_RST_FILTER,
                                                       NULL,
@@ -1282,7 +1305,7 @@ void MediaRecorderObjectTask::stopEnc(void)
               cmplt.output_buffer.p_buffer =
                 reinterpret_cast<unsigned long *>(getOutputBufAddr());
               cmplt.output_buffer.size = 0;
-              er = MsgLib::send<FilterCompCmpltParam>(s_self_dtq,
+              er = MsgLib::send<FilterCompCmpltParam>(s_msgq_id.recorder,
                                                       MsgPriNormal,
                                                       MSG_AUD_VRC_RST_FILTER,
                                                       NULL,
@@ -1310,7 +1333,7 @@ void MediaRecorderObjectTask::stopEnc(void)
 void* MediaRecorderObjectTask::getOutputBufAddr()
 {
   MemMgrLite::MemHandle mh;
-  if (mh.allocSeg(s_out_pool_id, m_max_output_pcm_size) != ERR_OK)
+  if (mh.allocSeg(m_pool_id.output, m_max_output_pcm_size) != ERR_OK)
     {
       MEDIA_RECORDER_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return NULL;
@@ -1672,7 +1695,7 @@ bool MediaRecorderObjectTask::getInputDeviceHdlr(void)
     {
       if (!AS_get_capture_comp_handler(&m_capture_from_mic_hdlr,
                                        m_input_device,
-                                       s_in_pool_id))
+                                       m_pool_id.input))
         {
           return false;
         }
@@ -1681,7 +1704,7 @@ bool MediaRecorderObjectTask::getInputDeviceHdlr(void)
     {
       if (!AS_get_capture_comp_handler(&m_capture_from_mic_hdlr,
                                        m_input_device,
-                                       s_in_pool_id))
+                                       m_pool_id.input))
         {
           return false;
         }
@@ -1706,42 +1729,42 @@ bool MediaRecorderObjectTask::delInputDeviceHdlr(void)
 /*--------------------------------------------------------------------------*/
 bool MediaRecorderObjectTask::checkAndSetMemPool(void)
 {
-  if (!MemMgrLite::Manager::isPoolAvailable(s_in_pool_id))
+  if (!MemMgrLite::Manager::isPoolAvailable(m_pool_id.input))
     {
       MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return false;
     }
-  m_max_capture_pcm_size = (MemMgrLite::Manager::getPoolSize(s_in_pool_id)) /
-    (MemMgrLite::Manager::getPoolNumSegs(s_in_pool_id));
+  m_max_capture_pcm_size = (MemMgrLite::Manager::getPoolSize(m_pool_id.input)) /
+    (MemMgrLite::Manager::getPoolNumSegs(m_pool_id.input));
 
-  if (!MemMgrLite::Manager::isPoolAvailable(s_out_pool_id))
+  if (!MemMgrLite::Manager::isPoolAvailable(m_pool_id.output))
     {
       MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return false;
     }
-  m_max_output_pcm_size = (MemMgrLite::Manager::getPoolSize(s_out_pool_id)) /
-    (MemMgrLite::Manager::getPoolNumSegs(s_out_pool_id));
+  m_max_output_pcm_size = (MemMgrLite::Manager::getPoolSize(m_pool_id.output)) /
+    (MemMgrLite::Manager::getPoolNumSegs(m_pool_id.output));
 
-  if (!MemMgrLite::Manager::isPoolAvailable(s_apu_pool_id))
+  if (!MemMgrLite::Manager::isPoolAvailable(m_pool_id.dsp))
     {
       MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return false;
     }
   if ((int)(sizeof(Apu::Wien2ApuCmd)) >
-      (MemMgrLite::Manager::getPoolSize(s_apu_pool_id))/
-      (MemMgrLite::Manager::getPoolNumSegs(s_apu_pool_id)))
+      (MemMgrLite::Manager::getPoolSize(m_pool_id.dsp))/
+      (MemMgrLite::Manager::getPoolNumSegs(m_pool_id.dsp)))
     {
       MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return false;
     }
-  if (!MemMgrLite::Manager::isPoolAvailable(s_apu_pool_id))
+  if (!MemMgrLite::Manager::isPoolAvailable(m_pool_id.dsp))
     {
       MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return false;
     }
   if ((int)(sizeof(Apu::Wien2ApuCmd)) >
-      (MemMgrLite::Manager::getPoolSize(s_apu_pool_id))/
-      (MemMgrLite::Manager::getPoolNumSegs(s_apu_pool_id)))
+      (MemMgrLite::Manager::getPoolSize(m_pool_id.dsp))/
+      (MemMgrLite::Manager::getPoolNumSegs(m_pool_id.dsp)))
     {
       MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
       return false;
@@ -1802,12 +1825,8 @@ bool AS_CreateMediaRecorder(FAR AsCreateRecorderParam_t *param, AudioAttentionCb
 
   /* Create */
 
-  s_self_dtq      = param->msgq_id.recorder;
-  s_manager_dtq   = param->msgq_id.mng;
-  s_apu_dtq       = param->msgq_id.dsp;
-  s_in_pool_id    = param->pool_id.input;
-  s_out_pool_id   = param->pool_id.output;
-  s_apu_pool_id   = param->pool_id.dsp;
+  s_msgq_id = param->msgq_id;
+  s_pool_id = param->pool_id;
 
   s_rcd_pid = task_create("REC_OBJ",
                           150, 1024 * 2,
@@ -1838,10 +1857,10 @@ bool AS_ActivateMediaRecorder(FAR AsActivateRecorder *actparam)
 
   cmd.act_param = *actparam;
 
-  err_t er = MsgLib::send<RecorderCommand>(s_self_dtq,
+  err_t er = MsgLib::send<RecorderCommand>(s_msgq_id.recorder,
                                            MsgPriNormal,
                                            MSG_AUD_VRC_CMD_ACTIVATE,
-                                           s_self_dtq,
+                                           NULL,
                                            cmd);
   F_ASSERT(er == ERR_OK);
 
@@ -1864,10 +1883,10 @@ bool AS_InitMediaRecorder(FAR AsInitRecorderParam *initparam)
 
   cmd.init_param = *initparam;
 
-  err_t er = MsgLib::send<RecorderCommand>(s_self_dtq,
+  err_t er = MsgLib::send<RecorderCommand>(s_msgq_id.recorder,
                                            MsgPriNormal,
                                            MSG_AUD_VRC_CMD_INIT,
-                                           s_self_dtq,
+                                           NULL,
                                            cmd);
   F_ASSERT(er == ERR_OK);
 
@@ -1879,10 +1898,10 @@ bool AS_StartMediaRecorder(void)
 {
   RecorderCommand cmd;
 
-  err_t er = MsgLib::send<RecorderCommand>(s_self_dtq,
+  err_t er = MsgLib::send<RecorderCommand>(s_msgq_id.recorder,
                                            MsgPriNormal,
                                            MSG_AUD_VRC_CMD_START,
-                                           s_self_dtq,
+                                           NULL,
                                            cmd);
   F_ASSERT(er == ERR_OK);
 
@@ -1894,10 +1913,10 @@ bool AS_StopMediaRecorder(void)
 {
   RecorderCommand cmd;
 
-  err_t er = MsgLib::send<RecorderCommand>(s_self_dtq,
+  err_t er = MsgLib::send<RecorderCommand>(s_msgq_id.recorder,
                                            MsgPriNormal,
                                            MSG_AUD_VRC_CMD_STOP,
-                                           s_self_dtq,
+                                           NULL,
                                            cmd);
   F_ASSERT(er == ERR_OK);
 
@@ -1909,10 +1928,10 @@ bool AS_DeactivateMediaRecorder(void)
 {
   RecorderCommand cmd;
 
-  err_t er = MsgLib::send<RecorderCommand>(s_self_dtq,
+  err_t er = MsgLib::send<RecorderCommand>(s_msgq_id.recorder,
                                            MsgPriNormal,
                                            MSG_AUD_VRC_CMD_DEACTIVATE,
-                                           s_self_dtq,
+                                           NULL,
                                            cmd);
   F_ASSERT(er == ERR_OK);
 
@@ -1940,13 +1959,13 @@ bool AS_DeleteMediaRecorder(void)
 }
 
 /*--------------------------------------------------------------------------*/
-void MediaRecorderObjectTask::create(MsgQueId self_dtq,
-                                     MsgQueId manager_dtq)
+void MediaRecorderObjectTask::create(AsRecorderMsgQueId_t msgq_id,
+                                     AsRecorderPoolId_t pool_id)
 {
   if(s_rcd_obj == NULL)
     {
-      s_rcd_obj = new MediaRecorderObjectTask(self_dtq,
-                                              manager_dtq);
+      s_rcd_obj = new MediaRecorderObjectTask(msgq_id,
+                                              pool_id);
       s_rcd_obj->run();
     }
   else
