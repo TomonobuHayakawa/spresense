@@ -45,7 +45,7 @@
 #include "memutils/s_stl/queue.h"
 #include "memutils/memory_manager/MemHandle.h"
 #include "audio/audio_high_level_api.h"
-#include "common/audio_internal_message_types.h"
+#include "audio/audio_message_types.h"
 #include "audio_recorder_sink.h"
 #include "components/capture/capture_component.h"
 #include "wien2_common_defs.h"
@@ -67,14 +67,14 @@ __WIEN2_BEGIN_NAMESPACE
 
 class MediaRecorderObjectTask {
 public:
-  static void create(MsgQueId self_dtq,
-                     MsgQueId manager_dtq);
+  static void create(AsRecorderMsgQueId_t msgq_id,
+                     AsRecorderPoolId_t pool_id);
 
 private:
-  MediaRecorderObjectTask(MsgQueId self_dtq,
-                          MsgQueId manager_dtq):
-    m_self_dtq(self_dtq),
-    m_manager_dtq(manager_dtq),
+  MediaRecorderObjectTask(AsRecorderMsgQueId_t msgq_id,
+                          AsRecorderPoolId_t pool_id):
+    m_msgq_id(msgq_id),
+    m_pool_id(pool_id),
     m_state(AS_MODULE_ID_MEDIA_RECORDER_OBJ, "", RecorderStateInactive),
     m_channel_num(2),
     m_pcm_bit_width(AudPcm16Bit),
@@ -99,8 +99,9 @@ private:
     RecorderStateNum
   };
 
-  MsgQueId m_self_dtq;
-  MsgQueId m_manager_dtq;
+  AsRecorderMsgQueId_t m_msgq_id;
+  AsRecorderPoolId_t   m_pool_id;
+
   AudioState<RecorderState_e> m_state;
   int8_t  m_channel_num;
   AudioPcmBitWidth m_pcm_bit_width;
@@ -136,6 +137,10 @@ private:
 
   void run();
   void parse(MsgPacket *);
+
+  void reply(AsRecorderEvent evtype,
+             MsgType msg_type,
+             uint32_t result);
 
   void illegal(MsgPacket *);
   void activate(MsgPacket *);

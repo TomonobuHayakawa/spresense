@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/common/component_common.h
+ * modules/audio/objects/audio_object_common.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,43 +33,75 @@
  *
  ****************************************************************************/
 
-#ifndef WIEN2_COMPONENT_COMMON_H
-#define WIEN2_COMPONENT_COMMON_H
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
 
-#include "memutils/common_utils/common_assert.h"
-#include "audio/audio_message_types.h"
 #include "memutils/message/Message.h"
-
-#include "apus/dsp_audio_version.h"
+#include "audio/audio_object_common_api.h"
+#include "audio/audio_message_types.h"
 #include "wien2_internal_packet.h"
+#include "wien2_common_defs.h"
 
-__WIEN2_BEGIN_NAMESPACE
+__USING_WIEN2
 
-#ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#define AUDIOUTILS_DSP_DEBUG_DUMP_SIZE  (1948)
-#define LOG_ENTRY_NAME                  (8)
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
 
-struct DebugLogInfo
+/*--------------------------------------------------------------------------*/
+bool AS_ReceiveObjectReply(MsgQueId msgq_id,
+                           AudioObjReply *reply)
 {
-  char name[LOG_ENTRY_NAME];
-  void *addr;
-};
-#endif
+  return AS_ReceiveObjectReply(msgq_id, TIME_FOREVER, reply);
+}
 
-class ComponentCommon
+/*--------------------------------------------------------------------------*/
+bool AS_ReceiveObjectReply(MsgQueId msgq_id,
+                           uint32_t ms,
+                           AudioObjReply *reply)
 {
-public:
-  ComponentCommon() {}
-  ~ComponentCommon() {}
+  err_t           err_code;
+  FAR MsgQueBlock *que;
+  FAR MsgPacket   *msg;
 
-  bool dsp_boot_check(MsgQueId dsp_dtq, uint32_t *dsp_inf);
-  uint32_t dsp_init_check(MsgQueId dsp_dtq, uint32_t *dsp_inf);
-  void dsp_init_complete(MsgQueId dsp_dtq, Apu::Wien2ApuCmd *packet);
+  if (reply == NULL)
+    {
+      return false;
+    }
 
-private:
-};
+  /* Get an instance of the specified message ID. */
 
-__WIEN2_END_NAMESPACE
+  err_code = MsgLib::referMsgQueBlock(msgq_id, &que);
+  if (err_code != ERR_OK)
+    {
+      return false;
+    }
 
-#endif /* WIEN2_COMPONENT_COMMON_H */
+  /* Waiting to receive a message. */
 
+  err_code = que->recv(ms, &msg);
+  if (err_code != ERR_OK)
+    {
+      return false;
+    }
+
+  if (msg->getType() != MSG_AUD_MGR_RST)
+    {
+      return false;
+    }
+
+  /* Store reply information. */
+
+  *reply = msg->moveParam<AudioObjReply>();
+
+  /* Delete received data. */
+
+  err_code = que->pop();
+  if (err_code != ERR_OK)
+    {
+      return false;
+    }
+
+  return true;
+}
