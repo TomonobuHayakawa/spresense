@@ -3257,10 +3257,14 @@ void AudioManager::setThroughPath(AudioCommand &cmd)
 
   /* Enable I2S pin. */
 
-  if ((cmd.set_through_path.path1.in == AS_THROUGH_PATH_IN_I2S1)  ||
-      (cmd.set_through_path.path1.in == AS_THROUGH_PATH_IN_I2S2)  ||
-      (cmd.set_through_path.path2.in == AS_THROUGH_PATH_OUT_I2S1) ||
-      (cmd.set_through_path.path2.in == AS_THROUGH_PATH_OUT_I2S2))
+  if ((cmd.set_through_path.path1.in  == AS_THROUGH_PATH_IN_I2S1)  ||
+      (cmd.set_through_path.path1.in  == AS_THROUGH_PATH_IN_I2S2)  ||
+      (cmd.set_through_path.path2.in  == AS_THROUGH_PATH_IN_I2S1)  ||
+      (cmd.set_through_path.path2.in  == AS_THROUGH_PATH_IN_I2S2)  ||
+      (cmd.set_through_path.path1.out == AS_THROUGH_PATH_OUT_I2S1) ||
+      (cmd.set_through_path.path1.out == AS_THROUGH_PATH_OUT_I2S2) ||
+      (cmd.set_through_path.path2.out == AS_THROUGH_PATH_OUT_I2S1) ||
+      (cmd.set_through_path.path2.out == AS_THROUGH_PATH_OUT_I2S2))
     {
       cxd56_audio_en_i2s_io();
     }
