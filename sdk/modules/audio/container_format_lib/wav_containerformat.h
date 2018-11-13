@@ -109,6 +109,17 @@ public:
     {}
   ~WavContainerFormat() {}
 
+  /* Init function
+   *
+   * A bitlength is fixed to 16bit 
+   */
+
+  bool init(uint16_t  format_id,
+            uint16_t  channel_number,
+            uint32_t  sampling_rate);
+
+  /* Init function */
+
   bool init(uint16_t  format_id,
             uint16_t  channel_number,
             uint32_t  sampling_rate,
