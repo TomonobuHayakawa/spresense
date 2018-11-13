@@ -39,6 +39,14 @@
 /*--------------------------------------------------------------------------*/
 bool WavContainerFormat::init(uint16_t format_id,
                               uint16_t channel_number,
+                              uint32_t sampling_rate)
+{
+  return init(format_id, channel_number, sampling_rate, BIT_WIDTH_16);
+}
+
+/*--------------------------------------------------------------------------*/
+bool WavContainerFormat::init(uint16_t format_id,
+                              uint16_t channel_number,
                               uint32_t sampling_rate,
                               uint8_t bitwidth)
 {
