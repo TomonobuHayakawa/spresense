@@ -2371,6 +2371,12 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
 
               break;
 
+            case V4L2_CID_SHARPNESS:
+              control->value = isx012_getreg(priv,
+                                             ISX012_REG_SHARPNESS,
+                                             ISX012_SIZE_SHARPNESS);
+              break;
+
             case V4L2_CID_COLOR_KILLER:
               readvalue = isx012_getreg(priv,
                                         ISX012_REG_COLORKILLER,
