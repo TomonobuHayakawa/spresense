@@ -420,7 +420,7 @@ static uint16_t isx012_getreg(isx012_dev_t *priv,
                               uint16_t regaddr, uint16_t regsize)
 {
   struct i2c_config_s config;
-  volatile uint16_t regval;
+  volatile uint16_t regval = 0;
   volatile uint8_t buffer[2];
   int ret;
 
