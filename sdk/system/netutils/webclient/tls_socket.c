@@ -1,8 +1,7 @@
 /****************************************************************************
  * system/netutils/webclient/tls_socket.c
  *
- *   Copyright (C) 2016 Sony Corporation. All rights reserved.
- *   Author: Mitsuo Hiragane <Mitsuo.Hiragane@sony.com>
+ *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -14,9 +13,10 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name NuttX nor the names of its contributors may be
- *    used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+ *    the names of its contributors may be used to endorse or promote
+ *    products derived from this software without specific prior written
+ *    permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -45,12 +45,12 @@
 #include <string.h>
 #include <dirent.h>
 
-#include <mbedtls/config.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/net.h>
-#include <mbedtls/platform.h>
-#include <mbedtls/ssl.h>
+#include "mbedtls/config.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/net.h"
+#include "mbedtls/platform.h"
+#include "mbedtls/ssl.h"
 
 #include "tls_internal.h"
 #include "tls_rootca_certs.h"
