@@ -420,7 +420,7 @@ static uint16_t isx012_getreg(isx012_dev_t *priv,
                               uint16_t regaddr, uint16_t regsize)
 {
   struct i2c_config_s config;
-  volatile uint16_t regval;
+  volatile uint16_t regval = 0;
   volatile uint8_t buffer[2];
   int ret;
 
@@ -1890,7 +1890,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-
+#endif
             case V4L2_CID_GAMMA_CURVE:
               range->type          = ISX012_TYPE_GAMMACURVE;
               range->minimum       = ISX012_MIN_GAMMACURVE;
@@ -1902,7 +1902,7 @@ static int isx012_get_range_of_ctrlvalue(FAR struct v4l2_query_ext_ctrl *range)
                       sizeof(range->name));
 
               break;
-#endif
+
             case V4L2_CID_EXPOSURE:
               range->type          = ISX012_TYPE_EXPOSURE;
               range->minimum       = ISX012_MIN_EXPOSURE;
@@ -2244,6 +2244,8 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
   FAR struct isx012_dev_s *priv = &g_isx012_private;
   int16_t    readvalue;
   uint8_t    cnt;
+  uint16_t   read_src;
+  uint16_t   *read_dst;
   int        ret = -EINVAL;
 
   if (control == NULL)
@@ -2301,6 +2303,26 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                                              ISX012_SIZE_BLUEBALANCE);
               break;
 #endif
+            case V4L2_CID_GAMMA_CURVE:
+              if (control->p_u16 == NULL)
+                {
+                  return -EINVAL;
+                }
+
+              read_src = ISX012_REG_GAMMACURVE;
+              read_dst = control->p_u16;
+
+              for (cnt = 0; cnt < ISX012_ELEMS_GAMMACURVE; cnt++)
+                {
+                  *read_dst = isx012_getreg(priv,
+                                            read_src,
+                                            ISX012_SIZE_GAMMACURVE);
+                  read_src += ISX012_SIZE_GAMMACURVE;
+                  read_dst++;
+                }
+
+              break;
+
             case V4L2_CID_EXPOSURE:
               control->value = isx012_getreg(priv,
                                              ISX012_REG_EXPOSURE,
@@ -2369,6 +2391,12 @@ static int isx012_get_ctrlvalue(uint16_t ctrl_class,
                   control->value = false;
                 }
 
+              break;
+
+            case V4L2_CID_SHARPNESS:
+              control->value = isx012_getreg(priv,
+                                             ISX012_REG_SHARPNESS,
+                                             ISX012_SIZE_SHARPNESS);
               break;
 
             case V4L2_CID_COLOR_KILLER:
@@ -2581,10 +2609,8 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
   FAR struct isx012_dev_s *priv = &g_isx012_private;
   int       ret = -EINVAL;
   uint8_t   cnt;
-#if 0 /* Used in temporarily unsupported function(V4L2_CID_GAMMA_CURVE) */
-  uint8_t   *write_src;
+  uint16_t  *write_src;
   uint16_t  write_dst;
-#endif
   uint16_t  regval;
   uint16_t  exposure_time_lsb;
   uint16_t  exposure_time_msb;
@@ -2710,14 +2736,14 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                                   ISX012_SIZE_BLUEBALANCE);
 
               break;
-
+#endif
             case V4L2_CID_GAMMA_CURVE:
-              if (control->p_u8 == NULL)
+              if (control->p_u16 == NULL)
                 {
                   return -EINVAL;
                 }
 
-              write_src = control->p_u8;
+              write_src = control->p_u16;
               write_dst = ISX012_REG_GAMMACURVE;
  
               for (cnt = 0; cnt < ISX012_ELEMS_GAMMACURVE; cnt++)
@@ -2731,10 +2757,13 @@ static int isx012_set_ctrlvalue(uint16_t ctrl_class,
                                       write_dst,
                                       *write_src,
                                       ISX012_SIZE_GAMMACURVE);
+
+                  write_src++;
+                  write_dst += ISX012_SIZE_GAMMACURVE;
                 }
 
               break;
-#endif
+
             case V4L2_CID_EXPOSURE:
               CHECK_RANGE(control->value,
                           ISX012_MIN_EXPOSURE,

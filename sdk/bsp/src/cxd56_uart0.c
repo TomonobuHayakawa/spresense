@@ -52,6 +52,7 @@
 
 #include "up_arch.h"
 #include "chip.h"
+#include "cxd56_pinconfig.h"
 
 #ifdef CONFIG_CXD56_UART0
 
@@ -171,11 +172,15 @@ static int uart0_open(FAR struct file *filep)
   /* 1 = 1 stop, 2 = 2 stop bit */
 
   stop = CONFIG_CXD56_UART0_2STOP + 1;
-  
+
+  /* Enable UART0 pin configuration */
+
 #ifdef CONFIG_UART0_FLOWCONTROL
   flowctl = 1;
+  CXD56_PIN_CONFIGS(PINCONFS_SPI2_UART0);
 #else
   flowctl = 0;
+  CXD56_PIN_CONFIGS(PINCONFS_SPI2A_UART0);
 #endif
 
   ret = PD_UartConfiguration(0, CONFIG_CXD56_UART0_BAUD,
@@ -212,6 +217,14 @@ static int uart0_close(FAR struct file *filep)
     {
       PD_UartDisable(0);
       PD_UartUninit(0);
+
+      /* Disable UART0 pin by changing Hi-Z GPIO */
+
+#ifdef CONFIG_UART0_FLOWCONTROL
+      CXD56_PIN_CONFIGS(PINCONFS_SPI2_GPIO);
+#else
+      CXD56_PIN_CONFIGS(PINCONFS_SPI2A_GPIO);
+#endif
     }
 
   return 0;
@@ -223,15 +236,23 @@ static int uart0_close(FAR struct file *filep)
 
 static ssize_t uart0_read(FAR struct file *filep, FAR char *buffer, size_t len)
 {
+  int ret;
+
   uart0_semtake(&g_lock);
 
   /* Always blocking */
 
-  PD_UartReceive(0, buffer, len, 0);
+  ret = PD_UartReceive(0, buffer, len, 0);
 
   uart0_semgive(&g_lock);
 
-  return 0;
+  if (ret < 0)
+    {
+      set_errno(-ret);
+      ret = 0; /* Receive no data */
+    }
+
+  return (ssize_t)ret;
 }
 
 /****************************************************************************
@@ -240,15 +261,22 @@ static ssize_t uart0_read(FAR struct file *filep, FAR char *buffer, size_t len)
 
 static ssize_t uart0_write(FAR struct file *filep, FAR const char *buffer, size_t len)
 {
+  int ret;
+
   uart0_semtake(&g_lock);
 
   /* Always blocking */
 
-  PD_UartSend(0, (FAR void *)buffer, len, 0);
+  ret = PD_UartSend(0, (FAR void *)buffer, len, 0);
 
   uart0_semgive(&g_lock);
 
-  return len;
+  if (ret < 0)
+    {
+      set_errno(-ret);
+      ret = 0;
+    }
+  return (ssize_t)ret;
 }
 
 /****************************************************************************
@@ -286,6 +314,7 @@ int cxd56_uart0initialize(FAR const char *devname)
 void cxd56_uart0uninitialize(FAR const char *devname)
 {
   unregister_driver(devname);
+  sem_destroy(&g_lock);
 }
 
 #endif /* CONFIG_CXD56_UART0 */
