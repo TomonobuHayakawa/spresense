@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/sensing/include/dsp_sensor_version.h
+ * step_counter/gnss_sensor.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,29 +33,44 @@
  *
  ****************************************************************************/
 
-#ifndef _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
-#define _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
+#ifndef _STEP_COUNTER_GNSS_SENSOR_H
+#define _STEP_COUNTER_GNSS_SENSOR_H
 
-/* (change library).(change of DSP interface).(change of internal processing) */
-/* Gesture */
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
 
-#define DSP_ARMGESTURE_VERSION    0x010102    /* 01.01.02 */
+#include <sdk/config.h>
 
-/* Orientation */
+#include "sensing/logical_sensor/physical_command.h"
 
-#define DSP_ORIENTATION_VERSION   0x010201    /* 01.02.01 */
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-/* Step_counter */
+typedef int (*GnssEventHandler) (uint32_t context, FAR GnssSampleData *pos);
 
-#define DSP_STEP_COUNTER_VERSION  0x010102    /* 01.01.02 */
+typedef struct
+{
+  GnssSampleData   gnss_pos;
+  GnssEventHandler handler;
+  uint32_t         context;
+  bool             stopped;
+} GnssSensor;
 
-/* Transport_recognition */
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-#define DSP_TRAM_VERSION          0x010102    /* 01.01.02 */
+int GnssSensorCreate(FAR GnssSensor** sensor);
+int GnssSensorRegisterHandler(FAR GnssSensor *sensor,
+                              GnssEventHandler handler,
+                              uint32_t context);
+int GnssSensorStartSensing(FAR GnssSensor *sensor);
+int GnssSensorSetProperty(FAR GnssSensor *sensor,
+                          uint32_t key,
+                          uint32_t param);
+int GnssSensorDestroy(FAR GnssSensor *sensor);
+int GnssSensorStopSensing(FAR GnssSensor *sensor);
 
-/* Transport_recognition_lite */
-
-#define DSP_TRAMLITE_VERSION      0x010102    /* 01.01.02 */
-
-#endif /* _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H */
-
+#endif /* _STEP_COUNTER_GNSS_SENSOR_H */

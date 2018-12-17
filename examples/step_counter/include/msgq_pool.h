@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/sensing/include/dsp_sensor_version.h
+ * msgq_pool.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -13,10 +13,9 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
- *    the names of its contributors may be used to endorse or promote
- *    products derived from this software without specific prior written
- *    permission.
+ * 3. Neither the name Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -33,29 +32,15 @@
  *
  ****************************************************************************/
 
-#ifndef _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
-#define _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
+#ifndef MSGQ_POOL_H_INCLUDED
+#define MSGQ_POOL_H_INCLUDED
 
-/* (change library).(change of DSP interface).(change of internal processing) */
-/* Gesture */
+#include "msgq_id.h"
 
-#define DSP_ARMGESTURE_VERSION    0x010102    /* 01.01.02 */
+extern const MsgQueDef MsgqPoolDefs[NUM_MSGQ_POOLS] = {
+   /* n_drm, n_size, n_num, h_drm, h_size, h_num */
+  { 0x00000000, 0, 0, 0x00000000, 0, 0, 0 }, /* MSGQ_NULL */
+  { 0xfe088, 40, 8, 0xffffffff, 0, 0 }, /* MSGQ_SEN_MGR */
+};
 
-/* Orientation */
-
-#define DSP_ORIENTATION_VERSION   0x010201    /* 01.02.01 */
-
-/* Step_counter */
-
-#define DSP_STEP_COUNTER_VERSION  0x010102    /* 01.01.02 */
-
-/* Transport_recognition */
-
-#define DSP_TRAM_VERSION          0x010102    /* 01.01.02 */
-
-/* Transport_recognition_lite */
-
-#define DSP_TRAMLITE_VERSION      0x010102    /* 01.01.02 */
-
-#endif /* _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H */
-
+#endif /* MSGQ_POOL_H_INCLUDED */

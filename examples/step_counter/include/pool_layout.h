@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/sensing/include/dsp_sensor_version.h
+ * pool_layout.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -13,10 +13,9 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
- *    the names of its contributors may be used to endorse or promote
- *    products derived from this software without specific prior written
- *    permission.
+ * 3. Neither the name Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -33,29 +32,24 @@
  *
  ****************************************************************************/
 
-#ifndef _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
-#define _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
+#ifndef POOL_LAYOUT_H_INCLUDED
+#define POOL_LAYOUT_H_INCLUDED
 
-/* (change library).(change of DSP interface).(change of internal processing) */
-/* Gesture */
+#include "memutils/memory_manager/MemMgrTypes.h"
 
-#define DSP_ARMGESTURE_VERSION    0x010102    /* 01.01.02 */
+namespace MemMgrLite {
 
-/* Orientation */
+MemPool* static_pools[NUM_MEM_POOLS];
 
-#define DSP_ORIENTATION_VERSION   0x010201    /* 01.02.01 */
+extern const PoolAttr MemoryPoolLayouts[NUM_MEM_LAYOUTS][NUM_MEM_POOLS] = {
+ {/* Layout:0 */
+  /* pool_ID          type       seg fence  addr        size         */
+  { SENSOR_DSP_CMD_BUF_POOL, BasicType,   8, false, 0x000e0000, 0x00000380 },  /* SENSOR_WORK_AREA */
+  { ACCEL_DATA_BUF_POOL, BasicType,   8, false, 0x000e0380, 0x00000c00 },  /* SENSOR_WORK_AREA */
+  { GNSS_DATA_BUF_POOL, BasicType,   8, false, 0x000e0f80, 0x00000180 },  /* SENSOR_WORK_AREA */
+ },
+}; /* end of MemoryPoolLayouts */
 
-/* Step_counter */
+}  /* end of namespace MemMgrLite */
 
-#define DSP_STEP_COUNTER_VERSION  0x010102    /* 01.01.02 */
-
-/* Transport_recognition */
-
-#define DSP_TRAM_VERSION          0x010102    /* 01.01.02 */
-
-/* Transport_recognition_lite */
-
-#define DSP_TRAMLITE_VERSION      0x010102    /* 01.01.02 */
-
-#endif /* _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H */
-
+#endif /* POOL_LAYOUT_H_INCLUDED */

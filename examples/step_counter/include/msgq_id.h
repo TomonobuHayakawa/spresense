@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/sensing/include/dsp_sensor_version.h
+ * msgq_id.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -13,10 +13,9 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
- *    the names of its contributors may be used to endorse or promote
- *    products derived from this software without specific prior written
- *    permission.
+ * 3. Neither the name Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -33,29 +32,32 @@
  *
  ****************************************************************************/
 
-#ifndef _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
-#define _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
+#ifndef MSGQ_ID_H_INCLUDED
+#define MSGQ_ID_H_INCLUDED
 
-/* (change library).(change of DSP interface).(change of internal processing) */
-/* Gesture */
+/* Message area size: 456 bytes */
+#define MSGQ_TOP_DRM	0xfe000
+#define MSGQ_END_DRM	0xfe1c8
 
-#define DSP_ARMGESTURE_VERSION    0x010102    /* 01.01.02 */
+/* Message area fill value after message poped */
+#define MSG_FILL_VALUE_AFTER_POP	0x0
 
-/* Orientation */
+/* Message parameter type match check */
+#define MSG_PARAM_TYPE_MATCH_CHECK	false
 
-#define DSP_ORIENTATION_VERSION   0x010201    /* 01.02.01 */
+/* Message queue pool IDs */
+#define MSGQ_NULL	0
+#define MSGQ_SEN_MGR	1
+#define NUM_MSGQ_POOLS	2
 
-/* Step_counter */
+/* User defined constants */
 
-#define DSP_STEP_COUNTER_VERSION  0x010102    /* 01.01.02 */
-
-/* Transport_recognition */
-
-#define DSP_TRAM_VERSION          0x010102    /* 01.01.02 */
-
-/* Transport_recognition_lite */
-
-#define DSP_TRAMLITE_VERSION      0x010102    /* 01.01.02 */
-
-#endif /* _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H */
-
+/************************************************************************/
+#define MSGQ_SEN_MGR_QUE_BLOCK_DRM	0xfe044
+#define MSGQ_SEN_MGR_N_QUE_DRM	0xfe088
+#define MSGQ_SEN_MGR_N_SIZE	40
+#define MSGQ_SEN_MGR_N_NUM	8
+#define MSGQ_SEN_MGR_H_QUE_DRM	0xffffffff
+#define MSGQ_SEN_MGR_H_SIZE	0
+#define MSGQ_SEN_MGR_H_NUM	0
+#endif /* MSGQ_ID_H_INCLUDED */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/sensing/include/dsp_sensor_version.h
+ * fixed_fence.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -13,10 +13,9 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
- *    the names of its contributors may be used to endorse or promote
- *    products derived from this software without specific prior written
- *    permission.
+ * 3. Neither the name Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -33,29 +32,16 @@
  *
  ****************************************************************************/
 
-#ifndef _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
-#define _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H
+#ifndef FIXED_FENCE_H_INCLUDED
+#define FIXED_FENCE_H_INCLUDED
 
-/* (change library).(change of DSP interface).(change of internal processing) */
-/* Gesture */
+#include "memutils/memory_manager/MemMgrTypes.h"
 
-#define DSP_ARMGESTURE_VERSION    0x010102    /* 01.01.02 */
+namespace MemMgrLite {
 
-/* Orientation */
+extern PoolAddr const FixedAreaFences[] = {
+}; /* end of FixedAreaFences */
 
-#define DSP_ORIENTATION_VERSION   0x010201    /* 01.02.01 */
+}  /* end of namespace MemMgrLite */
 
-/* Step_counter */
-
-#define DSP_STEP_COUNTER_VERSION  0x010102    /* 01.01.02 */
-
-/* Transport_recognition */
-
-#define DSP_TRAM_VERSION          0x010102    /* 01.01.02 */
-
-/* Transport_recognition_lite */
-
-#define DSP_TRAMLITE_VERSION      0x010102    /* 01.01.02 */
-
-#endif /* _MODULES_SENSING_INCLUDE_DSP_SENSOR_VERSION_H */
-
+#endif /* FIXED_FENCE_H_INCLUDED */
