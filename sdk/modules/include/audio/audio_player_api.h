@@ -67,7 +67,8 @@
  ****************************************************************************/
 
 #define AS_FEATURE_PLAYER_ENABLE
-
+#define AS_FEATURE_OUTPUTMIX_ENABLE
+  
 /** @name Packet length of player command*/
 /** @{ */
 

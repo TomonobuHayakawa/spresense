@@ -68,7 +68,7 @@ static obs_AudioAttentionCb s_obs_attention_cb  = NULL;
 
 static AudioManager *s_mng = NULL;
 
-#ifdef AS_FEATURE_PLAYER_ENABLE
+#ifdef AS_FEATURE_OUTPUTMIX_ENABLE
 /*
  * Callback functions from OutputMixer
  */
@@ -129,7 +129,9 @@ static void outputmixer_error_callback(uint8_t handle)
                                          player);
   F_ASSERT(er == ERR_OK);
 }
+#endif /* AS_FEATURE_OUTPUTMIX_ENABLE */
 
+#ifdef AS_FEATURE_PLAYER_ENABLE
 /*
  * Callback functions from MediaPlayer 
  */
@@ -1497,7 +1499,7 @@ void AudioManager::player(AudioCommand &cmd)
 /*--------------------------------------------------------------------------*/
 void AudioManager::outputmixer(AudioCommand &cmd)
 {
-#ifdef AS_FEATURE_PLAYER_ENABLE
+#ifdef AS_FEATURE_OUTPUTMIX_ENABLE
 
   MSG_TYPE msg_type;
   bool check = false;
@@ -1532,8 +1534,11 @@ void AudioManager::outputmixer(AudioCommand &cmd)
                                               m_selfDtq,
                                               omix_cmd);
   F_ASSERT(er == ERR_OK);
-
-#endif /* AS_FEATURE_PLAYER_ENABLE */
+#else
+  sendErrRespResult(cmd.header.sub_code,
+                    AS_MODULE_ID_AUDIO_MANAGER,
+                    AS_ECODE_COMMAND_NOT_SUPPOT);
+#endif /* AS_FEATURE_OUTPUTMIX_ENABLE */
 }
 
 /*--------------------------------------------------------------------------*/
@@ -2829,7 +2834,7 @@ void AudioManager::initDEQParam(AudioCommand &cmd)
 /*--------------------------------------------------------------------------*/
 void AudioManager::setOutputSelect(AudioCommand &cmd)
 {
-#ifdef AS_FEATURE_PLAYER_ENABLE
+#ifdef AS_FEATURE_OUTPUTMIX_ENABLE
   bool check =
     packetCheck(LENGTH_INITOUTPUTSELECT, AUDCMD_INITOUTPUTSELECT, cmd);
   if (!check)
@@ -2862,7 +2867,7 @@ void AudioManager::setOutputSelect(AudioCommand &cmd)
         }
         return;;
     }
-#endif /* AS_FEATURE_PLAYER_ENABLE */
+#endif /* AS_FEATURE_OUTPUTMIX_ENABLE */
 
   sendResult(AUDRLT_INITOUTPUTSELECTCMPLT, cmd.header.sub_code);
 }

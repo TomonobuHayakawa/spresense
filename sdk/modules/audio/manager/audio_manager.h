@@ -101,9 +101,9 @@ private:
     m_player_transition_count(0),
     m_input_en(false),
     m_output_en(false)
-#ifdef AS_FEATURE_PLAYER_ENABLE
+#ifdef AS_FEATURE_OUTPUTMIX_ENABLE
     , m_output_device(HPOutputDevice)
-#endif /* AS_FEATURE_PLAYER_ENABLE */
+#endif /* AS_FEATURE_OUTPUTMIX_ENABLE */
   {
   };
 
@@ -144,9 +144,9 @@ private:
   bool m_input_en;
   bool m_output_en;
 
-#ifdef AS_FEATURE_PLAYER_ENABLE
+#ifdef AS_FEATURE_OUTPUTMIX_ENABLE
   AsOutputMixDevice m_output_device;
-#endif /* AS_FEATURE_PLAYER_ENABLE */
+#endif /* AS_FEATURE_OUTPUTMIX_ENABLE */
 
   typedef void (AudioManager::*MsgProc)(AudioCommand &cmd);
   typedef void (AudioManager::*RstProc)(const AudioMngCmdCmpltResult &result);
