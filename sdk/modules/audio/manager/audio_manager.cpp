@@ -3092,14 +3092,6 @@ void AudioManager::setBeep(AudioCommand &cmd)
       return;
     }
 
-  if (!m_output_en)
-    {
-      sendErrRespResult(cmd.header.sub_code,
-                        AS_MODULE_ID_AUDIO_DRIVER,
-                        AS_ECODE_NOT_AUDIO_DATA_PATH);
-      return;
-    }
-
   if (cmd.set_beep_param.beep_en == AS_BEEPEN_DISABLE)
     {
       error_code = cxd56_audio_stop_beep();
