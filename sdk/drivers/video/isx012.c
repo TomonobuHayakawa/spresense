@@ -54,8 +54,10 @@
 #include <nuttx/video/isx012.h>
 #include <video/video.h>
 #include <video/video_halif.h>
+#include "isx012_internal.h"
 #include "isx012_reg.h"
 #include "isx012_range.h"
+#include "isx012_set_shd.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -167,14 +169,6 @@ enum isx012_state_e {
 };
 
 typedef enum isx012_state_e isx012_state_t;
-
-struct isx012_reg_s {
-  uint16_t regaddr;
-  uint16_t regval;
-  uint8_t  regsize;
-};
-
-typedef struct isx012_reg_s isx012_reg_t;
 
 struct isx012_conv_v4l2_to_regval_s
 {
@@ -935,6 +929,15 @@ int init_isx012(FAR struct isx012_dev_s *priv)
 
   /* initialize the isx012 hardware */
   ret = isx012_putreglist(priv, g_isx012_def_init, ISX012_RESET_NENTRIES);
+  if (ret < 0)
+    {
+      imagererr("isx012_putreglist failed: %d\n", ret);
+      board_isx012_set_reset();
+      return ret;
+    }
+
+  /* Set shading adjustment */
+  ret = isx012_putreglist(priv, g_isx012_shd_data, ISX012_SHD_NENTRIES);
   if (ret < 0)
     {
       imagererr("isx012_putreglist failed: %d\n", ret);
