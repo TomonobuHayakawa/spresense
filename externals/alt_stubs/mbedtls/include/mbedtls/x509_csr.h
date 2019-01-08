@@ -49,6 +49,9 @@ extern "C" {
  */
 typedef struct mbedtls_x509_csr
 {
+#if defined(CONFIG_LTE_NET_MBEDTLS)
+    uint32_t id;
+#else
     mbedtls_x509_buf raw;           /**< The raw CSR data (DER). */
     mbedtls_x509_buf cri;           /**< The raw CertificateRequestInfo body (DER). */
 
@@ -64,6 +67,7 @@ typedef struct mbedtls_x509_csr
     mbedtls_md_type_t sig_md;       /**< Internal representation of the MD algorithm of the signature algorithm, e.g. MBEDTLS_MD_SHA256 */
     mbedtls_pk_type_t sig_pk;       /**< Internal representation of the Public Key algorithm of the signature algorithm, e.g. MBEDTLS_PK_RSA */
     void *sig_opts;         /**< Signature options to be passed to mbedtls_pk_verify_ext(), e.g. for RSASSA-PSS */
+#endif
 }
 mbedtls_x509_csr;
 

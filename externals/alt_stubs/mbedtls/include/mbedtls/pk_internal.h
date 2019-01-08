@@ -34,6 +34,9 @@
 
 struct mbedtls_pk_info_t
 {
+#if defined(CONFIG_LTE_NET_MBEDTLS)
+    uint32_t id;
+#else
     /** Public key type */
     mbedtls_pk_type_t type;
 
@@ -82,6 +85,7 @@ struct mbedtls_pk_info_t
     /** Interface with the debug module */
     void (*debug_func)( const void *ctx, mbedtls_pk_debug_item *items );
 
+#endif
 };
 #if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
 /* Container for RSA-alt */

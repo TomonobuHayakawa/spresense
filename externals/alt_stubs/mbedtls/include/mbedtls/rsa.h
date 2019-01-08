@@ -78,6 +78,9 @@ extern "C" {
  */
 typedef struct
 {
+#if defined(CONFIG_LTE_NET_MBEDTLS)
+    uint32_t id;
+#else
     int ver;                    /*!<  always 0          */
     size_t len;                 /*!<  size(N) in chars  */
 
@@ -106,6 +109,7 @@ typedef struct
                                       encoding                          */
 #if defined(MBEDTLS_THREADING_C)
     mbedtls_threading_mutex_t mutex;    /*!<  Thread-safety mutex       */
+#endif
 #endif
 }
 mbedtls_rsa_context;
