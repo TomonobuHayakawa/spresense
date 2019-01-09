@@ -36,6 +36,9 @@
 #ifndef CAPTURE_COMPONENT_H
 #define CAPTURE_COMPONENT_H
 
+#include <nuttx/arch.h>
+#include <arch/chip/cxd56_audio.h>
+
 #include "wien2_common_defs.h"
 #include "wien2_internal_packet.h"
 #include "audio_state.h"
@@ -63,6 +66,8 @@ __WIEN2_BEGIN_NAMESPACE
 #endif
 /* Equals to Max number of DMAC resource */
 #define MAX_CAPTURE_COMP_INSTANCE_NUM  CONFIG_AUDIOUTILS_CAPTURE_CH_NUM
+
+#define MAX_CAPTURE_MIC_CH  CXD56_AUDIO_MIC_CH_MAX
 
 /* General types */
 
@@ -145,6 +150,11 @@ struct NotifyCaptureComponentParam
   E_AS_DMA_INT code;
 };
 
+struct SetMicGainCaptureComponentParam
+{
+  int16_t mic_gain[CXD56_AUDIO_MIC_CH_MAX];
+};
+
 struct CaptureComponentParam
 {
   CaptureComponentHandler handle;
@@ -156,6 +166,7 @@ struct CaptureComponentParam
     ExecCaptureComponentParam   exec_param;
     StopCaptureComponentParam   stop_param;
     NotifyCaptureComponentParam notify_param;
+    FAR SetMicGainCaptureComponentParam *set_micgain_param;
   };
 };
 
@@ -175,6 +186,7 @@ bool AS_exec_capture(const CaptureComponentParam *param);
 
 bool AS_stop_capture(const CaptureComponentParam *param);
 
+bool AS_set_micgain_capture(FAR const CaptureComponentParam *param);
 } /* extern "C" */
 
 class CaptureComponent
@@ -227,7 +239,7 @@ private:
   ReadDmacCmdQue m_cap_pre_que;
 
   typedef bool (CaptureComponent::*EvtProc)(const CaptureComponentParam&);
-  static EvtProc EvetProcTbl[AUD_BB_MSG_NUM][StateNum];
+  static EvtProc EvetProcTbl[AUD_CAP_MSG_NUM][StateNum];
 
   void run();
   bool parse(MsgPacket *msg);
@@ -242,6 +254,7 @@ private:
   bool stopOnReady(const CaptureComponentParam& param);
   bool stopOnPreAct(const CaptureComponentParam& param);
   bool stopOnAct(const CaptureComponentParam& param);
+  bool setMicGain(const CaptureComponentParam& param);
   bool notify(const CaptureComponentParam& param);
 
   void* getCapBuf(uint32_t cap_sample);
