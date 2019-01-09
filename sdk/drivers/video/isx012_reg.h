@@ -1277,7 +1277,7 @@
 /* CXC_DATA OFFSET */
 
 #define CXC_VALID                   (CXC_DATA_BASE+0x0000)
-#define CXC_RGB_UNIT(x, y)          (CXC_DATA_BASE+0x0022 + ((x * 7) + y))
+#define CXC_RGB_UNIT(x, y)          (CXC_DATA_BASE+0x0002 + ((x * 7) + y))
 #define CXC_GRB_UNIT(x, y)          (CXC_DATA_BASE+0x00BF + ((x * 7) + y))
 
 /* SHD_DATA OFFSET */
