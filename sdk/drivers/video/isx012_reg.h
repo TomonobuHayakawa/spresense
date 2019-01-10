@@ -1277,17 +1277,17 @@
 /* CXC_DATA OFFSET */
 
 #define CXC_VALID                   (CXC_DATA_BASE+0x0000)
-#define CXC_RGB_UNIT(x, y)          (CXC_DATA_BASE+0x0002 + ((x * 7) + y))
-#define CXC_GRB_UNIT(x, y)          (CXC_DATA_BASE+0x00BF + ((x * 7) + y))
+#define CXC_RGB_UNIT(x, y)          (CXC_DATA_BASE+0x0002 + (((x) * 7) + (y)))
+#define CXC_GRB_UNIT(x, y)          (CXC_DATA_BASE+0x00BF + (((x) * 7) + (y)))
 
 /* SHD_DATA OFFSET */
 
 #define SHD_VALID                   (SHD_DATA_BASE+0x0000)
-#define SHD_RGB_UNIT(x,y)           (SHD_DATA_BASE+0x0002 + ((x * 11) + y))
-#define SHD_GRB_UNIT(x, y)          (SHD_DATA_BASE+0x012B + ((x * 11) + y))
-#define SHD_R1_UNIT(x, y)           (SHD_DATA_BASE+0x0254 + ((x * 11) + y))
-#define SHD_R2_UNIT(x, y)           (SHD_DATA_BASE+0x02EE + ((x * 11) + y))
-#define SHD_B2_UNIT(x, y)           (SHD_DATA_BASE+0x0388 + ((x * 11) + y))
+#define SHD_RGB_UNIT(x,y)           (SHD_DATA_BASE+0x0002 + (((x) * 11) + (y)))
+#define SHD_GRB_UNIT(x, y)          (SHD_DATA_BASE+0x012B + (((x) * 11) + (y)))
+#define SHD_R1_UNIT(x, y)           (SHD_DATA_BASE+0x0254 + (((x) * 11) + (y)))
+#define SHD_R2_UNIT(x, y)           (SHD_DATA_BASE+0x02EE + (((x) * 11) + (y)))
+#define SHD_B2_UNIT(x, y)           (SHD_DATA_BASE+0x0388 + (((x) * 11) + (y)))
 
 /* Status bit */
 
