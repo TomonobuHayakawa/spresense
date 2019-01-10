@@ -1,5 +1,5 @@
 ############################################################################
-# modules/dnnrt/src/Makefile
+# modules/dnnrt/src-mp/Makefile
 #
 #   Copyright 2018 Sony Corporation
 #
@@ -39,19 +39,16 @@
 DELIM ?= $(strip /)
 RUNTIME_EXTERN_DIR := $(SDKDIR)/../externals/nnabla-c-runtime
 
-
 RUNTIME_EXTERN_SRCDIR := $(RUNTIME_EXTERN_DIR)/src
 
 INCLUDES := -I$(RUNTIME_EXTERN_DIR)/include
 INCLUDES += -I$(RUNTIME_EXTERN_SRCDIR)/runtime
 INCLUDES += -I$(RUNTIME_EXTERN_SRCDIR)/functions
-INCLUDES += -Isrc
+INCLUDES += -Isrc-mp
 
-CSRCS +=  runtime_nnabla.c
-CSRCS +=  affine.c
-CSRCS +=  convolution.c
-CSRC_PATH += src/functions
-CSRC_PATH += src/runtime
+CSRC_PATH += src-mp/runtime
+CSRCS += runtime_client.c
+CSRCS += mp_manager.c
 
 VPATH += $(CSRC_PATH)
 ROOTDEPPATH =$(foreach dir,$(CSRC_PATH), --dep-path $(dir))
@@ -63,17 +60,8 @@ else
   INCLUDES += -I$(SDKDIR)/modules/include/dnnrt
   INCLUDES += -I$(SDKDIR)/modules/include
 endif # ($(WINTOOL),y)
-
 CFLAGS += $(INCLUDES) -std=c99
 CFLAGS := $(patsubst -O%,-O3,$(CFLAGS)) # don't follow the -O. option in CFLAGS
-
-CMSIS_CFLAGS =  -I "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/Core/Include" \
-				-I "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/DSP/Include" \
-				-I "$(SDKDIR)/../externals/cmsis/CMSIS_5/CMSIS/NN/Include" \
-				-D__FPU_PRESENT=1U \
-				-DARM_MATH_CM4
-
-CFLAGS += $(CMSIS_CFLAGS)
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -83,25 +71,9 @@ OBJS = $(AOBJS) $(COBJS)
 
 LIB = libdnnrt$(LIBEXT)
 
-#Set NNABLA CMAKE VAR
-NNABLA_C_RUNTIME_MAKEFILE = $(RUNTIME_EXTERN_DIR)/build/Makefile
-NNABLA_CMAKE_TXT = $(RUNTIME_EXTERN_DIR)/CMakeLists.txt
-NNABLA_CMAKE_TOOLCHAIN_FILE = $(SDKDIR)/modules/dnnrt/nnabla-c-runtime.cmake
-NNABLA_CMAKE_LINKER = $(SDKDIR)/modules/dnnrt/dummy_linker.sh
-NNABLA_LIBS = libnnablart_runtime.a libnnablart_functions.a
-NNABLA_CMAKE_PATH = $(RUNTIME_EXTERN_DIR)/build
-NNABLA_CMAKE_FORCE_C_COMPILER = $(shell which $(CC))
-NNABLA_CMAKE_FORCE_CXX_COMPILER = $(shell which $(CXX))
-NNABLA_CMAKE_C_FLAGS = "$(CFLAGS)"
-NNABLA_CMAKE_AR = $(word 1, $(AR))
-
-# Common build
-.PHONY: context depend clean distclean libmakedep preconfig dnnrt-auto-format
-
 all: .built
 
-$(AOBJS): %$(OBJEXT): %.S
-	$(call ASSEMBLE, $<, $@)
+.PHONY: all context depend clean distclean preconfig
 
 $(COBJS) $(MAINOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
@@ -111,39 +83,21 @@ $(OBJS): Makefile
 $(LIB): $(OBJS)
 	$(call ARCHIVE, $(LIB), $(OBJS))
 
-.built: $(NNABLA_LIBS) $(LIB)
+.built: $(LIB)
 	$(Q) touch .built
 
 install:
 
 context:
-# make apps refer to the same version of network.h
-	$(Q) install -m 0664 \
+	# make apps refer to the same version of network.h
+	$(Q) install -m 0664 -C \
 		$(RUNTIME_EXTERN_DIR)/include/nnablart/network.h \
 		$(SDKDIR)/modules/include/dnnrt/nnablart/network.h
 
-#Compile NNABLA_C_RUNTIME
-$(NNABLA_C_RUNTIME_MAKEFILE):$(NNABLA_CMAKE_TXT)
-	@if [ -d $(NNABLA_CMAKE_PATH) ]; then rm -rf $(NNABLA_CMAKE_PATH); fi
-	@mkdir -p $(NNABLA_CMAKE_PATH)
-	cd $(NNABLA_CMAKE_PATH) && cmake -DARM_CC_PATH=$(NNABLA_CMAKE_FORCE_C_COMPILER) \
-	 -DARM_CXX_PATH=$(NNABLA_CMAKE_FORCE_CXX_COMPILER) \
-	 -DCMAKE_CFLAGS=$(NNABLA_CMAKE_C_FLAGS) \
-	 -DCMAKE_AR_TOOL=$(NNABLA_CMAKE_AR) \
-	 -DCMAKE_LINKER=$(NNABLA_CMAKE_LINKER) \
-	 -DCMAKE_TOOLCHAIN_FILE=$(NNABLA_CMAKE_TOOLCHAIN_FILE) ..
-
-$(NNABLA_LIBS):$(NNABLA_C_RUNTIME_MAKEFILE)
-	@cd $(NNABLA_CMAKE_PATH) && make
-	@mv $(NNABLA_CMAKE_PATH)/src/functions/libnnablart_functions.a .
-	@mv $(NNABLA_CMAKE_PATH)/src/runtime/libnnablart_runtime.a .
-
 # Create dependencies
 
-libmakedep: Makefile
+.depend: Makefile $(SRCS)
 	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) > Make.dep
-
-.depend: libmakedep 
 	$(Q) touch $@
 
 depend: .depend
@@ -155,7 +109,6 @@ clean:
 	$(call DELFILE, *.o)
 	$(call DELFILE, *.d)
 	$(call DELFILE, $(LIB))
-	$(Q) rm -rf $(NNABLA_CMAKE_PATH)
 
 distclean: clean
 	$(call DELFILE, Make.dep)
@@ -164,7 +117,3 @@ distclean: clean
 
 -include Make.dep
 preconfig:
-
-dnnrt-auto-format:
-	@find src/runtime/ -type f -name "*.[ch]" |xargs -n1 clang-format -i
-	@find src/functions/ -type f -name "*.[ch]" |xargs -n1 clang-format -i
