@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/altcom/include/evtdisp/evtdisp.h
+ * modules/lte/altcom/include/api/altcom_status.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,70 +33,129 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_LTE_ALTCOM_INCLUDE_EVTDISP_EVTDISP_H
-#define __MODULES_LTE_ALTCOM_INCLUDE_EVTDISP_EVTDISP_H
-
-/****************************************************************************
- * Included Files
- ****************************************************************************/
-
-#include <errno.h>
-#include "evthdl_if.h"
+#ifndef __MODULES_LTE_ALTCOM_INCLUDE_API_ALTCOM_STATUS_H
+#define __MODULES_LTE_ALTCOM_INCLUDE_API_ALTCOM_STATUS_H
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define EVTDISP_EVTHDLLIST_TERMINATION (NULL)
+#define ALTCOM_STATUS_UNINITIALIZED     (0)
+#define ALTCOM_STATUS_INITIALIZED       (1)
+#define ALTCOM_STATUS_RESTART_ONGOING   (2)
+#define ALTCOM_STATUS_POWER_ON          (3)
+#define ALTCOM_STATUS_MIN               (ALTCOM_STATUS_UNINITIALIZED)
+#define ALTCOM_STATUS_MAX               (ALTCOM_STATUS_POWER_ON)
 
 /****************************************************************************
  * Public Types
  ****************************************************************************/
 
-struct evtdisp_s
-{
-  CODE int32_t (*dispatch)(FAR struct evtdisp_s *thiz,
-    FAR uint8_t *evt, uint32_t evtln);
-  CODE int32_t (*addhdlr)(FAR struct evtdisp_s *thiz,
-    FAR evthdl_if_t *hdllist);
-  CODE int32_t (*rmvhdlr)(FAR struct evtdisp_s *thiz,
-    uint8_t hdlrid);
-};
+typedef void (*altcom_stat_chg_cb_t)(int32_t new_stat, int32_t old_stat);
 
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
- * Name: evthdisp_create
+ * Name: altcomstatus_init
  *
  * Description:
- *  Create EVTDISP object.
+ *   Initialize altcom status.
  *
- * Input Parameters: 
- *  evthdllist  handling process function pointer.
+ * Input Parameters:
+ *   None.
  *
- * Returned Value: 
- *  EVTDISP object pointer.
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
  *
  ****************************************************************************/
 
-FAR struct evtdisp_s *evtdisp_create(FAR evthdl_if_t *evthdllist);
+int32_t altcomstatus_init(void);
 
 /****************************************************************************
- * Name: evthdisp_delete
+ * Name: altcomstatus_fin
  *
  * Description:
- *  Delete EVTDISP object.
+ *   Finalize altcom status.
  *
- * Input Parameters: 
- *  thiz  EVTDISP object pointer.
+ * Input Parameters:
+ *   None.
  *
- * Returned Value: 
- *  result.
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
  *
  ****************************************************************************/
 
-int32_t evtdisp_delete(FAR struct evtdisp_s *thiz);
+int32_t altcomstatus_fin(void);
 
-#endif /* __MODULES_LTE_ALTCOM_INCLUDE_EVTDISP_EVTDISP_H */
+/****************************************************************************
+ * Name: altcom_get_status
+ *
+ * Description:
+ *   Get altcom status.
+ *
+ * Input Parameters:
+ *   None.
+ *
+ * Returned Value:
+ *   Return current altcom status.
+ *
+ ****************************************************************************/
+
+int32_t altcom_get_status(void);
+
+/****************************************************************************
+ * Name: altcom_set_status
+ *
+ * Description:
+ *   Set altcom status.
+ *
+ * Input Parameters:
+ *   status     altcom status.
+ *
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t altcom_set_status(int32_t status);
+
+/****************************************************************************
+ * Name: altcomstatus_reg_statchgcb
+ *
+ * Description:
+ *   Registoration altcom status change callbacks.
+ *
+ * Input Parameters:
+ *   cb_list     Status change callback list.
+ *
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t altcomstatus_reg_statchgcb(void *cb_list);
+
+/****************************************************************************
+ * Name: altcomstatus_unreg_statchgcb
+ *
+ * Description:
+ *   Unregistration altcom status change callbacks.
+ *
+ * Input Parameters:
+ *   cb_list     Status change callback list.
+ *
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t altcomstatus_unreg_statchgcb(void *cb_list);
+
+#endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_ALTCOM_STATUS_H */

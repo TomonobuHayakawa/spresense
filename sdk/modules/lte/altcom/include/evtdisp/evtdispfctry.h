@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/altcom/api/lte/lte_initialize.c
+ * modules/lte/altcom/include/evtdisp/evtdispfctry.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,75 +33,81 @@
  *
  ****************************************************************************/
 
+#ifndef __MODULES_LTE_ALTCOM_INCLUDE_EVTDISP_EVTDISPFCTRY_H
+#define __MODULES_LTE_ALTCOM_INCLUDE_EVTDISP_EVTDISPFCTRY_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdint.h>
-#include <errno.h>
-
-#include "lte/lte_api.h"
-#include "apiutil.h"
-#include "ltebuilder.h"
-#include "director.h"
-#include "dbg_if.h"
-#include "altcombs.h"
+#include "evthdl_if.h"
+#include "evtdisp.h"
 
 /****************************************************************************
- * Public Data
+ * Public Types
  ****************************************************************************/
 
-bool        g_lte_initialized = false;
-sys_mutex_t g_lte_apicallback_mtx;
+struct evtdispfctry_evtdispset_s
+{
+  uint8_t     dispid;
+  evthdl_if_t *evthdllist;
+};
 
 /****************************************************************************
- * Public Functions
+ * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
- * Name: lte_initialize
+ * Name: evtdispfctry_init
  *
  * Description:
- *   Initialize the LTE library resouces.
+ *   Initialize the event dispatcher.
  *
  * Input Parameters:
- *   None
+ *   set     Parameter list of the event dispatcher to be created.
+ *   setnum  Number of @set.
  *
  * Returned Value:
- *   On success, 0 is returned.
- *   On failure, negative value is returned.
+ *   If the process succeeds, it returns 0.
+ *   Otherwise errno is returned.
  *
  ****************************************************************************/
 
-int32_t lte_initialize(void)
-{
-  int32_t ret;
+int32_t evtdispfctry_init(struct evtdispfctry_evtdispset_s set[],
+                           int8_t setnum);
 
-  /* Set initialized status */
+/****************************************************************************
+ * Name: evtdispfctry_fin
+ *
+ * Description:
+ *   Finalize the event dispatcher.
+ *
+ * Input Parameters:
+ *   None.
+ *
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise errno is returned.
+ *
+ ****************************************************************************/
 
-  ret = altcom_check_initialized_and_set();
-  if (ret < 0)
-    {
-      DBGIF_LOG_ERROR("Already initialized.\n");
-    }
-  else
-    {
-      ret = director_construct(&g_ltebuilder, NULL);
-      if (ret < 0)
-        {
-          DBGIF_LOG1_ERROR("director_construct() error.", ret);
-        }
-      else
-        {
-          ret = altcom_set_status(ALTCOM_STATUS_INITIALIZED);
-        }
-    }
+int32_t evtdispfctry_fin(void);
 
-  if (ret < 0)
-    {
-      altcom_set_finalized();
-    }
+/****************************************************************************
+ * Name: evtdispfctry_get_instance
+ *
+ * Description:
+ *   Gets event dispatcher with the specified ID.
+ *
+ * Input Parameters:
+ *   id  The ID of the event dispatcher to retrieve.
+ *
+ * Returned Value:
+ *   Instance of event dispatcher.
+ *   If failed, returned NULL.
+ *
+ ****************************************************************************/
 
-  return ret;
-}
+struct evtdisp_s *evtdispfctry_get_instance(uint8_t id);
 
+#endif /* __MODULES_LTE_ALTCOM_INCLUDE_EVTDISP_EVTDISPFCTRY_H */

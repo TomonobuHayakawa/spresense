@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/altcom/include/evtdisp/evtdisp.h
+ * modules/lte/altcom/include/api/altcom_callbacks.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,70 +33,126 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_LTE_ALTCOM_INCLUDE_EVTDISP_EVTDISP_H
-#define __MODULES_LTE_ALTCOM_INCLUDE_EVTDISP_EVTDISP_H
+#ifndef __MODULES_LTE_ALTCOM_INCLUDE_API_ALTCOM_CALLBACKS_H
+#define __MODULES_LTE_ALTCOM_INCLUDE_API_ALTCOM_CALLBACKS_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <errno.h>
-#include "evthdl_if.h"
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define EVTDISP_EVTHDLLIST_TERMINATION (NULL)
-
-/****************************************************************************
- * Public Types
- ****************************************************************************/
-
-struct evtdisp_s
-{
-  CODE int32_t (*dispatch)(FAR struct evtdisp_s *thiz,
-    FAR uint8_t *evt, uint32_t evtln);
-  CODE int32_t (*addhdlr)(FAR struct evtdisp_s *thiz,
-    FAR evthdl_if_t *hdllist);
-  CODE int32_t (*rmvhdlr)(FAR struct evtdisp_s *thiz,
-    uint8_t hdlrid);
-};
 
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
- * Name: evthdisp_create
+ * Name: altcomcallbacks_init
  *
  * Description:
- *  Create EVTDISP object.
+ *   Initialize altcom API callbacks.
  *
- * Input Parameters: 
- *  evthdllist  handling process function pointer.
+ * Input Parameters:
+ *   None.
  *
- * Returned Value: 
- *  EVTDISP object pointer.
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
  *
  ****************************************************************************/
 
-FAR struct evtdisp_s *evtdisp_create(FAR evthdl_if_t *evthdllist);
+int32_t altcomcallbacks_init(void);
 
 /****************************************************************************
- * Name: evthdisp_delete
+ * Name: altcomcallbacks_fin
  *
  * Description:
- *  Delete EVTDISP object.
+ *   Finalize altcom API callbacks.
  *
- * Input Parameters: 
- *  thiz  EVTDISP object pointer.
+ * Input Parameters:
+ *   None.
  *
- * Returned Value: 
- *  result.
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
  *
  ****************************************************************************/
 
-int32_t evtdisp_delete(FAR struct evtdisp_s *thiz);
+int32_t altcomcallbacks_fin(void);
 
-#endif /* __MODULES_LTE_ALTCOM_INCLUDE_EVTDISP_EVTDISP_H */
+/****************************************************************************
+ * Name: altcomcallbacks_reg_cb
+ *
+ * Description:
+ *   Registration altcom API callback.
+ *
+ * Input Parameters:
+ *   cb_ptr     Pointer of registration callback.
+ *   id         Callback function id.
+ *
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t altcomcallbacks_reg_cb(void *cb_ptr, int32_t id);
+
+/****************************************************************************
+ * Name: altcomcallbacks_unreg_cb
+ *
+ * Description:
+ *   Unregistration altcom API callback.
+ *
+ * Input Parameters:
+ *   id       Target callback function id.
+ *
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t altcomcallbacks_unreg_cb(int32_t id);
+
+/****************************************************************************
+ * Name: altcomcallbacks_get_cb
+ *
+ * Description:
+ *   Get altcom API callback.
+ *
+ * Input Parameters:
+ *   id    Target callback function id.
+ *
+ * Returned Value:
+ *   Pointer of Callback function. When not registered callbacke return NULL.
+ *
+ ****************************************************************************/
+
+void *altcomcallbacks_get_cb(int32_t id);
+
+/****************************************************************************
+ * Inline Functions
+ ****************************************************************************/
+
+int32_t altcomcallbacks_get_unreg_cb(int32_t id, void **callback);
+
+/****************************************************************************
+ * Name: altcomcallbacks_chk_reg_cb
+ *
+ * Description:
+ *   Check and registration altcom API callback.
+ *
+ * Input Parameters:
+ *   cb         Pointer of altcom API callback function.
+ *   id         Callback function id.
+ *
+ * Returned Value:
+ *   If the process succeeds, it returns 0.
+ *   Otherwise negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t altcomcallbacks_chk_reg_cb(void *cb, int32_t id);
+
+#endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_ALTCOM_CALLBACKS_H */
