@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/board/spresense/src/cxd56_audio.c
+ * bsp/board/spresense/src/cxd56_audio_amp.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -60,119 +60,8 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* Check if the following are defined in the board.h */
-
-#ifndef CXD5247_XRST
-#  error "CXD5247_XRST must be defined in board.h !!"
-#endif
-#ifndef CXD5247_AVDD
-#  error "CXD5247_AVDD must be defined in board.h !!"
-#endif
-#ifndef CXD5247_DVDD
-#  error "CXD5247_DVDD must be defined in board.h !!"
-#endif
-
 #define MUTE_OFF_DELAY  (1250 * 1000) /* ms */
 #define MUTE_ON_DELAY   (150 * 1000) /* ms */
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Name: board_aca_power_control
- *
- * Description:
- *   Power on/off the Aca device on the board.
- *
- ****************************************************************************/
-
-int board_aca_power_control(int target, bool en)
-{
-  int ret = 0;
-  static int first = 1;
-  static bool avdd_on = false;
-  static bool dvdd_on = false;
-
-  if (first)
-    {
-      /* gpio configuration (output disabled yet) */
-
-      cxd56_gpio_config(CXD5247_XRST, false);
-
-      first = 0;
-    }
-
-  if (en)
-    {
-      if (!dvdd_on && (target & CXD5247_DVDD))
-        {
-          /* reset assert */
-          cxd56_gpio_write(CXD5247_XRST, false);
-        }
-
-      /* power on */
-      if (!avdd_on && (target & CXD5247_AVDD))
-        {
-          board_power_control(POWER_AUDIO_AVDD, true);
-          avdd_on = true;
-        }
-      if (!dvdd_on && (target & CXD5247_DVDD))
-        {
-          board_power_control(POWER_AUDIO_DVDD, true);
-          dvdd_on = true;
-
-          /* reset release */
-          cxd56_gpio_write(CXD5247_XRST, true);
-        }
-    }
-  else
-    {
-      if (dvdd_on && (target & CXD5247_DVDD))
-        {
-          /* reset assert */
-          cxd56_gpio_write(CXD5247_XRST, false);
-        }
-
-      /* power off */
-      if (avdd_on && (target & CXD5247_AVDD))
-        {
-          board_power_control(POWER_AUDIO_AVDD, false);
-          avdd_on = false;
-        }
-      if (dvdd_on && (target & CXD5247_DVDD))
-        {
-          board_power_control(POWER_AUDIO_DVDD, false);
-          dvdd_on = false;
-        }
-    }
-  return ret;
-}
-
-/****************************************************************************
- * Name: board_aca_power_monitor
- *
- * Description:
- *   Get status of Power on/off the Aca device on the board.
- *
- ****************************************************************************/
-
-bool board_aca_power_monitor(int target)
-{
-  bool avdd_stat = true;
-  bool dvdd_stat = true;
-
-  if (target & CXD5247_AVDD)
-    {
-      avdd_stat = board_power_monitor(POWER_AUDIO_AVDD);
-    }
-  if (target & CXD5247_DVDD)
-    {
-      dvdd_stat = board_power_monitor(POWER_AUDIO_DVDD);
-    }
-
-  return avdd_stat && dvdd_stat;
-}
 
 /****************************************************************************
  * Name: board_external_amp_mute_control
