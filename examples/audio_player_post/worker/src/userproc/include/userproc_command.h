@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/common/component_common.h
+ * audio_player_post/worker/src/userproc/include/userproc_command.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,51 +33,43 @@
  *
  ****************************************************************************/
 
-#ifndef WIEN2_COMPONENT_COMMON_H
-#define WIEN2_COMPONENT_COMMON_H
+#ifndef __USERPROC_COMMAND_H__
+#define __USERPROC_COMMAND_H__
 
-#include "memutils/common_utils/common_assert.h"
-#include "audio/audio_message_types.h"
-#include "memutils/message/Message.h"
+#include <stdint.h>
+#include "postproc_command_base.h"
 
-#include "apus/dsp_audio_version.h"
-#include "wien2_internal_packet.h"
-
-__WIEN2_BEGIN_NAMESPACE
-
-#ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#define AUDIOUTILS_DSP_DEBUG_DUMP_SIZE  (1948)
-#define LOG_ENTRY_NAME                  (8)
-
-struct DebugLogInfo
+struct InitParam : public PostprocCommand::CmdBase
 {
-  char name[LOG_ENTRY_NAME];
-  void *addr;
-};
-#endif
-
-template<typename T>
-struct DspResult
-{
-  uint32_t exec_result;
-  T        internal_result;
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
 };
 
-template<typename T>
-class ComponentCommon
+struct ExecParam : public PostprocCommand::CmdBase
 {
-public:
-  ComponentCommon() {}
-  ~ComponentCommon() {}
-
-  bool dsp_boot_check(MsgQueId dsp_dtq, uint32_t *dsp_inf);
-  uint32_t dsp_init_check(MsgQueId dsp_dtq, T *internal);
-  void dsp_init_complete(MsgQueId dsp_dtq, uint32_t result, T *internal);
-
-private:
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
 };
 
-__WIEN2_END_NAMESPACE
+struct FlushParam : public PostprocCommand::CmdBase
+{
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
 
-#endif /* WIEN2_COMPONENT_COMMON_H */
+struct SetParam : public PostprocCommand::CmdBase
+{
+  uint32_t postswitch;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
+
+#endif /* __USERPROC_COMMAND_H__ */
 

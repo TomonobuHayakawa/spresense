@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/common/component_common.h
+ * audio_player_post/worker/src/userproc/include/userproc.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,51 +33,37 @@
  *
  ****************************************************************************/
 
-#ifndef WIEN2_COMPONENT_COMMON_H
-#define WIEN2_COMPONENT_COMMON_H
+#ifndef __USERPROC_H__
+#define __USERPROC_H__
 
-#include "memutils/common_utils/common_assert.h"
-#include "audio/audio_message_types.h"
-#include "memutils/message/Message.h"
+#include <string.h>
 
-#include "apus/dsp_audio_version.h"
-#include "wien2_internal_packet.h"
+#include "postproc_dsp_userproc_if.h"
+#include "userproc_command.h"
 
-__WIEN2_BEGIN_NAMESPACE
-
-#ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#define AUDIOUTILS_DSP_DEBUG_DUMP_SIZE  (1948)
-#define LOG_ENTRY_NAME                  (8)
-
-struct DebugLogInfo
-{
-  char name[LOG_ENTRY_NAME];
-  void *addr;
-};
-#endif
-
-template<typename T>
-struct DspResult
-{
-  uint32_t exec_result;
-  T        internal_result;
-};
-
-template<typename T>
-class ComponentCommon
+class UserProc : public PostprocDspUserProcIf
 {
 public:
-  ComponentCommon() {}
-  ~ComponentCommon() {}
 
-  bool dsp_boot_check(MsgQueId dsp_dtq, uint32_t *dsp_inf);
-  uint32_t dsp_init_check(MsgQueId dsp_dtq, T *internal);
-  void dsp_init_complete(MsgQueId dsp_dtq, uint32_t result, T *internal);
+  UserProc() :
+    m_toggle(true)
+  {}
+
+  virtual void init(PostprocCommand::CmdBase *cmd) { init(static_cast<InitParam *>(cmd)); }
+  virtual void exec(PostprocCommand::CmdBase *cmd) { exec(static_cast<ExecParam *>(cmd)); }
+  virtual void flush(PostprocCommand::CmdBase *cmd) { flush(static_cast<FlushParam *>(cmd)); }
+  virtual void set(PostprocCommand::CmdBase *cmd) { set(static_cast<SetParam *>(cmd)); }
 
 private:
+
+  bool m_toggle;
+
+  void init(InitParam *param);
+  void exec(ExecParam *param);
+  void flush(FlushParam *param);
+  void set(SetParam *param);
+
 };
 
-__WIEN2_END_NAMESPACE
-
-#endif /* WIEN2_COMPONENT_COMMON_H */
+#endif /* __USERPROC_H__ */
 

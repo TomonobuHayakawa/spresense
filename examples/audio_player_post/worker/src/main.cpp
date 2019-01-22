@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/dsp/worker/main.cpp
+ * audio_player_post/worker/src/main.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -48,16 +48,22 @@ extern "C"
 }
 
 #include "dsp_audio_version.h"
-#include "postfilter_ctrl.h"
+#include "userproc.h"
+#include "postproc_dsp_ctrl.h"
+#include "postproc_command_base.h"
 
 #define KEY_MQ 2
 #define KEY_SHM   1
 #define COMMAND_DATATYPE_ADDRESS 0
-#define COMMAND_DATATYPE_VALUE 1 
+#define COMMAND_DATATYPE_VALUE 1
+
+#define MSGID_PROCMODE_SHIFT 4
+#define MSGID_DATATYPE_MASK 0x01
+
+#define CRE_MSGID(mode, type) ((mode << MSGID_PROCMODE_SHIFT) | (type & MSGID_DATATYPE_MASK))
 
 #define ASSERT(cond) if (!(cond)) wk_abort()
 
-static PostFilterCtrl s_ins;
 static mpmq_t s_mq;
 
 extern "C" {
@@ -70,9 +76,7 @@ static void reply_to_spu(void *addr)
 
   /* Create message ID */
 
-  msg_id |= (Wien2::Apu::FilterMode << 4);
-  msg_id |= (Wien2::Apu::ExecEvent  << 1);
-  msg_id |= COMMAND_DATATYPE_ADDRESS;
+  msg_id = CRE_MSGID(PostprocCommand::FilterMode, COMMAND_DATATYPE_ADDRESS);
 
   /* Message data is address of APU command */
 
@@ -93,7 +97,9 @@ static void reply_to_spu(void *addr)
 /*--------------------------------------------------------------------*/
 int main()
 {
-  
+  UserProc userproc_ins;
+  PostprocDspCtrl ctrl_ins(&userproc_ins);
+
   int ret = 0;
 
   /* Initialize MP message queue,
@@ -109,9 +115,7 @@ int main()
 
   uint8_t msg_id = 0;
 
-  msg_id |= (Wien2::Apu::CommonMode << 4);
-  msg_id |= (Wien2::Apu::BootEvent  << 1);
-  msg_id |= COMMAND_DATATYPE_VALUE;
+  msg_id = CRE_MSGID(PostprocCommand::CommonMode, COMMAND_DATATYPE_VALUE);
 
   ret = mpmq_send(&s_mq, msg_id, DSP_POSTFLTR_VERSION);
 
@@ -129,13 +133,13 @@ int main()
 
       command = mpmq_receive(&s_mq, &msgdata);
 
-      uint8_t type = (command >> 0) & 0x1;
+      uint8_t type = command & MSGID_DATATYPE_MASK;
 
       /* Parse and execute message */
 
       if (type == COMMAND_DATATYPE_ADDRESS)
         {
-          s_ins.parse(reinterpret_cast<Wien2::Apu::Wien2ApuCmd *>(msgdata));
+          ctrl_ins.parse(reinterpret_cast<PostprocCommand::CmdBase *>(msgdata));
         }
       else
         {

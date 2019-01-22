@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/common/component_common.h
+ * audio_player/include/memory_layout.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -32,52 +32,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
+#ifndef __AUDIO_LAYOUT_H_INCLUDED__
+#define __AUDIO_LAYOUT_H_INCLUDED__
 
-#ifndef WIEN2_COMPONENT_COMMON_H
-#define WIEN2_COMPONENT_COMMON_H
+#define MEM_LAYOUT_PLAYER_MAIN_ONLY   (0)
 
-#include "memutils/common_utils/common_assert.h"
-#include "audio/audio_message_types.h"
-#include "memutils/message/Message.h"
-
-#include "apus/dsp_audio_version.h"
-#include "wien2_internal_packet.h"
-
-__WIEN2_BEGIN_NAMESPACE
-
-#ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#define AUDIOUTILS_DSP_DEBUG_DUMP_SIZE  (1948)
-#define LOG_ENTRY_NAME                  (8)
-
-struct DebugLogInfo
-{
-  char name[LOG_ENTRY_NAME];
-  void *addr;
-};
-#endif
-
-template<typename T>
-struct DspResult
-{
-  uint32_t exec_result;
-  T        internal_result;
-};
-
-template<typename T>
-class ComponentCommon
-{
-public:
-  ComponentCommon() {}
-  ~ComponentCommon() {}
-
-  bool dsp_boot_check(MsgQueId dsp_dtq, uint32_t *dsp_inf);
-  uint32_t dsp_init_check(MsgQueId dsp_dtq, T *internal);
-  void dsp_init_complete(MsgQueId dsp_dtq, uint32_t result, T *internal);
-
-private:
-};
-
-__WIEN2_END_NAMESPACE
-
-#endif /* WIEN2_COMPONENT_COMMON_H */
-
+#endif /* __AUDIO_LAYOUT_H_INCLUDED__ */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/common/component_common.cpp
+ * modules/audio/components/postproc/postproc_through.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,86 +33,100 @@
  *
  ****************************************************************************/
 
-#include "component_common.h"
+#include "postproc_through.h"
 
-#define DBG_MODULE DBG_MODULE_AS
+/*--------------------------------------------------------------------
+    Class Methods
+  --------------------------------------------------------------------*/
+uint32_t PostprocThrough::init_apu(const InitPostprocParam& param)
+{
+  ApuReqData req;
 
-__WIEN2_BEGIN_NAMESPACE
+  m_req_que.push(req);
+
+  return AS_ECODE_OK;
+}
 
 /*--------------------------------------------------------------------*/
-template<typename T>
-bool ComponentCommon<T>::dsp_boot_check(MsgQueId dsp_dtq,
-                                        uint32_t *dsp_inf)
+bool PostprocThrough::exec_apu(const ExecPostprocParam& param)
 {
-  err_t        err_code;
-  MsgQueBlock  *que;
-  MsgPacket    *msg;
+  ApuReqData req;
 
-  err_code = MsgLib::referMsgQueBlock(dsp_dtq, &que);
-  F_ASSERT(err_code == ERR_OK);
+  req.pcm       = param.input;
 
-  err_code = que->recv(TIME_FOREVER, &msg);
-  F_ASSERT(err_code == ERR_OK);
-  F_ASSERT(msg->getType() == MSG_ISR_APU0);
+  m_req_que.push(req);
 
-  uint32_t dsp_version = msg->moveParam<uint32_t>();
-  err_code = que->pop();
-  F_ASSERT(err_code == ERR_OK);
+  PostprocCbParam cbpram;
 
-  /* Reply DSP version */
+  cbpram.event_type = PostprocExec;
 
-  *dsp_inf = dsp_version;
+  m_callback(&cbpram, m_p_requester);
 
   return true;
 }
 
 /*--------------------------------------------------------------------*/
-template<typename T>
-uint32_t ComponentCommon<T>::dsp_init_check(MsgQueId dsp_dtq, T *internal)
+bool PostprocThrough::flush_apu(const FlushPostprocParam& param)
 {
-  err_t        err_code;
-  MsgQueBlock  *que;
-  MsgPacket    *msg;
+  AsPcmDataParam fls = { 0 };
 
-  err_code = MsgLib::referMsgQueBlock(dsp_dtq, &que);
-  F_ASSERT(err_code == ERR_OK);
+  fls.mh       = param.output_mh;
+  fls.is_valid = true;
 
-  err_code = que->recv(TIME_FOREVER, &msg);
-  F_ASSERT(err_code == ERR_OK);
-  F_ASSERT(msg->getType() == MSG_ISR_APU0);
+  ApuReqData req;
 
-  DspResult<T> rst = msg->moveParam<DspResult<T> >();
-  err_code = que->pop();
-  F_ASSERT(err_code == ERR_OK);
+  req.pcm       = fls;
 
-  *internal = rst.internal_result;
+  m_req_que.push(req);
 
-  return rst.exec_result;
+  PostprocCbParam cbpram;
+
+  cbpram.event_type = PostprocFlush;
+
+  m_callback(&cbpram, m_p_requester);
+
+  return true;
 }
 
 /*--------------------------------------------------------------------*/
-template<typename T>
-void ComponentCommon<T>::dsp_init_complete(MsgQueId dsp_dtq,
-                                           uint32_t result,
-                                           T *internal)
+bool PostprocThrough::set_apu(const SetPostprocParam& param)
 {
-  DspResult<T> dsp_result;
+  ApuReqData req;
 
-  dsp_result.exec_result     = result;
-  dsp_result.internal_result = *internal;
+  m_req_que.push(req);
 
-  err_t er = MsgLib::send<DspResult<T> >(dsp_dtq,
-                                         MsgPriNormal,
-                                         MSG_ISR_APU0,
-                                         0,
-                                         dsp_result);
-  F_ASSERT(er == ERR_OK);
+  PostprocCbParam cbpram;
+
+  cbpram.event_type = PostprocSet;
+
+  m_callback(&cbpram, m_p_requester);
+
+  return true;
 }
 
-/* Explicit Instantiation */
+/*--------------------------------------------------------------------*/
+bool PostprocThrough::recv_done(PostprocCmpltParam *cmplt)
+{
+  cmplt->output = m_req_que.top().pcm;
+  cmplt->result = true;
 
-template class ComponentCommon<uint32_t>;
-template class ComponentCommon<Apu::InternalResult>;
+  m_req_que.pop();
 
-__WIEN2_END_NAMESPACE
+  return true;
+};
+
+/*--------------------------------------------------------------------*/
+uint32_t PostprocThrough::activate(PostprocCallback callback, void *p_requester, uint32_t *dsp_inf)
+{
+  m_p_requester = p_requester;
+  m_callback = callback;
+
+  return AS_ECODE_OK;
+}
+
+/*--------------------------------------------------------------------*/
+bool PostprocThrough::deactivate(void)
+{
+  return true;
+}
 

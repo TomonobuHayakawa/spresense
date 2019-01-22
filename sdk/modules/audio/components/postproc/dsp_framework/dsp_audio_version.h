@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postfilter/postfilter_api.h
+ * modules/audio/components/postfilter/dsp_framework/dsp_audio_version.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,33 +33,40 @@
  *
  ****************************************************************************/
 
-#ifndef _POSTFILTER_API_H_
-#define _POSTFILTER_API_H_
+#ifndef __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H
+#define __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H
 
-#include "postfilter_component.h"
-#include "postfilter_through.h"
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
 
-extern "C" {
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
 
-uint32_t AS_postfilter_init(const InitPostfilterParam *param,
-                            void *p_instance,
-                            uint32_t *dsp_inf);
+/* Version rule:
+ * (change library).(change of DSP interface).(change of internal processing)
+ */
 
-bool AS_postfilter_exec(const ExecPostfilterParam *param, void *p_instance);
+/* Postfilter Version. */
 
-bool AS_postfilter_flush(const FlushPostfilterParam *param, void *p_instance);
+#define DSP_POSTFLTR_VERSION  0x010101    /* 01.01.01 */
 
-bool AS_postfilter_recv_done(void *p_instance, PostfilterCmpltParam *cmplt);
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
 
-uint32_t AS_postfilter_activate(void **p_instance,
-                                MemMgrLite::PoolId apu_pool_id,
-                                MsgQueId apu_mid,
-                                uint32_t *dsp_inf,
-                                bool through);
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
-bool AS_postfilter_deactivate(void *p_instance);
+/****************************************************************************
+ * Inline Functions
+ ****************************************************************************/
 
-} /* extern "C" */
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-#endif /* _POSTFILTER_API_H_ */
+#endif /* __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H */
 

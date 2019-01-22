@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postfilter/postfilter_through.h
+ * modules/audio/components/postproc/dsp_framework/postproc_dsp_userproc_if.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,32 +33,22 @@
  *
  ****************************************************************************/
 
-#ifndef _POSTFILTER_THROUGH_H_
-#define _POSTFILTER_THROUGH_H_
+#ifndef __POSTPROC_DSP_USERPROC_IF_H__
+#define __POSTPROC_DSP_USERPROC_IF_H__
 
-#include "audio/audio_high_level_api.h"
-#include "memutils/s_stl/queue.h"
-#include "postfilter_base.h"
+#include "postproc_command_base.h"
 
-class PostfilterThrough : public PostfilterBase
+class PostprocDspUserProcIf
 {
 public:
-  PostfilterThrough() {}
-  ~PostfilterThrough() {}
 
-  virtual uint32_t init_apu(const InitPostfilterParam& param, uint32_t *dsp_inf);
-  virtual bool exec_apu(const ExecPostfilterParam& param);
-  virtual bool flush_apu(const FlushPostfilterParam& param);
-  virtual bool recv_done(PostfilterCmpltParam *cmplt);
-  virtual bool recv_done(void) { return true; };
-  virtual uint32_t activate(uint32_t *dsp_inf);
-  virtual bool deactivate();
+  /* Pure abstract functions to be overided by inheritor */
 
-private:
-  #define REQ_QUEUE_SIZE 7 
-  typedef s_std::Queue<AsPcmDataParam, REQ_QUEUE_SIZE> ReqQue;
-  ReqQue m_req_que;
+  virtual void init(PostprocCommand::CmdBase *cmd) = 0;
+  virtual void exec(PostprocCommand::CmdBase *cmd) = 0;
+  virtual void flush(PostprocCommand::CmdBase *cmd) = 0;
+  virtual void set(PostprocCommand::CmdBase *cmd) = 0;
 };
 
-#endif /* _POSTFILTER_THROUGH_H_ */
+#endif /* __POSTPROC_DSP_USERPROC_IF_H__ */
 

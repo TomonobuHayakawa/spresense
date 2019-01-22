@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/common/component_common.h
+ * pool_layout.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -13,10 +13,9 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
- *    the names of its contributors may be used to endorse or promote
- *    products derived from this software without specific prior written
- *    permission.
+ * 3. Neither the name Sony nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -33,51 +32,29 @@
  *
  ****************************************************************************/
 
-#ifndef WIEN2_COMPONENT_COMMON_H
-#define WIEN2_COMPONENT_COMMON_H
+#ifndef POOL_LAYOUT_H_INCLUDED
+#define POOL_LAYOUT_H_INCLUDED
 
-#include "memutils/common_utils/common_assert.h"
-#include "audio/audio_message_types.h"
-#include "memutils/message/Message.h"
+#include "memutils/memory_manager/MemMgrTypes.h"
 
-#include "apus/dsp_audio_version.h"
-#include "wien2_internal_packet.h"
+namespace MemMgrLite {
 
-__WIEN2_BEGIN_NAMESPACE
+MemPool* static_pools[NUM_MEM_POOLS];
 
-#ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#define AUDIOUTILS_DSP_DEBUG_DUMP_SIZE  (1948)
-#define LOG_ENTRY_NAME                  (8)
+extern const PoolAttr MemoryPoolLayouts[NUM_MEM_LAYOUTS][NUM_MEM_POOLS] = {
+ {/* Layout:0 */
+  /* pool_ID          type       seg fence  addr        size         */
+  { DEC_ES_MAIN_BUF_POOL, BasicType,   4, true, 0x000c0008, 0x00006000 },  /* AUDIO_WORK_AREA */
+  { REND_PCM_BUF_POOL, BasicType,   9, true, 0x000c6010, 0x000278d0 },  /* AUDIO_WORK_AREA */
+  { DEC_APU_CMD_POOL, BasicType,  10, true, 0x000ed8e8, 0x00000398 },  /* AUDIO_WORK_AREA */
+  { SRC_WORK_BUF_POOL, BasicType,   1, true, 0x000edc88, 0x00002000 },  /* AUDIO_WORK_AREA */
+  { PF0_PCM_BUF_POOL, BasicType,   1, true, 0x000efc90, 0x00004650 },  /* AUDIO_WORK_AREA */
+  { PF1_PCM_BUF_POOL, BasicType,   1, true, 0x000f42e8, 0x00004650 },  /* AUDIO_WORK_AREA */
+  { PF0_APU_CMD_POOL, BasicType,  10, true, 0x000f8940, 0x00000398 },  /* AUDIO_WORK_AREA */
+  { PF1_APU_CMD_POOL, BasicType,  10, true, 0x000f8ce0, 0x00000398 },  /* AUDIO_WORK_AREA */
+ },
+}; /* end of MemoryPoolLayouts */
 
-struct DebugLogInfo
-{
-  char name[LOG_ENTRY_NAME];
-  void *addr;
-};
-#endif
+}  /* end of namespace MemMgrLite */
 
-template<typename T>
-struct DspResult
-{
-  uint32_t exec_result;
-  T        internal_result;
-};
-
-template<typename T>
-class ComponentCommon
-{
-public:
-  ComponentCommon() {}
-  ~ComponentCommon() {}
-
-  bool dsp_boot_check(MsgQueId dsp_dtq, uint32_t *dsp_inf);
-  uint32_t dsp_init_check(MsgQueId dsp_dtq, T *internal);
-  void dsp_init_complete(MsgQueId dsp_dtq, uint32_t result, T *internal);
-
-private:
-};
-
-__WIEN2_END_NAMESPACE
-
-#endif /* WIEN2_COMPONENT_COMMON_H */
-
+#endif /* POOL_LAYOUT_H_INCLUDED */

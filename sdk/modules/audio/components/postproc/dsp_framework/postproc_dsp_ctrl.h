@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/common/component_common.h
+ * modules/audio/components/postproc/dsp_framework/postproc_dsp_ctrl.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,51 +33,36 @@
  *
  ****************************************************************************/
 
-#ifndef WIEN2_COMPONENT_COMMON_H
-#define WIEN2_COMPONENT_COMMON_H
+#ifndef __POSTPROC_DSP_CTRL_H__
+#define __POSTPROC_DSP_CTRL_H__
 
-#include "memutils/common_utils/common_assert.h"
-#include "audio/audio_message_types.h"
-#include "memutils/message/Message.h"
+#include <string.h>
 
-#include "apus/dsp_audio_version.h"
-#include "wien2_internal_packet.h"
+#include "postproc_command_base.h"
+#include "postproc_dsp_userproc_if.h"
 
-__WIEN2_BEGIN_NAMESPACE
-
-#ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#define AUDIOUTILS_DSP_DEBUG_DUMP_SIZE  (1948)
-#define LOG_ENTRY_NAME                  (8)
-
-struct DebugLogInfo
-{
-  char name[LOG_ENTRY_NAME];
-  void *addr;
-};
-#endif
-
-template<typename T>
-struct DspResult
-{
-  uint32_t exec_result;
-  T        internal_result;
-};
-
-template<typename T>
-class ComponentCommon
+class PostprocDspCtrl
 {
 public:
-  ComponentCommon() {}
-  ~ComponentCommon() {}
+  void parse(PostprocCommand::CmdBase *cmd);
 
-  bool dsp_boot_check(MsgQueId dsp_dtq, uint32_t *dsp_inf);
-  uint32_t dsp_init_check(MsgQueId dsp_dtq, T *internal);
-  void dsp_init_complete(MsgQueId dsp_dtq, uint32_t result, T *internal);
+  PostprocDspCtrl(PostprocDspUserProcIf *p_userproc_ins)
+    : m_p_userproc(p_userproc_ins)
+  {}
 
 private:
+
+  PostprocDspUserProcIf *m_p_userproc;
+
+  typedef void (PostprocDspCtrl::*CtrlProc)(PostprocCommand::CmdBase *cmd);
+  static CtrlProc CtrlFuncTbl[PostprocCommand::CmdTypeNum];
+
+  void init(PostprocCommand::CmdBase *cmd);
+  void exec(PostprocCommand::CmdBase *cmd);
+  void flush(PostprocCommand::CmdBase *cmd);
+  void set(PostprocCommand::CmdBase *cmd);
+  void illegal(PostprocCommand::CmdBase *cmd);
 };
 
-__WIEN2_END_NAMESPACE
-
-#endif /* WIEN2_COMPONENT_COMMON_H */
+#endif /* __POSTPROC_DSP_CTRL_H__ */
 

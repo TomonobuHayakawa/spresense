@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/common/component_common.h
+ * modules/audio/components/postfilter/dsp_framework/postproc_dsp_ctrl.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,51 +33,50 @@
  *
  ****************************************************************************/
 
-#ifndef WIEN2_COMPONENT_COMMON_H
-#define WIEN2_COMPONENT_COMMON_H
+#include "postproc_dsp_ctrl.h"
 
-#include "memutils/common_utils/common_assert.h"
-#include "audio/audio_message_types.h"
-#include "memutils/message/Message.h"
-
-#include "apus/dsp_audio_version.h"
-#include "wien2_internal_packet.h"
-
-__WIEN2_BEGIN_NAMESPACE
-
-#ifdef CONFIG_AUDIOUTILS_DSP_DEBUG_DUMP
-#define AUDIOUTILS_DSP_DEBUG_DUMP_SIZE  (1948)
-#define LOG_ENTRY_NAME                  (8)
-
-struct DebugLogInfo
+/*--------------------------------------------------------------------*/
+PostprocDspCtrl::CtrlProc PostprocDspCtrl::CtrlFuncTbl[PostprocCommand::CmdTypeNum] =
 {
-  char name[LOG_ENTRY_NAME];
-  void *addr;
-};
-#endif
-
-template<typename T>
-struct DspResult
-{
-  uint32_t exec_result;
-  T        internal_result;
+  &PostprocDspCtrl::init,
+  &PostprocDspCtrl::exec,
+  &PostprocDspCtrl::flush,
+  &PostprocDspCtrl::set,
 };
 
-template<typename T>
-class ComponentCommon
+/*--------------------------------------------------------------------*/
+void PostprocDspCtrl::parse(PostprocCommand::CmdBase *cmd)
 {
-public:
-  ComponentCommon() {}
-  ~ComponentCommon() {}
+  (this->*CtrlFuncTbl[cmd->header.cmd_type])(cmd);
+}
 
-  bool dsp_boot_check(MsgQueId dsp_dtq, uint32_t *dsp_inf);
-  uint32_t dsp_init_check(MsgQueId dsp_dtq, T *internal);
-  void dsp_init_complete(MsgQueId dsp_dtq, uint32_t result, T *internal);
+/*--------------------------------------------------------------------*/
+void PostprocDspCtrl::init(PostprocCommand::CmdBase *cmd)
+{
+  m_p_userproc->init(cmd);
+}
 
-private:
-};
+/*--------------------------------------------------------------------*/
+void PostprocDspCtrl::exec(PostprocCommand::CmdBase *cmd)
+{
+  m_p_userproc->exec(cmd);
+}
 
-__WIEN2_END_NAMESPACE
+/*--------------------------------------------------------------------*/
+void PostprocDspCtrl::flush(PostprocCommand::CmdBase *cmd)
+{
+  m_p_userproc->flush(cmd);
+}
 
-#endif /* WIEN2_COMPONENT_COMMON_H */
+/*--------------------------------------------------------------------*/
+void PostprocDspCtrl::set(PostprocCommand::CmdBase *cmd)
+{
+  m_p_userproc->set(cmd);
+}
+
+/*--------------------------------------------------------------------*/
+void PostprocDspCtrl::illegal(PostprocCommand::CmdBase *cmd)
+{
+  cmd->result.result_code = PostprocCommand::ExecError;
+}
 

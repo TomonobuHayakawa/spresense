@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/dsp/worker/postfilter_ctrl.h
+ * modules/audio/components/postproc/postproc_api.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,42 +33,36 @@
  *
  ****************************************************************************/
 
-#ifndef __POSTFILTER_CTRL_H__
-#define __POSTFILTER_CTRL_H__
+#ifndef _POSTPROC_API_H_
+#define _POSTPROC_API_H_
 
-#include <string.h>
+#include "postproc_component.h"
+#include "postproc_through.h"
 
-#include "apus/apu_cmd.h"
-#include "postfilter_command.h"
+extern "C" {
 
-class PostFilterCtrl
-{
-public:
-  void parse(Wien2::Apu::Wien2ApuCmd *cmd);
+uint32_t AS_postproc_init(const InitPostprocParam *param,
+                          void *p_instance);
 
-  PostFilterCtrl()
-    : m_state(BootedStatus)
-  {}
+bool AS_postproc_exec(const ExecPostprocParam *param, void *p_instance);
 
-private:
-  enum StateType
-  {
-    BootedStatus = 0,
-    ReadyStatus,
-    ExecStatus,
-    StateNum
-  };
+bool AS_postproc_flush(const FlushPostprocParam *param, void *p_instance);
 
-  StateType m_state;
-  typedef void (PostFilterCtrl::*CtrlProc)(Wien2::Apu::Wien2ApuCmd *cmd);
-  static CtrlProc CtrlFuncTbl[Wien2::Apu::ApuEventTypeNum][StateNum];
+bool AS_postproc_setparam(const SetPostprocParam *param, void *p_instance);
 
-  void init(Wien2::Apu::Wien2ApuCmd *cmd);
-  void exec(Wien2::Apu::Wien2ApuCmd *cmd);
-  void flush(Wien2::Apu::Wien2ApuCmd *cmd);
-  void setparam(Wien2::Apu::Wien2ApuCmd *cmd);
-  void illegal(Wien2::Apu::Wien2ApuCmd *cmd);
-};
+bool AS_postproc_recv_done(void *p_instance, PostprocCmpltParam *cmplt);
 
-#endif /* __POSTFILTER_CTRL_H__ */
+uint32_t AS_postproc_activate(void **p_instance,
+                              MemMgrLite::PoolId apu_pool_id,
+                              MsgQueId apu_mid,
+                              PostprocCallback callback,
+                              void *p_requester,
+                              uint32_t *dsp_inf,
+                              bool through);
+
+bool AS_postproc_deactivate(void *p_instance);
+
+} /* extern "C" */
+
+#endif /* _POSTPROC_API_H_ */
 

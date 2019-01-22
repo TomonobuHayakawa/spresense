@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/dsp/worker/dsp_audio_version.h
+ * modules/audio/components/postproc/postproc_through.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,40 +33,41 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H
-#define __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H
+#ifndef _POSTPROC_THROUGH_H_
+#define _POSTPROC_THROUGH_H_
 
-/****************************************************************************
- * Included Files
- ****************************************************************************/
+#include "audio/audio_high_level_api.h"
+#include "memutils/s_stl/queue.h"
+#include "postproc_base.h"
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
+class PostprocThrough : public PostprocBase
+{
+public:
+  PostprocThrough() {}
+  ~PostprocThrough() {}
 
-/* Version rule:
- * (change library).(change of DSP interface).(change of internal processing)
- */
+  virtual uint32_t init_apu(const InitPostprocParam& param);
+  virtual bool exec_apu(const ExecPostprocParam& param);
+  virtual bool flush_apu(const FlushPostprocParam& param);
+  virtual bool set_apu(const SetPostprocParam& param);
+  virtual bool recv_done(PostprocCmpltParam *cmplt);
+  virtual bool recv_done(void) { m_req_que.pop(); return true; }
+  virtual uint32_t activate(PostprocCallback callback,
+                            void *p_requester,
+                            uint32_t *dsp_inf);
+  virtual bool deactivate();
 
-/* Postfilter Version. */
+private:
+  #define REQ_QUEUE_SIZE 7 
 
-#define DSP_POSTFLTR_VERSION  0x010101    /* 01.01.01 */
+  struct ApuReqData
+  {
+    AsPcmDataParam       pcm;
+  };
 
-/****************************************************************************
- * Public Types
- ****************************************************************************/
+  typedef s_std::Queue<ApuReqData, REQ_QUEUE_SIZE> ReqQue;
+  ReqQue m_req_que;
+};
 
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-/****************************************************************************
- * Inline Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-#endif /* __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H */
+#endif /* _POSTPROC_THROUGH_H_ */
 
