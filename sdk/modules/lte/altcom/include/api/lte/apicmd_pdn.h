@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/altcom/api/lte/lte_finalize.c
+ * modules/lte/altcom/include/api/lte/apicmd_pdn.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,72 +33,67 @@
  *
  ****************************************************************************/
 
-/****************************************************************************
- * Included Files
- ****************************************************************************/
-
-#include <stdint.h>
-#include <errno.h>
-
-#include "lte/lte_api.h"
-#include "apiutil.h"
-#include "ltebuilder.h"
-#include "director.h"
-#include "dbg_if.h"
-#include "altcom_callbacks.h"
-#include "altcom_status.h"
+#ifndef __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_PDN_H
+#define __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_PDN_H
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
  ****************************************************************************/
+
+#define APICMD_PDN_SESSIONID_MIN          (0)
+#define APICMD_PDN_SESSIONID_MAX          (255)
+
+#define APICMD_PDN_ACT_ACTIVE             (0)
+#define APICMD_PDN_ACT_INACTIVE           (1)
+
+#define APICMD_PDN_IMS_REG                (0)
+#define APICMD_PDN_IMS_UNREG              (1)
+
+#define APICMD_PDN_DATAALLOW_ALLOW        (0)
+#define APICMD_PDN_DATAALLOW_DISALLOW     (1)
+
+#define APICMD_PDN_DATAROAMALLOW_ALLOW    (0)
+#define APICMD_PDN_DATAROAMALLOW_DISALLOW (1)
+
+#define APICMD_PDN_IPCOUNT_MAX            (2)
+#define APICMD_PDN_IPADDR_MAXLEN          (40)
+#define APICMD_PDN_IPTYPE_IP              (0)
+#define APICMD_PDN_IPTYPE_IPV6            (1)
+#define APICMD_PDN_IPTYPE_IPV4V6          (2)
+
+#define APICMD_PDN_APN_TYPE_UNKNOWN       (1 << 0)
+#define APICMD_PDN_APN_TYPE_DEFAULT       (1 << 1)
+#define APICMD_PDN_APN_TYPE_MMS           (1 << 2)
+#define APICMD_PDN_APN_TYPE_SUPL          (1 << 3)
+#define APICMD_PDN_APN_TYPE_DUN           (1 << 4)
+#define APICMD_PDN_APN_TYPE_HIPRI         (1 << 5)
+#define APICMD_PDN_APN_TYPE_FOTA          (1 << 6)
+#define APICMD_PDN_APN_TYPE_IMS           (1 << 7)
+#define APICMD_PDN_APN_TYPE_CBS           (1 << 8)
+#define APICMD_PDN_APN_TYPE_IA            (1 << 9)
+#define APICMD_PDN_APN_TYPE_EMERGENCY     (1 << 10)
 
 /****************************************************************************
- * Name: lte_finalize
- *
- * Description:
- *   Finalize the LTE library resouces.
- *
- * Input Parameters:
- *   None
- *
- * Returned Value:
- *   On success, 0 is returned.
- *   On failure, negative value is returned.
- *
+ * Public Types
  ****************************************************************************/
 
-int32_t lte_finalize(void)
+begin_packed_struct struct apicmd_ipaddr_s
 {
-  int32_t ret;
+  uint8_t iptype;
+  uint8_t address[APICMD_PDN_IPADDR_MAXLEN];
+} end_packed_struct;
 
-  /* Set not initialized status */
+begin_packed_struct struct apicmd_pdnset_s
+{
+  uint8_t session_id;
+  uint8_t activate;
+  uint8_t apntype;
+  uint8_t ipaddr_num;
+  struct apicmd_ipaddr_s
+    ip_address[APICMD_PDN_IPCOUNT_MAX];
+  uint8_t imsregister;
+  uint8_t dataallow;
+  uint8_t dararoamingallow;
+} end_packed_struct;
 
-  ret = altcom_check_finalized_and_set();
-  if (ret < 0)
-    {
-      DBGIF_LOG_ERROR("Already finalized.\n");
-    }
-  else
-    {
-      ret = director_destruct(&g_ltebuilder);
-      if (ret < 0)
-        {
-          DBGIF_LOG1_ERROR("director_destruct() error. %d \n", ret);
-          altcom_set_initialized();
-        }
-      else
-        {
-          ret = altcomcallbacks_fin();
-          if (ret < 0)
-            {
-              DBGIF_LOG1_ERROR("callbacks_uninitialize() error. %d", ret);
-              return ret;
-            }
-
-          altcom_set_status(ALTCOM_STATUS_UNINITIALIZED);
-          ret = 0;
-        }
-    }
-
-  return ret;
-}
+#endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_PDN_H */

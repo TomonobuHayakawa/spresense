@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/altcom/api/lte/lte_finalize.c
+ * modules/lte/altcom/include/api/lte/apicmd_getnetinfo.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,72 +33,53 @@
  *
  ****************************************************************************/
 
+#ifndef __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETNETINFO_H
+#define __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETNETINFO_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdint.h>
-#include <errno.h>
-
-#include "lte/lte_api.h"
-#include "apiutil.h"
-#include "ltebuilder.h"
-#include "director.h"
-#include "dbg_if.h"
-#include "altcom_callbacks.h"
-#include "altcom_status.h"
+#include "apicmd.h"
+#include "apicmd_pdn.h"
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
  ****************************************************************************/
+
+#define APICMD_GETNETINFO_RES_OK        (0)
+#define APICMD_GETNETINFO_RES_ERR       (1)
+
+#define APICMD_GETNETINFO_NETSTAT_NOT_REG_NOT_SEARCHING      (0)
+#define APICMD_GETNETINFO_NETSTAT_REG_HOME                   (1)
+#define APICMD_GETNETINFO_NETSTAT_NOT_REG_SEARCHING          (2)
+#define APICMD_GETNETINFO_NETSTAT_REG_DENIED                 (3)
+#define APICMD_GETNETINFO_NETSTAT_UNKNOWN                    (4)
+#define APICMD_GETNETINFO_NETSTAT_REG_ROAMING                (5)
+#define APICMD_GETNETINFO_NETSTAT_REG_SMS_ONLY_HOME          (6)
+#define APICMD_GETNETINFO_NETSTAT_REG_SMS_ONLY_ROAMING       (7)
+#define APICMD_GETNETINFO_NETSTAT_NOT_REG_EMERGENCY          (8)
+#define APICMD_GETNETINFO_NETSTAT_REG_CSFB_NOT_PREF_HOME     (9)
+#define APICMD_GETNETINFO_NETSTAT_REG_CSFB_NOT_PREF_ROAMING  (10)
+
+#define APICMD_GETNETINFO_PDNCOUNT_MAX  (5)
 
 /****************************************************************************
- * Name: lte_finalize
- *
- * Description:
- *   Finalize the LTE library resouces.
- *
- * Input Parameters:
- *   None
- *
- * Returned Value:
- *   On success, 0 is returned.
- *   On failure, negative value is returned.
- *
+ * Public Types
  ****************************************************************************/
 
-int32_t lte_finalize(void)
+/* This structure discribes the data structure of the API command */
+
+/* APICMDID_GET_NETINFO
+ * no data
+ */
+
+begin_packed_struct struct apicmd_cmddat_getnetinfores_s
 {
-  int32_t ret;
+  uint8_t result;
+  uint8_t nw_stat;
+  uint8_t pdn_count;
+  struct apicmd_pdnset_s pdn[APICMD_PDN_IPCOUNT_MAX];
+} end_packed_struct;
 
-  /* Set not initialized status */
-
-  ret = altcom_check_finalized_and_set();
-  if (ret < 0)
-    {
-      DBGIF_LOG_ERROR("Already finalized.\n");
-    }
-  else
-    {
-      ret = director_destruct(&g_ltebuilder);
-      if (ret < 0)
-        {
-          DBGIF_LOG1_ERROR("director_destruct() error. %d \n", ret);
-          altcom_set_initialized();
-        }
-      else
-        {
-          ret = altcomcallbacks_fin();
-          if (ret < 0)
-            {
-              DBGIF_LOG1_ERROR("callbacks_uninitialize() error. %d", ret);
-              return ret;
-            }
-
-          altcom_set_status(ALTCOM_STATUS_UNINITIALIZED);
-          ret = 0;
-        }
-    }
-
-  return ret;
-}
+#endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETNETINFO_H */

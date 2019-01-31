@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/altcom/api/lte/lte_finalize.c
+ * modules/lte/altcom/api/lte/lte_set_rep_restart.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -41,25 +41,36 @@
 #include <errno.h>
 
 #include "lte/lte_api.h"
+#include "altcombs.h"
+#include "apicmd.h"
 #include "apiutil.h"
-#include "ltebuilder.h"
-#include "director.h"
-#include "dbg_if.h"
-#include "altcom_callbacks.h"
 #include "altcom_status.h"
+#include "altcom_callbacks.h"
+#include "lte_report_restart.h"
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+static int32_t g_lte_set_represtart_reason = LTE_RESTART_USER_INITIATED;
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: lte_finalize
+ * Name: lte_set_report_restart
  *
  * Description:
- *   Finalize the LTE library resouces.
+ *   Registration Modem restart notification callback.
  *
  * Input Parameters:
- *   None
+ *   restart_callback Callback function to notify that modem restart.
+ *                    Stop report restart at set null this parameter.
  *
  * Returned Value:
  *   On success, 0 is returned.
@@ -67,38 +78,82 @@
  *
  ****************************************************************************/
 
-int32_t lte_finalize(void)
+int32_t lte_set_report_restart(restart_report_cb_t restart_callback)
 {
-  int32_t ret;
 
-  /* Set not initialized status */
+  /* Check Lte library status */
 
-  ret = altcom_check_finalized_and_set();
-  if (ret < 0)
+  if (ALTCOM_STATUS_UNINITIALIZED == altcom_get_status())
     {
-      DBGIF_LOG_ERROR("Already finalized.\n");
+      return -EOPNOTSUPP;
+    }
+
+  /* Regist or Unregist report callback */
+
+  if (restart_callback)
+    {
+      altcomcallbacks_reg_cb(restart_callback, APICMDID_REPORT_RESTART);
     }
   else
     {
-      ret = director_destruct(&g_ltebuilder);
-      if (ret < 0)
-        {
-          DBGIF_LOG1_ERROR("director_destruct() error. %d \n", ret);
-          altcom_set_initialized();
-        }
-      else
-        {
-          ret = altcomcallbacks_fin();
-          if (ret < 0)
-            {
-              DBGIF_LOG1_ERROR("callbacks_uninitialize() error. %d", ret);
-              return ret;
-            }
-
-          altcom_set_status(ALTCOM_STATUS_UNINITIALIZED);
-          ret = 0;
-        }
+      altcomcallbacks_unreg_cb(APICMDID_REPORT_RESTART);
     }
 
+  return 0;
+}
+
+/****************************************************************************
+ * Name: lte_set_report_reason
+ *
+ * Description:
+ *   Set restart reason.
+ *
+ * Input Parameters:
+ *   reason      Modem restart reason.
+ *
+ * Returned Value:
+ *   On success, 0 is returned.
+ *   On failure, negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t lte_set_report_reason(int32_t reason)
+{
+  int32_t ret = 0;
+
+  g_lte_set_represtart_reason = reason;
+
   return ret;
+}
+
+/****************************************************************************
+ * Name: lte_do_restartcallback
+ *
+ * Description:
+ *   Call registered modem restart callback function.
+ *
+ * Input Parameters:
+ *   None.
+ *
+ * Returned Value:
+ *   On success, 0 is returned.
+ *   On failure, negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t lte_do_restartcallback()
+{
+  int32_t             ret = 0;
+  restart_report_cb_t callback = NULL;
+
+  callback = altcomcallbacks_get_cb(APICMDID_REPORT_RESTART);
+
+  if (!callback)
+    {
+      DBGIF_LOG_INFO("restart callback is NULL.\n");
+      return ret;
+    }
+
+  callback(g_lte_set_represtart_reason);
+  return 0;
 }

@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/altcom/api/lte/lte_initialize.c
+ * modules/lte/altcom/api/lte/lte_geterrno.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -37,81 +37,110 @@
  * Included Files
  ****************************************************************************/
 
-#include <stdint.h>
-#include <errno.h>
-
 #include "lte/lte_api.h"
-#include "apiutil.h"
-#include "ltebuilder.h"
-#include "director.h"
-#include "dbg_if.h"
 #include "altcombs.h"
-#include "altcom_callbacks.h"
-#include "altcom_status.h"
+#include "apicmd_errinfo.h"
+#include "apicmdhdlrbs.h"
+#include "lte_geterrinfo.h"
 
 /****************************************************************************
- * Public Data
+ * Private Functions
  ****************************************************************************/
 
-bool        g_lte_initialized = false;
-sys_mutex_t g_lte_apicallback_mtx;
+/****************************************************************************
+ * Name: activatepdn_job
+ *
+ * Description:
+ *   This function is notification the api error infomation.
+ *
+ * Input Parameters:
+ *  arg    Pointer to received event.
+ *
+ * Returned Value:
+ *   None.
+ *
+ ****************************************************************************/
+
+static void errinfo_job(FAR void *arg)
+{
+  int32_t                        err_code = 0;
+  int32_t                        err_no   = 0;
+  struct apicmd_cmddat_errinfo_s *cmd     = NULL;
+
+  cmd = (struct apicmd_cmddat_errinfo_s *)arg;
+  err_code = ntohl(cmd->err_code);
+  err_no   = ntohl(cmd->err_no);
+
+  DBGIF_LOG_INFO("recv errinfo.\n");
+  DBGIF_LOG1_INFO("errcode: %d.\n", err_code);
+  DBGIF_LOG1_INFO("errcode: %d.\n", err_no);
+  altcombs_set_errinfo(err_code, err_no, cmd->err_str);
+}
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: lte_initialize
+ * Name: lte_get_errinfo
  *
  * Description:
- *   Initialize the LTE library resouces.
+ *   Get ALTCOM last error information.
  *
  * Input Parameters:
- *   None
+ *   info    Pointer of lte error info.
  *
  * Returned Value:
- *   On success, 0 is returned.
- *   On failure, negative value is returned.
+ *   When get success is returned 0.
+ *   When get failed return negative value.
  *
  ****************************************************************************/
 
-int32_t lte_initialize(void)
+int32_t lte_get_errinfo(lte_errinfo_t *info)
 {
   int32_t ret;
 
-  /* Set initialized status */
-
-  ret = altcom_check_initialized_and_set();
-  if (ret < 0)
+  if (ALTCOM_STATUS_INITIALIZED > altcom_get_status())
     {
-      DBGIF_LOG_ERROR("Already initialized.\n");
-    }
-  else
-    {
-      ret = director_construct(&g_ltebuilder, NULL);
-      if (ret < 0)
-        {
-          DBGIF_LOG1_ERROR("director_construct() error. %d", ret);
-        }
-      else
-        {
-          ret = altcomcallbacks_init();
-          if (ret < 0)
-            {
-              DBGIF_LOG1_ERROR("callbacks_initialize() failed %d\n", ret);
-              director_destruct(&g_ltebuilder);
-            }
-          else
-            {
-              altcom_set_status(ALTCOM_STATUS_INITIALIZED);
-            }
-        }
+      return -EOPNOTSUPP;
     }
 
-  if (ret < 0)
+  if (!info)
     {
-      altcom_set_finalized();
+      DBGIF_LOG_ERROR("Input argument is NULL.\n");
+      return -EINVAL;
     }
+
+  ret = altcombs_get_errinfo(info);
 
   return ret;
+}
+
+/****************************************************************************
+ * Name: apicmdhdlr_errinfo
+ *
+ * Description:
+ *   This function is an API command handler for Error info notification.
+ *
+ * Input Parameters:
+ *  evt    Pointer to received event.
+ *  evlen  Length of received event.
+ *
+ * Returned Value:
+ *   If the API command ID matches APICMDID_ERRINFO,
+ *   EVTHDLRC_STARTHANDLE is returned.
+ *   Otherwise it returns EVTHDLRC_UNSUPPORTEDEVENT. If an internal error is
+ *   detected, EVTHDLRC_INTERNALERROR is returned.
+ *
+ ****************************************************************************/
+
+enum evthdlrc_e apicmdhdlr_errinfo(FAR uint8_t *evt, uint32_t evlen)
+{
+  if (apicmdgw_cmdid_compare(evt, APICMDID_ERRINFO))
+    {
+      errinfo_job(evt);
+      return EVTHDLRC_STARTHANDLE;
+    }
+
+  return EVTHDLRC_UNSUPPORTEDEVENT;
 }

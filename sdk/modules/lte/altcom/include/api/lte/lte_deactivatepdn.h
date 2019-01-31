@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/altcom/api/lte/lte_finalize.c
+ * modules/lte/altcom/include/api/lte/lte_deactivatepdn.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,72 +33,37 @@
  *
  ****************************************************************************/
 
+#ifndef __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_DEACTIVATEPDN_H
+#define __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_DEACTIVATEPDN_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdint.h>
-#include <errno.h>
-
-#include "lte/lte_api.h"
-#include "apiutil.h"
-#include "ltebuilder.h"
-#include "director.h"
-#include "dbg_if.h"
-#include "altcom_callbacks.h"
-#include "altcom_status.h"
+#include "evthdl_if.h"
 
 /****************************************************************************
- * Public Functions
+ * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
- * Name: lte_finalize
+ * Name: apicmdhdlr_deactivatepdn
  *
  * Description:
- *   Finalize the LTE library resouces.
+ *   This function is an API command handler for deactivate PDN result.
  *
  * Input Parameters:
- *   None
+ *  evt    Pointer to received event.
+ *  evlen  Length of received event.
  *
  * Returned Value:
- *   On success, 0 is returned.
- *   On failure, negative value is returned.
+ *   If the API command ID matches APICMDID_DEACTIVATEPDN_RES,
+ *   EVTHDLRC_STARTHANDLE is returned.
+ *   Otherwise it returns EVTHDLRC_UNSUPPORTEDEVENT. If an internal error is
+ *   detected, EVTHDLRC_INTERNALERROR is returned.
  *
  ****************************************************************************/
 
-int32_t lte_finalize(void)
-{
-  int32_t ret;
+enum evthdlrc_e apicmdhdlr_deactivatepdn(FAR uint8_t *evt, uint32_t evlen);
 
-  /* Set not initialized status */
-
-  ret = altcom_check_finalized_and_set();
-  if (ret < 0)
-    {
-      DBGIF_LOG_ERROR("Already finalized.\n");
-    }
-  else
-    {
-      ret = director_destruct(&g_ltebuilder);
-      if (ret < 0)
-        {
-          DBGIF_LOG1_ERROR("director_destruct() error. %d \n", ret);
-          altcom_set_initialized();
-        }
-      else
-        {
-          ret = altcomcallbacks_fin();
-          if (ret < 0)
-            {
-              DBGIF_LOG1_ERROR("callbacks_uninitialize() error. %d", ret);
-              return ret;
-            }
-
-          altcom_set_status(ALTCOM_STATUS_UNINITIALIZED);
-          ret = 0;
-        }
-    }
-
-  return ret;
-}
+#endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_ACTIVATEPDN_H */

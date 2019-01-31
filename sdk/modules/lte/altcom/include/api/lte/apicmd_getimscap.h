@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/lte/altcom/api/lte/lte_finalize.c
+ * modules/lte/altcom/include/api/lte/apicmd_getimscap.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,72 +33,38 @@
  *
  ****************************************************************************/
 
+#ifndef __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETIMSCAP_H
+#define __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETIMSCAP_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdint.h>
-#include <errno.h>
-
-#include "lte/lte_api.h"
-#include "apiutil.h"
-#include "ltebuilder.h"
-#include "director.h"
-#include "dbg_if.h"
-#include "altcom_callbacks.h"
-#include "altcom_status.h"
+#include "apicmd.h"
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
  ****************************************************************************/
+
+#define APICMD_GETIMSCAP_RES_OK      (0)
+#define APICMD_GETIMSCAP_RES_ERR     (1)
+#define APICMD_IMSCAP_ENABLE         (0)
+#define APICMD_IMSCAP_DISABLE        (1)
 
 /****************************************************************************
- * Name: lte_finalize
- *
- * Description:
- *   Finalize the LTE library resouces.
- *
- * Input Parameters:
- *   None
- *
- * Returned Value:
- *   On success, 0 is returned.
- *   On failure, negative value is returned.
- *
+ * Public Types
  ****************************************************************************/
 
-int32_t lte_finalize(void)
+/* This structure discribes the data structure of the API command */
+
+/* APICMDID_GET_IMS_CAP
+ * no data
+ */
+
+begin_packed_struct struct apicmd_cmddat_getimscapres_s
 {
-  int32_t ret;
+  uint8_t result;
+  uint8_t ims_cap;
+} end_packed_struct;
 
-  /* Set not initialized status */
-
-  ret = altcom_check_finalized_and_set();
-  if (ret < 0)
-    {
-      DBGIF_LOG_ERROR("Already finalized.\n");
-    }
-  else
-    {
-      ret = director_destruct(&g_ltebuilder);
-      if (ret < 0)
-        {
-          DBGIF_LOG1_ERROR("director_destruct() error. %d \n", ret);
-          altcom_set_initialized();
-        }
-      else
-        {
-          ret = altcomcallbacks_fin();
-          if (ret < 0)
-            {
-              DBGIF_LOG1_ERROR("callbacks_uninitialize() error. %d", ret);
-              return ret;
-            }
-
-          altcom_set_status(ALTCOM_STATUS_UNINITIALIZED);
-          ret = 0;
-        }
-    }
-
-  return ret;
-}
+#endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETIMSCAP_H */
