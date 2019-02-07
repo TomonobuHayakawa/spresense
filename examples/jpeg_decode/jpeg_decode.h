@@ -50,6 +50,9 @@
 #include <nuttx/nx/nx.h>
 #include <nuttx/nx/nxglib.h>
 
+#include <jpeglib.h>
+
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -93,6 +96,10 @@ extern const struct nx_callback_s g_jpeg_decode_nximagecb;
 
 /* Background window interfaces */
 
-void nximage_image(NXWINDOW hwnd, FAR const void *image);
+void nximage_image(NXWINDOW hwnd,
+                   FAR const JSAMPARRAY image,
+                   JDIMENSION position,
+                   JDIMENSION width,
+                   JDIMENSION height);
 
 #endif /* __EXAMPLES_JPEG_DECODE_H */

@@ -54,7 +54,7 @@
 #include <nuttx/nx/nxfonts.h>
 
 #include "jpeg_decode.h"
-
+#include <jpeglib.h>
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -215,39 +215,36 @@ static void nximage_kbdin(NXWINDOW hwnd, uint8_t nch, FAR const uint8_t *ch,
  *   Put the NuttX logo in the center of the display.
  *
  ****************************************************************************/
-
-void nximage_image(NXWINDOW hwnd, FAR const void *image)
+void nximage_image(NXWINDOW hwnd,
+                   FAR const JSAMPARRAY image,
+                   JDIMENSION position,
+                   JDIMENSION xsize,
+                   JDIMENSION ysize)
 {
-  FAR struct nxgl_point_s origin;
   FAR struct nxgl_rect_s dest;
   FAR const void *src[CONFIG_NX_NPLANES];
   int ret;
-  static int current_row = 0; 
-
-  origin.x = 0;
-  origin.y = current_row;
+  int cnt;
 
   /* Set up the destination to whole LCD screen */
 
-  dest.pt1.x = 0;
-  dest.pt1.y = current_row;
-  dest.pt2.x = g_jpeg_decode_nximage.xres - 1;
-  dest.pt2.y = current_row;
+  dest.pt1.x = (position % g_jpeg_decode_nximage.xres);
+  dest.pt1.y = (position / g_jpeg_decode_nximage.xres);;
+  dest.pt2.x = dest.pt1.x + xsize - 1;
+  dest.pt2.y = dest.pt1.y;
 
-  src[0] = image;
+  /* Write per one line */
 
-  ret = nx_bitmap((NXWINDOW)hwnd, &dest, src, &origin,
-                  g_jpeg_decode_nximage.xres * sizeof(nxgl_mxpixel_t));
-  if (ret < 0)
+  for (cnt=0;
+       cnt < ysize;
+       cnt++, dest.pt1.y++, dest.pt2.y++)
     {
-      printf("nximage_image: nx_bitmapwindow failed: %d\n", errno);
-    }
-
-  current_row++;
-  if (current_row > g_jpeg_decode_nximage.yres - 1)
-    {
-      /* If last line is written, return to top. */
-
-      current_row = 0;
+      src[0] = image[cnt];
+      ret = nx_bitmap((NXWINDOW)hwnd, &dest, src, &dest.pt1,
+                      xsize * sizeof(nxgl_mxpixel_t));
+      if (ret < 0)
+        {
+          printf("nximage_image: nx_bitmapwindow failed: %d\n", errno);
+        }
     }
 }

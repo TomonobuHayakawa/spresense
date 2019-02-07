@@ -97,7 +97,6 @@ sep_upsample (j_decompress_ptr cinfo,
   int ci;
   jpeg_component_info * compptr;
   JDIMENSION num_rows;
-
   /* Fill the conversion buffer, if it's empty */
   if (upsample->next_row_out >= cinfo->max_v_samp_factor) {
     for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
@@ -295,3 +294,15 @@ jinit_upsampler (j_decompress_ptr cinfo)
        (JDIMENSION) cinfo->max_v_samp_factor);
   }
 }
+
+/*
+ * MCU decode preparation routine for upsampling.
+ */
+
+GLOBAL(void)
+jmcu_upsampler (j_decompress_ptr cinfo)
+{
+  my_upsample_ptr upsample = (my_upsample_ptr) cinfo->upsample;
+  upsample->rows_to_go = cinfo->output_height * cinfo->MCUs_per_row;
+}
+
