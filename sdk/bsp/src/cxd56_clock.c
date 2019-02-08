@@ -1007,6 +1007,65 @@ void cxd56_spi_clock_gate_disable(int port)
 #endif
 }
 
+/****************************************************************************
+ * Name: cxd56_spi_clock_gear_adjust
+ *
+ * Description:
+ *
+ ****************************************************************************/
+
+void cxd56_spi_clock_gear_adjust(int port, uint32_t maxfreq)
+{
+  uint32_t baseclock;
+  uint32_t gear;
+  uint32_t divisor;
+  uint32_t maxdivisor;
+  uint32_t addr;
+
+  if (maxfreq == 0)
+    {
+      return;
+    }
+
+#if defined(CONFIG_CXD56_SPI4)
+  if (port == 4)
+    {
+      maxdivisor = 0x7f;
+      addr       = CXD56_CRG_GEAR_IMG_SPI;
+    }
+  else
+#endif
+#if defined(CONFIG_CXD56_SPI5)
+  if (port == 5)
+    {
+      maxdivisor = 0xf;
+      addr       = CXD56_CRG_GEAR_IMG_WSPI;
+    }
+  else
+#endif
+    {
+      return;
+    }
+
+  sem_wait(&g_clockexc);
+  baseclock = cxd56_get_appsmp_baseclock();
+  if (baseclock != 0)
+    {
+      divisor = baseclock / (maxfreq * 2);
+      if (baseclock % (maxfreq * 2))
+        {
+          divisor += 1;
+        }
+      if (divisor > maxdivisor)
+        {
+          divisor = maxdivisor;
+        }
+      gear = 0x00010000 | divisor;
+      putreg32(gear, addr);
+    }
+  sem_post(&g_clockexc);
+}
+
 #if defined(CONFIG_CXD56_I2C2)
 /****************************************************************************
  * Name: cxd56_i2cm_clock_enable
