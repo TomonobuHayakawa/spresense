@@ -223,6 +223,7 @@ typedef enum {
 	JCS_GRAYSCALE,		/* monochrome */
 	JCS_RGB,		/* red/green/blue, standard RGB (sRGB) */
 	JCS_YCbCr,		/* Y/Cb/Cr (also known as YUV), standard YCC */
+	JCS_CbYCrY,		/* Cb/Y/Cr/Y (also known as YUV4:2:2) */
 	JCS_CMYK,		/* C/M/Y/K */
 	JCS_YCCK,		/* Y/Cb/Cr/K */
 	JCS_BG_RGB,		/* big gamut red/green/blue, bg-sRGB */
@@ -975,7 +976,11 @@ EXTERN(void) jpeg_destroy_decompress JPP((j_decompress_ptr cinfo));
 /* Standard data source and destination managers: stdio streams. */
 /* Caller is responsible for opening the file before and closing after. */
 EXTERN(void) jpeg_stdio_dest JPP((j_compress_ptr cinfo, FILE * outfile));
-EXTERN(void) jpeg_stdio_src JPP((j_decompress_ptr cinfo, int fd));
+EXTERN(void) jpeg_stdio_src JPP((j_decompress_ptr cinfo, FILE * infile));
+
+/* Data source managers: file descriptor. */
+/* Caller is responsible for opening the file before and closing after. */
+EXTERN(void) jpeg_fd_src JPP((j_decompress_ptr cinfo, int infd));
 
 /* Data source and destination managers: memory buffers. */
 EXTERN(void) jpeg_mem_dest JPP((j_compress_ptr cinfo,
