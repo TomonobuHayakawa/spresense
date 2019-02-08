@@ -163,6 +163,8 @@ static bool encoder_done_callback(void* p_response)
 
   cmplt.event_type = static_cast<Wien2::Apu::ApuEventType>
     (packet->header.event_type);
+  cmplt.result = (Apu::ApuExecOK == packet->result.exec_result)
+    ? true : false;
 
   switch (packet->header.event_type)
     {
@@ -411,13 +413,13 @@ MediaRecorderObjectTask::MsgProc
 {
   /* Message Type: MSG_AUD_VRC_RST_CAPTURE. */
 
-  {                                                  /* Recorder status: */
-    &MediaRecorderObjectTask::illegalCaptureDone,    /*   Inactive.      */
-    &MediaRecorderObjectTask::illegalCaptureDone,    /*   Ready.         */
-    &MediaRecorderObjectTask::captureDoneOnRec,      /*   Play.          */
-    &MediaRecorderObjectTask::captureDoneOnStop,     /*   Stopping.      */
-    &MediaRecorderObjectTask::captureDoneOnStop,     /*   ErrorStopping. */
-    &MediaRecorderObjectTask::illegalCaptureDone     /*   WaitStop.      */
+  {                                                   /* Recorder status: */
+    &MediaRecorderObjectTask::illegalCaptureDone,     /*   Inactive.      */
+    &MediaRecorderObjectTask::illegalCaptureDone,     /*   Ready.         */
+    &MediaRecorderObjectTask::captureDoneOnRec,       /*   Play.          */
+    &MediaRecorderObjectTask::captureDoneOnStop,      /*   Stopping.      */
+    &MediaRecorderObjectTask::captureDoneOnErrorStop, /*   ErrorStopping. */
+    &MediaRecorderObjectTask::illegalCaptureDone      /*   WaitStop.      */
   },
 
   /* Message Type: MSG_AUD_VRC_RST_CAPTURE_ERR. */
@@ -827,7 +829,6 @@ void MediaRecorderObjectTask::startOnReady(MsgPacket *msg)
   if (startCapture())
     {
       m_state = RecorderStateRecording;
-      m_fifo_overflow = false;
       m_callback(AsRecorderEventStart, AS_ECODE_OK, 0);
       return;
     }
@@ -840,20 +841,19 @@ void MediaRecorderObjectTask::startOnReady(MsgPacket *msg)
 /*--------------------------------------------------------------------------*/
 void MediaRecorderObjectTask::stopOnRec(MsgPacket *msg)
 {
-  CaptureComponentParam cap_comp_param;
   msg->moveParam<RecorderCommand>();
 
   MEDIA_RECORDER_DBG("STOP:\n");
 
-  if (!m_external_cmd_que.push(AsRecorderEventStop))
+  if (!setExternalCmd(AsRecorderEventStop))
     {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
       m_callback(AsRecorderEventStop, AS_ECODE_QUEUE_OPERATION_ERROR, 0);
       return;
     }
 
   /* Stop DMA transfer. */
 
+  CaptureComponentParam cap_comp_param;
   cap_comp_param.handle          = m_capture_from_mic_hdlr;
   cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
 
@@ -869,13 +869,16 @@ void MediaRecorderObjectTask::stopOnErrorStop(MsgPacket *msg)
 
   MEDIA_RECORDER_DBG("STOP:\n");
 
-  if (!m_external_cmd_que.push(AsRecorderEventStop))
-    {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      m_callback(AsRecorderEventStop, AS_ECODE_QUEUE_OPERATION_ERROR, 0);
-    }
-
-  m_state = RecorderStateStopping;
+  /* If STOP command received during internal error stop sequence, enque command.
+   * It will be trriger of transition to Ready when all of filter/encode is done.
+   */
+   
+   if (!setExternalCmd(AsRecorderEventStop))
+     {
+       m_callback(AsRecorderEventStop, AS_ECODE_QUEUE_OPERATION_ERROR, 0);
+       return;
+     }
+   
 }
 
 /*--------------------------------------------------------------------------*/
@@ -944,8 +947,25 @@ void MediaRecorderObjectTask::filterDoneOnRec(MsgPacket *msg)
 
   freeCnvInBuf();
 
-  writeToDataSinker(m_output_buf_mh_que.top(),
-                    filter_result.out_buffer.size);
+  if (filter_result.result)
+    {
+      bool write_result = writeToDataSinker(m_output_buf_mh_que.top(),
+                                            filter_result.out_buffer.size);
+
+      /* If write error, stop capturing to stop recording */
+
+      if (!write_result)
+        {
+          CaptureComponentParam cap_comp_param;
+          cap_comp_param.handle          = m_capture_from_mic_hdlr;
+          cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
+
+          AS_stop_capture(&cap_comp_param);
+
+          m_state = RecorderStateErrorStopping;
+        }
+    }
+
   freeOutputBuf();
 }
 
@@ -962,36 +982,28 @@ void MediaRecorderObjectTask::filterDoneOnStop(MsgPacket *msg)
 
   if (filter_result.event_type == ExecEvent)
     {
-      if (m_codec_type == AudCodecLPCM)
-        {
-          freeCnvInBuf();
-
-          writeToDataSinker(m_output_buf_mh_que.top(),
-                           filter_result.out_buffer.size);
-          freeOutputBuf();
-        }
-    }
-  else if (filter_result.event_type == StopEvent)
-    {
-      if (filter_result.out_buffer.size > 0)
+      if (filter_result.result)
         {
           writeToDataSinker(m_output_buf_mh_que.top(),
                             filter_result.out_buffer.size);
         }
+
+      freeCnvInBuf();
+      freeOutputBuf();
+    }
+  else if (filter_result.event_type == StopEvent)
+    {
+      if (filter_result.result && (filter_result.out_buffer.size > 0))
+        {
+          writeToDataSinker(m_output_buf_mh_que.top(),
+                            filter_result.out_buffer.size);
+        }
+
       freeOutputBuf();
 
       m_rec_sink.finalize();
 
-      if (m_external_cmd_que.empty())
-        {
-          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
-          return;
-        }
-      AsRecorderEvent ext_cmd = m_external_cmd_que.top();
-      if (!m_external_cmd_que.pop())
-        {
-          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-        }
+      AsRecorderEvent ext_cmd = getExternalCmd();
 
       m_callback(ext_cmd, AS_ECODE_OK, 0);
       m_state = RecorderStateReady;
@@ -1016,29 +1028,56 @@ void MediaRecorderObjectTask::filterDoneOnErrorStop(MsgPacket *msg)
 
   if (filter_result.event_type == ExecEvent)
     {
-      if (m_codec_type == AudCodecLPCM)
+      if (filter_result.result && (filter_result.out_buffer.size > 0))
         {
-          freeCnvInBuf();
-
           writeToDataSinker(m_output_buf_mh_que.top(),
-                           filter_result.out_buffer.size);
-
-          freeOutputBuf();
+                            filter_result.out_buffer.size);
         }
+
+      freeOutputBuf();
+
+      /* On error stopping, there is a case that flush request is not issued.
+       * In the case, wait end of the frames instead of flush request reply,
+       * and will transit to Ready state.
+       */
+
+      if (m_cnv_in_buf_mh_que.top().is_end && m_output_buf_mh_que.empty())
+        {
+          AsRecorderEvent ext_cmd = getExternalCmd();
+
+          m_callback(ext_cmd, AS_ECODE_OK, 0);
+          m_state = RecorderStateReady;
+        }
+
+      freeCnvInBuf();
     }
   else if (filter_result.event_type == StopEvent)
     {
-      if (filter_result.out_buffer.size > 0)
+      if (filter_result.result && (filter_result.out_buffer.size > 0))
         {
           writeToDataSinker(m_output_buf_mh_que.top(),
-                           filter_result.out_buffer.size);
+                            filter_result.out_buffer.size);
         }
 
       freeOutputBuf();
 
       m_rec_sink.finalize();
 
-      m_state = RecorderStateWaitStop;
+      /* Even if on error stopping, check exeternal command que and reply if
+       * request is there. This suppose follow cases, Error on stopping and
+       * stop request on error stopping. Other case will be transit to WaitStop,
+       */
+
+      if (checkExternalCmd())
+        {
+          AsRecorderEvent ext_cmd = getExternalCmd();
+          m_callback(ext_cmd, AS_ECODE_OK, 0);
+          m_state = RecorderStateReady;
+        }
+      else 
+        {
+          m_state = RecorderStateWaitStop;
+        }
     }
   else
     {
@@ -1062,8 +1101,26 @@ void MediaRecorderObjectTask::encDoneOnRec(MsgPacket *msg)
 
   freeCnvInBuf();
 
-  writeToDataSinker(m_output_buf_mh_que.top(),
-                   enc_result.exec_enc_cmplt.output_buffer.size);
+  if (enc_result.result)
+    {
+      bool write_result = writeToDataSinker(
+                            m_output_buf_mh_que.top(),
+                            enc_result.exec_enc_cmplt.output_buffer.size);
+
+      /* If write error, stop capturing to stop recording */
+
+      if (!write_result)
+        {
+          CaptureComponentParam cap_comp_param;
+          cap_comp_param.handle          = m_capture_from_mic_hdlr;
+          cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
+
+          AS_stop_capture(&cap_comp_param);
+
+          m_state = RecorderStateErrorStopping;
+        }
+    }
+
   freeOutputBuf();
 }
 
@@ -1075,33 +1132,28 @@ void MediaRecorderObjectTask::encDoneOnStop(MsgPacket *msg)
 
   if (enc_result.event_type == Apu::ExecEvent)
     {
-      freeCnvInBuf();
+      if (enc_result.result)
+        {
+          writeToDataSinker(m_output_buf_mh_que.top(),
+                            enc_result.exec_enc_cmplt.output_buffer.size);
+        }
 
-      writeToDataSinker(m_output_buf_mh_que.top(),
-                       enc_result.exec_enc_cmplt.output_buffer.size);
+      freeCnvInBuf();
       freeOutputBuf();
     }
   else if (enc_result.event_type == Apu::FlushEvent)
     {
-      if (enc_result.stop_enc_cmplt.output_buffer.size > 0)
+      if (enc_result.result && (enc_result.stop_enc_cmplt.output_buffer.size > 0))
         {
           writeToDataSinker(m_output_buf_mh_que.top(),
-                           enc_result.stop_enc_cmplt.output_buffer.size);
+                            enc_result.stop_enc_cmplt.output_buffer.size);
         }
+
       freeOutputBuf();
 
       m_rec_sink.finalize();
 
-      if (m_external_cmd_que.empty())
-        {
-          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
-          return;
-        }
-      AsRecorderEvent ext_cmd = m_external_cmd_que.top();
-      if (!m_external_cmd_que.pop())
-        {
-          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
-        }
+      AsRecorderEvent ext_cmd = getExternalCmd();
 
       m_callback(ext_cmd, AS_ECODE_OK, 0);
       m_state = RecorderStateReady;
@@ -1121,16 +1173,32 @@ void MediaRecorderObjectTask::encDoneOnErrorStop(MsgPacket *msg)
 
   if (enc_result.event_type == Apu::ExecEvent)
     {
-      freeCnvInBuf();
-
-      writeToDataSinker(m_output_buf_mh_que.top(),
-                       enc_result.exec_enc_cmplt.output_buffer.size);
+      if (enc_result.result)
+        {
+          writeToDataSinker(m_output_buf_mh_que.top(),
+                            enc_result.exec_enc_cmplt.output_buffer.size);
+        }
 
       freeOutputBuf();
+
+      /* On error stopping, there is a case that flush request is not issued.
+       * In the case, wait end of the frames instead of flush request reply,
+       * and will transit to Ready state.
+       */
+
+      if (m_cnv_in_buf_mh_que.top().is_end && m_output_buf_mh_que.empty())
+        {
+          AsRecorderEvent ext_cmd = getExternalCmd();
+
+          m_callback(ext_cmd, AS_ECODE_OK, 0);
+          m_state = RecorderStateReady;
+        }
+
+      freeCnvInBuf();
     }
   else if (enc_result.event_type == Apu::FlushEvent)
     {
-      if (enc_result.stop_enc_cmplt.output_buffer.size > 0)
+      if (enc_result.result && (enc_result.stop_enc_cmplt.output_buffer.size > 0))
         {
           writeToDataSinker(m_output_buf_mh_que.top(),
                            enc_result.stop_enc_cmplt.output_buffer.size);
@@ -1140,7 +1208,21 @@ void MediaRecorderObjectTask::encDoneOnErrorStop(MsgPacket *msg)
 
       m_rec_sink.finalize();
 
-      m_state = RecorderStateWaitStop;
+      /* Even if on error stopping, check exeternal command que and reply if
+       * request is there. This suppose follow cases, Error on stopping and
+       * stop request on error stopping. Other case will be transit to WaitStop,
+       */
+
+      if (checkExternalCmd())
+        {
+          AsRecorderEvent ext_cmd = getExternalCmd();
+          m_callback(ext_cmd, AS_ECODE_OK, 0);
+          m_state = RecorderStateReady;
+        }
+      else
+        {
+          m_state = RecorderStateWaitStop;
+        }
     }
   else
     {
@@ -1170,9 +1252,21 @@ void MediaRecorderObjectTask::captureDoneOnRec(MsgPacket *msg)
 
   /* Transfer Mic-in pcm data. */
 
-  execEnc(capture_result.buf.cap_mh,
-          capture_result.buf.sample *
-          m_cap_byte_len * m_channel_num);
+  bool exec_result = execEnc(capture_result.buf.cap_mh,
+                             capture_result.buf.sample *
+                             m_cap_byte_len * m_channel_num,
+                             capture_result.end_flag);
+
+  /* If exec failed, stop capturing */
+
+  if (!exec_result)
+    {
+      cap_comp_param.handle          = m_capture_from_mic_hdlr;
+      cap_comp_param.stop_param.mode = AS_DMASTOPMODE_IMMEDIATE;
+      AS_stop_capture(&cap_comp_param);
+
+      m_state = RecorderStateErrorStopping;
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1182,15 +1276,66 @@ void MediaRecorderObjectTask::captureDoneOnStop(MsgPacket *msg)
 
   /* Transfer Mic-in pcm data. */
 
-  execEnc(capture_result.buf.cap_mh,
-          capture_result.buf.sample *
-          m_cap_byte_len * m_channel_num);
+  bool exec_result = execEnc(capture_result.buf.cap_mh,
+                             capture_result.buf.sample *
+                             m_cap_byte_len * m_channel_num,
+                             capture_result.end_flag);
+
+  if (!exec_result)
+    {
+      m_state = RecorderStateErrorStopping;
+    }
+
+  /* Check endframe of capture */
+
+  if (capture_result.end_flag)
+    {
+      bool stop_result = stopEnc();
+
+      /* If stop failed, reply of flush request will not be notified. */
+
+      if (!stop_result)
+        {
+          if (m_cnv_in_buf_mh_que.empty())
+            {
+              m_state = RecorderStateWaitStop;
+            }
+          else
+            {
+              m_state = RecorderStateErrorStopping;
+            }
+        }
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+void MediaRecorderObjectTask::captureDoneOnErrorStop(MsgPacket *msg)
+{
+  CaptureDataParam capture_result = msg->moveParam<CaptureDataParam>();
+
+  /* In error stopping sequence, do not encode or filter because
+   * it won't be sequencial data and cause noise at end of data.
+   */
 
   /* Check end of capture */
 
   if (capture_result.end_flag)
     {
-      stopEnc();
+      bool stop_result = stopEnc();
+
+      /* If stop failed, reply of flush request will not be notified. */
+
+      if (!stop_result)
+        {
+          if (m_cnv_in_buf_mh_que.empty())
+            {
+              m_state = RecorderStateWaitStop;
+            }
+          else
+            {
+              m_state = RecorderStateErrorStopping;
+            }
+        }
     }
 }
 
@@ -1263,84 +1408,182 @@ bool MediaRecorderObjectTask::startCapture()
 }
 
 /*--------------------------------------------------------------------------*/
-void MediaRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_size)
+bool MediaRecorderObjectTask::execEnc(MemMgrLite::MemHandle mh,
+                                      uint32_t pcm_size,
+                                      bool is_end)
 {
+  MemMgrLite::MemHandle outmh = getOutputBufAddr();
+
   if (m_codec_type == AudCodecLPCM)
     {
       ExecFilterParam param;
 
       param.in_buffer.p_buffer  =
-        reinterpret_cast<unsigned long *>(mh.getPa());
+        static_cast<unsigned long *>(mh.getPa());
       param.in_buffer.size      = pcm_size;
       param.out_buffer.p_buffer =
-        reinterpret_cast<unsigned long *>(getOutputBufAddr());
-      param.out_buffer.size     =
-        m_max_output_pcm_size;
+        static_cast<unsigned long *>((outmh.isNull()) ? NULL : outmh.getPa());
+      param.out_buffer.size     = m_max_output_pcm_size;
 
-      if (m_filter_instance)
+      if ((m_filter_instance)
+       && (param.in_buffer.p_buffer)
+       && (param.out_buffer.p_buffer))
         {
-          AS_filter_exec(&param, m_filter_instance);
-
-          m_cnv_in_buf_mh_que.push(mh);
+          if (AS_filter_exec(&param, m_filter_instance))
+            {
+              ConvIn cnvin = { mh, is_end };
+              holdCnvInBuf(cnvin);
+              holdOutputBuf(outmh);
+            }
+          else
+            {
+              return false;
+            }
+        }
+      else
+        {
+          return false;
         }
     }
   else if ((m_codec_type == AudCodecMP3) || (m_codec_type == AudCodecOPUS))
     {
       ExecEncParam param;
+
       param.input_buffer.p_buffer  =
-        reinterpret_cast<unsigned long *>(mh.getPa());
+        static_cast<unsigned long *>(mh.getPa());
       param.input_buffer.size      = pcm_size;
       param.output_buffer.p_buffer =
-        reinterpret_cast<unsigned long *>(getOutputBufAddr());
+        static_cast<unsigned long *>((outmh.isNull()) ? NULL : outmh.getPa());
       param.output_buffer.size     = m_max_output_pcm_size;
-      AS_encode_exec(&param);
 
-      m_cnv_in_buf_mh_que.push(mh);
+      if ((param.input_buffer.p_buffer)
+       && (param.output_buffer.p_buffer))
+        {
+          if (AS_encode_exec(&param))
+            {
+              ConvIn cnvin = { mh, is_end };
+              holdCnvInBuf(cnvin);
+              holdOutputBuf(outmh);
+            }
+          else
+            {
+              return false;
+            }
+        }
+      else
+        {
+          return false;
+        }
     }
+
+  return true;
 }
 
 /*--------------------------------------------------------------------------*/
-void MediaRecorderObjectTask::stopEnc(void)
+bool MediaRecorderObjectTask::stopEnc(void)
 {
+  MemMgrLite::MemHandle outmh = getOutputBufAddr();
+
   if (m_codec_type == AudCodecLPCM)
     {
       StopFilterParam param;
 
       param.out_buffer.p_buffer =
-        reinterpret_cast<unsigned long *>(getOutputBufAddr());
-      param.out_buffer.size = m_max_output_pcm_size;
+        static_cast<unsigned long *>((outmh.isNull()) ? NULL : outmh.getPa());
+      param.out_buffer.size     = m_max_output_pcm_size;
 
       if (m_filter_instance)
         {
-          AS_filter_stop(&param, m_filter_instance);
+          /* Request flush even if it is not memory allocated.
+           * At Flush request, Spcifing NULL addrrdd is allowed
+           * and will be replyed with "ERROR".
+           */
+
+          if (AS_filter_stop(&param, m_filter_instance))
+            {
+              holdOutputBuf(outmh);
+            }
+          else
+            {
+              return false;
+            }
         }
     }
   else if ((m_codec_type == AudCodecMP3) || (m_codec_type == AudCodecOPUS))
     {
       StopEncParam param;
+
       param.output_buffer.p_buffer =
-        reinterpret_cast<unsigned long *>(getOutputBufAddr());
-      param.output_buffer.size = m_max_output_pcm_size;
-      AS_encode_stop(&param);
+        static_cast<unsigned long *>((outmh.isNull()) ? NULL : outmh.getPa());
+      param.output_buffer.size     = m_max_output_pcm_size;
+
+      /* Request flush even if it is not memory allocated.
+       * Spcifing NULL addr is allowed and will be replyed with "ERROR".
+       */
+
+      if (AS_encode_stop(&param))
+        {
+          holdOutputBuf(outmh);
+        }
+      else
+        {
+          return false;
+        }
     }
+
+  return true;
 }
 
 /*--------------------------------------------------------------------------*/
-void* MediaRecorderObjectTask::getOutputBufAddr()
+bool MediaRecorderObjectTask::setExternalCmd(AsRecorderEvent ext_event)
+{
+  if (!m_external_cmd_que.push(ext_event))
+    {
+      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+      return false;
+    }
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+AsRecorderEvent MediaRecorderObjectTask::getExternalCmd(void)
+{
+  AsRecorderEvent ext_cmd = AsRecorderEventAct;
+
+  if (m_external_cmd_que.empty())
+    {
+      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_MISSING_ERROR);
+    }
+  else
+    {
+      ext_cmd = m_external_cmd_que.top();
+
+      if (!m_external_cmd_que.pop())
+        {
+          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_POP_ERROR);
+        }
+    }
+
+  return ext_cmd;
+}
+
+/*--------------------------------------------------------------------------*/
+uint32_t MediaRecorderObjectTask::checkExternalCmd(void)
+{
+  return m_external_cmd_que.size();
+}
+
+/*--------------------------------------------------------------------------*/
+MemMgrLite::MemHandle MediaRecorderObjectTask::getOutputBufAddr()
 {
   MemMgrLite::MemHandle mh;
   if (mh.allocSeg(m_pool_id.output, m_max_output_pcm_size) != ERR_OK)
     {
       MEDIA_RECORDER_WARN(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
-      return NULL;
     }
 
-  if (!m_output_buf_mh_que.push(mh))
-    {
-      MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-      return NULL;
-    }
-  return mh.getPa();
+  return mh;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1654,30 +1897,15 @@ uint32_t MediaRecorderObjectTask::isValidInitParamOPUS(
 }
 
 /*--------------------------------------------------------------------------*/
-void MediaRecorderObjectTask::writeToDataSinker(
+bool MediaRecorderObjectTask::writeToDataSinker(
   const MemMgrLite::MemHandle& mh,
   uint32_t byte_size)
 {
-  if (!m_fifo_overflow)
-    {
-      bool rst = false;
-      AudioRecSinkData_s sink_data;
-      sink_data.mh = mh;
-      sink_data.byte_size = byte_size;
+  AudioRecSinkData_s sink_data;
+  sink_data.mh        = mh;
+  sink_data.byte_size = byte_size;
 
-      rst = m_rec_sink.write(sink_data);
-      if (!rst)
-        {
-          CaptureComponentParam cap_comp_param;
-          cap_comp_param.handle          = m_capture_from_mic_hdlr;
-          cap_comp_param.stop_param.mode = AS_DMASTOPMODE_NORMAL;
-
-          AS_stop_capture(&cap_comp_param);
-
-          m_state = RecorderStateErrorStopping;
-          m_fifo_overflow = true;
-        }
-    }
+  return m_rec_sink.write(sink_data);
 }
 
 /*--------------------------------------------------------------------------*/

@@ -121,7 +121,6 @@ private:
   int8_t  m_complexity;
   int32_t m_bit_rate;
   AudioRecorderSink m_rec_sink;
-  bool m_fifo_overflow;
 
   CaptureComponentHandler m_capture_from_mic_hdlr;
 
@@ -139,7 +138,13 @@ private:
 
   MediaRecorderCallback m_callback;
 
-  typedef s_std::Queue<MemMgrLite::MemHandle, CAPTURE_PCM_BUF_QUE_SIZE> CnvInMhQueue;
+  typedef struct
+  {
+    MemMgrLite::MemHandle mh;
+    bool                  is_end;
+  } ConvIn;
+
+  typedef s_std::Queue<ConvIn, CAPTURE_PCM_BUF_QUE_SIZE> CnvInMhQueue;
   CnvInMhQueue m_cnv_in_buf_mh_que;
 
   void run();
@@ -173,6 +178,7 @@ private:
   void illegalCaptureDone(MsgPacket *);
   void captureDoneOnRec(MsgPacket *);
   void captureDoneOnStop(MsgPacket *);
+  void captureDoneOnErrorStop(MsgPacket *);
 
   void captureErrorOnRec(MsgPacket *);
   void captureErrorOnStop(MsgPacket *);
@@ -180,20 +186,43 @@ private:
   void captureErrorOnWaitStop(MsgPacket *);
 
   bool startCapture();
-  void execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_size);
-  void stopEnc(void);
+  bool execEnc(MemMgrLite::MemHandle mh, uint32_t pcm_size, bool is_end);
+  bool stopEnc(void);
 
-  void* getMicInBufAddr();
-  void* getOutputBufAddr();
+  bool setExternalCmd(AsRecorderEvent ext_event);
+  AsRecorderEvent getExternalCmd(void);
+  uint32_t checkExternalCmd(void);
+
+  MemMgrLite::MemHandle getOutputBufAddr();
 
   uint32_t loadCodec(AudioCodec, char *, int32_t, int32_t, uint32_t *);
   bool unloadCodec(void);
 
+  bool holdCnvInBuf(ConvIn in)
+    {
+      if (!m_cnv_in_buf_mh_que.push(in))
+        {
+          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
+          return false;
+        }
+
+      return true;
+    }
   bool freeCnvInBuf()
     {
       if (!m_cnv_in_buf_mh_que.pop())
         {
           MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
+          return false;
+        }
+
+      return true;
+    }
+  bool holdOutputBuf(MemMgrLite::MemHandle mh)
+    {
+      if (!m_output_buf_mh_que.push(mh))
+        {
+          MEDIA_RECORDER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
           return false;
         }
 
@@ -241,7 +270,7 @@ private:
   uint32_t isValidInitParamMP3(const RecorderCommand& cmd);
   uint32_t isValidInitParamLPCM(const RecorderCommand& cmd);
   uint32_t isValidInitParamOPUS(const RecorderCommand& cmd);
-  void writeToDataSinker(const MemMgrLite::MemHandle& mh, uint32_t byte_size);
+  bool writeToDataSinker(const MemMgrLite::MemHandle& mh, uint32_t byte_size);
 
   bool getInputDeviceHdlr(void);
   bool delInputDeviceHdlr(void);
