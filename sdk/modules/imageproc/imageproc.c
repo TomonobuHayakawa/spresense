@@ -87,6 +87,17 @@
 
 #define MSEL     1
 
+/* limit size */
+#define HSIZE_MIN           (12)
+#define VSIZE_MIN           (12)
+#define HSIZE_MAX           (4096)  /* Not used scaler(ISE) */
+#define VSIZE_MAX           (4096)  /* Not used scaler(ISE) */
+#define ISE_SRC_HSIZE_MAX   (2880)
+#define ISE_SRC_VSIZE_MAX   (2160)
+#define ISE_DST_HSIZE_MAX   (768)
+#define ISE_DST_VSIZE_MAX   (1024)
+#define MAX_RATIO           (64)
+
 /* Command code */
 
 #define COPYCMD  0x4
@@ -239,6 +250,27 @@ static int intr_handler_ROT(int irq, FAR void *context, FAR void *arg)
   putreg32(1, ROT_INTR_DISABLE);
 
   ip_semgive(&g_rotwait);
+
+  return 0;
+}
+
+static int ratio_check(uint16_t src, uint16_t dest)
+{
+  uint16_t ratio = 1;
+
+  if (src > dest)
+    {
+      ratio = src / dest;
+    }
+  else if (src < dest)
+    {
+      ratio = dest / src;
+    }
+
+  if (ratio > MAX_RATIO)
+    {
+      return -1;
+    }
 
   return 0;
 }
@@ -411,6 +443,12 @@ void imageproc_convert_yuv2rgb(uint8_t * ibuf, uint32_t hsize, uint32_t vsize)
 {
   int ret;
 
+  if ((hsize & 1) || (vsize & 1))
+    {
+      return;
+    }
+
+
   ret = ip_semtake(&g_rotexc);
   if (ret)
     {
@@ -479,6 +517,20 @@ int imageproc_resize(uint8_t *ibuf, uint16_t ihsize, uint16_t ivsize,
       return -EINVAL;
     }
 
+  if ((ihsize > ISE_SRC_HSIZE_MAX || ihsize < HSIZE_MIN) ||
+      (ivsize > ISE_SRC_VSIZE_MAX || ihsize < VSIZE_MIN) ||
+      (ohsize > ISE_DST_HSIZE_MAX || ohsize < HSIZE_MIN) ||
+      (ovsize > ISE_DST_VSIZE_MAX || ovsize < VSIZE_MIN))
+    {
+      return -EINVAL;
+    }
+
+  if ((ratio_check(ihsize, ohsize) != 0) ||
+      (ratio_check(ivsize, ovsize) != 0))
+    {
+      return -EINVAL;
+    }
+
   ret = ip_semtake(&g_geexc);
   if (ret)
     {
@@ -514,3 +566,110 @@ int imageproc_resize(uint8_t *ibuf, uint16_t ihsize, uint16_t ivsize,
 
   return 0;
 }
+
+int imageproc_clip_and_resize(
+  uint8_t *ibuf, uint16_t ihsize, uint16_t ivsize,
+  uint8_t *obuf, uint16_t ohsize, uint16_t ovsize,
+  int bpp, imageproc_rect_t *clip_rect)
+{
+  void *cmd = g_gcmdbuf;
+  size_t len;
+  int ret;
+  uint8_t pix_bytes;
+  uint16_t clip_width = 0, clip_height = 0;
+
+  if (g_gfd <= 0)
+    {
+      return -ENODEV;
+    }
+
+  if (bpp != 8 && bpp != 16)
+    {
+      return -EINVAL;
+    }
+
+  if ((ihsize > ISE_SRC_HSIZE_MAX || ihsize < HSIZE_MIN) ||
+      (ivsize > ISE_SRC_VSIZE_MAX || ihsize < VSIZE_MIN) ||
+      (ohsize > ISE_DST_HSIZE_MAX || ohsize < HSIZE_MIN) ||
+      (ovsize > ISE_DST_VSIZE_MAX || ovsize < VSIZE_MIN))
+    {
+      return -EINVAL;
+    }
+
+  if (clip_rect != NULL)
+    {
+      if ( (clip_rect->x2 < clip_rect->x1) || 
+           (clip_rect->y2 < clip_rect->y1) )
+        {
+          return -EINVAL;
+        }
+
+      if ((clip_rect->x2 > ihsize) ||
+          (clip_rect->y2 > ivsize) )
+        {
+          return -EINVAL;
+        }
+
+      clip_width  = clip_rect->x2 - clip_rect->x1 + 1;
+      clip_height = clip_rect->y2 - clip_rect->y1 + 1;
+
+      if ((ratio_check(clip_width,  ohsize) != 0) ||
+          (ratio_check(clip_height, ovsize) != 0))
+        {
+          return -EINVAL;
+        }
+
+      pix_bytes = bpp >> 3;
+      ibuf = ibuf + (clip_rect->x1 * pix_bytes + clip_rect->y1 * ihsize * pix_bytes);
+
+    }
+  else
+    {
+      if ((ratio_check(ihsize, ohsize) != 0) ||
+          (ratio_check(ivsize, ovsize) != 0))
+        {
+          return -EINVAL;
+        }
+      clip_width  = ihsize;
+      clip_height = ivsize;
+    }
+
+  ret = ip_semtake(&g_geexc);
+  if (ret)
+    {
+      return ret; /* -EINTR */
+    }
+
+  /* Create descriptor to graphics engine */
+
+  cmd = set_rop_cmd(cmd, ibuf, obuf,
+                    clip_width, clip_height, ihsize,
+                    ohsize, ovsize, ohsize,
+                    bpp, SRCCOPY, FIXEDCOLOR, 0x0080);
+
+  if (cmd == NULL)
+    {
+      ip_semgive(&g_geexc);
+      return -EINVAL;
+    }
+
+  /* Terminate command */
+
+  cmd = set_halt_cmd(cmd);
+
+  /* Process resize */
+
+  len = (uintptr_t)cmd - (uintptr_t)g_gcmdbuf;
+  ret = write(g_gfd, g_gcmdbuf, len);
+  if (ret < 0)
+    {
+      ip_semgive(&g_geexc);
+      return -EFAULT;
+    }
+
+  ip_semgive(&g_geexc);
+
+  return 0;
+}
+
+
