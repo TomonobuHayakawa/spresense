@@ -68,7 +68,10 @@ bool Playlist::init(const char *playlist_path)
 
   /* Load alias list. */
 
-  this->loadAliasList();
+  if (!this->loadAliasList())
+    {
+      return false;
+    }
 
   return true;
 }
@@ -129,7 +132,10 @@ bool Playlist::setPlayMode(PlayMode play_mode)
     }
   else
     {
-      this->loadAliasList();
+      if (!this->loadAliasList())
+        {
+          return false;
+        }
     }
 
   return true;
@@ -159,7 +165,10 @@ bool Playlist::select(ListType type, FAR const char *key_str)
 
   /* Load alist list from file. */
 
-  this->loadAliasList();
+  if (!this->loadAliasList())
+    {
+      return false;
+    }
 
   /* If shuffle mode, shuffle a list. */
 
@@ -772,11 +781,15 @@ bool Playlist::loadAliasList(void)
 {
   /* Open AliasList. */
 
-  char file_name[FileNameMaxLength];
-  this->getFileName(this->m_list_type,
-                    this->m_list_key,
-                    file_name,
-                    sizeof(file_name));
+  char file_name[FileNameMaxLength + 1];
+  if (!this->getFileName(this->m_list_type,
+                         this->m_list_key,
+                         file_name,
+                         sizeof(file_name)))
+    {
+      return false;
+    }
+
   FAR FILE* list_fp = fopen(static_cast<const char*>(file_name), "r");
   if (list_fp == NULL)
     {
@@ -1093,7 +1106,7 @@ bool Playlist::getFileName(ListType       type,
 
   /* Check arguments */
 
-  if (key_str == NULL || file_name == NULL)
+  if (key_str == NULL || file_name == NULL || max_length < 1)
     {
       return false;
     }
@@ -1102,7 +1115,7 @@ bool Playlist::getFileName(ListType       type,
     {
       case ListTypeAllTrack:
           snprintf(file_name,
-                   max_length,
+                   max_length - 1,
                    "%s/%s%s.bin",
                    m_playlist_path,
                    prefix,
@@ -1111,7 +1124,7 @@ bool Playlist::getFileName(ListType       type,
 
       case ListTypeArtist:
           snprintf(file_name,
-                   max_length,
+                   max_length - 1,
                    "%s/%s%s%s.bin",
                    m_playlist_path,
                    prefix,
@@ -1121,7 +1134,7 @@ bool Playlist::getFileName(ListType       type,
 
       case ListTypeAlbum:
           snprintf(file_name,
-                   max_length,
+                   max_length - 1,
                    "%s/%s%s%s.bin",
                    m_playlist_path,
                    prefix,
@@ -1131,7 +1144,7 @@ bool Playlist::getFileName(ListType       type,
 
       case ListTypeUser:
           snprintf(file_name,
-                   max_length,
+                   max_length - 1,
                    "%s/%s%s%s.bin",
                    m_playlist_path,
                    prefix,
@@ -1141,13 +1154,17 @@ bool Playlist::getFileName(ListType       type,
 
       default:
           snprintf(file_name,
-                   max_length,
+                   max_length - 1,
                    "%s/%s%s.bin",
                    m_playlist_path,
                    prefix,
                    "alltrack");
           break;
     }
+
+  /* Add termination code */
+
+  file_name[max_length - 1] = '\0';
 
   return true;
 }
