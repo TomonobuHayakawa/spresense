@@ -47,17 +47,15 @@
 
 #include "accel_sensor.h"
 #include "sensing/logical_sensor/transport_mode.h"
-#include "include/mem_layout.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
+/* For physical sensor. */
+
 #define TRAM_ACCEL_DEVNAME "/dev/accel0"
 
-#ifndef CONFIG_EXAMPLES_SENSOR_TRAM_CHANGE_SCU_SIGNO
-#  define CONFIG_EXAMPLES_SENSOR_TRAM_CHANGE_SCU_SIGNO 16
-#endif
 #ifndef CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO
 #  define CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO 15
 #endif
@@ -68,84 +66,148 @@
 #  define CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO 13
 #endif
 
-#define err(format, ...)        fprintf(stderr, format, ##__VA_ARGS__)
+/* For error */
 
-/* task priority */
-
-#define SENSING_TASK_PRIORITY  150
-
-/* value check macros */
-
-#define CHECK_FUNC_RET(func)                                            \
-  do {                                                                  \
-    if ((func) < 0) {                                                   \
-      err("return error, %s, %d\n", __FUNCTION__, __LINE__);            \
-      return -1;                                                        \
-    }                                                                   \
-  } while(0)
-
-#define CHECK_NULL_RET(expr)                                            \
-  do {                                                                  \
-    if (expr == NULL) {                                                 \
-      err("check failed. %s, %d\n", __FUNCTION__, __LINE__);            \
-      return -1;                                                        \
-    }                                                                   \
-  } while(0)
+#define err(format, ...)    fprintf(stderr, format, ##__VA_ARGS__)
 
 /****************************************************************************
  * Private Types
  ****************************************************************************/
 
-typedef struct accel_t three_axis_s;
-
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-
-static FAR struct ScuSettings* s_scu_settings;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-static int createOneshotTimer(FAR timer_t *timerid)
+static FAR void *accel_sensor_entry(pthread_addr_t arg)
 {
-  struct sigevent notify;
+  static int s_entory_function_result = PHYSICAL_SENSOR_ERR_CODE_OK;
+  FAR physical_sensor_t *sensor =
+    reinterpret_cast<FAR physical_sensor_t *>(arg);
 
-  notify.sigev_notify            = SIGEV_SIGNAL;
-  notify.sigev_signo             = CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO;
-  notify.sigev_value.sival_int   = 0;
+  /* Create instanse of AccelSensorClass. */
 
-  return timer_create(CLOCK_REALTIME, &notify, timerid);
+  AccelSensorClass *instance = new AccelSensorClass(sensor);
+
+  /* Set sensor signal number. */
+
+  instance->add_signal(CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_WM_SIGNO);
+  instance->add_signal(CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO);
+  instance->add_signal(CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO);
+
+  /* Start accel sensor process. */
+
+  instance->run();
+
+  /* Delete sensor signal number. */
+
+  instance->delete_signal(CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_WM_SIGNO);
+  instance->delete_signal(CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO);
+  instance->delete_signal(CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO);
+
+  /* Free instance of AccelSensorClass. */
+
+  free(instance);
+
+  return (void *)&s_entory_function_result;
+}
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+FAR physical_sensor_t *AccelSensorCreate(pysical_event_handler_t handler)
+{
+  return PhysicalSensorCreate(handler,
+                              (void *)accel_sensor_entry,
+                              "accel_sensor");
 }
 
 /*--------------------------------------------------------------------------*/
-static int startOneshotTimer(timer_t timerid, uint32_t milliseconds)
+int AccelSensorOpen(FAR physical_sensor_t *sensor,
+                    FAR struct ScuSettings *settings)
 {
-  struct itimerspec timer;
-
-  timer.it_value.tv_sec     = milliseconds / 1000;
-  timer.it_value.tv_nsec    = milliseconds % 1000 * 1000 * 1000;
-  timer.it_interval.tv_sec  = 0;
-  timer.it_interval.tv_nsec = 0;
-
-  return timer_settime(timerid, 0, &timer, NULL);
+  return PhysicalSensorOpen(sensor, reinterpret_cast<void *>(settings));
 }
 
 /*--------------------------------------------------------------------------*/
-static int deleteOneshotTimer(timer_t timerid)
+int AccelSensorStart(FAR physical_sensor_t *sensor)
 {
-  return timer_delete(timerid);
+  return PhysicalSensorStart(sensor);
 }
 
 /*--------------------------------------------------------------------------*/
-static int setupAccel(FAR AccelSensor *sensor,
-                      FAR struct ScuSettings *settings)
+int AccelSensorStop(FAR physical_sensor_t *sensor)
+{
+  return PhysicalSensorStop(sensor);
+}
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorClose(FAR physical_sensor_t *sensor)
+{
+  return PhysicalSensorClose(sensor);
+}
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorDestroy(FAR physical_sensor_t *sensor)
+{
+  return PhysicalSensorDestroy(sensor);
+}
+
+/****************************************************************************
+ * AccelSensorClass
+ ****************************************************************************/
+
+int AccelSensorClass::open_sensor()
+{
+  /* Create oneshot timer */
+
+  int ret = create_timer(&m_timer_id);
+  if (ret != 0)
+    {
+      err("Create timer failed. error = %d\n", ret);
+      ASSERT(0);
+    }
+
+  m_fd = open(TRAM_ACCEL_DEVNAME, O_RDONLY);
+  if (m_fd <= 0)
+    {
+      return -1;
+    }
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::close_sensor()
+{
+  delete_timer(m_timer_id);
+  return close(m_fd);
+}
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::start_sensor()
+{
+  return ioctl(m_fd, SCUIOC_START, 0);
+}
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::stop_sensor()
+{
+  return ioctl(m_fd, SCUIOC_STOP, 0);
+}
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::setup_sensor(FAR void *param)
 {
   uint32_t scu_sampling_rate;
   uint32_t power_mode;
   uint32_t output_data_rate;
 
+  FAR struct ScuSettings *settings =
+    reinterpret_cast<FAR struct ScuSettings *>(param);
   scu_sampling_rate =
     GET_SCU_ACCEL_SAMPLING_FREQUENCY(settings->samplingrate);
 
@@ -167,47 +229,84 @@ static int setupAccel(FAR AccelSensor *sensor,
 
   /* Set power mode. */
 
-  CHECK_FUNC_RET(ioctl(sensor->fd, SNIOC_SETACCPM, power_mode));
+  int ret = ioctl(m_fd, SNIOC_SETACCPM, power_mode);
+  if (ret < 0)
+    {
+      err("Accel set power mode error %d\n", ret);
+      return ret;
+    }
 
   /* Set output data rate. */
 
-  CHECK_FUNC_RET(ioctl(sensor->fd, SNIOC_SETACCODR, output_data_rate));
+  ret = ioctl(m_fd, SNIOC_SETACCODR, output_data_rate);
+  if (ret < 0)
+    {
+      err("Accel set output data rate error %d\n", ret);
+      return ret;
+    }
 
   return 0;
 }
 
 /*--------------------------------------------------------------------------*/
-static int setupScu(FAR AccelSensor *sensor,
-                    FAR struct ScuSettings *settings)
+int AccelSensorClass::setup_scu(FAR void *param)
 {
-  /* Set FIFO size */
+  FAR struct ScuSettings *settings =
+  reinterpret_cast<FAR struct ScuSettings *>(param);
 
-  CHECK_FUNC_RET(ioctl(sensor->fd,
-                       SCUIOC_SETFIFO,
-                       sizeof(three_axis_s) * settings->fifosize));
+  /* Free FIFO. */
+
+  int ret = ioctl(m_fd, SCUIOC_FREEFIFO, 0);
+  if (ret < 0)
+    {
+      err("Accel free FIFO error %d\n", ret);
+      return ret;
+    }
+
+  /* Set FIFO size. */
+
+  ret = ioctl(m_fd,
+              SCUIOC_SETFIFO,
+              sizeof(struct accel_t) * settings->fifosize);
+  if (ret < 0)
+    {
+      err("Accel set FIFO size error %d\n", ret);
+      return ret;
+    }
 
   /* Set sampling rate */
 
-  CHECK_FUNC_RET(ioctl(sensor->fd,
-                       SCUIOC_SETSAMPLE,
-                       settings->samplingrate));
+  ret = ioctl(m_fd, SCUIOC_SETSAMPLE, settings->samplingrate);
+  if (ret < 0)
+    {
+      err("Accel set sequencer sampling rate error %d\n", ret);
+      return ret;
+    }
 
   /* Set elements */
 
   if (settings->elements)
     {
-      CHECK_FUNC_RET(ioctl(sensor->fd,
-                           SCUIOC_SETELEMENTS,
-                           settings->elements));
+      ret = ioctl(m_fd, SCUIOC_SETELEMENTS, settings->elements);
+      if (ret < 0)
+        {
+          err("Accel set elements error %d\n", ret);
+          return ret;
+        }
     }
 
   /* Set MathFunction filter */
 
   if (settings->mf)
     {
-      CHECK_FUNC_RET(ioctl(sensor->fd,
-                           SCUIOC_SETFILTER,
-                           (unsigned long)(uintptr_t)settings->mf));
+      ret = ioctl(m_fd,
+                  SCUIOC_SETFILTER,
+                  static_cast<unsigned long>((uintptr_t)settings->mf));
+      if (ret < 0)
+        {
+          err("Accel set MathFunction filter error %d\n", ret);
+          return ret;
+        }
     }
 
   /* Set event */
@@ -215,11 +314,16 @@ static int setupScu(FAR AccelSensor *sensor,
   if (settings->ev)
     {
       settings->ev->signo = CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO;
-      settings->ev->arg   = &sensor->ev_arg;
+      settings->ev->arg   = &m_ev_arg;
 
-      CHECK_FUNC_RET(ioctl(sensor->fd,
-                           SCUIOC_SETNOTIFY,
-                           (unsigned long)(uintptr_t)settings->ev));
+      ret = ioctl(m_fd,
+                  SCUIOC_SETNOTIFY,
+                  static_cast<unsigned long>((uintptr_t)settings->ev));
+      if (ret < 0)
+        {
+          err("Accel set event error %d\n", ret);
+          return ret;
+        }
     }
 
   /* Set water mark */
@@ -227,401 +331,214 @@ static int setupScu(FAR AccelSensor *sensor,
   if (settings->wm)
     {
       settings->wm->signo = CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_WM_SIGNO;
-      settings->wm->ts    = &sensor->wm_ts;
-      CHECK_FUNC_RET(ioctl(sensor->fd,
-                           SCUIOC_SETWATERMARK,
-                           (unsigned long)(uintptr_t)settings->wm));
-    }
+      settings->wm->ts    = &m_wm_ts;
 
-  return 0;
-}
-
-/*--------------------------------------------------------------------------*/
-static int notifyData(FAR AccelSensor *sensor,
-                      MemMgrLite::MemHandle &mh_src,
-                      MemMgrLite::MemHandle &mh_dst)
-{
-  FAR three_axis_s *p_src =
-    reinterpret_cast<FAR three_axis_s *>(mh_src.getVa());
-  FAR AccelDOF     *p_dst =
-    reinterpret_cast<FAR AccelDOF *>(mh_dst.getVa());
-
-  for (int i = 0; i < ACCEL_WATERMARK_NUM; ++i)
-    {
-      p_dst->accel_x = (float)p_src->x * 2 / 32768;
-      p_dst->accel_y = (float)p_src->y * 2 / 32768;
-      p_dst->accel_z = (float)p_src->z * 2 / 32768;
-
-      p_src++;
-      p_dst++;
-    }
-
-  if ((sensor->handler != NULL) && !sensor->stopped)
-    {
-      sensor->handler(sensor->context, ACCEL_EV_WM, mh_dst);
-    }
-
-  return 0;
-}
-
-/*--------------------------------------------------------------------------*/
-static int restartScu(FAR AccelSensor *sensor)
-{
-  /* Stop SCU */
-
-  CHECK_FUNC_RET(ioctl(sensor->fd, SCUIOC_STOP, 0));
-
-  /* Free SCU FIFO */
-
-  CHECK_FUNC_RET(ioctl(sensor->fd, SCUIOC_FREEFIFO, 0));
-
-  /* Set up accel physical sensor */
-
-  CHECK_FUNC_RET(setupAccel(sensor, s_scu_settings));
-
-  /* Set up SCU */
-
-  CHECK_FUNC_RET(setupScu(sensor, s_scu_settings));
-
-  /* Restart SCU */
-
-  CHECK_FUNC_RET(ioctl(sensor->fd, SCUIOC_START, 0));
-
-  return 0;
-}
-
-/*--------------------------------------------------------------------------*/
-extern "C" void *AccelSensorReceivingThread(FAR void *arg)
-{
-  int              ret;
-  FAR char         *p_src;
-  struct siginfo   value;
-  struct timespec  timeout;
-  FAR AccelSensor  *sensor;
-  timer_t timerid;
-  bool is_first_ev = true;
-  bool is_rise = false;
-
-  sensor = reinterpret_cast<FAR AccelSensor *>(arg);
-
-  /* Set up accel physical sensor */
-
-  ret = setupAccel(sensor, s_scu_settings);
-  if (ret != 0)
-    {
-      err("Setup accel failed. error = %d\n", ret);
-      ASSERT(0);
-    }
-
-  /* Setup scu */
-
-  ret = setupScu(sensor, s_scu_settings);
-  if (ret != 0)
-    {
-      err("Setup scu failed. error = %d\n", ret);
-      ASSERT(0);
-    }
-
-  /* Create oneshot timer */
-
-  ret = createOneshotTimer(&timerid);
-  if (ret != 0)
-    {
-      err("Create timer failed. error = %d\n", ret);
-      ASSERT(0);
-    }
-
-  /* Start sequencer */
-
-  ret = ioctl(sensor->fd, SCUIOC_START, 0);
-  if (ret != 0)
-    {
-      err("Start accel sensor failed. error = %d\n", ret);
-      ASSERT(0);
-    }
-
-  /* Set timeout 6 seconds, SCU may send signal every 5 second. */
-
-  timeout.tv_sec  = 6;
-  timeout.tv_nsec = 0;
-
-  while(!sensor->stopped)
-    {
-      ret = sigtimedwait(&sensor->sig_set, &value, &timeout);
+      ret = ioctl(m_fd,
+                  SCUIOC_SETWATERMARK,
+                  static_cast<unsigned long>((uintptr_t)settings->wm));
       if (ret < 0)
         {
-          continue;
+          err("Accel set water mark error %d\n", ret);
+          return ret;
         }
-      else if (ret == CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO)
+    }
+
+  /* Reset status flags */
+
+  m_is_first_rise_ev = true;
+  m_is_rise = false;
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::receive_signal(int sig_no, FAR siginfo_t *sig_info)
+{
+  int ret = -1;
+
+  switch (sig_no)
+    {
+      case CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO:
         {
-          /* mathfunc */
-
-          FAR struct scuev_arg_s *scuev =
-            (FAR struct scuev_arg_s *)value.si_value.sival_ptr;
-
-          if (scuev->type == SCU_EV_RISE)
-            {
-              is_rise = true;
-
-              if (is_first_ev)
-                {
-                  /* Rise event occurs just after sensor starts
-                   * because of the filter setting.
-                   * So check later if it is moving or not.
-                   */
-
-                  ret = startOneshotTimer(timerid, 1000);
-                  if (ret != 0)
-                    {
-                      err("Start timer failed.\n");
-                      ASSERT(0);
-                    }
-
-                  is_first_ev = false;
-                }
-              else
-                {
-                  MemMgrLite::MemHandle dummy;
-                  sensor->handler(sensor->context, ACCEL_EV_MF, dummy);
-                }
-            }
-          else
-            {
-              is_rise = false;
-            }
-
-          continue;
+          ret = receive_timer_ev();
         }
-      else if (ret == CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO)
+        break;
+ 
+      case CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_WM_SIGNO:
         {
-          if (is_rise)
-            {
-              /* Still rise, then send rise event */
-
-              MemMgrLite::MemHandle dummy;
-              sensor->handler(sensor->context, ACCEL_EV_MF, dummy);
-            }
-
-          continue;
+          ret = receive_scu_wm_ev();
         }
-      else if (ret == CONFIG_EXAMPLES_SENSOR_TRAM_CHANGE_SCU_SIGNO)
+        break;
+
+      case CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO:
         {
-          /* Reset status flags */
+          ret = receive_scu_mf_ev(sig_info);
+        }
+        break;
 
-          is_first_ev = true;
-          is_rise = false;
+      default:
+        break;
+    }
+  return ret;
+}
 
-          /* Rester accel and scu */
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::receive_timer_ev()
+{
+  int ret = 0;
 
-          if (restartScu(sensor) != 0)
+  /* Still rise, then send rise event */
+
+  if (m_is_rise)
+    {
+      MemMgrLite::MemHandle dummy;
+      uint32_t timestamp = get_timestamp();
+      ret = m_handler(ACCEL_EV_MF, timestamp, dummy);
+    }
+  return ret;
+}
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::receive_scu_wm_ev()
+{
+  MemMgrLite::MemHandle mh_dst;
+  MemMgrLite::MemHandle mh_src;
+  FAR char *p_src;
+  FAR char *p_dst;
+
+  /* Get segment of memory handle. */
+
+  if (ERR_OK != mh_src.allocSeg(
+                  ACCEL_DATA_BUF_POOL,
+                  (sizeof(struct accel_t) * ACCEL_WATERMARK_NUM)))
+    {
+      /* Fatal error occured. */
+
+      err("Fail to allocate segment of memory handle.\n");
+      ASSERT(0);
+    }
+  p_src = reinterpret_cast<char *>(mh_src.getPa());
+
+  if (ERR_OK != mh_dst.allocSeg(
+                  ACCEL_DATA_BUF_POOL,
+                  (sizeof(accel_float_t) * ACCEL_WATERMARK_NUM)))
+    {
+      /* Fatal error occured. */
+
+      err("Fail to allocate segment of memory handle.\n");
+      ASSERT(0);
+    }
+  p_dst = reinterpret_cast<char *>(mh_dst.getPa());
+
+  /* Read accelerometer data from driver. */
+
+  read(m_fd, p_src, sizeof(struct accel_t) * ACCEL_WATERMARK_NUM);
+
+  this->convert_data(reinterpret_cast<FAR struct accel_t *>(p_src),
+                     reinterpret_cast<FAR accel_float_t *>(p_dst),
+                     ACCEL_WATERMARK_NUM);
+
+  /* Notify accelerometer data to sensor manager. */
+
+  this->notify_data(mh_dst);
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::receive_scu_mf_ev(FAR siginfo_t *sig_info)
+{
+  int ret = 0;
+
+  /* Get info of math-function event. */
+
+  FAR struct scuev_arg_s *scuev =
+    (FAR struct scuev_arg_s *)sig_info->si_value.sival_ptr;
+
+  if (scuev->type == SCU_EV_RISE)
+    {
+      m_is_rise = true;
+
+      if (m_is_first_rise_ev)
+        {
+          /* Rise event occurs just after sensor starts
+           * because of the filter setting.
+           * So check later if it is moving or not.
+           */
+
+          ret = start_timer(m_timer_id, 1000);
+          if (ret != 0)
             {
+              err("Start timer failed.\n");
               ASSERT(0);
             }
 
-          continue;
+          m_is_first_rise_ev = false;
         }
       else
         {
-          /* Watermark */
-
-          /* Do nothing */
+          MemMgrLite::MemHandle dummy;
+          uint32_t timestamp = get_timestamp();
+          m_handler(ACCEL_EV_MF, timestamp, dummy);
         }
-
-      /* Get MemHandle */
-
-      MemMgrLite::MemHandle mh_src;
-      MemMgrLite::MemHandle mh_dst;
-      if (mh_src.allocSeg(
-            ACCEL_DATA_BUF_POOL,
-            (sizeof(three_axis_s) * ACCEL_WATERMARK_NUM)) != ERR_OK)
-        {
-          err("Get MemHandle failed.\n");
-          ASSERT(0);
-        }
-
-      /* Set physical address.
-       * (The addess specified for the SCU must be a physical address)
-       */
-
-      p_src = reinterpret_cast<FAR char *>(mh_src.getPa());
-
-      if (mh_dst.allocSeg(
-            ACCEL_DATA_BUF_POOL,
-            (sizeof(AccelDOF)*ACCEL_WATERMARK_NUM)) != ERR_OK)
-        {
-          ASSERT(0);
-        }
-
-      /* Read accel data from driver */
-
-      ret = read(sensor->fd,
-                 p_src,
-                 sizeof(three_axis_s) * ACCEL_WATERMARK_NUM);
-      if (ret != (sizeof(three_axis_s) * ACCEL_WATERMARK_NUM))
-        {
-          ASSERT(0);
-        }
-
-      notifyData(sensor, mh_src, mh_dst);
     }
-
-  deleteOneshotTimer(timerid);
-
-  return 0;
-}
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-int AccelSensorCreate(FAR AccelSensor **sensor)
-{
-  CHECK_NULL_RET(sensor);
-
-  *sensor = (AccelSensor *)malloc(sizeof(AccelSensor));
-  memset(*sensor, 0 , sizeof(AccelSensor));
-
-  return 0;
-}
-
-/*--------------------------------------------------------------------------*/
-int AccelSensorRegisterHandler(FAR AccelSensor *sensor,
-                               AccelEventHandler handler,
-                               uint32_t context)
-{
-  CHECK_NULL_RET(sensor);
-
-  sensor->handler = handler;
-  sensor->context = context;
-
-  return 0;
-}
-
-
-/*--------------------------------------------------------------------------*/
-int AccelSensorStartSensing(FAR AccelSensor *sensor,
-                            FAR struct ScuSettings *settings)
-{
-  pthread_attr_t attr;
-  struct sched_param sch_param;
-
-  CHECK_NULL_RET(sensor);
-  CHECK_NULL_RET(settings);
-
-  /* Open accel driver */
-
-  sensor->fd = open(TRAM_ACCEL_DEVNAME, O_RDONLY);
-  if (sensor->fd <= 0)
+  else
     {
-      err("Accel device open error %d\n", sensor->fd);
-      return -1;
+      m_is_rise = false;
     }
 
-  /* Set status */
-
-  sensor->stopped = false;
-
-  /* Add signal */
-
-  sigemptyset(&sensor->sig_set);
-  sigaddset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_WM_SIGNO);
-  sigaddset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO);
-  sigaddset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO);
-  sigaddset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_CHANGE_SCU_SIGNO);
-
-  /* Set SCU settings */
-
-  s_scu_settings = settings;
-
-  /* Create receive thread */
-
-  (void)pthread_attr_init(&attr);
-  sch_param.sched_priority = SENSING_TASK_PRIORITY;
-  CHECK_FUNC_RET(pthread_attr_setschedparam(&attr, &sch_param));
-
-  CHECK_FUNC_RET(pthread_create(&sensor->thread_id,
-                 &attr,
-                 AccelSensorReceivingThread,
-                 (pthread_addr_t)sensor));
-
-  return 0;
+  return ret;
 }
 
+
 /*--------------------------------------------------------------------------*/
-int AccelSensorStopSensing(FAR AccelSensor *sensor)
+void AccelSensorClass::convert_data(FAR accel_t *p_src,
+                                    FAR accel_float_t *p_dst,
+                                    int sample_num)
 {
-  FAR void *value;
-
-  CHECK_NULL_RET(sensor);
-
-  if (sensor->fd == 0)
+  for (int i = 0; i < sample_num; i++, p_src++, p_dst++)
     {
-      /* Already stopped */
-
-      return 0;
+      p_dst->x = (float)p_src->x * 2 / 32768;
+      p_dst->y = (float)p_src->y * 2 / 32768;
+      p_dst->z = (float)p_src->z * 2 / 32768;
     }
-
-  /* Set status */
-
-  sensor->stopped = true;
-
-  /* Cancel thread */
-
-  pthread_cancel(sensor->thread_id);
-  pthread_join(sensor->thread_id, &value);
-
-  CHECK_FUNC_RET(ioctl(sensor->fd, SCUIOC_STOP, 0));
-
-  /* Delete signal */
-
-  sigdelset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_WM_SIGNO);
-  sigdelset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO);
-  sigdelset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO);
-  sigdelset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_CHANGE_SCU_SIGNO);
-
-  /* Close driver */
-
-  CHECK_FUNC_RET(close(sensor->fd));
-
-  return 0;
 }
 
 /*--------------------------------------------------------------------------*/
-int AccelSensorDestroy(FAR AccelSensor *sensor)
+int AccelSensorClass::notify_data(MemMgrLite::MemHandle &mh_dst)
 {
-  CHECK_NULL_RET(sensor);
+  uint32_t timestamp = get_timestamp();
 
-  free(sensor);
-  return 0;
+  return m_handler(ACCEL_EV_WM, timestamp, mh_dst);
+};
+
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::create_timer(FAR timer_t *timerid)
+{
+  struct sigevent notify;
+
+  notify.sigev_notify          = SIGEV_SIGNAL;
+  notify.sigev_signo           = CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_TM_SIGNO;
+  notify.sigev_value.sival_int = 0;
+
+  return timer_create(CLOCK_REALTIME, &notify, timerid);
 }
 
 /*--------------------------------------------------------------------------*/
-int AccelSensorChangeScuSetting(FAR AccelSensor *sensor,
-                                FAR struct ScuSettings *settings)
+int AccelSensorClass::start_timer(timer_t timerid, uint32_t milliseconds)
 {
-  CHECK_NULL_RET(sensor);
-  CHECK_NULL_RET(settings);
+  struct itimerspec timer;
 
-  if (settings == s_scu_settings)
-    {
-      /* No need to change */
+  timer.it_value.tv_sec     = milliseconds / 1000;
+  timer.it_value.tv_nsec    = milliseconds % 1000 * 1000 * 1000;
+  timer.it_interval.tv_sec  = 0;
+  timer.it_interval.tv_nsec = 0;
 
-      return 0;
-    }
+  return timer_settime(timerid, 0, &timer, NULL);
+}
 
-  s_scu_settings = settings;
-
-#ifdef CONFIG_CAN_PASS_STRUCTS
-  union sigval value;
-  value.sival_ptr = NULL;
-  sigqueue(sensor->thread_id,
-           CONFIG_EXAMPLES_SENSOR_TRAM_CHANGE_SCU_SIGNO,
-           value);
-#else
-  sigqueue(sensor->thread_id,
-           CONFIG_EXAMPLES_SENSOR_TRAM_CHANGE_SCU_SIGNO,
-           0);
-#endif
-
-  return 0;
+/*--------------------------------------------------------------------------*/
+int AccelSensorClass::delete_timer(timer_t timerid)
+{
+  return timer_delete(timerid);
 }

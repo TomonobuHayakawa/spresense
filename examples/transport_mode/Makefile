@@ -51,6 +51,7 @@ STACKSIZE = $(CONFIG_EXAMPLES_TRAM_STACKSIZE)
 
 MAINSRC = transport_mode_main.cxx
 CXXSRCS = sensor_control.cxx
+CXXSRCS += physical_sensor.cxx
 CXXSRCS += accel_sensor.cxx magnetometer_sensor.cxx pressure_sensor.cxx temperature_sensor.cxx
 
 # Sensing Example paths
