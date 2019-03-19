@@ -38,6 +38,10 @@ CURRENT_DIR=`pwd`
 SCRIPT_NAME=`readlink -e "${BASH_SOURCE[0]}"`
 SCRIPT_DIR=`dirname "$SCRIPT_NAME"`
 
+############################################################################
+# Public function                                                          #
+############################################################################
+
 # Create Spresense home environmet with mkapp
 function create_spresense_home()
 {
@@ -45,21 +49,60 @@ function create_spresense_home()
     ${SCRIPT_DIR}/mkappsdir.py -s ${SPRESENSE_HOME} "User application"
 }
 
+# TAB completion for ./tools/config.py
+function _spresense_config_completion() {
+	local cur prev cword
+
+	# get command line arguments
+	_get_comp_words_by_ref -n : cur prev cword
+
+	if [ "${prev}" == "-d" -o "${prev}" == "--dir" ]; then
+		# If use '-d' or '--dir' option, use filename completion
+		compopt -o nospace
+		COMPREPLY=($(compgen -d -- "${cur}" | sed 's#$#/#g'))
+	else
+		compopt +o nospace
+		if [ "${cur:0:1}" == "-" ]; then
+			# For option prediction
+			SOPT=`${SPRESENSE_SDK}/sdk/tools/config.py -h | grep -oE "\--[a-zA-Z]+"`
+			LOPT=`${SPRESENSE_SDK}/sdk/tools/config.py -h | grep -oE "^[ ]+-[a-zA-Z]{1}"  | tr -d " "`
+			LIST="${SOPT} ${LOPT}"
+		else
+			LIST=`${COMP_WORDS[@]} -l | tail -n +2 | tr -d "\t"`
+		fi
+		COMPREPLY=($(compgen -W "${LIST}" -- "${cur}"))
+	fi
+}
+
+# Add configuration command behalf of tools/config.py
+function spresense_config() {
+	cd ${SPRESENSE_SDK}/sdk
+	./tools/config.py $@
+}
+
+############################################################################
+# Public parameter definition                                              #
+############################################################################
+
 # Set <user home>/Spresense to SPRESENSE_HOME
-SPRESENSE_HOME=${HOME}/Spresense
+export SPRESENSE_HOME=${HOME}/Spresense
 
 # Set repository root to SPRESENSE_SDK
-SPRESENSE_SDK=${SCRIPT_DIR}
+export SPRESENSE_SDK=$(dirname $(dirname ${SCRIPT_DIR}))
+
+############################################################################
+# Environment setup                                                        #
+############################################################################
+
+#
+# User application setup
+#
 
 if [ ! -d ${SPRESENSE_HOME} ]; then
     echo "Warning: Spresense user application directory is not exists."
     echo "         Please run"
     echo "         $ create_spresense_home"
 fi
-
-# Export parameters
-export SPRESENSE_HOME
-export SPRESENSE_SDK
 
 # Export parameters into configuration file
 echo "SPRESENSE_HOME=${SPRESENSE_HOME}" > ${HOME}/.spresense_env
@@ -77,4 +120,10 @@ else
         echo "         $ create_spresense_home"
     fi
 fi
+
+#
+# TAB completion
+#
+
+complete -F _spresense_config_completion tools/config.py ./tools/config.py spresense_config
 
