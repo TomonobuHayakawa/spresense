@@ -66,6 +66,8 @@
 #  define CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO 13
 #endif
 
+#define TRAM_ACCEL_RANGE 2 /* 2G */
+
 /* For error */
 
 #define err(format, ...)    fprintf(stderr, format, ##__VA_ARGS__)
@@ -498,9 +500,9 @@ void AccelSensorClass::convert_data(FAR accel_t *p_src,
 {
   for (int i = 0; i < sample_num; i++, p_src++, p_dst++)
     {
-      p_dst->x = (float)p_src->x * 2 / 32768;
-      p_dst->y = (float)p_src->y * 2 / 32768;
-      p_dst->z = (float)p_src->z * 2 / 32768;
+      p_dst->x = (float)p_src->x * TRAM_ACCEL_RANGE / 32768;
+      p_dst->y = (float)p_src->y * TRAM_ACCEL_RANGE / 32768;
+      p_dst->z = (float)p_src->z * TRAM_ACCEL_RANGE / 32768;
     }
 }
 
