@@ -123,7 +123,7 @@ private:
 
   int receive_timer_ev();
   int receive_scu_wm_ev();
-  int receive_scu_mf_ev(FAR siginfo_t *sig_info);
+  int receive_scu_math_function_event(FAR siginfo_t *sig_info);
   void convert_data(FAR struct accel_t *p_src,
                     FAR accel_float_t *p_dst,
                     int sample_num);

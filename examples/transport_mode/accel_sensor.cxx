@@ -66,7 +66,9 @@
 #  define CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO 13
 #endif
 
-#define TRAM_ACCEL_RANGE 2 /* 2G */
+/* Gravity acceleration measurement range fixed at 2g. */
+
+#define TRAM_ACCEL_RANGE 2
 
 /* For error */
 
@@ -374,7 +376,7 @@ int AccelSensorClass::receive_signal(int sig_no, FAR siginfo_t *sig_info)
 
       case CONFIG_EXAMPLES_SENSOR_TRAM_ACCEL_EV_SIGNO:
         {
-          ret = receive_scu_mf_ev(sig_info);
+          ret = receive_scu_math_function_event(sig_info);
         }
         break;
 
@@ -448,7 +450,7 @@ int AccelSensorClass::receive_scu_wm_ev()
 }
 
 /*--------------------------------------------------------------------------*/
-int AccelSensorClass::receive_scu_mf_ev(FAR siginfo_t *sig_info)
+int AccelSensorClass::receive_scu_math_function_event(FAR siginfo_t *sig_info)
 {
   int ret = 0;
 
@@ -498,6 +500,11 @@ void AccelSensorClass::convert_data(FAR accel_t *p_src,
                                     FAR accel_float_t *p_dst,
                                     int sample_num)
 {
+  /* Convert the range of data obtained from the sensor (-32768 to 32767)
+   * to the range of gravitational acceleration
+   * (-TRAM_ACCEL_RANGE to TRAM_ACCEL_RANGE).
+   */
+
   for (int i = 0; i < sample_num; i++, p_src++, p_dst++)
     {
       p_dst->x = (float)p_src->x * TRAM_ACCEL_RANGE / 32768;
