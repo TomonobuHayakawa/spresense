@@ -330,7 +330,10 @@ void MagSensorClass::convert_data(FAR struct mag_data_s *p_src,
                                   FAR mag_float_t *p_dst,
                                   int sample_num)
 {
+  /* Ratio of the value and the magnetic obtained from the sensor. */
+
   float coef = AK9912_PHISICAL_MAX / AK9912_DECIMAL_MAX;
+
   for (int i = 0; i < sample_num; i++, p_src++, p_dst++)
     {
       p_dst->x = (float)(((p_src->x * (int32_t)m_adj[0]) >> 8) * coef);

@@ -322,6 +322,8 @@ void PressSensorClass::convert_data(FAR struct bmp280_meas_s *p_src,
 {
   for (int i = 0; i < sample_num; i++, p_src++, p_dst++)
     {
+      /* Get the raw pressure data from registers. Unit is hPa. */
+
       *p_dst = (int32_t)((((uint32_t)(p_src->msb)) << 12)
         | ((uint32_t)p_src->lsb << 4)
         | ((uint32_t)p_src->xlsb >> 4));
