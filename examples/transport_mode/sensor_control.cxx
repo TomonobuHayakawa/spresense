@@ -54,11 +54,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* Get timestamp in millisecond. Tick in 32768 Hz  */
-
-#define GET_TIMESTAMP_TICK_IN_32768(_sec_, _tick_)  \
-          (1000 * (_sec_) + ((1000 * (_tick_)) >> 15))
-
 /* Error message */
 
 #define err(format, ...)        fprintf(stderr, format, ##__VA_ARGS__)
@@ -89,28 +84,29 @@
 
 static FAR TramClass         *s_tram_ins     = NULL;
 static FAR BarometerClass    *s_bar_ins      = NULL;
-static FAR AccelSensor       *p_accel_sensor = NULL;
-static FAR MagnetmeterSensor *p_mag_sensor   = NULL;
-static FAR PressureSensor    *p_press_sensor = NULL;
-static FAR TemperatureSensor *p_temp_sensor  = NULL;
+static FAR physical_sensor_t *p_accel_sensor = NULL;
+static FAR physical_sensor_t *p_mag_sensor   = NULL;
+static FAR physical_sensor_t *p_press_sensor = NULL;
+static FAR physical_sensor_t *p_temp_sensor  = NULL;
 
 #ifdef CONFIG_EXAMPLES_SENSOR_TRAM_DETAILED_INFO
 static  MemMgrLite::MemHandle s_likelihood;
 #endif
 
+static mqd_t s_ev_msg_id = (mqd_t)-1;
+static int s_pw_status = 0;
+static int s_active_status = 0;
+
 /****************************************************************************
  * Callback Function
  ****************************************************************************/
 
-static int accel_read_callback(uint32_t context,
-                               AccelEvent ev_type,
+static int accel_read_callback(uint32_t ev_type,
+                               uint32_t timestamp,
                                MemMgrLite::MemHandle &mh)
 {
   if (ACCEL_EV_WM == ev_type)
     {
-      struct scutimestamp_s wm_ts = p_accel_sensor->wm_ts;
-      uint32_t timestamp = GET_TIMESTAMP_TICK_IN_32768(wm_ts.sec, wm_ts.tick);
-
       sensor_command_data_mh_t packet;
       packet.header.size = 0;
       packet.header.code = SendData;
@@ -140,11 +136,10 @@ static int accel_read_callback(uint32_t context,
 }
 
 /*--------------------------------------------------------------------------*/
-static int mag_read_callback(uint32_t context, MemMgrLite::MemHandle &mh)
+static int mag_read_callback(uint32_t ev_type,
+                             uint32_t timestamp,
+                             MemMgrLite::MemHandle &mh)
 {
-  struct scutimestamp_s wm_ts = p_mag_sensor->wm_ts;
-  uint32_t timestamp = GET_TIMESTAMP_TICK_IN_32768(wm_ts.sec, wm_ts.tick);
-
   sensor_command_data_mh_t packet;
   packet.header.size = 0;
   packet.header.code = SendData;
@@ -160,11 +155,10 @@ static int mag_read_callback(uint32_t context, MemMgrLite::MemHandle &mh)
 }
 
 /*--------------------------------------------------------------------------*/
-static int press_read_callback(uint32_t context, MemMgrLite::MemHandle &mh)
+static int press_read_callback(uint32_t ev_type,
+                               uint32_t timestamp,
+                               MemMgrLite::MemHandle &mh)
 {
-  struct scutimestamp_s wm_ts = p_press_sensor->wm_ts;
-  uint32_t timestamp = GET_TIMESTAMP_TICK_IN_32768(wm_ts.sec, wm_ts.tick);
-
   sensor_command_data_mh_t packet;
   packet.header.size = 0;
   packet.header.code = SendData;
@@ -180,11 +174,10 @@ static int press_read_callback(uint32_t context, MemMgrLite::MemHandle &mh)
 }
 
 /*--------------------------------------------------------------------------*/
-static int temp_read_callback(uint32_t context, MemMgrLite::MemHandle &mh)
+static int temp_read_callback(uint32_t ev_type,
+                               uint32_t timestamp,
+                               MemMgrLite::MemHandle &mh)
 {
-  struct scutimestamp_s wm_ts = p_temp_sensor->wm_ts;
-  uint32_t timestamp = GET_TIMESTAMP_TICK_IN_32768(wm_ts.sec, wm_ts.tick);
-
   sensor_command_data_mh_t packet;
   packet.header.size = 0;
   packet.header.code = SendData;
@@ -200,66 +193,152 @@ static int temp_read_callback(uint32_t context, MemMgrLite::MemHandle &mh)
 }
 
 /*--------------------------------------------------------------------------*/
-static bool accel_power_ctrl_callback(bool is_data)
+static bool accel_power_ctrl_callback(bool is_on)
 {
-  if (is_data)
+  uint8_t ev;
+
+  if (is_on)
+    {
+      ev = TRAM_POWER_EV_ACCEL_ON;
+    }
+  else
+    {
+      ev = TRAM_POWER_EV_ACCEL_OFF;
+    }
+
+  mq_send(s_ev_msg_id, (char *)&ev, sizeof(uint8_t), 0);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------------*/
+static int accel_power_ctrl(bool is_on)
+{
+  if (is_on)
     {
       FAR ScuSettings *settings = TramGetAccelScuSettings(s_tram_ins);
       CHECK_NULL_RET(settings);
 
-      CHECK_FUNC_RET(AccelSensorStartSensing(p_accel_sensor, settings));
+      CHECK_FUNC_RET(AccelSensorOpen(p_accel_sensor, settings));
+      CHECK_FUNC_RET(AccelSensorStart(p_accel_sensor));
     }
   else
     {
-      CHECK_FUNC_RET(AccelSensorStopSensing(p_accel_sensor));
+      CHECK_FUNC_RET(AccelSensorStop(p_accel_sensor));
+      CHECK_FUNC_RET(AccelSensorClose(p_accel_sensor));
     }
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+static bool magne_power_ctrl_callback(bool is_on)
+{
+  uint8_t ev;
+
+  if (is_on)
+    {
+      ev = TRAM_POWER_EV_MAG_ON;
+    }
+  else
+    {
+      ev = TRAM_POWER_EV_MAG_OFF;
+    }
+
+  mq_send(s_ev_msg_id, (char *)&ev, sizeof(uint8_t), 0);
 
   return true;
 }
 
 /*--------------------------------------------------------------------------*/
-static bool magne_power_ctrl_callback(bool is_data)
+static int magne_power_ctrl(bool is_on)
 {
-  if (is_data)
+  if (is_on)
     {
-      CHECK_FUNC_RET(MagnetmeterSensorStartSensing(p_mag_sensor));
+      CHECK_FUNC_RET(MagSensorOpen(p_mag_sensor));
+      CHECK_FUNC_RET(MagSensorStart(p_mag_sensor));
     }
   else
     {
-      CHECK_FUNC_RET(MagnetmeterSensorStopSensing(p_mag_sensor));
+      CHECK_FUNC_RET(MagSensorStop(p_mag_sensor));
+      CHECK_FUNC_RET(MagSensorClose(p_mag_sensor));
     }
+
+  return 0;
+}
+/*--------------------------------------------------------------------------*/
+static bool pressure_power_ctrl_callback(bool is_on)
+{
+  uint8_t ev;
+
+  if (is_on)
+    {
+      ev = TRAM_POWER_EV_PRESS_ON;
+    }
+  else
+    {
+      ev = TRAM_POWER_EV_PRESS_OFF;
+    }
+
+  mq_send(s_ev_msg_id, (char *)&ev, sizeof(uint8_t), 0);
 
   return true;
 }
 
 /*--------------------------------------------------------------------------*/
-static bool pressure_power_ctrl_callback(bool is_data)
+static int pressure_power_ctrl(bool is_on)
 {
-  if (is_data)
+  if (is_on)
     {
-      CHECK_FUNC_RET(PressureSensorStartSensing(p_press_sensor));
+      struct bmp280_press_adj_s press_adj;
+      CHECK_FUNC_RET(PressSensorOpen(p_press_sensor, &press_adj));
+      s_bar_ins->setAdjustParam(&press_adj);
+      CHECK_FUNC_RET(PressSensorStart(p_press_sensor));
     }
   else
     {
-      CHECK_FUNC_RET(PressureSensorStopSensing(p_press_sensor));
+      CHECK_FUNC_RET(PressSensorStop(p_press_sensor));
+      CHECK_FUNC_RET(PressSensorClose(p_press_sensor));
     }
+
+  return 0;
+}
+/*--------------------------------------------------------------------------*/
+static bool temperature_power_ctrl_callback(bool is_on)
+{
+  uint8_t ev;
+
+  if (is_on)
+    {
+      ev = TRAM_POWER_EV_TEMP_ON;
+    }
+  else
+    {
+      ev = TRAM_POWER_EV_TEMP_OFF;
+    }
+
+  mq_send(s_ev_msg_id, (char *)&ev, sizeof(uint8_t), 0);
 
   return true;
 }
 
 /*--------------------------------------------------------------------------*/
-static bool temperature_power_ctrl_callback(bool is_data)
+static int temperature_power_ctrl(bool is_on)
 {
-  if (is_data)
+  if (is_on)
     {
-      CHECK_FUNC_RET(TemperatureSensorStartSensing(p_temp_sensor));
+      struct bmp280_temp_adj_s temp_adj;
+      CHECK_FUNC_RET(TempSensorOpen(p_press_sensor, &temp_adj));
+      s_bar_ins->setAdjustParam(&temp_adj);
+      CHECK_FUNC_RET(TempSensorStart(p_press_sensor));
     }
   else
     {
-      CHECK_FUNC_RET(TemperatureSensorStopSensing(p_temp_sensor));
+      CHECK_FUNC_RET(TempSensorStop(p_temp_sensor));
+      CHECK_FUNC_RET(TempSensorClose(p_temp_sensor));
     }
 
-  return true;
+  return 0;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -305,91 +384,63 @@ static bool tram_receive_data(sensor_command_data_mh_t& data)
  * Private Functions
  ****************************************************************************/
 
-static int init_physical_sensor(uint32_t context)
+static int create_physical_sensor(void)
 {
   int ret = 0;
 
   /* Accelerator */
 
-  ret = AccelSensorCreate(&p_accel_sensor);
-  if (ret < 0)
+  p_accel_sensor = AccelSensorCreate(accel_read_callback);
+  if (p_accel_sensor == NULL)
     {
       err("AccelSensorCreate() failure. %d\n", ret);
       return -1;
     }
-
-  ret = AccelSensorRegisterHandler(p_accel_sensor,
-                                   accel_read_callback,
-                                   context);
-  if (ret < 0)
-    {
-      err("AccelSensorRegisterHandler() failure. %d\n", ret);
-      return -1;
-    }
+  s_active_status |= 1 << accelID;
 
   /* Magnetmeter */
 
-  ret = MagnetmeterSensorCreate(&p_mag_sensor);
-  if (ret < 0)
+  p_mag_sensor = MagSensorCreate(mag_read_callback);
+  if (p_mag_sensor == NULL)
     {
-      err("MagnetmeterSensorCreate() failure. %d\n", ret);
+      err("MagSensorCreate() failure. %d\n", ret);
       return -1;
     }
-
-  ret = MagnetmeterSensorRegisterHandler(p_mag_sensor,
-                                         mag_read_callback,
-                                         context);
-  if (ret < 0)
-    {
-      err("MagnetmeterSensorRegisterHandler() failure. %d\n", ret);
-      return -1;
-    }
-
+  s_active_status |= 1 << magID;
+  
   /* Pressure */
 
-  ret = PressureSensorCreate(&p_press_sensor);
-  if (ret < 0)
+  p_press_sensor = PressSensorCreate(press_read_callback);
+  if (p_mag_sensor == NULL)
     {
-      err("BarometerSensorCreate() failure. %d\n", ret);
+      err("PressSensorCreate() failure. %d\n", ret);
       return -1;
     }
-
-  ret = PressureSensorRegisterHandler(p_press_sensor,
-                                      press_read_callback,
-                                      context);
-  if (ret < 0)
-    {
-      err("BarometerSensorRegisterHandler() failure. %d\n", ret);
-      return -1;
-    }
+  s_active_status |= 1 << pressureID;
 
   /* Temperature */
 
-  ret = TemperatureSensorCreate(&p_temp_sensor);
-  if (ret < 0)
+  p_temp_sensor = TempSensorCreate(temp_read_callback);
+  if (p_temp_sensor == NULL)
     {
-      err("TemperatureSensorCreate() failure. %d\n", ret);
+      err("TempSensorCreate() failure. %d\n", ret);
       return -1;
     }
+  s_active_status |= 1 << tempID;
 
-  ret = TemperatureSensorRegisterHandler(p_temp_sensor,
-                                         temp_read_callback,
-                                         context);
-  if (ret < 0)
-    {
-      err("TemperatureSensorRegisterHandler() failure. %d\n", ret);
-      return -1;
-    }
   return 0;
 }
 
 /*--------------------------------------------------------------------------*/
-static void finish_physical_sensor(void)
+static void destroy_physical_sensor(void)
 {
-  AccelSensorDestroy(p_accel_sensor);
-  MagnetmeterSensorDestroy(p_mag_sensor);
-  PressureSensorDestroy(p_press_sensor);
-  TemperatureSensorDestroy(p_temp_sensor);
+  uint8_t ev = TRAM_APP_EV_PHYSEN_DESTROY;
+  mq_send(s_ev_msg_id, (char *)&ev, sizeof(uint8_t), 0);
+
+  while(s_active_status != 0)
+    {
+      sleep(1);
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -433,11 +484,6 @@ static int init_logical_sensor(uint8_t cmd_pool_id)
       err("BarometerOpen() failure. %d\n", ret);
       return -1;
     }
-
-  /* Set barometer as owner of pressure and temperature sensor */
-
-  p_press_sensor->owner = s_bar_ins;
-  p_temp_sensor->owner  = s_bar_ins;
 
   return 0;
 }
@@ -566,11 +612,20 @@ static void release_logical_sensor(void)
 /****************************************************************************
  * External Interface
  ****************************************************************************/
-int TramOpenSensors(uint8_t cmd_pool_id)
+int TramOpenSensors(uint8_t cmd_pool_id, mqd_t msg_id)
 {
+  /* Clear power status of physical sensor */
+
+  s_pw_status = 0;
+  s_active_status = 0;
+
+  /* Set message id for event occure */
+
+  s_ev_msg_id = msg_id;
+
   /* Initialize physical sensor */
 
-  init_physical_sensor(0);
+  create_physical_sensor();
   regist_physical_sensor();
 
   /* Initialize logical sensor */
@@ -592,7 +647,7 @@ int TramCloseSensors(void)
   /* Finalize physical sensors */
 
   release_physical_sensor();
-  finish_physical_sensor();
+  destroy_physical_sensor();
 
   return 0;
 }
@@ -600,13 +655,39 @@ int TramCloseSensors(void)
 /*--------------------------------------------------------------------------*/
 int TramStartSensors(void)
 {
-  return TramStart(s_tram_ins);
+  int ret = TramStart(s_tram_ins);
+  if (ret != SS_ECODE_OK)
+    {
+      return ret;
+    }
+
+  /* Wait physical sensor start. */
+
+  while(s_pw_status == 0)
+    {
+      sleep(1);
+    }
+
+  return ret;
 }
 
 /*--------------------------------------------------------------------------*/
 int TramStopSensors(void)
 {
-  return TramStop(s_tram_ins);
+  int ret = TramStop(s_tram_ins);
+  if (ret != SS_ECODE_OK)
+    {
+      return ret;
+    }
+
+  /* Wait physical sensor start. */
+
+  while(s_pw_status != 0)
+    {
+      sleep(1);
+    }
+
+  return ret;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -625,7 +706,149 @@ int TramChangeScuSettings(void)
       return -1;
     }
 
-  return AccelSensorChangeScuSetting(p_accel_sensor, settings);
+  /* Restart accelerometer sensor */
+
+  CHECK_FUNC_RET(AccelSensorStop(p_accel_sensor));
+  CHECK_FUNC_RET(AccelSensorClose(p_accel_sensor));
+  CHECK_FUNC_RET(AccelSensorOpen(p_accel_sensor, settings));
+  CHECK_FUNC_RET(AccelSensorStart(p_accel_sensor));
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+int TramDestroyPhysicalSensors(void)
+{
+  int ret;
+
+  ret = AccelSensorDestroy(p_accel_sensor);
+  if (ret != PHYSICAL_SENSOR_ERR_CODE_OK)
+    {
+      err("AccelSensorDestroy() failure. %d\n", ret);
+      return -1;
+    }
+  s_active_status &= ~(1 << accelID);
+
+  ret = MagSensorDestroy(p_mag_sensor);
+  if (ret != PHYSICAL_SENSOR_ERR_CODE_OK)
+    {
+      err("MagSensorDestroy() failure. %d\n", ret);
+      return -1;
+    }
+  s_active_status &= ~(1 << magID);
+
+  ret = PressSensorDestroy(p_press_sensor);
+  if (ret != PHYSICAL_SENSOR_ERR_CODE_OK)
+    {
+      err("PressSensorDestroy() failure. %d\n", ret);
+      return -1;
+    }
+  s_active_status &= ~(1 << pressureID);
+
+  ret = TempSensorDestroy(p_temp_sensor);
+  if (ret != PHYSICAL_SENSOR_ERR_CODE_OK)
+    {
+      err("TempSensorDestroy() failure. %d\n", ret);
+      return -1;
+    }
+  s_active_status &= ~(1 << tempID);
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+int TramPowerControl(int power_ev)
+{
+  int ret = 0;
+
+  switch (power_ev)
+    {
+      case TRAM_POWER_EV_ACCEL_ON:
+        {
+          ret = accel_power_ctrl(true);
+          if(ret == 0)
+            {
+              s_pw_status |= 1 << accelID;
+            }
+        }
+        break;
+
+      case TRAM_POWER_EV_ACCEL_OFF:
+        {
+          ret = accel_power_ctrl(false);
+          if(ret == 0)
+            {
+              s_pw_status &= ~(1 << accelID);
+            }
+        }
+        break;
+
+      case TRAM_POWER_EV_MAG_ON:
+        {
+          ret = magne_power_ctrl(true);
+          if(ret == 0)
+            {
+              s_pw_status |= 1 << magID;
+            }
+        }
+        break;
+
+      case TRAM_POWER_EV_MAG_OFF:
+        {
+          ret = magne_power_ctrl(false);
+          if(ret == 0)
+            {
+              s_pw_status &= ~(1 << magID);
+            }
+        }
+        break;
+
+      case TRAM_POWER_EV_PRESS_ON:
+        {
+          ret = pressure_power_ctrl(true);
+          if(ret == 0)
+            {
+              s_pw_status |= 1 << pressureID;
+            }
+        }
+        break;
+
+      case TRAM_POWER_EV_PRESS_OFF:
+        {
+          ret = pressure_power_ctrl(false);
+          if(ret == 0)
+            {
+              s_pw_status &= ~(1 << pressureID);
+            }
+        }
+        break;
+
+      case TRAM_POWER_EV_TEMP_ON:
+        {
+          ret = temperature_power_ctrl(true);
+          if(ret == 0)
+            {
+              s_pw_status |= 1 << tempID;
+            }
+        }
+        break;
+
+      case TRAM_POWER_EV_TEMP_OFF:
+        {
+          ret = temperature_power_ctrl(false);
+          if(ret == 0)
+            {
+              s_pw_status &= ~(1 << tempID);
+            }
+        }
+        break;
+
+      default:
+        ret = -1;
+        break;
+    }
+
+  return ret;
 }
 
 /*--------------------------------------------------------------------------*/

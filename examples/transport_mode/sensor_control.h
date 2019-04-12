@@ -37,15 +37,45 @@
 #define __TRAM_SENSOR_CONTROL_H
 
 /****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/* Event type. */
+
+#define TRAM_LOGSEN_EV     0x00
+#define TRAM_PHYSEN_EV     0x10
+#define TRAM_POWER_EV      0x20
+#define TRAM_APP_EV        0x30
+
+#define TRAM_APP_FINISH_PHYSICAL_SENSOR (TRAM_APP_EV | 0x01)
+
+#define TRAM_LOGSEN_EV_SCU_CHANGE (TRAM_LOGSEN_EV | 0x01)
+
+#define TRAM_PHYSEN_EV_ACCEL_MF   (TRAM_PHYSEN_EV | 0x01)
+
+#define TRAM_POWER_EV_ACCEL_ON    (TRAM_POWER_EV | 0x0)
+#define TRAM_POWER_EV_ACCEL_OFF   (TRAM_POWER_EV | 0x1)
+#define TRAM_POWER_EV_MAG_ON      (TRAM_POWER_EV | 0x2)
+#define TRAM_POWER_EV_MAG_OFF     (TRAM_POWER_EV | 0x3)
+#define TRAM_POWER_EV_PRESS_ON    (TRAM_POWER_EV | 0x4)
+#define TRAM_POWER_EV_PRESS_OFF   (TRAM_POWER_EV | 0x5)
+#define TRAM_POWER_EV_TEMP_ON     (TRAM_POWER_EV | 0x6)
+#define TRAM_POWER_EV_TEMP_OFF    (TRAM_POWER_EV | 0x7)
+
+#define TRAM_APP_EV_PHYSEN_DESTROY (TRAM_APP_EV | 0x01)
+
+/****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
-int TramOpenSensors(uint8_t cmd_pool_id);
+int TramOpenSensors(uint8_t cmd_pool_id, mqd_t msg_id);
 int TramCloseSensors(void);
 int TramStartSensors(void);
 int TramStopSensors(void);
 int TramSendMathFuncEvent(void);
 int TramChangeScuSettings(void);
+int TramDestroyPhysicalSensors(void);
+int TramPowerControl(int power_ev);
 
 #ifdef CONFIG_EXAMPLES_SENSOR_TRAM_DETAILED_INFO
 FAR float *TramGetLikelihood(void);

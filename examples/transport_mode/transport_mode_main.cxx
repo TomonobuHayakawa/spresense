@@ -63,21 +63,23 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define DETECTED_MF_EV  0
-#define CHANGE_SCU_EV   1
-
 #define TIME_TO_WAIT_KEY (200 * 1000) /* in microsecond */
 
 /* Error message */
 
 #define err(format, ...)        fprintf(stderr, format, ##__VA_ARGS__)
 
+/* Message queue name */
+
+#define TRAM_MSGQ_NAME  "tram_mqueue"
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
 static mpshm_t s_shm;
-static mqd_t s_mqfd = (mqd_t)-1;
+static mqd_t s_mqfd_snd = (mqd_t)-1;
+static mqd_t s_mqfd_rcv = (mqd_t)-1;
 static pthread_t s_thread_id;
 
 static const char *s_class_strings[] =
@@ -110,8 +112,8 @@ static bool app_receive_event(sensor_command_data_t& data)
         {
           /* send message */
 
-          char ev = DETECTED_MF_EV;
-          mq_send(s_mqfd, (char *)&ev, sizeof(uint8_t), 10);
+          uint8_t ev = TRAM_PHYSEN_EV_ACCEL_MF;
+          mq_send(s_mqfd_snd, (char *)&ev, sizeof(uint8_t), 0);
         }
         break;
 
@@ -137,11 +139,11 @@ static bool app_receive_event(sensor_command_data_t& data)
             }
           else if (result_type == TramCmdTypeTrans)
             {
-              char state;
+              uint8_t ev;
               switch (result_data)
                 {
                 case ChangeScuSettings:
-                  state = CHANGE_SCU_EV;
+                  ev = TRAM_LOGSEN_EV_SCU_CHANGE;
                   break;
 
                 default:
@@ -151,7 +153,7 @@ static bool app_receive_event(sensor_command_data_t& data)
 
               /* Send message */
 
-              mq_send(s_mqfd, (char *)&state, sizeof(uint8_t), 10);
+              mq_send(s_mqfd_snd, (char *)&ev, sizeof(uint8_t), 0);
               break;
             }
         }
@@ -321,13 +323,13 @@ static void finalize_memutilities(void)
 extern "C" void *TramReceivingEvThread(FAR void *arg)
 {
   int ret = 0;
-  char ev;
+  uint8_t ev;
 
-  while (mq_receive(s_mqfd, &ev, sizeof(uint8_t), 0) != 0)
+  while (mq_receive(s_mqfd_rcv, (char *)&ev, sizeof(uint8_t), 0) != 0)
     {
       switch (ev)
         {
-          case DETECTED_MF_EV:
+          case TRAM_PHYSEN_EV_ACCEL_MF:
             {
               ret = TramSendMathFuncEvent();
               if (ret != 0)
@@ -337,12 +339,39 @@ extern "C" void *TramReceivingEvThread(FAR void *arg)
             }
             break;
 
-          case CHANGE_SCU_EV:
+          case TRAM_LOGSEN_EV_SCU_CHANGE:
             {
               ret = TramChangeScuSettings();
               if (ret != 0)
                 {
                   err("failed to change SCU settings.\n");
+                }
+            }
+            break;
+
+          case TRAM_POWER_EV_ACCEL_ON:
+          case TRAM_POWER_EV_ACCEL_OFF:
+          case TRAM_POWER_EV_MAG_ON:
+          case TRAM_POWER_EV_MAG_OFF:
+          case TRAM_POWER_EV_PRESS_ON:
+          case TRAM_POWER_EV_PRESS_OFF:
+          case TRAM_POWER_EV_TEMP_ON:
+          case TRAM_POWER_EV_TEMP_OFF:
+            {
+              ret = TramPowerControl(ev);
+              if (ret != 0)
+                {
+                  err("failed to control power.\n");
+                }
+            }
+            break;
+
+          case TRAM_APP_EV_PHYSEN_DESTROY:
+            {
+              ret = TramDestroyPhysicalSensors();
+              if (ret != 0)
+                {
+                  err("failed to destroy physical sensors.\n");
                 }
             }
             break;
@@ -367,13 +396,24 @@ static int open_message(void)
   /* Fill in attributes for message queue */
 
   mqueue_attr.mq_maxmsg  = 20;
-  mqueue_attr.mq_msgsize = 1;
+  mqueue_attr.mq_msgsize = sizeof(char);
   mqueue_attr.mq_flags   = 0;
 
-  s_mqfd = mq_open("tram_mqueue", O_RDWR|O_CREAT, 0666, &mqueue_attr);
-  if (s_mqfd < 0)
+  /* Open message queue for send */
+
+  s_mqfd_snd = mq_open(TRAM_MSGQ_NAME, O_WRONLY|O_CREAT, 0666, &mqueue_attr);
+  if (s_mqfd_snd < 0)
     {
-      err("failed by mq_open(O_RDWR)\n");
+      err("failed by mq_open(O_WRONLY)\n");
+      return EXIT_FAILURE;
+    }
+
+  /* Open message queue for receive */
+
+  s_mqfd_rcv = mq_open(TRAM_MSGQ_NAME, O_RDONLY|O_CREAT, 0666, &mqueue_attr);
+  if (s_mqfd_rcv < 0)
+    {
+      err("failed by mq_open(O_RDONLY)\n");
       return EXIT_FAILURE;
     }
 
@@ -395,7 +435,9 @@ static void close_message(void)
 
   /* Close mq fd */
 
-  mq_close(s_mqfd);
+  mq_close(s_mqfd_snd);
+  mq_close(s_mqfd_rcv);
+  mq_unlink(TRAM_MSGQ_NAME);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -458,7 +500,7 @@ extern "C" int transport_mode_main(int argc, char *argv[])
 
   /* Open transport_mode state transition */
 
-  ret = TramOpenSensors(SENSOR_DSP_CMD_BUF_POOL);
+  ret = TramOpenSensors(SENSOR_DSP_CMD_BUF_POOL, s_mqfd_snd);
   if (ret < 0)
     {
       return EXIT_FAILURE;
@@ -502,9 +544,7 @@ extern "C" int transport_mode_main(int argc, char *argv[])
 
   TramStopSensors();
 
-  /* Wait until sensors stop */
-
-  sleep(1);
+  /* Release application client */
 
   release_app();
 

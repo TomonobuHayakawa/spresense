@@ -40,43 +40,85 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <sdk/config.h>
 #include <arch/chip/cxd56_scu.h>
 #include <nuttx/sensors/bmp280.h>
 
-#include "memutils/memory_manager/MemHandle.h"
-#include "sensing/logical_sensor/barometer.h"
+#include "physical_sensor.h"
 
 /****************************************************************************
  * Public Types
  ****************************************************************************/
 
-typedef int (*TemperatureEventHandler) (uint32_t context,
-                                        MemMgrLite::MemHandle &mh);
-
-typedef struct
-{
-  TemperatureEventHandler  handler;    /* Event handler of the temperature sensor.  */
-  uint32_t                 context;    /* Context of the temperature sensor.        */
-  bool                     stopped;    /* Status flag of pressure process.          */
-  pthread_t                thread_id;  /* ID of receiving thread.                   */
-  int                      fd;         /* File discriptor of driver.                */
-  sigset_t                 sig_set;    /* Information of signal from driver.        */
-  struct scutimestamp_s    wm_ts;      /* Time stamp information of water mark.     */
-  struct bmp280_temp_adj_s sens_adj;   /* Sensitivity adjustment value.             */
-  FAR BarometerClass       *owner;     /* Owner class of Barometer                  */
-} TemperatureSensor;
-
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
-int TemperatureSensorCreate(FAR TemperatureSensor **sensor);
-int TemperatureSensorRegisterHandler(FAR TemperatureSensor *sensor,
-                                     TemperatureEventHandler handler,
-                                     uint32_t context);
-int TemperatureSensorStartSensing(FAR TemperatureSensor *sensor);
-int TemperatureSensorDestroy(FAR TemperatureSensor *sensor);
-int TemperatureSensorStopSensing(FAR TemperatureSensor *sensor);
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
+FAR physical_sensor_t *TempSensorCreate(pysical_event_handler_t handler);
+int TempSensorOpen(FAR physical_sensor_t *sensor,
+                   FAR struct bmp280_temp_adj_s *temp_adj);
+int TempSensorStart(FAR physical_sensor_t *sensor);
+int TempSensorStop(FAR physical_sensor_t *sensor);
+int TempSensorClose(FAR physical_sensor_t *sensor);
+int TempSensorDestroy(FAR physical_sensor_t *sensor);
+
+#ifdef __cplusplus
+} /* end of extern "C" */
+#endif /* __cplusplus */
+
+/****************************************************************************
+ * Class
+ ****************************************************************************/
+
+#ifdef __cplusplus
+
+class TempSensorClass : public PhysicalSensorClass
+{
+public:
+
+  TempSensorClass(FAR physical_sensor_t *sensor) :
+    PhysicalSensorClass(sensor)
+    {
+      create();
+    };
+
+  ~TempSensorClass(){};
+
+private:
+
+  /* Override method */
+
+  int open_sensor();
+  int close_sensor();
+  int start_sensor();
+  int stop_sensor();
+
+  int setup_sensor(FAR void *param);
+  int setup_scu(FAR void *param);
+  int receive_signal(int sig_no, FAR siginfo_t *sig_info);
+
+  /* Local method */
+
+  int receive_scu_wm_ev();
+  void convert_data(FAR struct bmp280_meas_s *p_src,
+                    FAR int32_t *p_dst,
+                    int sample_num);
+  int notify_data(MemMgrLite::MemHandle &mh_dst);
+
+  /* Inline method */
+
+  uint32_t get_timestamp()
+    {
+      return 1000 * m_wm_ts.sec + ((1000 * m_wm_ts.tick) >> 15);
+    }
+
+  int m_fd;
+  struct scutimestamp_s m_wm_ts;
+};
+
+#endif /* __cplusplus */
 #endif /* __TRAM_TEMPERATURE_SENSOR_H */

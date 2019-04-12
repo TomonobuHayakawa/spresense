@@ -44,8 +44,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#include "include/mem_layout.h"
 #include "pressure_sensor.h"
+#include "sensing/logical_sensor/barometer.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -57,294 +57,287 @@
 #  define CONFIG_EXAMPLES_SENSOR_TRAM_PRESS_SIGNO 11
 #endif
 
-/* Task priority */
-
-#define SENSING_TASK_PRIORITY  150
-
 /* Error message */
 
 #define err(format, ...)        fprintf(stderr, format, ##__VA_ARGS__)
-
-/* Value check macros */
-
-#define CHECK_FUNC_RET(func)                                            \
-  do {                                                                  \
-    if ((func) < 0) {                                                   \
-      err("return error, %s, %d\n", __FUNCTION__, __LINE__);            \
-      return -1;                                                        \
-    }                                                                   \
-  } while(0)
-
-#define CHECK_NULL_RET(expr)                                            \
-  do {                                                                  \
-    if (expr == NULL) {                                                 \
-      err("check failed. %s, %d\n", __FUNCTION__, __LINE__);            \
-      return -1;                                                        \
-    }                                                                   \
-  } while(0)
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-static int PressureSensorSetupScu(FAR PressureSensor *sensor)
+static FAR void *press_sensor_entry(pthread_addr_t arg)
 {
-  struct scufifo_wm_s wm;
+  static int s_entory_function_result = PHYSICAL_SENSOR_ERR_CODE_OK;
+  FAR physical_sensor_t *sensor =
+    reinterpret_cast<FAR physical_sensor_t *>(arg);
 
-  CHECK_NULL_RET(sensor);
+  /* Create instanse of PressSensorClass. */
 
-  /* Get BMP280 sensitivity adjustment value. */
+  PressSensorClass *instance = new PressSensorClass(sensor);
 
-  CHECK_FUNC_RET(ioctl(sensor->fd,
-                       SNIOC_GETADJ,
-                       (unsigned long)(uintptr_t)&sensor->sens_adj));
+  /* Set sensor signal number. */
 
-  /* Set adjustment value to Barometer class. */
+  instance->add_signal(CONFIG_EXAMPLES_SENSOR_TRAM_PRESS_SIGNO);
 
-  sensor->owner->setAdjustParam(&sensor->sens_adj);
+  /* Start pressure sensor process. */
 
-  /* Set FIFO size to 3 bytes * 8 Hz = 24 */
+  instance->run();
 
-  CHECK_FUNC_RET(ioctl(
-                   sensor->fd,
-                   SCUIOC_SETFIFO,
-                   sizeof(struct bmp280_meas_s) * PRESSURE_WATERMARK_NUM));
+  /* Delete sensor signal number. */
 
-  /* Set sequencer sampling rate 8 Hz
-   * (if config CXD56_SCU_PREDIV = 64)
-   * 32768 / 64 / (2 ^ 6) = 8
-   */
+  instance->delete_signal(CONFIG_EXAMPLES_SENSOR_TRAM_PRESS_SIGNO);
 
-  CHECK_FUNC_RET(ioctl(sensor->fd, SCUIOC_SETSAMPLE, 6));
+  /* Free instance of PressSensorClass. */
 
-  /* Set watermark. */
+  free(instance);
 
-  wm.signo     = CONFIG_EXAMPLES_SENSOR_TRAM_PRESS_SIGNO;
-  wm.ts        = &sensor->wm_ts;
-  wm.watermark = PRESSURE_WATERMARK_NUM;
-
-  CHECK_FUNC_RET(ioctl(sensor->fd,
-                       SCUIOC_SETWATERMARK,
-                       (unsigned long)(uintptr_t)&wm));
-
-  return 0;
-}
-
-/*--------------------------------------------------------------------------*/
-static int PressureNotifyData(FAR PressureSensor *sensor,
-                              MemMgrLite::MemHandle &mh_src,
-                              MemMgrLite::MemHandle &mh_dst)
-{
-  FAR struct bmp280_meas_s *p_src =
-    reinterpret_cast<FAR struct bmp280_meas_s *>(mh_src.getVa());
-  FAR int32_t              *p_dst =
-    reinterpret_cast<FAR int32_t *>(mh_dst.getVa());
-
-  for (int i = 0; i < PRESSURE_WATERMARK_NUM; i++, p_src++, p_dst++)
-    {
-      *p_dst = (int32_t)((((uint32_t)(p_src->msb)) << 12)
-        | ((uint32_t)p_src->lsb << 4)
-        | ((uint32_t)p_src->xlsb >> 4));
-    }
-
-  if ((sensor->handler != NULL) && !sensor->stopped)
-    {
-      sensor->handler(sensor->context, mh_dst);
-    }
-
-  return 0;
-}
-
-/*--------------------------------------------------------------------------*/
-extern "C" void *PressureSensorReceivingThread(FAR void *arg)
-{
-  int                 ret;
-  FAR char            *p_src;
-  struct siginfo      value;
-  struct timespec     timeout;
-  FAR PressureSensor  *sensor;
-
-  sensor = reinterpret_cast<FAR PressureSensor *>(arg);
-
-  /* Setup scu */
-
-  ret = PressureSensorSetupScu(sensor);
-  if (ret != 0)
-    {
-      ASSERT(0);
-    }
-
-  /* Start sequencer */
-
-  ret = ioctl(sensor->fd, SCUIOC_START, 0);
-  if (ret != 0)
-    {
-      err("Start pressure sensor failed. error = %d\n", ret);
-      ASSERT(0);
-    }
-
-  /* Set timeout 6 seconds, SCU may send signal every 5 second. */
-
-  timeout.tv_sec  = 6;
-  timeout.tv_nsec = 0;
-
-  while(!sensor->stopped)
-    {
-      ret = sigtimedwait(&sensor->sig_set, &value, &timeout);
-      if (ret < 0)
-        {
-          continue;
-        }
-
-      /* Get MemHandle */
-
-      MemMgrLite::MemHandle mh_src;
-      MemMgrLite::MemHandle mh_dst;
-      if (mh_src.allocSeg(
-            PRESS_DATA_BUF_POOL,
-            (sizeof(struct bmp280_meas_s) * PRESSURE_WATERMARK_NUM))
-            != ERR_OK)
-        {
-          ASSERT(0);
-        }
-
-      /* Set physical address.
-       * (The addess specified for the SCU must be a physical address)
-       */
-
-      p_src = reinterpret_cast<FAR char *>(mh_src.getPa());
-
-      if (mh_dst.allocSeg(PRESS_DATA_BUF_POOL,
-                          (sizeof(uint32_t) * PRESSURE_WATERMARK_NUM))
-            != ERR_OK)
-        {
-          ASSERT(0);
-        }
-
-      ret = read(sensor->fd,
-                 p_src,
-                 sizeof(struct bmp280_meas_s) * PRESSURE_WATERMARK_NUM);
-      if (ret != (sizeof(struct bmp280_meas_s) * PRESSURE_WATERMARK_NUM))
-        {
-          ASSERT(0);
-        }
-
-      PressureNotifyData(sensor, mh_src, mh_dst);
-    }
-
-  return 0;
+  return (void *)&s_entory_function_result;
 }
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-int PressureSensorCreate(FAR PressureSensor **sensor)
+FAR physical_sensor_t *PressSensorCreate(pysical_event_handler_t handler)
 {
-  CHECK_NULL_RET(sensor);
-
-  *sensor = (FAR PressureSensor *)malloc(sizeof(PressureSensor));
-  memset(*sensor, 0 , sizeof(PressureSensor));
-
-  return 0;
+  return PhysicalSensorCreate(handler,
+                              (void *)press_sensor_entry,
+                              "press_sensor");
 }
 
 /*--------------------------------------------------------------------------*/
-int PressureSensorRegisterHandler(FAR PressureSensor* sensor,
-                                  PressureEventHandler handler,
-                                  uint32_t context)
+int PressSensorOpen(FAR physical_sensor_t *sensor,
+                    FAR struct bmp280_press_adj_s *press_adj)
 {
-  CHECK_NULL_RET(sensor);
-
-  sensor->handler = handler;
-  sensor->context = context;
-
-  return 0;
+  return PhysicalSensorOpen(sensor, reinterpret_cast<void *>(press_adj));
 }
 
 /*--------------------------------------------------------------------------*/
-int PressureSensorStartSensing(FAR PressureSensor *sensor)
+int PressSensorStart(FAR physical_sensor_t *sensor)
 {
-  pthread_attr_t attr;
-  struct sched_param sch_param;
+  return PhysicalSensorStart(sensor);
+}
 
-  CHECK_NULL_RET(sensor);
+/*--------------------------------------------------------------------------*/
+int PressSensorStop(FAR physical_sensor_t *sensor)
+{
+  return PhysicalSensorStop(sensor);
+}
 
-  /* Open driver */
+/*--------------------------------------------------------------------------*/
+int PressSensorClose(FAR physical_sensor_t *sensor)
+{
+  return PhysicalSensorClose(sensor);
+}
 
-  sensor->fd = open(TRAM_PRESSURE_DEVNAME, O_RDONLY);
-  if (sensor->fd <= 0)
+/*--------------------------------------------------------------------------*/
+int PressSensorDestroy(FAR physical_sensor_t *sensor)
+{
+  return PhysicalSensorDestroy(sensor);
+}
+
+/****************************************************************************
+ * PressSensorClass
+ ****************************************************************************/
+
+int PressSensorClass::open_sensor()
+{
+  m_fd = open(TRAM_PRESSURE_DEVNAME, O_RDONLY);
+  if (m_fd <= 0)
     {
-      err("Pressure device open error %d\n", sensor->fd);
       return -1;
     }
-
-  /* Set standby duration*/
-
-  CHECK_FUNC_RET(ioctl(sensor->fd, SNIOC_SETSTB, BMP280_STANDBY_63_MS));
-
-  /* Set status */
-
-  sensor->stopped = false;
-
-  /* Add signal */
-
-  sigemptyset(&sensor->sig_set);
-  sigaddset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_PRESS_SIGNO);
-
-  /* Create receive thread */
-
-  (void)pthread_attr_init(&attr);
-  sch_param.sched_priority = SENSING_TASK_PRIORITY;
-  CHECK_FUNC_RET(pthread_attr_setschedparam(&attr, &sch_param));
-
-  CHECK_FUNC_RET(pthread_create(&sensor->thread_id,
-                                &attr,
-                                PressureSensorReceivingThread,
-                                (pthread_addr_t)sensor));
-
   return 0;
 }
 
 /*--------------------------------------------------------------------------*/
-int PressureSensorStopSensing(FAR PressureSensor* sensor)
+int PressSensorClass::close_sensor()
 {
-  FAR void *value;
+  return close(m_fd);
+}
 
-  CHECK_NULL_RET(sensor);
+/*--------------------------------------------------------------------------*/
+int PressSensorClass::start_sensor()
+{
+  return ioctl(m_fd, SCUIOC_START, 0);
+}
 
-  if (sensor->fd == 0)
+/*--------------------------------------------------------------------------*/
+int PressSensorClass::stop_sensor()
+{
+  return ioctl(m_fd, SCUIOC_STOP, 0);
+}
+
+/*--------------------------------------------------------------------------*/
+int PressSensorClass::setup_sensor(FAR void *param)
+{
+  struct bmp280_press_adj_s *press_adj =
+    reinterpret_cast<FAR struct bmp280_press_adj_s *>(param);
+
+  /* Set standby duration */
+
+  int ret = ioctl(m_fd, SNIOC_SETSTB, BMP280_STANDBY_63_MS);
+  if (ret < 0)
     {
-      /* Already stopped */
-
-      return 0;
+      err("Press set standby duration error %d\n", ret);
+      return ret;
     }
 
-  /* Set status */
+  /* Get adjust value */
 
-  sensor->stopped = true;
-
-  /* Cancel thread */
-
-  pthread_cancel(sensor->thread_id);
-  pthread_join(sensor->thread_id, &value);
-
-  /* Delete signal */
-
-  sigdelset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_PRESS_SIGNO);
-
-  /* Close driver */
-
-  close(sensor->fd);
+  ret = ioctl(m_fd, SNIOC_GETADJ, (unsigned long)(uintptr_t)press_adj);
+  if (ret < 0)
+    {
+      err("Press get adjust value error %d\n", ret);
+      return ret;
+    }
 
   return 0;
 }
 
 /*--------------------------------------------------------------------------*/
-int PressureSensorDestroy(FAR PressureSensor* sensor)
+int PressSensorClass::setup_scu(FAR void *param)
 {
-  CHECK_NULL_RET(sensor);
+  /* Free FIFO. */
 
-  free(sensor);
+  int ret = ioctl(m_fd, SCUIOC_FREEFIFO, 0);
+  if (ret < 0)
+    {
+      err("Press free FIFO error %d\n", ret);
+      return ret;
+    }
+
+  /* Set FIFO size to 3 bytes * 8 Hz = 24 */
+
+  ret = ioctl(m_fd,
+              SCUIOC_SETFIFO,
+              sizeof(struct bmp280_meas_s) * PRESSURE_WATERMARK_NUM);
+  if (ret < 0)
+    {
+      err("Press set FIFO size error %d\n", ret);
+      return ret;
+    }
+
+  /* Set sequencer sampling rate 8 Hz
+   * (if config CXD56_SCU_PREDIV = 64)
+   * 32768 / 64 / (2 ^ 6) = 8
+   */
+
+  ret = ioctl(m_fd, SCUIOC_SETSAMPLE, 6);
+  if (ret < 0)
+    {
+      err("Press set sequencer sampling rate error %d\n", ret);
+      return ret;
+    }
+
+  /* Set water mark */
+
+  struct scufifo_wm_s wm;
+  wm.signo     = CONFIG_EXAMPLES_SENSOR_TRAM_PRESS_SIGNO;
+  wm.ts        = &m_wm_ts;
+  wm.watermark = PRESSURE_WATERMARK_NUM;
+
+  ret = ioctl(m_fd,
+              SCUIOC_SETWATERMARK,
+              static_cast<unsigned long>((uintptr_t)&wm));
+  if (ret < 0)
+    {
+      err("Press set water mark error %d\n", ret);
+      return ret;
+    }
+
   return 0;
 }
+
+/*--------------------------------------------------------------------------*/
+int PressSensorClass::receive_signal(int sig_no, FAR siginfo_t *sig_info)
+{
+  int ret = -1;
+
+  switch (sig_no)
+    {
+      case CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO:
+        {
+          ret = receive_scu_wm_ev();
+        }
+        break;
+
+      default:
+        break;
+    }
+  return ret;
+}
+
+/*--------------------------------------------------------------------------*/
+int PressSensorClass::receive_scu_wm_ev()
+{
+  MemMgrLite::MemHandle mh_dst;
+  MemMgrLite::MemHandle mh_src;
+  FAR char *p_src;
+  FAR char *p_dst;
+
+  /* Get segment of memory handle. */
+
+  if (ERR_OK != mh_src.allocSeg(
+                  MAG_DATA_BUF_POOL,
+                  (sizeof(struct bmp280_meas_s) * PRESSURE_WATERMARK_NUM)))
+    {
+      /* Fatal error occured. */
+
+      err("Fail to allocate segment of memory handle.\n");
+      ASSERT(0);
+    }
+  p_src = reinterpret_cast<char *>(mh_src.getPa());
+
+  if (ERR_OK != mh_dst.allocSeg(
+                  MAG_DATA_BUF_POOL,
+                  (sizeof(uint32_t) * PRESSURE_WATERMARK_NUM)))
+    {
+      /* Fatal error occured. */
+
+      err("Fail to allocate segment of memory handle.\n");
+      ASSERT(0);
+    }
+  p_dst = reinterpret_cast<char *>(mh_dst.getPa());
+
+  /* Read mangetometer data from driver. */
+
+  read(m_fd, p_src, sizeof(struct bmp280_meas_s) * PRESSURE_WATERMARK_NUM);
+
+  this->convert_data(reinterpret_cast<FAR struct bmp280_meas_s *>(p_src),
+                     reinterpret_cast<FAR int32_t *>(p_dst),
+                     PRESSURE_WATERMARK_NUM);
+
+  /* Notify mangetometer data to sensor manager. */
+
+  this->notify_data(mh_dst);
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+void PressSensorClass::convert_data(FAR struct bmp280_meas_s *p_src,
+                                  FAR int32_t *p_dst,
+                                  int sample_num)
+{
+  for (int i = 0; i < sample_num; i++, p_src++, p_dst++)
+    {
+      /* Get the raw pressure data from registers. Unit is hPa. */
+
+      *p_dst = (int32_t)((((uint32_t)(p_src->msb)) << 12)
+        | ((uint32_t)p_src->lsb << 4)
+        | ((uint32_t)p_src->xlsb >> 4));
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+int PressSensorClass::notify_data(MemMgrLite::MemHandle &mh_dst)
+{
+  if (m_handler != NULL)
+    {
+      uint32_t timestamp = get_timestamp();
+      return m_handler(0, timestamp, mh_dst);
+    }
+
+  return 0;
+};

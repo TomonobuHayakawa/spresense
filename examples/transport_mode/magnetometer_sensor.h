@@ -43,44 +43,89 @@
 #include <sdk/config.h>
 #include <arch/chip/cxd56_scu.h>
 
-#include "memutils/memory_manager/MemHandle.h"
+#include "physical_sensor.h"
 
 /****************************************************************************
  * Public Types
  ****************************************************************************/
 
-typedef struct
-{
-  float x;         /* Northward component, X. */
-  float y;         /* Northward component, Y. */
-  float z;         /* Northward component, Z. */
-} MagnetometerDOF;
-
-typedef int (*MagnetometerEventHandler) (uint32_t context,
-                                         MemMgrLite::MemHandle &mh);
-
-typedef struct
-{
-  MagnetometerEventHandler handler;          /* Event handler of the magnetometer sensor. */
-  uint32_t                 context;          /* Context of the magnetometer sensor.       */
-  bool                     stopped;          /* Status flag of magnetmeter process.       */
-  pthread_t                thread_id;        /* ID of receiving thread.                   */
-  int                      fd;               /* File discriptor of driver.                */
-  sigset_t                 sig_set;          /* Information of signal from driver.        */
-  struct scutimestamp_s    wm_ts;            /* Time stamp information of water mark.     */
-  int16_t                  sens_adj[3];      /* Sensitivity adjustment value.             */
-} MagnetmeterSensor;
-
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
-int MagnetmeterSensorCreate(FAR MagnetmeterSensor **sensor);
-int MagnetmeterSensorRegisterHandler(FAR MagnetmeterSensor *sensor,
-                                     MagnetometerEventHandler handler,
-                                     uint32_t context);
-int MagnetmeterSensorStartSensing(FAR MagnetmeterSensor *sensor);
-int MagnetmeterSensorDestroy(FAR MagnetmeterSensor *sensor);
-int MagnetmeterSensorStopSensing(FAR MagnetmeterSensor *sensor);
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
+FAR physical_sensor_t *MagSensorCreate(pysical_event_handler_t handler);
+int MagSensorOpen(FAR physical_sensor_t *sensor);
+int MagSensorStart(FAR physical_sensor_t *sensor);
+int MagSensorStop(FAR physical_sensor_t *sensor);
+int MagSensorClose(FAR physical_sensor_t *sensor);
+int MagSensorDestroy(FAR physical_sensor_t *sensor);
+
+#ifdef __cplusplus
+} /* end of extern "C" */
+#endif /* __cplusplus */
+
+/****************************************************************************
+ * Class
+ ****************************************************************************/
+
+#ifdef __cplusplus
+
+class MagSensorClass : public PhysicalSensorClass
+{
+public:
+
+  MagSensorClass(FAR physical_sensor_t *sensor) :
+    PhysicalSensorClass(sensor)
+    {
+      create();
+    };
+
+  ~MagSensorClass(){};
+
+private:
+
+  struct mag_float_s
+    {
+      float x;  /* Northward component, X. */
+      float y;  /* Northward component, X. */
+      float z;  /* Northward component, X. */
+    };
+  typedef struct mag_float_s mag_float_t;
+
+  /* Override method */
+
+  int open_sensor();
+  int close_sensor();
+  int start_sensor();
+  int stop_sensor();
+
+  int setup_sensor(FAR void *param);
+  int setup_scu(FAR void *param);
+  int receive_signal(int sig_no, FAR siginfo_t *sig_info);
+
+  /* Local method */
+
+  int receive_scu_wm_ev();
+  void convert_data(FAR struct mag_data_s *p_src,
+                    FAR mag_float_t *p_dst,
+                    int sample_num);
+  int notify_data(MemMgrLite::MemHandle &mh_dst);
+
+  /* Inline method */
+
+  uint32_t get_timestamp()
+    {
+      return 1000 * m_wm_ts.sec + ((1000 * m_wm_ts.tick) >> 15);
+    }
+
+  int m_fd;
+  struct scutimestamp_s m_wm_ts;
+  int16_t m_adj[3];
+};
+
+#endif /* __cplusplus */
 #endif /* __TRAM_MAGNETOMETER_SENSOR_H */

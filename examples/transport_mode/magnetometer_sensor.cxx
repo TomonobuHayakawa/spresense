@@ -45,13 +45,14 @@
 #include <fcntl.h>
 #include <nuttx/sensors/ak09912.h>
 
-#include "sensing/logical_sensor/transport_mode.h"
-#include "include/mem_layout.h"
 #include "magnetometer_sensor.h"
+#include "sensing/logical_sensor/transport_mode.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+
+/* For physical sensor. */
 
 #define TRAM_MAG_DEVNAME "/dev/mag0"
 
@@ -59,316 +60,296 @@
 #  define CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO 12
 #endif
 
-/* Task priority */
-
-#define SENSING_TASK_PRIORITY  150
-
 /* Error message */
 
 #define err(format, ...)        fprintf(stderr, format, ##__VA_ARGS__)
 
-/* Value check macros */
+/* Device fixed */
 
-#define CHECK_FUNC_RET(func)                                            \
-  do {                                                                  \
-    if ((func) < 0) {                                                   \
-      err("return error, %s, %d\n", __FUNCTION__, __LINE__);            \
-      return -1;                                                        \
-    }                                                                   \
-  } while(0)
-
-#define CHECK_NULL_RET(expr)                                            \
-  do {                                                                  \
-    if (expr == NULL) {                                                 \
-      err("check failed. %s, %d\n", __FUNCTION__, __LINE__);            \
-      return -1;                                                        \
-    }                                                                   \
-  } while(0)
+#define AK09912_SENSITIVITY      128
+#define AK9912_DECIMAL_MAX       32752.0F
+#define AK9912_PHISICAL_MAX      4912.0F
 
 /****************************************************************************
  * Private Types
  ****************************************************************************/
 
-typedef struct mag_data_s three_axis_s;
-
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-
-#define AK09912_SENSITIVITY      128
-#define AK09912_SENSITIVITY_DIV  256
-#define AK9912_DECIMAL_MAX       32752.0F
-#define AK9912_PHISICAL_MAX      4912.0F
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-static int MagnetometerSensorSetupScu(FAR MagnetmeterSensor *sensor)
+static FAR void *mag_sensor_entry(pthread_addr_t arg)
 {
-  struct scufifo_wm_s wm;
-  struct ak09912_sensadj_s sensadj;
+  static int s_entory_function_result = PHYSICAL_SENSOR_ERR_CODE_OK;
+  FAR physical_sensor_t *sensor =
+    reinterpret_cast<FAR physical_sensor_t *>(arg);
 
-  /* Set adjust value */
+  /* Create instanse of MagSensorClass. */
 
-  CHECK_FUNC_RET(ioctl(sensor->fd,
-                       SNIOC_GETADJ,
-                       (unsigned long)(uintptr_t)&sensadj));
+  MagSensorClass *instance = new MagSensorClass(sensor);
 
-  sensor->sens_adj[0] = sensadj.x + AK09912_SENSITIVITY;
-  sensor->sens_adj[1] = sensadj.y + AK09912_SENSITIVITY;
-  sensor->sens_adj[2] = sensadj.z + AK09912_SENSITIVITY;
+  /* Set sensor signal number. */
 
-  /* Set FIFO size to 6 bytes * 8 Hz = 48 */
+  instance->add_signal(CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO);
 
-  CHECK_FUNC_RET(ioctl(sensor->fd,
-                       SCUIOC_SETFIFO,
-                       sizeof(three_axis_s) * MAG_WATERMARK_NUM));
+  /* Start mangetometer sensor process. */
 
-  /* Set sequencer sampling rate 8 Hz
-   * (if config CXD56_SCU_PREDIV = 64)
-   * 32768 / 64 / (2 ^ 6) = 8
-   */
+  instance->run();
 
-  CHECK_FUNC_RET(ioctl(sensor->fd, SCUIOC_SETSAMPLE, 6));
+  /* Delete sensor signal number. */
 
-  /* Set watermark */
+  instance->delete_signal(CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO);
 
-  wm.signo = CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO;
-  wm.ts = &sensor->wm_ts;
-  wm.watermark = MAG_WATERMARK_NUM;
+  /* Free instance of MagSensorClass. */
 
-  CHECK_FUNC_RET(ioctl(sensor->fd,
-                       SCUIOC_SETWATERMARK,
-                       (unsigned long)(uintptr_t)&wm));
+  free(instance);
 
-  return 0;
-}
-
-/*--------------------------------------------------------------------------*/
-static inline float MagnetometerGetCompValue(FAR MagnetmeterSensor *sensor,
-                                             int16_t val,
-                                             uint32_t axis)
-{
-  return (float)(((val * (int32_t)sensor->sens_adj[axis]) >> 8) *
-                    AK9912_PHISICAL_MAX / AK9912_DECIMAL_MAX);
-}
-
-/*--------------------------------------------------------------------------*/
-static int MagnetmeterNotifyData(FAR MagnetmeterSensor *sensor,
-                                 MemMgrLite::MemHandle &mh_src,
-                                 MemMgrLite::MemHandle &mh_dst)
-{
-  FAR three_axis_s *p_src =
-    reinterpret_cast<FAR three_axis_s *>(mh_src.getVa());
-  FAR MagnetometerDOF *p_dst =
-    reinterpret_cast<FAR MagnetometerDOF *>(mh_dst.getVa());
-
-  for (int i = 0; i < MAG_WATERMARK_NUM; i++)
-    {
-      p_dst->x = MagnetometerGetCompValue(sensor, p_src->x, 0);
-      p_dst->y = MagnetometerGetCompValue(sensor, p_src->y, 1);
-      p_dst->z = MagnetometerGetCompValue(sensor, p_src->z, 2);
-
-      p_src++;
-      p_dst++;
-    }
-
-  if ((sensor->handler != NULL) && !sensor->stopped)
-    {
-      sensor->handler(sensor->context, mh_dst);
-    }
-
-  return 0;
-}
-
-/*--------------------------------------------------------------------------*/
-extern "C" void *MagnetmeterSensorReceivingThread(FAR void *arg)
-{
-  int                   ret;
-  FAR char              *p_src;
-  struct siginfo        value;
-  struct timespec       timeout;
-  FAR MagnetmeterSensor *sensor;
-
-  sensor = reinterpret_cast<FAR MagnetmeterSensor *>(arg);
-
-  /* Setup scu */
-
-  ret = MagnetometerSensorSetupScu(sensor);
-  if (ret != 0)
-    {
-      err("Setup mag failed. error = %d\n", ret);
-      ASSERT(0);
-    }
-
-  /* Start sequencer */
-
-  ret = ioctl(sensor->fd, SCUIOC_START, 0);
-  if (ret != 0)
-    {
-      err("Start magnetometer sensor failed. error = %d\n", ret);
-      ASSERT(0);
-    }
-
-  /* Set timeout 6 seconds, SCU may send signal every 5 second. */
-
-  timeout.tv_sec  = 6;
-  timeout.tv_nsec = 0;
-
-  while(!sensor->stopped)
-    {
-      ret = sigtimedwait(&sensor->sig_set, &value, &timeout);
-      if (ret < 0)
-        {
-          continue;
-        }
-
-      /* Get MemHandle */
-
-      MemMgrLite::MemHandle mh_src;
-      MemMgrLite::MemHandle mh_dst;
-      if (mh_src.allocSeg(
-            MAG_DATA_BUF_POOL,
-            (sizeof(three_axis_s) * MAG_WATERMARK_NUM)) != ERR_OK)
-        {
-          err("Get MemHandle of src failed.\n");
-          ASSERT(0);
-        }
-
-      /* Set physical address.
-       * (The addess specified for the SCU must be a physical address)
-       */
-
-      p_src = reinterpret_cast<FAR char *>(mh_src.getPa());
-
-      if (mh_dst.allocSeg(
-            MAG_DATA_BUF_POOL,
-            (sizeof(MagnetometerDOF) * MAG_WATERMARK_NUM)) != ERR_OK)
-        {
-          err("Get MemHandle of dst failed.\n");
-          ASSERT(0);
-        }
-
-      ret = read(sensor->fd, p_src, sizeof(three_axis_s) * MAG_WATERMARK_NUM);
-      if (ret != (sizeof(three_axis_s) * MAG_WATERMARK_NUM))
-        {
-          err("Read data failed.\n");
-          ASSERT(0);
-        }
-
-      MagnetmeterNotifyData(sensor, mh_src, mh_dst);
-    }
-
-  return 0;
+  return (void *)&s_entory_function_result;
 }
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-int MagnetmeterSensorCreate(FAR MagnetmeterSensor **sensor)
+FAR physical_sensor_t *MagSensorCreate(pysical_event_handler_t handler)
 {
-  CHECK_NULL_RET(sensor);
-
-  *sensor = (FAR MagnetmeterSensor *)malloc(sizeof(MagnetmeterSensor));
-  memset(*sensor, 0 , sizeof(MagnetmeterSensor));
-
-  return 0;
+  return PhysicalSensorCreate(handler,
+                              (void *)mag_sensor_entry,
+                              "mag_sensor");
 }
 
 /*--------------------------------------------------------------------------*/
-int MagnetmeterSensorRegisterHandler(FAR MagnetmeterSensor *sensor,
-                                     MagnetometerEventHandler handler,
-                                     uint32_t context)
+int MagSensorOpen(FAR physical_sensor_t *sensor)
 {
-  CHECK_NULL_RET(sensor);
-
-  sensor->handler = handler;
-  sensor->context = context;
-
-  return 0;
+  return PhysicalSensorOpen(sensor, NULL);
 }
 
 /*--------------------------------------------------------------------------*/
-int MagnetmeterSensorStartSensing(FAR MagnetmeterSensor *sensor)
+int MagSensorStart(FAR physical_sensor_t *sensor)
 {
-  pthread_attr_t attr;
-  struct sched_param sch_param;
+  return PhysicalSensorStart(sensor);
+}
 
-  CHECK_NULL_RET(sensor);
+/*--------------------------------------------------------------------------*/
+int MagSensorStop(FAR physical_sensor_t *sensor)
+{
+  return PhysicalSensorStop(sensor);
+}
 
-  /* Open driver */
+/*--------------------------------------------------------------------------*/
+int MagSensorClose(FAR physical_sensor_t *sensor)
+{
+  return PhysicalSensorClose(sensor);
+}
 
-  sensor->fd = open(TRAM_MAG_DEVNAME, O_RDONLY);
-  if (sensor->fd <= 0)
+/*--------------------------------------------------------------------------*/
+int MagSensorDestroy(FAR physical_sensor_t *sensor)
+{
+  return PhysicalSensorDestroy(sensor);
+}
+
+/****************************************************************************
+ * MagSensorClass
+ ****************************************************************************/
+
+int MagSensorClass::open_sensor()
+{
+  m_fd = open(TRAM_MAG_DEVNAME, O_RDONLY);
+  if (m_fd <= 0)
     {
-      err("Mag device open error %d\n", sensor->fd);
       return -1;
     }
-
-  /* Set status */
-
-  sensor->stopped = false;
-
-  /* Add signal */
-
-  sigemptyset(&sensor->sig_set);
-  sigaddset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO);
-
-  /* Create receive thread */
-
-  (void)pthread_attr_init(&attr);
-  sch_param.sched_priority = SENSING_TASK_PRIORITY;
-  CHECK_FUNC_RET(pthread_attr_setschedparam(&attr, &sch_param));
-
-  CHECK_FUNC_RET(pthread_create(&sensor->thread_id,
-                                &attr,
-                                MagnetmeterSensorReceivingThread,
-                                (pthread_addr_t)sensor));
-
   return 0;
 }
 
 /*--------------------------------------------------------------------------*/
-int MagnetmeterSensorStopSensing(FAR MagnetmeterSensor *sensor)
+int MagSensorClass::close_sensor()
 {
-  FAR void *value;
+  return close(m_fd);
+}
 
-  CHECK_NULL_RET(sensor);
+/*--------------------------------------------------------------------------*/
+int MagSensorClass::start_sensor()
+{
+  return ioctl(m_fd, SCUIOC_START, 0);
+}
 
-  if (sensor->fd == 0)
+/*--------------------------------------------------------------------------*/
+int MagSensorClass::stop_sensor()
+{
+  return ioctl(m_fd, SCUIOC_STOP, 0);
+}
+
+/*--------------------------------------------------------------------------*/
+int MagSensorClass::setup_sensor(FAR void *param)
+{
+  struct ak09912_sensadj_s sensadj;
+
+  /* Get adjust value */
+
+  int ret = ioctl(m_fd, SNIOC_GETADJ, (unsigned long)(uintptr_t)&sensadj);
+  if (ret < 0)
     {
-      /* Already stopped */
-
-      return 0;
+      err("Mag get adjust value error %d\n", ret);
+      return ret;
     }
 
-  /* Set status */
-
-  sensor->stopped = true;
-
-  /* Cancel thread */
-
-  pthread_cancel(sensor->thread_id);
-  pthread_join(sensor->thread_id, &value);
-
-  /* Delete signal */
-
-  sigdelset(&sensor->sig_set, CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO);
-
-  /* Close driver */
-
-  close(sensor->fd);
+  m_adj[0] = sensadj.x + AK09912_SENSITIVITY;
+  m_adj[1] = sensadj.y + AK09912_SENSITIVITY;
+  m_adj[2] = sensadj.z + AK09912_SENSITIVITY;
 
   return 0;
 }
 
 /*--------------------------------------------------------------------------*/
-int MagnetmeterSensorDestroy(FAR MagnetmeterSensor *sensor)
+int MagSensorClass::setup_scu(FAR void *param)
 {
-  CHECK_NULL_RET(sensor);
+  /* Free FIFO. */
 
-  free(sensor);
+  int ret = ioctl(m_fd, SCUIOC_FREEFIFO, 0);
+  if (ret < 0)
+    {
+      err("Mag free FIFO error %d\n", ret);
+      return ret;
+    }
+
+  /* Set FIFO size to 6 bytes * 8 Hz = 48 */
+
+  ret = ioctl(m_fd,
+              SCUIOC_SETFIFO,
+              sizeof(struct mag_data_s) * MAG_WATERMARK_NUM);
+  if (ret < 0)
+    {
+      err("Mag set FIFO size error %d\n", ret);
+      return ret;
+    }
+
+  /* Set sequencer sampling rate 8 Hz
+   * (if config CXD56_SCU_PREDIV = 64)
+   * 32768 / 64 / (2 ^ 6) = 8
+   */
+
+  ret = ioctl(m_fd, SCUIOC_SETSAMPLE, 6);
+  if (ret < 0)
+    {
+      err("Mag set sequencer sampling rate error %d\n", ret);
+      return ret;
+    }
+
+  /* Set water mark */
+
+  struct scufifo_wm_s wm;
+  wm.signo     = CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO;
+  wm.ts        = &m_wm_ts;
+  wm.watermark = MAG_WATERMARK_NUM;
+
+  ret = ioctl(m_fd,
+              SCUIOC_SETWATERMARK,
+              static_cast<unsigned long>((uintptr_t)&wm));
+  if (ret < 0)
+    {
+      err("Mag set water mark error %d\n", ret);
+      return ret;
+    }
+
   return 0;
 }
+
+/*--------------------------------------------------------------------------*/
+int MagSensorClass::receive_signal(int sig_no, FAR siginfo_t *sig_info)
+{
+  int ret = -1;
+
+  switch (sig_no)
+    {
+      case CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO:
+        {
+          ret = receive_scu_wm_ev();
+        }
+        break;
+
+      default:
+        break;
+    }
+  return ret;
+}
+
+/*--------------------------------------------------------------------------*/
+int MagSensorClass::receive_scu_wm_ev()
+{
+  MemMgrLite::MemHandle mh_dst;
+  MemMgrLite::MemHandle mh_src;
+  FAR char *p_src;
+  FAR char *p_dst;
+
+  /* Get segment of memory handle. */
+
+  if (ERR_OK != mh_src.allocSeg(
+                  MAG_DATA_BUF_POOL,
+                  (sizeof(struct mag_data_s) * MAG_WATERMARK_NUM)))
+    {
+      /* Fatal error occured. */
+
+      err("Fail to allocate segment of memory handle.\n");
+      ASSERT(0);
+    }
+  p_src = reinterpret_cast<char *>(mh_src.getPa());
+
+  if (ERR_OK != mh_dst.allocSeg(
+                  MAG_DATA_BUF_POOL,
+                  (sizeof(mag_float_t) * MAG_WATERMARK_NUM)))
+    {
+      /* Fatal error occured. */
+
+      err("Fail to allocate segment of memory handle.\n");
+      ASSERT(0);
+    }
+  p_dst = reinterpret_cast<char *>(mh_dst.getPa());
+
+  /* Read mangetometer data from driver. */
+
+  read(m_fd, p_src, sizeof(struct mag_data_s) * MAG_WATERMARK_NUM);
+
+  this->convert_data(reinterpret_cast<FAR struct mag_data_s *>(p_src),
+                     reinterpret_cast<FAR mag_float_t *>(p_dst),
+                     MAG_WATERMARK_NUM);
+
+  /* Notify mangetometer data to sensor manager. */
+
+  this->notify_data(mh_dst);
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+void MagSensorClass::convert_data(FAR struct mag_data_s *p_src,
+                                  FAR mag_float_t *p_dst,
+                                  int sample_num)
+{
+  /* Ratio of the value and the magnetic obtained from the sensor. */
+
+  float coef = AK9912_PHISICAL_MAX / AK9912_DECIMAL_MAX;
+
+  for (int i = 0; i < sample_num; i++, p_src++, p_dst++)
+    {
+      p_dst->x = (float)(((p_src->x * (int32_t)m_adj[0]) >> 8) * coef);
+      p_dst->y = (float)(((p_src->y * (int32_t)m_adj[1]) >> 8) * coef);
+      p_dst->z = (float)(((p_src->z * (int32_t)m_adj[2]) >> 8) * coef);
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+int MagSensorClass::notify_data(MemMgrLite::MemHandle &mh_dst)
+{
+  if (m_handler != NULL)
+    {
+      uint32_t timestamp = get_timestamp();
+      return m_handler(0, timestamp, mh_dst);
+    }
+
+  return 0;
+};
