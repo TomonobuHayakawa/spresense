@@ -1,7 +1,7 @@
 /****************************************************************************
- * modules/audio/components/postproc/postproc_api.h
+ * modules/include/audio/utilities/frame_samples.h
  *
- *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *   Copyright 2019 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,53 +33,57 @@
  *
  ****************************************************************************/
 
-#ifndef _POSTPROC_API_H_
-#define _POSTPROC_API_H_
+#ifndef MODULES_INCLUDE_AUDIO_UTILITIES_FRAME_SAMPLES_H
+#define MODULES_INCLUDE_AUDIO_UTILITIES_FRAME_SAMPLES_H
 
-#include "usercustom_component.h"
-#include "thruproc_component.h"
+#include "audio/audio_common_defs.h"
 
-/* Proc type definitions */
+/* When MP3 encode and fs is 16kHz, 22.05kHz, 24kHz, sample num of
+ * 1au(access unit) is 1152/2 = 576 (It depend on MPEG2 compliant).
+ * Therefore, at first, value is (#1)"CapSampleNumPerFrame[m_codec_type] / 2".
+ * And sample num of captured and SRC filterd data is to be 576,
+ * return ((#1) * 48000 / m_sampling_rate(Hz)).
+ *
+ * The process below is only for fs is 48kHz, 16kHz.
+ * To correspontd to 32000Hz, 44100Hz..., need conversion process to 
+ * sample num per 1au to be 1152.
+ */
 
-typedef enum
+
+inline uint32_t getCapSampleNumPerFrame(uint8_t codec_type, uint32_t fs)
 {
-  /* PreProc through (No signal processing) */
+  const uint32_t CapSampleNumPerFrame[] =
+  {
+    1152,  /* MP3 */
+    768,   /* WAV */ /* Any integer in capable */
+    1024,  /* AAC */
+    160,   /* OPUS */
+    1024,  /* AAC */
+    768,   /* LPCM */
+  };
 
-  ProcTypeThrough = 0,
-   
-  /* User defined process */
+  if (codec_type > AS_CODECTYPE_LPCM)
+    {
+      return 0;
+    }
 
-  ProcTypeUserDefFilter,
+  if (codec_type == AS_CODECTYPE_MP3 && fs < 32000)
+    {
+      return (CapSampleNumPerFrame[codec_type] / 2 * 48000 /
+        fs);
+    }
+  else if (codec_type == AS_CODECTYPE_OPUS)
+    {
+      /* 20ms. */
 
-} ProcType;
+      return ((fs / 50) * (48000 / fs));
+    }
+  else
+    {
+    }
 
-/* Postproc APIs */
+  return CapSampleNumPerFrame[codec_type];
+}
 
-extern "C" {
-
-uint32_t AS_postproc_init(const InitCustomProcParam *param,
-                          void *p_instance);
-
-bool AS_postproc_exec(const ExecCustomProcParam *param, void *p_instance);
-
-bool AS_postproc_flush(const FlushCustomProcParam *param, void *p_instance);
-
-bool AS_postproc_setparam(const SetCustomProcParam *param, void *p_instance);
-
-bool AS_postproc_recv_done(void *p_instance, CustomProcCmpltParam *cmplt);
-
-uint32_t AS_postproc_activate(void **p_instance,
-                              MemMgrLite::PoolId apu_pool_id,
-                              MsgQueId apu_mid,
-                              CustomProcCallback callback,
-                              const char *dsp_name,
-                              void *p_requester,
-                              uint32_t *dsp_inf,
-                              ProcType type);
-
-bool AS_postproc_deactivate(void *p_instance);
-
-} /* extern "C" */
-
-#endif /* _POSTPROC_API_H_ */
+#endif /* MODULES_INCLUDE_AUDIO_UTILITIES_FRAME_SAMPLES_H */
 

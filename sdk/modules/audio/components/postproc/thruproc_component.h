@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postproc/postproc_through.h
+ * modules/audio/components/postproc/thruproc_component.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,26 +33,27 @@
  *
  ****************************************************************************/
 
-#ifndef _POSTPROC_THROUGH_H_
-#define _POSTPROC_THROUGH_H_
+#ifndef _THRUPROC_COMPONENT_H_
+#define _THRUPROC_COMPONENT_H_
 
 #include "audio/audio_high_level_api.h"
 #include "memutils/s_stl/queue.h"
-#include "postproc_base.h"
+#include "customproc_base.h"
 
-class PostprocThrough : public PostprocBase
+class ThruProcComponent : public CustomProcBase
 {
 public:
-  PostprocThrough() {}
-  ~PostprocThrough() {}
+  ThruProcComponent() {}
+  ~ThruProcComponent() {}
 
-  virtual uint32_t init_apu(const InitPostprocParam& param);
-  virtual bool exec_apu(const ExecPostprocParam& param);
-  virtual bool flush_apu(const FlushPostprocParam& param);
-  virtual bool set_apu(const SetPostprocParam& param);
-  virtual bool recv_done(PostprocCmpltParam *cmplt);
-  virtual bool recv_done(void) { m_req_que.pop(); return true; }
-  virtual uint32_t activate(PostprocCallback callback,
+  virtual uint32_t init(const InitCustomProcParam& param);
+  virtual bool exec(const ExecCustomProcParam& param);
+  virtual bool flush(const FlushCustomProcParam& param);
+  virtual bool set(const SetCustomProcParam& param);
+  virtual bool recv_done(CustomProcCmpltParam *cmplt);
+  virtual bool recv_done(void);
+  virtual uint32_t activate(CustomProcCallback callback,
+                            const char *image_name,
                             void *p_requester,
                             uint32_t *dsp_inf);
   virtual bool deactivate();
@@ -69,5 +70,5 @@ private:
   ReqQue m_req_que;
 };
 
-#endif /* _POSTPROC_THROUGH_H_ */
+#endif /* _THRUPROC_COMPONENT_H_ */
 

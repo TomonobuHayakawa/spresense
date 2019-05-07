@@ -76,6 +76,7 @@ struct CaptureBuffer
 {
   MemMgrLite::MemHandle cap_mh;
   uint32_t              sample; 
+  bool                  validity;
 };
 
 enum CaptureDevice
@@ -256,6 +257,7 @@ private:
   bool execOnRdy(const CaptureComponentParam& param);
   bool execOnPreAct(const CaptureComponentParam& param);
   bool execOnAct(const CaptureComponentParam& param);
+  bool execOnError(const CaptureComponentParam& param);
   bool stopOnReady(const CaptureComponentParam& param);
   bool stopOnPreAct(const CaptureComponentParam& param);
   bool stopOnAct(const CaptureComponentParam& param);
@@ -264,7 +266,7 @@ private:
   bool notify(const CaptureComponentParam& param);
 
   CaptureBuffer getCapBuf(uint32_t cap_sample);
-  bool holdCapBuf(CaptureBuffer buf);
+  bool enqueDmaReqQue(CaptureBuffer buf);
 };
 
 
