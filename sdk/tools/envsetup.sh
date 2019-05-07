@@ -144,6 +144,37 @@ function spresense_config() {
 	cd - &> /dev/null
 }
 
+# Name: spresense_goto_sdk
+# Note: Move current directory to SDK directory.
+# Usage: $ spresense_goto_sdk
+function spresense_goto_sdk() {
+	if [ "${SPRESENSE_SDK}" != "" ]; then
+		cd ${SPRESENSE_SDK}/sdk
+	else
+		echo "Warning: SPRESENSE_SDK is not set."
+		echo "         Please run 'source tools/envsetup.sh' again."
+	fi
+}
+
+# Name: spresense_goto_apps_root
+# Note: Move current directory to user application root directory.
+# Usage: $ spresense_goto_apps_root
+function spresense_goto_apps_root() {
+	if [ "${SPRESENSE_HOME}" != "" ]; then
+		cd ${SPRESENSE_HOME}
+	else
+		echo "Warning: SPRESENSE_HOME is not set."
+		echo "         Please run 'spresense_set_apps_root' first."
+	fi
+}
+
+# Name: spresense_make
+# Note: Build SDK and user application same as make command.
+# Usage: $ spresense_make [build options]
+function spresense_make() {
+	make -C ${SPRESENSE_SDK}/sdk $@
+}
+
 # Load current variable
 function _load_spresense_environment() {
 	if [ -f ${HOME}/.spresense_env ]; then
