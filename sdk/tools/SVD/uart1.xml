@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <peripheral>
-  <name>UART2</name>
+  <name>UART1</name>
   <version>1.0</version>
   <description>UART</description>
-  <baseAddress>0x02103000</baseAddress>
+  <baseAddress>0x041ac000</baseAddress>
   <size>32</size>
   <access>read-write</access>
 
@@ -14,9 +14,9 @@
   </addressBlock>
 
   <interrupt>
-    <name>UART2</name>
-    <description>UART2 interrupt</description>
-    <value>127</value>
+    <name>UART1</name>
+    <description>UART1 interrupt</description>
+    <value>27</value>
   </interrupt>
 
   <registers>
@@ -180,22 +180,6 @@
           <name>CTS</name>
           <description>Clear to send</description>
           <bitRange>[0:0]</bitRange>
-        </field>
-      </fields>
-    </register>
-
-    <!-- RTO -->
-    <register>
-      <name>RTO</name>
-      <description>Receive Timeout Configuration Register</description>
-      <addressOffset>0x1c</addressOffset>
-      <size>32</size>
-      <access>read-write</access>
-      <fields>
-        <field>
-          <name>TIMEOUT</name>
-          <description>Recieve timeout</description>
-          <bitRange>[15:0]</bitRange>
         </field>
       </fields>
     </register>
@@ -413,42 +397,6 @@
           <enumeratedValues>
             <enumeratedValue><name>Disabled</name><description>Disabled</description><value>0</value></enumeratedValue>
             <enumeratedValue><name>Enabled</name><description>Enabled</description><value>1</value></enumeratedValue>
-          </enumeratedValues>
-        </field>
-        <field>
-          <name>DTRINV</name>
-          <description>Invert DTR signal</description>
-          <bitRange>[6:6]</bitRange>
-          <enumeratedValues>
-            <enumeratedValue><name>Normal</name><description>Normal</description><value>0</value></enumeratedValue>
-            <enumeratedValue><name>Inverted</name><description>Inverted</description><value>1</value></enumeratedValue>
-          </enumeratedValues>
-        </field>
-        <field>
-          <name>RXDMSK</name>
-          <description>RxD mask</description>
-          <bitRange>[5:5]</bitRange>
-          <enumeratedValues>
-            <enumeratedValue><name>Normal</name><description>Normal</description><value>0</value></enumeratedValue>
-            <enumeratedValue><name>ForceOne</name><description>Force 1</description><value>1</value></enumeratedValue>
-          </enumeratedValues>
-        </field>
-        <field>
-          <name>SIROINV</name>
-          <description>Invert SIR output</description>
-          <bitRange>[4:4]</bitRange>
-          <enumeratedValues>
-            <enumeratedValue><name>Normal</name><description>Normal</description><value>0</value></enumeratedValue>
-            <enumeratedValue><name>Inverted</name><description>Inverted</description><value>1</value></enumeratedValue>
-          </enumeratedValues>
-        </field>
-        <field>
-          <name>SIRIINV</name>
-          <description>Invert SIR input</description>
-          <bitRange>[3:3]</bitRange>
-          <enumeratedValues>
-            <enumeratedValue><name>Normal</name><description>Normal</description><value>0</value></enumeratedValue>
-            <enumeratedValue><name>Inverted</name><description>Inverted</description><value>1</value></enumeratedValue>
           </enumeratedValues>
         </field>
         <field>
