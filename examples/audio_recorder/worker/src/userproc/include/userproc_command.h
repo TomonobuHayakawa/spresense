@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postfilter/dsp_framework/dsp_audio_version.h
+ * audio_player_post/worker/src/userproc/include/userproc_command.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,40 +33,43 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H
-#define __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H
+#ifndef __USERPROC_COMMAND_H__
+#define __USERPROC_COMMAND_H__
 
-/****************************************************************************
- * Included Files
- ****************************************************************************/
+#include <stdint.h>
+#include <audio/dsp_framework/customproc_command_base.h>
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
+struct InitParam : public CustomprocCommand::CmdBase
+{
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
 
-/* Version rule:
- * (change library).(change of DSP interface).(change of internal processing)
- */
+struct ExecParam : public CustomprocCommand::CmdBase
+{
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
 
-/* Postfilter Version. */
+struct FlushParam : public CustomprocCommand::CmdBase
+{
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
 
-#define DSP_POSTFLTR_VERSION  0x010101    /* 01.01.01 */
+struct SetParam : public CustomprocCommand::CmdBase
+{
+  uint32_t enable;
+  uint32_t coef;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
 
-/****************************************************************************
- * Public Types
- ****************************************************************************/
-
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-/****************************************************************************
- * Inline Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-#endif /* __MODULES_AUDIO_DSP_WORKER_DSP_AUDIO_VERSION_H */
+#endif /* __USERPROC_COMMAND_H__ */
 

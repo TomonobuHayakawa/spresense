@@ -1,5 +1,5 @@
 /****************************************************************************
- * pool_layout.h
+ * modules/audio/components/customproc/postproc_api.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,27 +33,53 @@
  *
  ****************************************************************************/
 
-#ifndef POOL_LAYOUT_H_INCLUDED
-#define POOL_LAYOUT_H_INCLUDED
+#ifndef _POSTPROC_API_H_
+#define _POSTPROC_API_H_
 
-#include "memutils/memory_manager/MemMgrTypes.h"
+#include "usercustom_component.h"
+#include "thruproc_component.h"
 
-namespace MemMgrLite {
+/* Proc type definitions */
 
-MemPool* static_pools[NUM_MEM_POOLS];
+typedef enum
+{
+  /* PreProc through (No signal processing) */
 
-extern const PoolAttr MemoryPoolLayouts[NUM_MEM_LAYOUTS][NUM_MEM_POOLS] = {
- {/* Layout:0 */
-  /* pool_ID          type       seg fence  addr        size         */
-  { ES_BUF_POOL     , BasicType,   5, true, 0x000c0008, 0x0000f000 },  /* AUDIO_WORK_AREA */
-  { PREPROC_BUF_POOL, BasicType,   5, true, 0x000cf010, 0x0000f000 },  /* AUDIO_WORK_AREA */
-  { INPUT_BUF_POOL  , BasicType,   5, true, 0x000de018, 0x0000f000 },  /* AUDIO_WORK_AREA */
-  { ENC_APU_CMD_POOL, BasicType,   3, true, 0x000ed020, 0x00000114 },  /* AUDIO_WORK_AREA */
-  { SRC_APU_CMD_POOL, BasicType,   3, true, 0x000ed140, 0x00000114 },  /* AUDIO_WORK_AREA */
-  { PRE_APU_CMD_POOL, BasicType,   3, true, 0x000ed260, 0x00000114 },  /* AUDIO_WORK_AREA */
- },
-}; /* end of MemoryPoolLayouts */
+  ProcTypeThrough = 0,
+   
+  /* User defined process */
 
-}  /* end of namespace MemMgrLite */
+  ProcTypeUserDefFilter,
 
-#endif /* POOL_LAYOUT_H_INCLUDED */
+} ProcType;
+
+/* Postproc APIs */
+
+extern "C" {
+
+uint32_t AS_postproc_init(const InitCustomProcParam *param,
+                          void *p_instance);
+
+bool AS_postproc_exec(const ExecCustomProcParam *param, void *p_instance);
+
+bool AS_postproc_flush(const FlushCustomProcParam *param, void *p_instance);
+
+bool AS_postproc_setparam(const SetCustomProcParam *param, void *p_instance);
+
+bool AS_postproc_recv_done(void *p_instance, CustomProcCmpltParam *cmplt);
+
+uint32_t AS_postproc_activate(void **p_instance,
+                              MemMgrLite::PoolId apu_pool_id,
+                              MsgQueId apu_mid,
+                              CustomProcCallback callback,
+                              const char *dsp_name,
+                              void *p_requester,
+                              uint32_t *dsp_inf,
+                              ProcType type);
+
+bool AS_postproc_deactivate(void *p_instance);
+
+} /* extern "C" */
+
+#endif /* _POSTPROC_API_H_ */
+

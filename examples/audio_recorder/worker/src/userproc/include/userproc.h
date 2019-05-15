@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postproc/dsp_framework/postproc_dsp_ctrl.h
+ * audio_player_post/worker/src/userproc/include/userproc.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,36 +33,39 @@
  *
  ****************************************************************************/
 
-#ifndef __POSTPROC_DSP_CTRL_H__
-#define __POSTPROC_DSP_CTRL_H__
+#ifndef __USERPROC_H__
+#define __USERPROC_H__
 
 #include <string.h>
 
-#include "postproc_command_base.h"
-#include "postproc_dsp_userproc_if.h"
+#include <audio/dsp_framework/customproc_dsp_userproc_if.h>
+#include "userproc_command.h"
+#include "rcfilter.h"
 
-class PostprocDspCtrl
+class UserProc : public CustomprocDspUserProcIf
 {
 public:
-  void parse(PostprocCommand::CmdBase *cmd);
 
-  PostprocDspCtrl(PostprocDspUserProcIf *p_userproc_ins)
-    : m_p_userproc(p_userproc_ins)
+  UserProc() :
+    m_enable(true)
   {}
+
+  virtual void init(CustomprocCommand::CmdBase *cmd) { init(static_cast<InitParam *>(cmd)); }
+  virtual void exec(CustomprocCommand::CmdBase *cmd) { exec(static_cast<ExecParam *>(cmd)); }
+  virtual void flush(CustomprocCommand::CmdBase *cmd) { flush(static_cast<FlushParam *>(cmd)); }
+  virtual void set(CustomprocCommand::CmdBase *cmd) { set(static_cast<SetParam *>(cmd)); }
 
 private:
 
-  PostprocDspUserProcIf *m_p_userproc;
+  bool m_enable;
+  RCfilter m_filter_ins;
 
-  typedef void (PostprocDspCtrl::*CtrlProc)(PostprocCommand::CmdBase *cmd);
-  static CtrlProc CtrlFuncTbl[PostprocCommand::CmdTypeNum];
+  void init(InitParam *param);
+  void exec(ExecParam *param);
+  void flush(FlushParam *param);
+  void set(SetParam *param);
 
-  void init(PostprocCommand::CmdBase *cmd);
-  void exec(PostprocCommand::CmdBase *cmd);
-  void flush(PostprocCommand::CmdBase *cmd);
-  void set(PostprocCommand::CmdBase *cmd);
-  void illegal(PostprocCommand::CmdBase *cmd);
 };
 
-#endif /* __POSTPROC_DSP_CTRL_H__ */
+#endif /* __USERPROC_H__ */
 

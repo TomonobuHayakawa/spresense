@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postproc/dsp_framework/postproc_dsp_userproc_if.h
+ * modules/audio/components/postfilter/dsp_framework/customproc_dsp_ctrl.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,22 +33,50 @@
  *
  ****************************************************************************/
 
-#ifndef __POSTPROC_DSP_USERPROC_IF_H__
-#define __POSTPROC_DSP_USERPROC_IF_H__
+#include <audio/dsp_framework/customproc_dsp_ctrl.h>
 
-#include "postproc_command_base.h"
-
-class PostprocDspUserProcIf
+/*--------------------------------------------------------------------*/
+CustomprocDspCtrl::CtrlProc CustomprocDspCtrl::CtrlFuncTbl[CustomprocCommand::CmdTypeNum] =
 {
-public:
-
-  /* Pure abstract functions to be overided by inheritor */
-
-  virtual void init(PostprocCommand::CmdBase *cmd) = 0;
-  virtual void exec(PostprocCommand::CmdBase *cmd) = 0;
-  virtual void flush(PostprocCommand::CmdBase *cmd) = 0;
-  virtual void set(PostprocCommand::CmdBase *cmd) = 0;
+  &CustomprocDspCtrl::init,
+  &CustomprocDspCtrl::exec,
+  &CustomprocDspCtrl::flush,
+  &CustomprocDspCtrl::set,
 };
 
-#endif /* __POSTPROC_DSP_USERPROC_IF_H__ */
+/*--------------------------------------------------------------------*/
+void CustomprocDspCtrl::parse(CustomprocCommand::CmdBase *cmd)
+{
+  (this->*CtrlFuncTbl[cmd->header.cmd_type])(cmd);
+}
+
+/*--------------------------------------------------------------------*/
+void CustomprocDspCtrl::init(CustomprocCommand::CmdBase *cmd)
+{
+  m_p_userproc->init(cmd);
+}
+
+/*--------------------------------------------------------------------*/
+void CustomprocDspCtrl::exec(CustomprocCommand::CmdBase *cmd)
+{
+  m_p_userproc->exec(cmd);
+}
+
+/*--------------------------------------------------------------------*/
+void CustomprocDspCtrl::flush(CustomprocCommand::CmdBase *cmd)
+{
+  m_p_userproc->flush(cmd);
+}
+
+/*--------------------------------------------------------------------*/
+void CustomprocDspCtrl::set(CustomprocCommand::CmdBase *cmd)
+{
+  m_p_userproc->set(cmd);
+}
+
+/*--------------------------------------------------------------------*/
+void CustomprocDspCtrl::illegal(CustomprocCommand::CmdBase *cmd)
+{
+  cmd->result.result_code = CustomprocCommand::ExecError;
+}
 

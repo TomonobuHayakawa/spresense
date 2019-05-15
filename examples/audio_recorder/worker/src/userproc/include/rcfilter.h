@@ -1,5 +1,5 @@
 /****************************************************************************
- * pool_layout.h
+ * audio_player_post/worker/src/userproc/include/rcfilter.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,27 +33,29 @@
  *
  ****************************************************************************/
 
-#ifndef POOL_LAYOUT_H_INCLUDED
-#define POOL_LAYOUT_H_INCLUDED
+#ifndef __RCFILTER_H__
+#define __RCFILTER_H__
 
-#include "memutils/memory_manager/MemMgrTypes.h"
+#include <string.h>
 
-namespace MemMgrLite {
 
-MemPool* static_pools[NUM_MEM_POOLS];
+class RCfilter
+{
+public:
+  RCfilter()
+    : m_coef(0)
+  {}
+  ~RCfilter();
 
-extern const PoolAttr MemoryPoolLayouts[NUM_MEM_LAYOUTS][NUM_MEM_POOLS] = {
- {/* Layout:0 */
-  /* pool_ID          type       seg fence  addr        size         */
-  { ES_BUF_POOL     , BasicType,   5, true, 0x000c0008, 0x0000f000 },  /* AUDIO_WORK_AREA */
-  { PREPROC_BUF_POOL, BasicType,   5, true, 0x000cf010, 0x0000f000 },  /* AUDIO_WORK_AREA */
-  { INPUT_BUF_POOL  , BasicType,   5, true, 0x000de018, 0x0000f000 },  /* AUDIO_WORK_AREA */
-  { ENC_APU_CMD_POOL, BasicType,   3, true, 0x000ed020, 0x00000114 },  /* AUDIO_WORK_AREA */
-  { SRC_APU_CMD_POOL, BasicType,   3, true, 0x000ed140, 0x00000114 },  /* AUDIO_WORK_AREA */
-  { PRE_APU_CMD_POOL, BasicType,   3, true, 0x000ed260, 0x00000114 },  /* AUDIO_WORK_AREA */
- },
-}; /* end of MemoryPoolLayouts */
+  bool init(void);
+  uint32_t exec(int16_t *in, uint32_t insize, int16_t *out, uint32_t outsize);
+  uint32_t flush(int16_t *out, uint32_t outsize);
+  bool set(uint32_t coef);
 
-}  /* end of namespace MemMgrLite */
+private:
 
-#endif /* POOL_LAYOUT_H_INCLUDED */
+  int16_t m_coef;
+};
+
+#endif /* __RCFILTER_H__ */
+

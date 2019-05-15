@@ -48,23 +48,21 @@ LDLIBPATH += -L "$(SDKDIR)/lib"
 
 LDLIBS += -lasmpw -lc
 
-BIN = POSTPROC
+BIN = PREPROC
 
 VPATH = $(SDKDIR)/modules/audio/components/customproc/dsp_framework
 VPATH += userproc/src
 
 CXXSRCS = customproc_dsp_ctrl.cpp main.cpp
-CXXSRCS += userproc.cpp
+CXXSRCS += userproc.cpp rcfilter.cpp
 
 CXXELFFLAGS += -Os
 ifeq ($(WINTOOL),y)
 CXXELFFLAGS += -I"$(shell cygpath -w userproc$(DELIM)include)"
 CXXELFFLAGS += -I"$(shell cygpath -w $(APPDIR))"
-CXXELFFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIM)asmp$(DELIM)worker)"
 else
 CXXELFFLAGS += -Iuserproc/include
 CXXELFFLAGS += -I$(APPDIR)
-CXXELFFLAGS += -I$(SDKDIR)/modules/asmp/worker
 endif
 
 CXXELFFLAGS += -D_POSIX

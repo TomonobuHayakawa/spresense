@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postfilter/dsp_framework/postproc_dsp_ctrl.cpp
+ * audio_player_post/worker/src/userproc/src/userproc.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,50 +33,66 @@
  *
  ****************************************************************************/
 
-#include "postproc_dsp_ctrl.h"
+#include "userproc.h"
 
 /*--------------------------------------------------------------------*/
-PostprocDspCtrl::CtrlProc PostprocDspCtrl::CtrlFuncTbl[PostprocCommand::CmdTypeNum] =
-{
-  &PostprocDspCtrl::init,
-  &PostprocDspCtrl::exec,
-  &PostprocDspCtrl::flush,
-  &PostprocDspCtrl::set,
-};
+/*                                                                    */
+/*--------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------*/
-void PostprocDspCtrl::parse(PostprocCommand::CmdBase *cmd)
+void UserProc::init(InitParam *param)
 {
-  (this->*CtrlFuncTbl[cmd->header.cmd_type])(cmd);
+  /* Init signal process. */
+
+  param->result.result_code = CustomprocCommand::ExecOk;
 }
 
 /*--------------------------------------------------------------------*/
-void PostprocDspCtrl::init(PostprocCommand::CmdBase *cmd)
+void UserProc::exec(ExecParam *param)
 {
-  m_p_userproc->init(cmd);
+  /* Execute signal process to input audio data. */
+
+  memcpy(param->exec_cmd.output.addr,
+         param->exec_cmd.input.addr,
+         param->exec_cmd.input.size);
+
+  param->exec_cmd.output.size = param->exec_cmd.input.size;
+
+  if (m_enable)
+    {
+      param->exec_cmd.output.size =
+        m_filter_ins.exec((int16_t *)param->exec_cmd.input.addr,
+                          param->exec_cmd.input.size,
+                          (int16_t *)param->exec_cmd.output.addr,
+                          param->exec_cmd.output.size);
+    }
+
+  param->result.result_code = CustomprocCommand::ExecOk;
 }
 
 /*--------------------------------------------------------------------*/
-void PostprocDspCtrl::exec(PostprocCommand::CmdBase *cmd)
+void UserProc::flush(FlushParam *param)
 {
-  m_p_userproc->exec(cmd);
+  /* Flush signal process. */
+
+  param->flush_cmd.output.size = 
+    m_filter_ins.flush((int16_t *)param->flush_cmd.output.addr,
+                       param->flush_cmd.output.size);
+
+  param->result.result_code = CustomprocCommand::ExecOk;
 }
 
 /*--------------------------------------------------------------------*/
-void PostprocDspCtrl::flush(PostprocCommand::CmdBase *cmd)
+void UserProc::set(SetParam *param)
 {
-  m_p_userproc->flush(cmd);
-}
+  /* Set signal process parameters.
+   * Enable/Disable and Coef.
+   */
 
-/*--------------------------------------------------------------------*/
-void PostprocDspCtrl::set(PostprocCommand::CmdBase *cmd)
-{
-  m_p_userproc->set(cmd);
-}
+  m_enable = param->enable;
 
-/*--------------------------------------------------------------------*/
-void PostprocDspCtrl::illegal(PostprocCommand::CmdBase *cmd)
-{
-  cmd->result.result_code = PostprocCommand::ExecError;
+  m_filter_ins.set(param->coef);
+
+  param->result.result_code = CustomprocCommand::ExecOk;
 }
 

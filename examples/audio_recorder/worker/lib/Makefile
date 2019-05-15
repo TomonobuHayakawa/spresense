@@ -1,8 +1,6 @@
 ############################################################################
-# audio_player_post/worker/src/Makefile
+# audio_player/worker/lib/Makefile
 #
-#   Copyright (C) 2012, 2014 Gregory Nutt. All rights reserved.
-#   Author: Gregory Nutt <gnutt@nuttx.org>
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
@@ -15,9 +13,10 @@
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-# 3. Neither the name NuttX nor the names of its contributors may be
-#    used to endorse or promote products derived from this software
-#    without specific prior written permission.
+# 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+#    the names of its contributors may be used to endorse or promote
+#    products derived from this software without specific prior written
+#    permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -37,57 +36,23 @@
 -include $(TOPDIR)/Make.defs
 -include $(SDKDIR)/Make.defs
 
-ifeq ($(WINTOOL),y)
-LIB_DIR = "${shell cygpath -w ../lib}"
-else
-LIB_DIR = "../lib"
-endif
-
-LDLIBPATH += -L $(LIB_DIR)
-LDLIBPATH += -L "$(SDKDIR)/lib"
-
-LDLIBS += -lasmpw -lc
-
-BIN = POSTPROC
-
-VPATH = $(SDKDIR)/modules/audio/components/customproc/dsp_framework
-VPATH += userproc/src
-
-CXXSRCS = customproc_dsp_ctrl.cpp main.cpp
-CXXSRCS += userproc.cpp
-
-CXXELFFLAGS += -Os
-ifeq ($(WINTOOL),y)
-CXXELFFLAGS += -I"$(shell cygpath -w userproc$(DELIM)include)"
-CXXELFFLAGS += -I"$(shell cygpath -w $(APPDIR))"
-CXXELFFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIM)asmp$(DELIM)worker)"
-else
-CXXELFFLAGS += -Iuserproc/include
-CXXELFFLAGS += -I$(APPDIR)
-CXXELFFLAGS += -I$(SDKDIR)/modules/asmp/worker
-endif
-
-CXXELFFLAGS += -D_POSIX
-
-CXXOBJS = $(CXXSRCS:.cpp=$(OBJEXT))
+BIN = libasmpw$(LIBEXT)
+WORKER_DIR = $(SDKDIR)$(DELIM)modules$(DELIM)asmp$(DELIM)worker
+LIB = $(WORKER_DIR)$(DELIM)libasmpw$(LIBEXT)
 
 all: $(BIN)
-.PHONY: depend clean
-
-$(CXXOBJS): %$(OBJEXT): %.cpp
-	@echo "CXX: $<"
-	$(Q) $(CXX) -c $(CXXELFFLAGS) $< -o $@
-
-# Link ELF file
-
-$(BIN): $(CXXOBJS)
-	@echo "LD: $@"
-	$(Q) $(LD) $(LDRAWELFFLAGS) $(LDLIBPATH) -o $@ $(ARCHCRT0OBJ) $^ $(LDLIBS)
-	$(Q) $(STRIP) -d $(BIN)
+.PHONY: depend clean distclean
 
 depend:
+	$(Q) $(MAKE) -C $(WORKER_DIR) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" depend
+
+$(LIB): depend
+	$(Q) $(MAKE) -C $(WORKER_DIR) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" $(BIN)
+
+$(BIN): $(LIB)
+	$(Q) install $< $@
 
 clean:
-	$(call DELFILE, $(BIN))
 	$(call CLEAN)
 
+distclean: clean

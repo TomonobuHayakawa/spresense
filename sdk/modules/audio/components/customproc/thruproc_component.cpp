@@ -1,5 +1,5 @@
 /****************************************************************************
- * audio_player_post/worker/src/userproc/src/userproc.cpp
+ * modules/audio/components/customproc/thruproc_component.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,74 +33,111 @@
  *
  ****************************************************************************/
 
-#include "userproc.h"
+#include "thruproc_component.h"
 
-/*--------------------------------------------------------------------*/
-/*                                                                    */
-/*--------------------------------------------------------------------*/
-
-/*--------------------------------------------------------------------*/
-void UserProc::init(InitParam *param)
+/*--------------------------------------------------------------------
+    Class Methods
+  --------------------------------------------------------------------*/
+uint32_t ThruProcComponent::init(const InitCustomProcParam& param)
 {
-  param->result.result_code = CustomprocCommand::ExecOk;
+  ApuReqData req;
+
+  m_req_que.push(req);
+
+  return AS_ECODE_OK;
 }
 
 /*--------------------------------------------------------------------*/
-void UserProc::exec(ExecParam *param)
+bool ThruProcComponent::exec(const ExecCustomProcParam& param)
 {
-  /* !!tentative!! simply copy from input to output */
+  ApuReqData req;
 
-  memcpy(param->exec_cmd.output.addr,
-         param->exec_cmd.input.addr,
-         param->exec_cmd.input.size);
+  req.pcm       = param.input;
 
-  param->exec_cmd.output.size = param->exec_cmd.input.size;
+  m_req_que.push(req);
 
-  if (m_toggle)
-  {
-    /* RC filter example */
+  CustomProcCbParam cbpram;
 
-    int16_t *ls = (int16_t*)param->exec_cmd.output.addr;
-    int16_t *rs = ls + 1;
+  cbpram.event_type = CustomProcExec;
 
-    static int16_t ls_l = 0;
-    static int16_t rs_l = 0;
+  m_callback(&cbpram, m_p_requester);
 
-    if (!ls_l && !rs_l)
-      {
-        ls_l = *ls;
-        rs_l = *rs;
-      }
-
-    for (uint32_t cnt = 0; cnt < param->exec_cmd.input.size; cnt += 4)
-      {
-        *ls = (ls_l * 99 / 100) + (*ls * 1 / 100);
-        *rs = (rs_l * 99 / 100) + (*rs * 1 / 100);
-
-        ls_l = *ls;
-        rs_l = *rs;
-
-        ls += 2;
-        rs += 2;
-      }
-  }
-
-  param->result.result_code = CustomprocCommand::ExecOk;
+  return true;
 }
 
 /*--------------------------------------------------------------------*/
-void UserProc::flush(FlushParam *param)
+bool ThruProcComponent::flush(const FlushCustomProcParam& param)
 {
-  param->flush_cmd.output.size = 0;
+  AsPcmDataParam fls = { 0 };
 
-  param->result.result_code = CustomprocCommand::ExecOk;
+  fls.mh       = param.output_mh;
+  fls.is_valid = true;
+
+  ApuReqData req;
+
+  req.pcm       = fls;
+
+  m_req_que.push(req);
+
+  CustomProcCbParam cbpram;
+
+  cbpram.event_type = CustomProcFlush;
+
+  m_callback(&cbpram, m_p_requester);
+
+  return true;
 }
 
 /*--------------------------------------------------------------------*/
-void UserProc::set(SetParam *param)
+bool ThruProcComponent::set(const SetCustomProcParam& param)
 {
-  m_toggle = param->postswitch;
+  ApuReqData req;
 
-  param->result.result_code = CustomprocCommand::ExecOk;
+  m_req_que.push(req);
+
+  CustomProcCbParam cbpram;
+
+  cbpram.event_type = CustomProcSet;
+
+  m_callback(&cbpram, m_p_requester);
+
+  return true;
+}
+
+/*--------------------------------------------------------------------*/
+bool ThruProcComponent::recv_done(CustomProcCmpltParam *cmplt)
+{
+  cmplt->output = m_req_que.top().pcm;
+  cmplt->result = true;
+
+  m_req_que.pop();
+
+  return true;
+}
+
+/*--------------------------------------------------------------------*/
+bool ThruProcComponent::recv_done(void)
+{
+  m_req_que.pop();
+  
+  return true;
+}
+
+/*--------------------------------------------------------------------*/
+uint32_t ThruProcComponent::activate(CustomProcCallback callback,
+                                   const char *dsp_name,
+                                   void *p_requester,
+                                   uint32_t *dsp_inf)
+{
+  m_p_requester = p_requester;
+  m_callback = callback;
+
+  return AS_ECODE_OK;
+}
+
+/*--------------------------------------------------------------------*/
+bool ThruProcComponent::deactivate(void)
+{
+  return true;
 }
 

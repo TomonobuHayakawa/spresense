@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postproc/thruproc_component.cpp
+ * audio_player_post/worker/src/userproc/src/rcfilter.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,111 +33,69 @@
  *
  ****************************************************************************/
 
-#include "thruproc_component.h"
-
-/*--------------------------------------------------------------------
-    Class Methods
-  --------------------------------------------------------------------*/
-uint32_t ThruProcComponent::init(const InitCustomProcParam& param)
-{
-  ApuReqData req;
-
-  m_req_que.push(req);
-
-  return AS_ECODE_OK;
-}
+#include "rcfilter.h"
 
 /*--------------------------------------------------------------------*/
-bool ThruProcComponent::exec(const ExecCustomProcParam& param)
+/*                                                                    */
+/*--------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------*/
+bool RCfilter::init(void)
 {
-  ApuReqData req;
-
-  req.pcm       = param.input;
-
-  m_req_que.push(req);
-
-  CustomProcCbParam cbpram;
-
-  cbpram.event_type = CustomProcExec;
-
-  m_callback(&cbpram, m_p_requester);
-
   return true;
 }
 
 /*--------------------------------------------------------------------*/
-bool ThruProcComponent::flush(const FlushCustomProcParam& param)
+uint32_t RCfilter::exec(int16_t *in, uint32_t insize, int16_t *out, uint32_t outsize)
 {
-  AsPcmDataParam fls = { 0 };
+  /* Exec RC filter. */
 
-  fls.mh       = param.output_mh;
-  fls.is_valid = true;
+  int16_t *ls_i = in;
+  int16_t *rs_i = ls_i + 1;
+  int16_t *ls_o = out;
+  int16_t *rs_o = ls_o + 1;
 
-  ApuReqData req;
+  static int16_t ls_l = 0;
+  static int16_t rs_l = 0;
 
-  req.pcm       = fls;
+  if (!ls_l && !rs_l)
+    {
+      ls_l = *ls_i;
+      rs_l = *rs_i;
+    }
 
-  m_req_que.push(req);
+  uint32_t cnt = 0;
 
-  CustomProcCbParam cbpram;
+  for (cnt = 0; cnt < insize; cnt += 4)
+    {
+      *ls_o = (ls_l * m_coef / 100) + (*ls_i * (100 - m_coef) / 100);
+      *rs_o = (rs_l * m_coef / 100) + (*rs_i * (100 - m_coef) / 100);
 
-  cbpram.event_type = CustomProcFlush;
+      ls_l = *ls_o;
+      rs_l = *rs_o;
 
-  m_callback(&cbpram, m_p_requester);
+      ls_i += 2;
+      rs_i += 2;
+      ls_o += 2;
+      rs_o += 2;
+    }
 
-  return true;
+  return cnt;
 }
 
 /*--------------------------------------------------------------------*/
-bool ThruProcComponent::set(const SetCustomProcParam& param)
+uint32_t RCfilter::flush(int16_t *out, uint32_t outsize)
 {
-  ApuReqData req;
-
-  m_req_que.push(req);
-
-  CustomProcCbParam cbpram;
-
-  cbpram.event_type = CustomProcSet;
-
-  m_callback(&cbpram, m_p_requester);
-
-  return true;
+  return 0;
 }
 
 /*--------------------------------------------------------------------*/
-bool ThruProcComponent::recv_done(CustomProcCmpltParam *cmplt)
+bool RCfilter::set(uint32_t coef)
 {
-  cmplt->output = m_req_que.top().pcm;
-  cmplt->result = true;
+  /* Set RC filter coef. */
 
-  m_req_que.pop();
+  m_coef = static_cast<int16_t>(coef);
 
-  return true;
-}
-
-/*--------------------------------------------------------------------*/
-bool ThruProcComponent::recv_done(void)
-{
-  m_req_que.pop();
-  
-  return true;
-}
-
-/*--------------------------------------------------------------------*/
-uint32_t ThruProcComponent::activate(CustomProcCallback callback,
-                                   const char *dsp_name,
-                                   void *p_requester,
-                                   uint32_t *dsp_inf)
-{
-  m_p_requester = p_requester;
-  m_callback = callback;
-
-  return AS_ECODE_OK;
-}
-
-/*--------------------------------------------------------------------*/
-bool ThruProcComponent::deactivate(void)
-{
   return true;
 }
 

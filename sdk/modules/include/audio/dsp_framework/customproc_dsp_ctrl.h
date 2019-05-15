@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postproc/postproc_api.h
+ * modules/include/audio/dsp_framework/customproc_dsp_ctrl.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,53 +33,36 @@
  *
  ****************************************************************************/
 
-#ifndef _POSTPROC_API_H_
-#define _POSTPROC_API_H_
+#ifndef __CUSTOMPROC_DSP_CTRL_H__
+#define __CUSTOMPROC_DSP_CTRL_H__
 
-#include "usercustom_component.h"
-#include "thruproc_component.h"
+#include <string.h>
 
-/* Proc type definitions */
+#include <audio/dsp_framework/customproc_command_base.h>
+#include <audio/dsp_framework/customproc_dsp_userproc_if.h>
 
-typedef enum
+class CustomprocDspCtrl
 {
-  /* PreProc through (No signal processing) */
+public:
+  void parse(CustomprocCommand::CmdBase *cmd);
 
-  ProcTypeThrough = 0,
-   
-  /* User defined process */
+  CustomprocDspCtrl(CustomprocDspUserProcIf *p_userproc_ins)
+    : m_p_userproc(p_userproc_ins)
+  {}
 
-  ProcTypeUserDefFilter,
+private:
 
-} ProcType;
+  CustomprocDspUserProcIf *m_p_userproc;
 
-/* Postproc APIs */
+  typedef void (CustomprocDspCtrl::*CtrlProc)(CustomprocCommand::CmdBase *cmd);
+  static CtrlProc CtrlFuncTbl[CustomprocCommand::CmdTypeNum];
 
-extern "C" {
+  void init(CustomprocCommand::CmdBase *cmd);
+  void exec(CustomprocCommand::CmdBase *cmd);
+  void flush(CustomprocCommand::CmdBase *cmd);
+  void set(CustomprocCommand::CmdBase *cmd);
+  void illegal(CustomprocCommand::CmdBase *cmd);
+};
 
-uint32_t AS_postproc_init(const InitCustomProcParam *param,
-                          void *p_instance);
-
-bool AS_postproc_exec(const ExecCustomProcParam *param, void *p_instance);
-
-bool AS_postproc_flush(const FlushCustomProcParam *param, void *p_instance);
-
-bool AS_postproc_setparam(const SetCustomProcParam *param, void *p_instance);
-
-bool AS_postproc_recv_done(void *p_instance, CustomProcCmpltParam *cmplt);
-
-uint32_t AS_postproc_activate(void **p_instance,
-                              MemMgrLite::PoolId apu_pool_id,
-                              MsgQueId apu_mid,
-                              CustomProcCallback callback,
-                              const char *dsp_name,
-                              void *p_requester,
-                              uint32_t *dsp_inf,
-                              ProcType type);
-
-bool AS_postproc_deactivate(void *p_instance);
-
-} /* extern "C" */
-
-#endif /* _POSTPROC_API_H_ */
+#endif /* __USERCUSTOM_DSP_CTRL_H__ */
 

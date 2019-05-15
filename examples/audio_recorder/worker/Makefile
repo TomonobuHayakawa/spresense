@@ -1,8 +1,6 @@
 ############################################################################
-# audio_player_post/worker/src/Makefile
+# audio_player_post/worker/Makefile
 #
-#   Copyright (C) 2012, 2014 Gregory Nutt. All rights reserved.
-#   Author: Gregory Nutt <gnutt@nuttx.org>
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
@@ -15,9 +13,10 @@
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-# 3. Neither the name NuttX nor the names of its contributors may be
-#    used to endorse or promote products derived from this software
-#    without specific prior written permission.
+# 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+#    the names of its contributors may be used to endorse or promote
+#    products derived from this software without specific prior written
+#    permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -34,60 +33,43 @@
 #
 ############################################################################
 
+-include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
--include $(SDKDIR)/Make.defs
+include $(SDKDIR)/Make.defs
 
-ifeq ($(WINTOOL),y)
-LIB_DIR = "${shell cygpath -w ../lib}"
-else
-LIB_DIR = "../lib"
-endif
+WORKER_ELFS = src/POSTPROC
 
-LDLIBPATH += -L $(LIB_DIR)
-LDLIBPATH += -L "$(SDKDIR)/lib"
+define DIR_template
+$(1)_$(2):
+	$(Q) $(MAKE) -C $(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+endef
 
-LDLIBS += -lasmpw -lc
+SUBDIRS = $(dir $(WORKER_ELFS))
 
-BIN = POSTPROC
+all: $(WORKER_ELFS)
 
-VPATH = $(SDKDIR)/modules/audio/components/customproc/dsp_framework
-VPATH += userproc/src
+# Build ASMP worker library
 
-CXXSRCS = customproc_dsp_ctrl.cpp main.cpp
-CXXSRCS += userproc.cpp
+lib/libasmpw.a:
+	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
-CXXELFFLAGS += -Os
-ifeq ($(WINTOOL),y)
-CXXELFFLAGS += -I"$(shell cygpath -w userproc$(DELIM)include)"
-CXXELFFLAGS += -I"$(shell cygpath -w $(APPDIR))"
-CXXELFFLAGS += -I"$(shell cygpath -w $(SDKDIR)$(DELIM)modules$(DELIM)asmp$(DELIM)worker)"
-else
-CXXELFFLAGS += -Iuserproc/include
-CXXELFFLAGS += -I$(APPDIR)
-CXXELFFLAGS += -I$(SDKDIR)/modules/asmp/worker
-endif
+lib: lib/libasmpw.a
 
-CXXELFFLAGS += -D_POSIX
+# Build workers
 
-CXXOBJS = $(CXXSRCS:.cpp=$(OBJEXT))
+$(WORKER_ELFS): lib
+	$(Q) $(MAKE) -C $(dir $@) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
-all: $(BIN)
-.PHONY: depend clean
+.depend:
+	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) depend
+	@touch $@
 
-$(CXXOBJS): %$(OBJEXT): %.cpp
-	@echo "CXX: $<"
-	$(Q) $(CXX) -c $(CXXELFFLAGS) $< -o $@
+depend: .depend
 
-# Link ELF file
+lib_clean:
+	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" clean
 
-$(BIN): $(CXXOBJS)
-	@echo "LD: $@"
-	$(Q) $(LD) $(LDRAWELFFLAGS) $(LDLIBPATH) -o $@ $(ARCHCRT0OBJ) $^ $(LDLIBS)
-	$(Q) $(STRIP) -d $(BIN)
+clean: $(foreach DIR, $(SUBDIRS), $(DIR)_clean) lib_clean
+	$(Q) rm -rf romfs romfs.img romfs.h
 
-depend:
-
-clean:
-	$(call DELFILE, $(BIN))
-	$(call CLEAN)
-
+$(foreach DIR, $(SUBDIRS), $(eval $(call DIR_template,$(DIR),clean,clean)))

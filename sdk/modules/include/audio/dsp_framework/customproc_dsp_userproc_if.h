@@ -1,5 +1,5 @@
 /****************************************************************************
- * pool_layout.h
+ * modules/include/audio/dsp_framework/customproc_dsp_userproc_if.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,27 +33,22 @@
  *
  ****************************************************************************/
 
-#ifndef POOL_LAYOUT_H_INCLUDED
-#define POOL_LAYOUT_H_INCLUDED
+#ifndef __CUSTOMPROC_DSP_USERPROC_IF_H__
+#define __CUSTOMPROC_DSP_USERPROC_IF_H__
 
-#include "memutils/memory_manager/MemMgrTypes.h"
+#include <audio/dsp_framework/customproc_command_base.h>
 
-namespace MemMgrLite {
+class CustomprocDspUserProcIf
+{
+public:
 
-MemPool* static_pools[NUM_MEM_POOLS];
+  /* Pure abstract functions to be overided by inheritor */
 
-extern const PoolAttr MemoryPoolLayouts[NUM_MEM_LAYOUTS][NUM_MEM_POOLS] = {
- {/* Layout:0 */
-  /* pool_ID          type       seg fence  addr        size         */
-  { ES_BUF_POOL     , BasicType,   5, true, 0x000c0008, 0x0000f000 },  /* AUDIO_WORK_AREA */
-  { PREPROC_BUF_POOL, BasicType,   5, true, 0x000cf010, 0x0000f000 },  /* AUDIO_WORK_AREA */
-  { INPUT_BUF_POOL  , BasicType,   5, true, 0x000de018, 0x0000f000 },  /* AUDIO_WORK_AREA */
-  { ENC_APU_CMD_POOL, BasicType,   3, true, 0x000ed020, 0x00000114 },  /* AUDIO_WORK_AREA */
-  { SRC_APU_CMD_POOL, BasicType,   3, true, 0x000ed140, 0x00000114 },  /* AUDIO_WORK_AREA */
-  { PRE_APU_CMD_POOL, BasicType,   3, true, 0x000ed260, 0x00000114 },  /* AUDIO_WORK_AREA */
- },
-}; /* end of MemoryPoolLayouts */
+  virtual void init(CustomprocCommand::CmdBase *cmd) = 0;
+  virtual void exec(CustomprocCommand::CmdBase *cmd) = 0;
+  virtual void flush(CustomprocCommand::CmdBase *cmd) = 0;
+  virtual void set(CustomprocCommand::CmdBase *cmd) = 0;
+};
 
-}  /* end of namespace MemMgrLite */
+#endif /* __USERCUSTOM_DSP_USERPROC_IF_H__ */
 
-#endif /* POOL_LAYOUT_H_INCLUDED */

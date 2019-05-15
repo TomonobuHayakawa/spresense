@@ -43,8 +43,6 @@ extern "C"
 #include <asmp/mpshm.h>
 #include <asmp/mpmutex.h>
 #include <asmp/mpmq.h>
-
-#include "asmp.h"
 }
 
 #include "userproc.h"
@@ -60,8 +58,6 @@ extern "C"
 #define MSGID_DATATYPE_MASK 0x01
 
 #define CRE_MSGID(mode, type) ((mode << MSGID_PROCMODE_SHIFT) | (type & MSGID_DATATYPE_MASK))
-
-#define ASSERT(cond) if (!(cond)) wk_abort()
 
 static mpmq_t s_mq;
 
@@ -84,7 +80,6 @@ static void reply_to_spu(void *addr)
   /* Send */
 
   int ret = mpmq_send(&s_mq, msg_id, msg_data);
-
   if (ret != 0)
     {
       /* error */
@@ -106,7 +101,10 @@ int main()
    */
 
   ret = mpmq_init(&s_mq, KEY_MQ, 0);
-  ASSERT(ret == 0);
+  if (ret != 0)
+    {
+      /* error */
+    }
 
   /* Reply "boot complete"
    * MsgID is taken as part of message parameters.
@@ -117,6 +115,10 @@ int main()
   msg_id = CRE_MSGID(CustomprocCommand::CommonMode, COMMAND_DATATYPE_VALUE);
 
   ret = mpmq_send(&s_mq, msg_id, ret);
+  if (ret != 0)
+    {
+      /* error */
+    }
 
   /* Excution loop */
 

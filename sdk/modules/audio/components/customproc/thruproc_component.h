@@ -1,5 +1,5 @@
 /****************************************************************************
- * modules/audio/components/postproc/usercustom_component.h
+ * modules/audio/components/customproc/thruproc_component.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,121 +33,42 @@
  *
  ****************************************************************************/
 
-#ifndef _USERCUSTOM_COMPONENT_H_
-#define _USERCUSTOM_COMPONENT_H_
+#ifndef _THRUPROC_COMPONENT_H_
+#define _THRUPROC_COMPONENT_H_
 
+#include "audio/audio_high_level_api.h"
 #include "memutils/s_stl/queue.h"
-#include "memutils/message/Message.h"
-#include "debug/dbg_log.h"
-#include "components/common/component_common.h"
 #include "customproc_base.h"
 
-extern "C" {
-
-bool AS_postproc_recv_apu(void *p_param, void *p_instance);
-
-} /* extern "C" */
-
-class UserCustomComponent : public CustomProcBase,
-                          public Wien2::ComponentCommon<uint32_t>
+class ThruProcComponent : public CustomProcBase
 {
 public:
-  UserCustomComponent(MemMgrLite::PoolId apu_pool_id,MsgQueId apu_mid):
-      m_apu_pool_id(apu_pool_id)
-    , m_apu_mid(apu_mid)
-  {}
-  ~UserCustomComponent() {}
+  ThruProcComponent() {}
+  ~ThruProcComponent() {}
 
   virtual uint32_t init(const InitCustomProcParam& param);
   virtual bool exec(const ExecCustomProcParam& param);
   virtual bool flush(const FlushCustomProcParam& param);
   virtual bool set(const SetCustomProcParam& param);
   virtual bool recv_done(CustomProcCmpltParam *cmplt);
-  virtual bool recv_done(void) { return freeApuCmdBuf(); }
+  virtual bool recv_done(void);
   virtual uint32_t activate(CustomProcCallback callback,
                             const char *image_name,
                             void *p_requester,
                             uint32_t *dsp_inf);
   virtual bool deactivate();
 
-  bool recv_apu(void *p_param);
-  MsgQueId get_apu_mid(void) { return m_apu_mid; };
-
-  void *m_dsp_handler;
-
 private:
-  MemMgrLite::PoolId m_apu_pool_id;
-
-  MsgQueId m_apu_mid;
-
-  #define REQ_QUEUE_SIZE 7
+  #define REQ_QUEUE_SIZE 7 
 
   struct ApuReqData
   {
-    MemMgrLite::MemHandle cmd_mh;
-    AsPcmDataParam        input;
-    MemMgrLite::MemHandle output_mh;
+    AsPcmDataParam       pcm;
   };
 
-  typedef s_std::Queue<ApuReqData, REQ_QUEUE_SIZE> ApuReqMhQue;
-  ApuReqMhQue m_apu_req_mh_que;
-
-  void send(void*);
-
-  void* allocApuBufs(AsPcmDataParam input, MemMgrLite::MemHandle output)
-  {
-    ApuReqData req;
-
-    req.input     = input;
-    req.output_mh = output;
-
-    return pushqueue(req);
-  }
-
-  void* allocApuBufs(MemMgrLite::MemHandle output)
-  {
-    ApuReqData req;
-
-    req.output_mh = output;
-
-    return pushqueue(req);
-  }
-
-  void* allocApuBufs(void)
-  {
-    ApuReqData req;
-
-    return pushqueue(req);
-  }
-
-  void* pushqueue(ApuReqData reqdata)
-  {
-    if (reqdata.cmd_mh.allocSeg(m_apu_pool_id, sizeof(PostprocCommand::CmdBase)) != ERR_OK)
-      {
-        DECODER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_ALLOC_ERROR);
-        return NULL;
-      }
-
-    if (!m_apu_req_mh_que.push(reqdata))
-      {
-        DECODER_ERR(AS_ATTENTION_SUB_CODE_QUEUE_PUSH_ERROR);
-        return NULL;
-      }
-
-    return reqdata.cmd_mh.getPa();
-  }
-
-  bool freeApuCmdBuf()
-  {
-    if (!m_apu_req_mh_que.pop())
-      {
-        DECODER_ERR(AS_ATTENTION_SUB_CODE_MEMHANDLE_FREE_ERROR);
-        return false;
-      }
-
-    return true;
-  }
+  typedef s_std::Queue<ApuReqData, REQ_QUEUE_SIZE> ReqQue;
+  ReqQue m_req_que;
 };
 
-#endif /* _USERCUSTOM_COMPONENT_H_ */
+#endif /* _THRUPROC_COMPONENT_H_ */
 
