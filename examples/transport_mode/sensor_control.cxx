@@ -328,9 +328,9 @@ static int temperature_power_ctrl(bool is_on)
   if (is_on)
     {
       struct bmp280_temp_adj_s temp_adj;
-      CHECK_FUNC_RET(TempSensorOpen(p_press_sensor, &temp_adj));
+      CHECK_FUNC_RET(TempSensorOpen(p_temp_sensor, &temp_adj));
       s_bar_ins->setAdjustParam(&temp_adj);
-      CHECK_FUNC_RET(TempSensorStart(p_press_sensor));
+      CHECK_FUNC_RET(TempSensorStart(p_temp_sensor));
     }
   else
     {
