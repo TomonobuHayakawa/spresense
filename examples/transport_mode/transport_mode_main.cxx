@@ -506,6 +506,7 @@ extern "C" int transport_mode_main(int argc, char *argv[])
       return EXIT_FAILURE;
     }
 
+#ifdef CONFIG_CPUFREQ_RELEASE_LOCK
   /* After here,
    * because this example program doesn't access
    * to flash and doesn't use TCXO,
@@ -514,6 +515,7 @@ extern "C" int transport_mode_main(int argc, char *argv[])
 
   board_xtal_power_control(false);
   board_flash_power_control(false);
+#endif
 
   /* Regist application callback */
 
@@ -572,10 +574,12 @@ extern "C" int transport_mode_main(int argc, char *argv[])
 
   close_message();
 
+#ifdef CONFIG_CPUFREQ_RELEASE_LOCK
   /* Turn the flash and TCXO power on */
 
   board_xtal_power_control(true);
   board_flash_power_control(true);
+#endif
 
   printf("transport_mode example finished\n");
 
