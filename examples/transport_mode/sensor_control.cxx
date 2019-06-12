@@ -450,7 +450,12 @@ static int init_logical_sensor(uint8_t cmd_pool_id)
 
   /* Tram */
 
-  s_tram_ins = TramCreate((MemMgrLite::PoolId)cmd_pool_id);
+  MemMgrLite::PoolId  id;
+
+  id.sec  = 0;
+  id.pool = cmd_pool_id;
+
+  s_tram_ins = TramCreate(id);
 
 #ifdef CONFIG_EXAMPLES_SENSOR_TRAM_DETAILED_INFO
 
