@@ -247,7 +247,7 @@ int TempSensorClass::receive_signal(int sig_no, FAR siginfo_t *sig_info)
 
   switch (sig_no)
     {
-      case CONFIG_EXAMPLES_SENSOR_TRAM_MAG_SIGNO:
+      case CONFIG_EXAMPLES_SENSOR_TRAM_TEMP_SIGNO:
         {
           ret = receive_scu_wm_ev();
         }
