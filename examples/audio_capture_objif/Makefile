@@ -1,5 +1,5 @@
 ############################################################################
-# modules/audio/objects/output_mixer/Make.defs
+# examples/audio_capture_objif/Makefile
 #
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
@@ -33,10 +33,41 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_AUDIOUTILS_OUTPUTMIXER),y)
+-include $(TOPDIR)/.config
+-include $(TOPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
+include $(APPDIR)/Make.defs
 
-CXXSRCS += output_mix_obj.cpp output_mix_sink_device.cpp
-VPATH   += objects/output_mixer
-DEPPATH += --dep-path objects/output_mixer
+# Audio application info
 
+CONFIG_EXAMPLES_AUDIO_CAPTURE_OBJIF_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+CONFIG_EXAMPLES_AUDIO_CAPTURE_OBJIF_STACKSIZE ?= 2048
+
+APPNAME   = capture_objif
+PRIORITY  = $(CONFIG_EXAMPLES_AUDIO_CAPTURE_OBJIF_PRIORITY)
+STACKSIZE = $(CONFIG_EXAMPLES_AUDIO_CAPTURE_OBJIF_STACKSIZE)
+
+# Audio Example
+
+MAINSRC = audio_capture_objif_main.cxx
+
+# Audio Example paths
+
+AUDIODIR = $(SDKDIR)$(DELIM)modules$(DELIM)audio
+
+# Audio Example flags
+
+ifeq ($(WINTOOL),y)
+CXXFLAGS += -I "${shell cygpath -w $(AUDIODIR)}"
+else
+CXXFLAGS += -I $(AUDIODIR)
 endif
+
+CXXFLAGS += -D_POSIX
+CXXFLAGS += -DUSE_MEMMGR_FENCE
+CXXFLAGS += -DATTENTION_USE_FILENAME_LINE
+
+CONFIG_EXAMPLES_AUDIO_CAPTURE_OBJIF_PROGNAME ?= audio_capture_objif$(EXEEXT)
+PROGNAME = $(CONFIG_EXAMPLES_AUDIO_CAPTURE_OBJIF_PROGNAME)
+
+include $(APPDIR)/Application.mk
