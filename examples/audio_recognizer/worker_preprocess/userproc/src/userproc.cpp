@@ -1,5 +1,5 @@
 /****************************************************************************
- * audio_player_post/worker/src/userproc/src/userproc.cpp
+ * audio_recognizer/worker_preprocess/userproc/src/userproc.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

@@ -1,5 +1,5 @@
 /****************************************************************************
- * audio_player_post/worker/src/userproc/include/userproc_command.h
+ * audio_recorder/worker/userproc/include/userproc_command.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,21 +33,13 @@
  *
  ****************************************************************************/
 
-#ifndef __RCGPROC_COMMAND_H__
-#define __RCGPROC_COMMAND_H__
+#ifndef __USERPROC_COMMAND_H__
+#define __USERPROC_COMMAND_H__
 
 #include <stdint.h>
 #include <audio/dsp_framework/customproc_command_base.h>
 
-struct InitRcgParam : public CustomprocCommand::CmdBase
-{
-  uint32_t ch_num;
-  uint32_t sample_width;
-  uint32_t reserve2;
-  uint32_t reserve3;
-};
-
-struct ExecRcgParam : public CustomprocCommand::CmdBase
+struct InitParam : public CustomprocCommand::CmdBase
 {
   uint32_t reserve0;
   uint32_t reserve1;
@@ -55,7 +47,7 @@ struct ExecRcgParam : public CustomprocCommand::CmdBase
   uint32_t reserve3;
 };
 
-struct FlushRcgParam : public CustomprocCommand::CmdBase
+struct ExecParam : public CustomprocCommand::CmdBase
 {
   uint32_t reserve0;
   uint32_t reserve1;
@@ -63,13 +55,21 @@ struct FlushRcgParam : public CustomprocCommand::CmdBase
   uint32_t reserve3;
 };
 
-struct SetRcgParam : public CustomprocCommand::CmdBase
+struct FlushParam : public CustomprocCommand::CmdBase
+{
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
+
+struct SetParam : public CustomprocCommand::CmdBase
 {
   uint32_t enable;
-  uint32_t reserve1;
+  uint32_t coef;
   uint32_t reserve2;
   uint32_t reserve3;
 };
 
-#endif /* __RCGPROC_COMMAND_H__ */
+#endif /* __USERPROC_COMMAND_H__ */
 

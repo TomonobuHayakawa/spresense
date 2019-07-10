@@ -1,5 +1,5 @@
 /****************************************************************************
- * audio_player_post/worker/src/userproc/src/rcgproc.cpp
+ * audio_recorder/worker/userproc/src/rcfilter.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,109 +33,69 @@
  *
  ****************************************************************************/
 
-#include "rcgproc.h"
+#include "rcfilter.h"
 
 /*--------------------------------------------------------------------*/
 /*                                                                    */
 /*--------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------*/
-void RcgProc::init(InitRcgParam *param)
+bool RCfilter::init(void)
 {
-  /* Init recognition process. */
-
-  m_ch_num       = param->ch_num;
-  m_sample_width = param->sample_width;
-
-  param->result.result_code = CustomprocCommand::ExecOk;
+  return true;
 }
 
 /*--------------------------------------------------------------------*/
-void RcgProc::exec(ExecRcgParam *param)
+uint32_t RCfilter::exec(int16_t *in, uint32_t insize, int16_t *out, uint32_t outsize)
 {
-  /* Execute recognition process to input audio data. */
+  /* Exec RC filter. */
 
-  /* Here, in this example, simply return max, min, average
-   * and sample num of each audio frames to application.
-   */
+  int16_t *ls_i = in;
+  int16_t *rs_i = ls_i + 1;
+  int16_t *ls_o = out;
+  int16_t *rs_o = ls_o + 1;
 
-  if (!m_enable)
+  static int16_t ls_l = 0;
+  static int16_t rs_l = 0;
+
+  if (!ls_l && !rs_l)
     {
-      /* If not enabled, do not inform result to application. */
-
-      param->exec_cmd.output.size = 0;
-      param->result.inform_req  = 0;
-      param->result.result_code = CustomprocCommand::ExecOk;
-
-      return;
+      ls_l = *ls_i;
+      rs_l = *rs_i;
     }
 
-  int16_t *data = (int16_t *)param->exec_cmd.input.addr;
-  int16_t max = 0x8000;
-  int16_t min = 0x7fff;
-  int16_t smp = param->exec_cmd.input.size / m_ch_num / m_sample_width;
-  int16_t avg = 0;
-  int32_t sum = 0;
+  uint32_t cnt = 0;
 
-  for (uint32_t cnt = 0; cnt < param->exec_cmd.input.size; cnt += (m_ch_num * m_sample_width))
+  for (cnt = 0; cnt < insize; cnt += 4)
     {
-      max = (*data > max) ? *data : max;
-      min = (min > *data) ? *data : min;
-      sum += *data;
+      *ls_o = (ls_l * m_coef / 100) + (*ls_i * (100 - m_coef) / 100);
+      *rs_o = (rs_l * m_coef / 100) + (*rs_i * (100 - m_coef) / 100);
 
-      /* Next sample */
+      ls_l = *ls_o;
+      rs_l = *rs_o;
 
-      data += m_ch_num;
+      ls_i += 2;
+      rs_i += 2;
+      ls_o += 2;
+      rs_o += 2;
     }
 
-  avg = (int16_t)(sum / smp);
-
-  /* Set output data and size. */
-
-  param->exec_cmd.output.size = 8;
-  
-  int16_t *output = (int16_t *)param->exec_cmd.output.addr;
-
-  output[0] = max;
-  output[1] = min;
-  output[2] = avg;
-  output[3] = smp;
-
-  /* Set inform request. */
-
-  /* In this example, inform output to application every 100 frames.
-   * This parameter can use for notify change point of recognition too.
-   */
-
-  static int s_inform_cnt = 0;
-
-  param->result.inform_req  = ((s_inform_cnt++ % 100) == 0) ? 1 : 0;
-
-  /* Set result code. */
-
-  param->result.result_code = CustomprocCommand::ExecOk;
+  return cnt;
 }
 
 /*--------------------------------------------------------------------*/
-void RcgProc::flush(FlushRcgParam *param)
+uint32_t RCfilter::flush(int16_t *out, uint32_t outsize)
 {
-  /* Flush signal process. */
-
-  param->flush_cmd.output.size = 0;
-
-  param->result.result_code = CustomprocCommand::ExecOk;
+  return 0;
 }
 
 /*--------------------------------------------------------------------*/
-void RcgProc::set(SetRcgParam *param)
+bool RCfilter::set(uint32_t coef)
 {
-  /* Set recognition process parameters. */
+  /* Set RC filter coef. */
 
-  /* In this examples, set Enable/Disable.
-   */
+  m_coef = static_cast<int16_t>(coef);
 
-  m_enable = param->enable;
-
-  param->result.result_code = CustomprocCommand::ExecOk;
+  return true;
 }
 

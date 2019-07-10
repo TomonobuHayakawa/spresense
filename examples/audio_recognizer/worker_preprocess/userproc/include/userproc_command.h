@@ -1,5 +1,5 @@
 /****************************************************************************
- * audio_player_post/worker/src/userproc/include/userproc_command.h
+ * audio_recognizer/worker_preprocess/userproc/include/userproc_command.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
