@@ -197,7 +197,7 @@ static bool app_create_audio_sub_system(void)
   frontend_create_param.msgq_id.mng         = MSGQ_AUD_MNG;
   frontend_create_param.msgq_id.dsp         = MSGQ_AUD_PREDSP;
   frontend_create_param.pool_id.input       = S0_MIC_IN_BUF_POOL;
-#ifdef CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC
+#if defined(CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC) || defined(CONFIG_EXAMPLES_AUDIO_RECOGNIZER_SAMPLERATECONV)
   frontend_create_param.pool_id.output      = S0_PREPROC_BUF_POOL;
 #else
   frontend_create_param.pool_id.output      = S0_NULL_POOL;
