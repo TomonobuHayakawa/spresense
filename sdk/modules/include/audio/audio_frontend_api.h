@@ -139,6 +139,10 @@ typedef enum
 
   AsMicFrontendPreProcThrough = 0,
 
+  /*! \brief Pre Process Sampling Rate Conveter */
+
+  AsMicFrontendPreProcSampleRateCnv,
+
   /*! \brief Pre Process user customed */
 
   AsMicFrontendPreProcUserCustom,
