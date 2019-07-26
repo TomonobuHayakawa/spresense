@@ -316,7 +316,7 @@ static bool app_set_preprocess_type(void)
   command.header.packet_length = LENGTH_SETMFETYPE;
   command.header.command_code  = AUDCMD_SETMFETYPE;
   command.header.sub_code      = 0x00;
-  command.set_mfetype_param.preproc_type = AsMicFrontendPreProcUserCustom;
+  command.set_mfetype_param.preproc_type = AsMicFrontendPreProcSampleRateCnv;
   AS_SendAudioCommand(&command);
 
   AudioResult result;
@@ -363,7 +363,7 @@ static bool app_init_recognizer(sampling_rate_e sampling_rate,
   command.header.sub_code      = 0x00;
   command.init_recognizer.ch_num     = AS_CHANNEL_MONO;
   command.init_recognizer.bit_length = AS_BITLENGTH_16;
-  command.init_recognizer.samples    = 320;
+  command.init_recognizer.samples    = 768;
   command.init_recognizer.fcb        = recognizer_find_callback;
 
   AS_SendAudioCommand(&command);

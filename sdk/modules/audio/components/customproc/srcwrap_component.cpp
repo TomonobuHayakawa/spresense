@@ -258,7 +258,7 @@ uint32_t SrcWrapComponent::activate(CustomProcCallback callback,
 
   /* Activate SRC with full path (include file name). */
 
-  m_p_src_instance->activate_apu(dsp_name, dsp_inf, true);
+  m_p_src_instance->activate_apu(CONFIG_AUDIOUTILS_DSP_MOUNTPT, dsp_inf);
 
   m_p_requester = p_requester;
   m_callback = callback;
