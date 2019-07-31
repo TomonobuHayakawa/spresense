@@ -97,34 +97,6 @@ using namespace MemMgrLite;
  * Private Type Declarations
  ****************************************************************************/
 
-/* Recognizing parameter. */
-
-enum sampling_rate_e
-{
-  SAMPLING_RATE_8K = 0,
-  SAMPLING_RATE_16K,
-  SAMPLING_RATE_48K,
-  SAMPLING_RATE_192K,
-  SAMPLING_RATE_NUM
-};
-
-enum channel_type_e
-{
-  CHAN_TYPE_MONO = 0,
-  CHAN_TYPE_STEREO,
-  CHAN_TYPE_4CH,
-  CHAN_TYPE_6CH,
-  CHAN_TYPE_8CH,
-  CHAN_TYPE_NUM
-};
-
-enum bitwidth_e
-{
-  BITWIDTH_16BIT = 0,
-  BITWIDTH_24BIT,
-  BITWIDTH_32BIT
-};
-
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -309,21 +281,30 @@ static bool app_init_mic_gain(void)
   return printAudCmdResult(command.header.command_code, result);
 }
 
-#ifdef CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC
-static bool app_set_preprocess_type(void)
+static bool app_init_micfrontend(uint32_t sampling_rate,
+                                 uint8_t ch_num,
+                                 uint8_t bitlength,
+                                 uint8_t preproc_type,
+                                 const char *dsp_name)
 {
   AudioCommand command;
-  command.header.packet_length = LENGTH_SETMFETYPE;
-  command.header.command_code  = AUDCMD_SETMFETYPE;
+  command.header.packet_length = LENGTH_INIT_MICFRONTEND;
+  command.header.command_code  = AUDCMD_INIT_MICFRONTEND;
   command.header.sub_code      = 0x00;
-  command.set_mfetype_param.preproc_type = AsMicFrontendPreProcUserCustom;
+  command.init_micfrontend_param.ch_num       = ch_num;
+  command.init_micfrontend_param.bit_length   = bitlength;
+  command.init_micfrontend_param.samples      = 320;
+  command.init_micfrontend_param.preproc_type = preproc_type;
+  snprintf(command.init_micfrontend_param.preprocess_dsp_path,
+           AS_RECOGNIZER_FILE_PATH_LEN,
+           "%s", dsp_name);
+  command.init_micfrontend_param.data_dest = AsMicFrontendDataToRecognizer;
   AS_SendAudioCommand(&command);
 
   AudioResult result;
   AS_ReceiveAudioResult(&result);
   return printAudCmdResult(command.header.command_code, result);
 }
-#endif /* CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC */
 
 static bool app_set_recognizer_status(void)
 {
@@ -339,18 +320,12 @@ static bool app_set_recognizer_status(void)
   return printAudCmdResult(command.header.command_code, result);
 }
 
-static bool app_init_recognizer(sampling_rate_e sampling_rate,
-                                channel_type_e ch_type,
-                                bitwidth_e bitwidth,
-                                const char *dsp_name)
+static bool app_init_recognizer(const char *dsp_name)
 {
   AudioCommand command;
   command.header.packet_length = LENGTH_INIT_RECOGNIZER;
   command.header.command_code  = AUDCMD_INITRECOGNIZER;
   command.header.sub_code      = 0x00;
-  command.init_recognizer.ch_num     = AS_CHANNEL_MONO;
-  command.init_recognizer.bit_length = AS_BITLENGTH_16;
-  command.init_recognizer.samples    = 320;
   command.init_recognizer.fcb        = recognizer_find_callback;
   command.init_recognizer.recognizer_type = AsRecognizerTypeUserCustom;
   snprintf(command.init_recognizer.recognizer_dsp_path,
@@ -396,16 +371,16 @@ static bool app_stop_recognizer(void)
 }
 
 #ifdef CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC
-static bool app_init_mfe(void)
+static bool app_init_preproc_dsp(void)
 {
   static InitParam s_initparam;
 
   AudioCommand command;
-  command.header.packet_length = LENGTH_INITMFE;
-  command.header.command_code  = AUDCMD_INITMFE;
+  command.header.packet_length = LENGTH_INIT_PREPROCESS_DSP;
+  command.header.command_code  = AUDCMD_INIT_PREPROCESS_DSP;
   command.header.sub_code      = 0x00;
-  command.init_mfe_param.initpre_param.packet_addr = reinterpret_cast<uint8_t *>(&s_initparam);
-  command.init_mfe_param.initpre_param.packet_size = sizeof(s_initparam);
+  command.init_preproc_param.packet_addr = reinterpret_cast<uint8_t *>(&s_initparam);
+  command.init_preproc_param.packet_size = sizeof(s_initparam);
   AS_SendAudioCommand(&command);
 
   AudioResult result;
@@ -413,7 +388,7 @@ static bool app_init_mfe(void)
   return printAudCmdResult(command.header.command_code, result);
 }
 
-static bool app_set_mfe(void)
+static bool app_set_preproc_dsp(void)
 {
   static SetParam s_setparam;
 
@@ -421,11 +396,11 @@ static bool app_set_mfe(void)
   s_setparam.coef   = 99;
 
   AudioCommand command;
-  command.header.packet_length = LENGTH_SETMFE;
-  command.header.command_code  = AUDCMD_SETMFE;
+  command.header.packet_length = LENGTH_SET_PREPROCESS_DSP;
+  command.header.command_code  = AUDCMD_SET_PREPROCESS_DSP;
   command.header.sub_code      = 0x00;
-  command.init_mfe_param.initpre_param.packet_addr = reinterpret_cast<uint8_t *>(&s_setparam);
-  command.init_mfe_param.initpre_param.packet_size = sizeof(s_setparam);
+  command.set_preproc_param.packet_addr = reinterpret_cast<uint8_t *>(&s_setparam);
+  command.set_preproc_param.packet_size = sizeof(s_setparam);
   AS_SendAudioCommand(&command);
 
   AudioResult result;
@@ -441,8 +416,8 @@ static bool app_init_rcgproc(void)
   s_initrcgparam.sample_width = 2;
 
   AudioCommand command;
-  command.header.packet_length = LENGTH_INIT_RECOGNIZERPROC;
-  command.header.command_code  = AUDCMD_INITRECOGNIZERPROC;
+  command.header.packet_length = LENGTH_INIT_RECOGNIZER_DSP;
+  command.header.command_code  = AUDCMD_INIT_RECOGNIZER_DSP;
   command.header.sub_code      = 0x00;
   command.init_rcg_param.packet_addr = reinterpret_cast<uint8_t *>(&s_initrcgparam);
   command.init_rcg_param.packet_size = sizeof(s_initrcgparam);
@@ -459,8 +434,8 @@ static bool app_set_rcgproc(void)
   s_setrcgparam.enable = true;
 
   AudioCommand command;
-  command.header.packet_length = LENGTH_SET_RECOGNIZERPROC;
-  command.header.command_code  = AUDCMD_SETRECOGNIZERPROC;
+  command.header.packet_length = LENGTH_SET_RECOGNIZER_DSP;
+  command.header.command_code  = AUDCMD_SET_RECOGNIZER_DSP;
   command.header.sub_code      = 0x00;
   command.init_rcg_param.packet_addr = reinterpret_cast<uint8_t *>(&s_setrcgparam);
   command.init_rcg_param.packet_size = sizeof(s_setrcgparam);
@@ -639,16 +614,6 @@ extern "C" int recognizer_main(int argc, char *argv[])
       return 1;
     }
 
-#ifdef CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC
-  /* Set preprocess type. */
-
-  if (!app_set_preprocess_type())
-    {
-      printf("Error: app_set_preprocess_type() failure.\n");
-      return 1;
-    }
-#endif /* CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC */
-
   /* Set recognizer operation mode. */
 
   if (!app_set_recognizer_status())
@@ -657,12 +622,25 @@ extern "C" int recognizer_main(int argc, char *argv[])
       return 1;
     }
 
+  /* Init MicFrontend. */
+
+  if (!app_init_micfrontend(AS_SAMPLINGRATE_48000,
+                            AS_CHANNEL_MONO,
+                            AS_BITLENGTH_16,
+#ifdef CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC
+                            AsMicFrontendPreProcUserCustom,
+#else /* CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC */
+                            AsMicFrontendPreProcThrough,
+#endif /* CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC */
+                            "/mnt/sd0/BIN/PREPROC"))
+    {
+      printf("Error: app_init_micfrontend() failure.\n");
+      return 1;
+    }
+
   /* Initialize recognizer. */
 
-  if (!app_init_recognizer(SAMPLING_RATE_48K,
-                           CHAN_TYPE_MONO,
-                           BITWIDTH_16BIT,
-                           "/mnt/sd0/BIN/RCGPROC"))
+  if (!app_init_recognizer("/mnt/sd0/BIN/RCGPROC"))
     {
       printf("Error: app_init_recognizer() failure.\n");
       return 1;
@@ -671,17 +649,17 @@ extern "C" int recognizer_main(int argc, char *argv[])
 #ifdef CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC
   /* Init PREPROC */
 
-  if (!app_init_mfe())
+  if (!app_init_preproc_dsp())
     {
-      printf("Error: app_init_mfe() failure.\n");
+      printf("Error: app_init_preproc_dsp() failure.\n");
       return 1;
     }
 
   /* Set PREPROC */
 
-  if (!app_set_mfe())
+  if (!app_set_preproc_dsp())
     {
-      printf("Error: app_set_mfe() failure.\n");
+      printf("Error: app_set_preproc_dsp() failure.\n");
       return 1;
     }
 #endif /* CONFIG_EXAMPLES_AUDIO_RECOGNIZER_USEPREPROC */

@@ -947,34 +947,59 @@ typedef struct
 
 #ifdef AS_FEATURE_FRONTEND_ENABLE
 
-/** EnablePreProc Command (#AUDCMD_SETMFETYPE) parameter */
+typedef enum
+{
+  /*! \brief [in] Send audio data to Recorder
+   */
+
+  AsMicFrontendDataToRecorder = 0,
+
+  /*! \brief [in] Send audio data to Recognizer
+   */
+
+  AsMicFrontendDataToRecognizer,
+
+} AsFrontendDataDest;
+
+/** Initialize Command (#AUDCMD_INIT_MICFRONTEND) parameter */
 
 typedef struct
 {
-  /*! \brief [in] Set pre process type 
+  /*! \brief [in] Select InitMicFrontend input channels
+   */
+
+  uint8_t  ch_num;
+
+  /*! \brief [in] Select InitMicFrontend input bit length
+   */
+
+  uint8_t  bit_length;
+
+  /*! \brief [in] Samples per a frame
+   */
+
+  uint16_t samples;
+
+  /*! \brief [in] Select pre process enable 
    *
    * Use #AsMicFrontendPreProcType enum type
    */
 
-  uint32_t  preproc_type;
+  uint8_t  preproc_type;
+
+  /*! \brief [in] Set dsp file name and path 
+   */
+
+  char preprocess_dsp_path[AS_PREPROCESS_FILE_PATH_LEN];
+
+  /*! \brief [in] Select Data path from MicFrontend 
+   *
+   * Use #AsMicFrontendDataDest enum type
+   */
+
+  uint8_t data_dest;
   
-} AsSetMicFrontEndType;
-
-/** InitMfe Command (#AUDCMD_INITMFE) parameter */
-
-typedef struct
-{
-  AsInitPreProcParam initpre_param;
-
 } AsInitMicFrontEnd;
-
-/** SetMfe Command (#AUDCMD_SETMFE) parameter */
-
-typedef struct
-{
-  AsSetPreProcParam setpre_param;
-
-} AsSetMicFrontEnd;
 
 #endif
 
@@ -999,26 +1024,6 @@ typedef void (*RecognizerFindCallback)(AsRecognitionInfo info);
 
 typedef struct
 {
-  /*! \brief [in] Select InitMicFrontend input channels
-   */
-
-  uint8_t  ch_num;
-
-  /*! \brief [in] Select InitMicFrontend input bit length
-   */
-
-  uint8_t  bit_length;
-
-  /*! \brief [in] Samples per a frame
-   */
-
-  uint32_t samples;
-  
-  /*! \brief [in] Required fs by recognizer 
-   */
-
-  uint32_t fs;
-
   /*! \brief [in] Recognizer type 
    */
 
@@ -1119,23 +1124,23 @@ typedef struct
 #endif
 #ifdef AS_FEATURE_FRONTEND_ENABLE
 
-    /*! \brief [in] for Enable PreProcess 
-     * (header.command_code==#AUDCMD_SETMFETYPE)
+    /*! \brief [in] for InitMicFrontend 
+     * (header.command_code==#AUDCMD_INIT_MICFRONTEND)
      */
 
-    AsSetMicFrontEndType set_mfetype_param;
+    AsInitMicFrontEnd init_micfrontend_param;
 
-    /*! \brief [in] for InitMFE
-     * (header.command_code==#AUDCMD_INITMFE)
+    /*! \brief [in] for InitPreProcessDSP
+     * (header.command_code==#AUDCMD_INIT_PREPROCESS_DSP)
      */
 
-    AsInitMicFrontEnd init_mfe_param;
+    AsInitPreProcParam init_preproc_param;
 
-    /*! \brief [in] for SetMFE
-     * (header.command_code==#AUDCMD_SETMFEPARAM)
+    /*! \brief [in] for SetPreProcessDSP
+     * (header.command_code==#AUDCMD_SET_PREPROCESS_DSP)
      */
 
-    AsSetMicFrontEnd set_mfe_param;
+    AsSetPreProcParam set_preproc_param;
 
 #endif
 #ifdef AS_FEATURE_RECORDER_ENABLE
@@ -1178,14 +1183,14 @@ typedef struct
 
     AsStopRecognizer stop_recognizer;
 
-    /*! \brief [in] for InitRcgProcDSPCommand 
-     * (header.command_code==#AUDCMD_INITRECOGNIZERPROC)
+    /*! \brief [in] for InitRecognizerDSPCommand 
+     * (header.command_code==#AUDCMD_INIT_RECOGNIZER_DSP)
      */
 
     AsInitRcgProcParam init_rcg_param;
 
-    /*! \brief [in] for SetRcgProcDSPCommand 
-     * (header.command_code==#AUDCMD_SETRECOGNIZERPROC)
+    /*! \brief [in] for SetRecognizerDSPCommand 
+     * (header.command_code==#AUDCMD_SET_RECOGNIZER_DSP)
      */
 
     AsSetRcgProcParam set_rcg_param;

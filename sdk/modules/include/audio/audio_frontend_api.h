@@ -69,19 +69,23 @@
 /** @name Packet length of command*/
 /** @{ */
 
-/*! \brief Set MFE(PreProcess) type command (#AUDCMD_SETMFETYPE) packet length */
+/*! \brief Init Mic Frontend command (#AUDCMD_INIT_MICFRONTEND) packet length */
 
-#define  LENGTH_SETMFETYPE          4
+#define  LENGTH_INIT_MICFRONTEND    4
 
-/*! \brief InitMFE command (#AUDCMD_INITMFE) packet length */
+/*! \brief InitPreProcessDSP command (#AUDCMD_INIT_PREPROCESS) packet length */
 
-#define  LENGTH_INITMFE             4
+#define  LENGTH_INIT_PREPROCESS_DSP  4
 
-/*! \brief InitMFE command (#AUDCMD_SETMFE) packet length */
+/*! \brief SetPreProcessDSP command (#AUDCMD_SET_PREPROCESS_DSP) packet length */
 
-#define  LENGTH_SETMFE             4
+#define  LENGTH_SET_PREPROCESS_DSP   4
 
 /** @} */
+
+/*! \brief Length of Recognizer dsp file name and path */
+
+#define AS_PREPROCESS_FILE_PATH_LEN (AS_AUDIO_DSP_PATH_LEN)
 
 /****************************************************************************
  * Public Types
@@ -143,6 +147,8 @@ typedef enum
 
   AsMicFrontendPreProcUserCustom,
 
+  AsMicFrontendPreProcInvalid = 0xff,
+
 } AsMicFrontendPreProcType;
 
 typedef enum
@@ -167,13 +173,6 @@ typedef struct
    */
 
   uint8_t  input_device;
-
-  /*! \brief [in] Select pre process enable 
-   *
-   * Use #AsMicFrontendPreProcType enum type
-   */
-
-  uint32_t  preproc_type;
 
 } AsActivateFrontendParam;
 
@@ -206,7 +205,7 @@ union AsDataDest
   struct __st_tunnel
   {
     uint8_t msgqid;
-    uint32_t msgtype;
+    uint16_t msgtype;
   } msg;
 };
 
@@ -225,7 +224,19 @@ typedef struct
   /*! \brief [in] Samples per a frame
    */
 
-  uint32_t samples_per_frame;
+  uint16_t samples_per_frame;
+
+  /*! \brief [in] Select pre process enable 
+   *
+   * Use #AsMicFrontendPreProcType enum type
+   */
+
+  uint8_t  preproc_type;
+
+  /*! \brief [in] Set dsp file name and path 
+   */
+
+  char dsp_path[AS_PREPROCESS_FILE_PATH_LEN];
 
   /*! \brief [in] Select Data path from MicFrontend 
    *
