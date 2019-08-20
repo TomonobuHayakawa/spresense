@@ -85,7 +85,7 @@
 
 /*! \brief Length of Recognizer dsp file name and path */
 
-#define AS_PREPROCESS_FILE_PATH_LEN (AS_AUDIO_DSP_PATH_LEN)
+#define AS_PREPROCESS_FILE_PATH_LEN 22
 
 /****************************************************************************
  * Public Types
@@ -142,6 +142,10 @@ typedef enum
   /*! \brief Pre Process through */
 
   AsMicFrontendPreProcThrough = 0,
+
+  /*! \brief Pre Process Sampling Rate Conveter */
+
+  AsMicFrontendPreProcSrc,
 
   /*! \brief Pre Process user customed */
 
@@ -225,6 +229,13 @@ typedef struct
    */
 
   uint16_t samples_per_frame;
+
+  /*! \brief [in] Output Fs
+   *
+   * !! effective only when preproc_type is "AsMicFrontendPreProcSrc" !!
+   */
+
+  uint32_t out_fs;
 
   /*! \brief [in] Select pre process enable 
    *
