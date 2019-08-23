@@ -38,7 +38,7 @@ class ConfigArgs:
 	XMODEM_BAUD = 0
 	PACKAGE_NAME = []
 
-ROM_MSG = [b"nsh>"]
+NSH_MSG = "nsh>"
 
 class ConfigArgsLoader():
 	def __init__(self):
@@ -198,20 +198,24 @@ class XmodemWriter:
 		
 
 	def cancel_autoboot(self) :
-		boot_msg = ''
+		# Retry while 10 seconds. If expire retry count, will exit
+		retry = 100
 		self.serial.reboot()  # Target reboot before send '%'
-		while boot_msg == '' :
+		while retry > 0 :
 			rx = self.serial.readline().strip()
 			self.serial.write(b"%")  # Send "%" key to avoid auto boot
-			for msg in ROM_MSG :
-				if msg in rx :
-					boot_msg = msg
-					self.check_sysutil_sw()
-					break
+			if NSH_MSG.encode() in rx :
+				self.check_sysutil_sw()
+				break
+			retry = retry - 1
+
+		if retry == 0:
+			print("Error: Please flash new bootloader.");
+			sys.exit(-2)
 
 		while True :
 			rx = self.serial.readline().decode(errors="replace").strip()
-			if "nsh>" in rx :
+			if NSH_MSG in rx :
 				break
 			# Workaround : Sometime first character is dropped.
 			# Send line feed as air shot before actual command.
@@ -233,7 +237,7 @@ class XmodemWriter:
 				break
 
 	def wait_for_prompt(self):
-		prompt_pat = re.compile(b"nsh>")
+		prompt_pat = re.compile(NSH_MSG.encode())
 		while True:
 			rx = self.recv()
 			if prompt_pat.search(rx):
@@ -304,7 +308,7 @@ def main():
 		for i in range(3):
 			writer.send("")
 			rx = writer.recv()
-			if "updater".encode() in rx:
+			if NSH_MSG.encode() in rx:
 				# No need to wait for reset
 				do_wait_reset = False
 				break
