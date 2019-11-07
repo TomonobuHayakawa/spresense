@@ -1,0 +1,27 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_AUDIO_CAPTURE_OBJIF
+	bool "Audio capture (use object if)example"
+	default n
+	depends on CXD56_AUDIO
+	---help---
+		Enable the audio capture with object level i/f example
+
+if EXAMPLES_AUDIO_CAPTURE_OBJIF
+
+config EXAMPLES_AUDIO_CAPTURE_OBJIF_PROGNAME
+	string "Program name"
+	default "audio_capture_objif"
+
+config EXAMPLES_AUDIO_CAPTURE_OBJIF_PRIORITY
+	int "Audio capture task priority"
+	default 150
+
+config EXAMPLES_AUDIO_CAPTURE_OBJIF_STACKSIZE
+	int "Audio capture stack size"
+	default 2048
+
+endif
