@@ -115,6 +115,12 @@
  *    - Blocks the task that called the API until 
  *      processing is completed on the modem.
  *
+ *    - If the retrun value is -EPROTO, you can get the error code 
+ *      with lte_get_errinfo.
+ *
+ *    - If the argument attribute is out, the argument must be allocated 
+ *      by the caller.
+ *
  *  - Asynchronous API
  *    - The processing result is notified by callback.
  *      The callback is invoked in the task context.
@@ -133,35 +139,51 @@
  *    - If the callback reports an error (LTE_RESULT_ERROR), 
  *      detailed error information can be acquired with lte_get_errinfo.
  *
- * | Synchronous API                 | Asynchronous API                |
- * | :------------------------------ | :------------------------------ |
- * | @ref lte_initialize             | @ref lte_radio_on               |
- * | @ref lte_finalize               | @ref lte_radio_off              |
- * | @ref lte_set_report_restart     | @ref lte_activate_pdn           |
- * | @ref lte_power_on               | @ref lte_deactivate_pdn         |
- * | @ref lte_power_off              | @ref lte_data_allow             |
- * | @ref lte_set_report_netinfo     | @ref lte_get_netinfo            |
- * | @ref lte_set_report_simstat     | @ref lte_get_imscap             |
- * | @ref lte_set_report_localtime   | @ref lte_get_version            |
- * | @ref lte_set_report_quality     | @ref lte_get_phoneno            |
- * | @ref lte_set_report_cellinfo    | @ref lte_get_imsi               |
- * | @ref lte_get_errinfo            | @ref lte_get_imei               |
- * | @ref lte_activate_pdn_cancel    | @ref lte_get_pinset             |
- * |                                 | @ref lte_set_pinenable          |
- * |                                 | @ref lte_change_pin             |
- * |                                 | @ref lte_enter_pin              |
- * |                                 | @ref lte_get_localtime          |
- * |                                 | @ref lte_get_operator           |
- * |                                 | @ref lte_get_edrx               |
- * |                                 | @ref lte_set_edrx               |
- * |                                 | @ref lte_get_psm                |
- * |                                 | @ref lte_set_psm                |
- * |                                 | @ref lte_get_ce                 |
- * |                                 | @ref lte_set_ce                 |
- * |                                 | @ref lte_get_siminfo            |
- * |                                 | @ref lte_get_dynamic_edrx_param |
- * |                                 | @ref lte_get_dynamic_psm_param  |
- * |                                 | @ref lte_get_quality            |
+ *  For some APIs, both synchronous and asynchronous APIs are available.
+ *  The correspondence table of API is as follows.
+ *  
+ *
+ * | Synchronous API                   | Asynchronous API                |
+ * | :-------------------------------- | :------------------------------ |
+ * | @ref lte_initialize               |                                 |
+ * | @ref lte_finalize                 |                                 |
+ * | @ref lte_set_report_restart       |                                 |
+ * | @ref lte_power_on                 |                                 |
+ * | @ref lte_power_off                |                                 |
+ * | @ref lte_set_report_netinfo       |                                 |
+ * | @ref lte_set_report_simstat       |                                 |
+ * | @ref lte_set_report_localtime     |                                 |
+ * | @ref lte_set_report_quality       |                                 |
+ * | @ref lte_set_report_cellinfo      |                                 |
+ * | @ref lte_get_errinfo              |                                 |
+ * | @ref lte_activate_pdn_cancel      |                                 |
+ * | @ref lte_radio_on_sync            | @ref lte_radio_on               |
+ * | @ref lte_radio_off_sync           | @ref lte_radio_off              |
+ * | @ref lte_activate_pdn_sync        | @ref lte_activate_pdn           |
+ * | @ref lte_deactivate_pdn_sync      | @ref lte_deactivate_pdn         |
+ * | @ref lte_data_allow_sync          | @ref lte_data_allow             |
+ * | @ref lte_get_netinfo_sync         | @ref lte_get_netinfo            |
+ * | @ref lte_get_imscap_sync          | @ref lte_get_imscap             |
+ * | @ref lte_get_version_sync         | @ref lte_get_version            |
+ * | @ref lte_get_phoneno_sync         | @ref lte_get_phoneno            |
+ * | @ref lte_get_imsi_sync            | @ref lte_get_imsi               |
+ * | @ref lte_get_imei_sync            | @ref lte_get_imei               |
+ * | @ref lte_get_pinset_sync          | @ref lte_get_pinset             |
+ * | @ref lte_set_pinenable_sync       | @ref lte_set_pinenable          |
+ * | @ref lte_change_pin_sync          | @ref lte_change_pin             |
+ * | @ref lte_enter_pin_sync           | @ref lte_enter_pin              |
+ * | @ref lte_get_localtime_sync       | @ref lte_get_localtime          |
+ * | @ref lte_get_operator_sync        | @ref lte_get_operator           |
+ * | @ref lte_get_edrx_sync            | @ref lte_get_edrx               |
+ * | @ref lte_set_edrx_sync            | @ref lte_set_edrx               |
+ * | @ref lte_get_psm_sync             | @ref lte_get_psm                |
+ * | @ref lte_set_psm_sync             | @ref lte_set_psm                |
+ * | @ref lte_get_ce_sync              | @ref lte_get_ce                 |
+ * | @ref lte_set_ce_sync              | @ref lte_set_ce                 |
+ * | @ref lte_get_siminfo_sync         | @ref lte_get_siminfo            |
+ * | @ref lte_get_current_edrx_sync    | @ref lte_get_current_edrx       |
+ * | @ref lte_get_current_psm_sync     | @ref lte_get_current_psm        |
+ * | @ref lte_get_quality_sync         | @ref lte_get_quality            |
  *
  */
 
@@ -646,6 +668,10 @@
 #define LTE_SIMINFO_ICCID_LEN (10)  /**< Maximum length of ICCCID */
 #define LTE_SIMINFO_IMSI_LEN  (15)  /**< Maximum length of IMSI */
 #define LTE_SIMINFO_GID_LEN   (128) /**< Maximum length of GID */
+
+#define LTE_PHONENO_LEN  (41)  /**< Maximum length of phone number */
+#define LTE_IMEI_LEN     (16)  /**< Maximum length of IMEI */
+#define LTE_OPERATOR_LEN (17)  /**< Maximum length of network operator */
 
 /****************************************************************************
  * Public Types
@@ -1179,11 +1205,16 @@ typedef struct lte_netinfo
 
   lte_nw_err_info_t nw_err;
 
-  /** Number of PDN status informations. */
+  /** Number of PDN status informations.
+   *  The maximum number of PDNs is @ref LTE_SESSION_ID_MAX. */
 
   uint8_t           pdn_num;
 
-  /** List of PDN status. See @ref lte_pdn_t*/
+  /** List of PDN status. See @ref lte_pdn_t
+   *
+   *  @attention When using the lte_getnetinfo, 
+   *             the maximum number of PDNs status areas must be allocated.
+   */
 
   lte_pdn_t         *pdn_stat;
 } lte_netinfo_t;
@@ -1837,6 +1868,38 @@ typedef void (*get_dynamic_psm_param_cb_t)(uint32_t result,
 
 /** Definition of callback function.
  *
+ *  Since lte_get_current_edrx() is an asynchronous API,
+ *  the result is notified by this function.
+ *
+ * @param[in] result : The result of lte_get_current_edrx().
+ *                     As below value stored.
+ * - @ref LTE_RESULT_OK
+ * - @ref LTE_RESULT_ERROR
+ *
+ * @param[in] settings : Current eDRX settings. See @ref lte_edrx_setting_t.
+ */
+
+typedef void (*get_current_edrx_cb_t)(uint32_t result,
+                                      lte_edrx_setting_t *settings);
+
+/** Definition of callback function.
+ *
+ *  Since lte_get_current_psm() is an asynchronous API,
+ *  the result is notified by this function.
+ *
+ * @param[in] result : The result of lte_get_current_psm().
+ *                     As below value stored.
+ * - @ref LTE_RESULT_OK
+ * - @ref LTE_RESULT_ERROR
+ *
+ * @param[in] settings : Current PSM settings. See @ref lte_psm_setting_t
+ */
+
+typedef void (*get_current_psm_cb_t)(uint32_t result,
+                                     lte_psm_setting_t *settings);
+
+/** Definition of callback function.
+ *
  *  Since lte_get_quality() is an asynchronous API,
  *  the quality information is notified by this function.
  *
@@ -1955,6 +2018,18 @@ int32_t lte_power_off(void);
  * @attention Attention to the following when this API calling.
  * - If SIM is PIN locked, the result will be an error.
  *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_radio_on_sync(void);
+
+/**
+ * With the radio on, to start the LTE network search.
+ *
+ * @attention Attention to the following when this API calling.
+ * - If SIM is PIN locked, the result will be an error.
+ *
  * @param [in] callback: Callback function to notify that
  *                       radio on is completed.
  *
@@ -1963,6 +2038,18 @@ int32_t lte_power_off(void);
  */
 
 int32_t lte_radio_on(radio_on_cb_t callback);
+
+/**
+ * Exit LTE network searches with the radio off.
+ *
+ * If this function is called when a PDN has already been constructed, 
+ * the PDN is discarded.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_radio_off_sync(void);
 
 /**
  * Exit LTE network searches with the radio off.
@@ -1982,6 +2069,21 @@ int32_t lte_radio_off(radio_off_cb_t callback);
 /**
  * Get LTE network information.
  *
+ * @attention The maximum number of PDNs status areas must be allocated 
+ *            before calls this API.
+ *
+ * @param [out] info: The LTE network information.
+ *                    See @ref lte_netinfo_t
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_netinfo_sync(lte_netinfo_t *info);
+
+/**
+ * Get LTE network information.
+ *
  * @param [in] callback: Callback function to notify that
  *                       get network information completed.
  *
@@ -1990,6 +2092,34 @@ int32_t lte_radio_off(radio_off_cb_t callback);
  */
 
 int32_t lte_get_netinfo(get_netinfo_cb_t callback);
+
+/**
+ * Constructs a PDN with the specified APN settings.
+ *
+ * When constructs the initial PDN, 
+ * LTE_APN_TYPE_IA must be set to the APN type. 
+ *
+ * When PDN construction is successful, 
+ * an IP address is given from the LTE network.
+ *
+ * @attention Attention to the following when this API calling.
+ * - The initial PDN construction may take a few minutes 
+ *   depending on radio conditions.
+ *
+ * - If API is not returned, please check if the APN settings are correct.
+ *
+ * @param [in] apn: The pointer of the apn setting.
+ *                  See @ref lte_apn_setting_t for valid parameters.
+ *
+ * @param [out] pdn: The construction PDN information. 
+ *                   See @ref lte_pdn_t.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ * If canceling, -ECANCELED is returned.
+ */
+
+int32_t lte_activate_pdn_sync(lte_apn_setting_t *apn, lte_pdn_t *pdn);
 
 /**
  * Constructs a PDN with the specified APN settings.
@@ -2040,6 +2170,24 @@ int32_t lte_activate_pdn_cancel(void);
  * @param [in] session_id: The numeric value of the session ID.
  *                         Use the value obtained by the lte_activate_pdn.
  *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_deactivate_pdn_sync(uint8_t session_id);
+
+/**
+ * Discard the constructed PDN.
+ *
+ * Discards the PDN corresponding to the session ID 
+ * obtained by lte_activate_pdn.
+ *
+ * When the discard process is successful, the IP address assigned to 
+ * the modem is released to the LTE network.
+ *
+ * @param [in] session_id: The numeric value of the session ID.
+ *                         Use the value obtained by the lte_activate_pdn.
+ *
  * @param [in] callback: Callback function to notify that
  *                       LTE PDN deactivation completed.
  *
@@ -2048,6 +2196,32 @@ int32_t lte_activate_pdn_cancel(void);
  */
 
 int32_t lte_deactivate_pdn(uint8_t session_id, deactivate_pdn_cb_t callback);
+
+/**
+ * Allow or disallow to data communication for specified PDN.
+ *
+ * If the application performs data communication in the disallow state,
+ * the modem discards the data.
+ *
+ * @param [in] session_id: The numeric value of the session ID.
+ *                         Use the value obtained by the lte_activate_pdn.
+ *
+ * @param [in] allow: Allow or disallow to data communication for
+ *                    all network. Definition is as below.
+ *  - @ref LTE_DATA_ALLOW
+ *  - @ref LTE_DATA_DISALLOW
+ *
+ * @param [in] roaming_allow: Allow or disallow to data communication for
+ *                            roaming network. Definition is as below.
+ *  - @ref LTE_DATA_ALLOW
+ *  - @ref LTE_DATA_DISALLOW
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_data_allow_sync(uint8_t session_id, uint8_t allow,
+                            uint8_t roaming_allow);
 
 /**
  * Allow or disallow to data communication for specified PDN.
@@ -2081,6 +2255,20 @@ int32_t lte_data_allow(uint8_t session_id, uint8_t allow,
 /**
  * Get whether the modem supports IMS or not.
  *
+ * @param [out] imscap: The IMS capability.
+ *                      As below value stored.
+ *  - @ref LTE_ENABLE
+ *  - @ref LTE_DISABLE
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_imscap_sync(bool *imscap);
+
+/**
+ * Get whether the modem supports IMS or not.
+ *
  * @param [in] callback: Callback function to notify when
  *                       getting IMS capability is completed.
  *
@@ -2089,6 +2277,18 @@ int32_t lte_data_allow(uint8_t session_id, uint8_t allow,
  */
 
 int32_t lte_get_imscap(get_imscap_cb_t callback);
+
+/**
+ * Acquires the FW version information of the modem.
+ *
+ * @param [out] version: The version information of the modem.
+ *                        See @ref lte_version_t
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_version_sync(lte_version_t *version);
 
 /**
  * Acquires the FW version information of the modem.
@@ -2105,6 +2305,20 @@ int32_t lte_get_version(get_ver_cb_t callback);
 /**
  * Get phone number from SIM.
  *
+ * @param [out] phoneno: A character string indicating phone number.
+ *                       It is terminated with '\0'.
+ *                       The maximum number of phone number areas 
+ *                       must be allocated. See @ref LTE_PHONENO_LEN.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_phoneno_sync(int8_t *phoneno);
+
+/**
+ * Get phone number from SIM.
+ *
  * @param [in] callback: Callback function to notify when
  *                       getting the phone number is completed.
  *
@@ -2113,6 +2327,20 @@ int32_t lte_get_version(get_ver_cb_t callback);
  */
 
 int32_t lte_get_phoneno(get_phoneno_cb_t callback);
+
+/**
+ * Get International Mobile Subscriber Identity from SIM.
+ *
+ * @param [out] imsi: A character string indicating IMSI.
+ *                    It is terminated with '\0'.
+ *                    The maximum number of IMSI areas 
+ *                    must be allocated. See @ref LTE_SIMINFO_IMSI_LEN.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_imsi_sync(int8_t *imsi);
 
 /**
  * Get International Mobile Subscriber Identity from SIM.
@@ -2129,6 +2357,20 @@ int32_t lte_get_imsi(get_imsi_cb_t callback);
 /**
  * Get International Mobile Equipment Identifier from the modem.
  *
+ * @param [out] imei: A character string indicating IMEI.
+ *                    It is terminated with '\0'.
+ *                    The maximum number of IMEI areas 
+ *                    must be allocated. See @ref LTE_IMEI_LEN.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_imei_sync(int8_t *imei);
+
+/**
+ * Get International Mobile Equipment Identifier from the modem.
+ *
  * @param [in] callback: Callback function to notify when
  *                       getting IMEI is completed
  *
@@ -2137,6 +2379,18 @@ int32_t lte_get_imsi(get_imsi_cb_t callback);
  */
 
 int32_t lte_get_imei(get_imei_cb_t callback);
+
+/**
+ * Get Personal Identification Number settings.
+ *
+ * @param [out] pinset: PIN settings information.
+ *                      See @ref lte_getpin_t.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_pinset_sync(lte_getpin_t *pinset);
 
 /**
  * Get Personal Identification Number settings.
@@ -2162,6 +2416,28 @@ int32_t lte_get_pinset(get_pinset_cb_t callback);
  *                      Maximum number of digits is 8, end with '\0'.
  *                      (i.e. Max 9 byte)
  *
+ * @param [out] attemptsleft: Number of attempts left.
+ *                            Set only if failed.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_set_pinenable_sync(bool enable, int8_t *pincode,
+                               uint8_t *attemptsleft);
+
+/**
+ * Set Personal Identification Number enable.
+ *
+ * @param [in] enable: "Enable" or "Disable".
+ *                      Definition is as below.
+ *  - @ref LTE_ENABLE
+ *  - @ref LTE_DISABLE
+ *
+ * @param [in] pincode: Current PIN code. Minimum number of digits is 4.
+ *                      Maximum number of digits is 8, end with '\0'.
+ *                      (i.e. Max 9 byte)
+ *
  * @param [in] callback: Callback function to notify that
  *                       setting of PIN enables/disables is completed.
  *
@@ -2171,6 +2447,34 @@ int32_t lte_get_pinset(get_pinset_cb_t callback);
 
 int32_t lte_set_pinenable(bool enable, int8_t *pincode,
                           set_pinenable_cb_t callback);
+
+/**
+ * Change Personal Identification Number.
+ *
+ * It can be changed only when PIN is enable.
+ *
+ * @param [in] target_pin: Target of change PIN.
+ *                      Definition is as below.
+ *  - @ref LTE_TARGET_PIN
+ *  - @ref LTE_TARGET_PIN2
+ *
+ * @param [in] pincode: Current PIN code. Minimum number of digits is 4.
+ *                      Maximum number of digits is 8, end with '\0'.
+ *                      (i.e. Max 9 byte)
+ *
+ * @param [in] new_pincode: New PIN code. Minimum number of digits is 4.
+ *                          Maximum number of digits is 8, end with '\0'.
+ *                          (i.e. Max 9 byte)
+ *
+ * @param [out] attemptsleft: Number of attempts left.
+ *                            Set only if failed.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_change_pin_sync(int8_t target_pin, int8_t *pincode,
+                            int8_t *new_pincode, uint8_t *attemptsleft);
 
 /**
  * Change Personal Identification Number.
@@ -2214,6 +2518,51 @@ int32_t lte_change_pin(int8_t target_pin, int8_t *pincode,
  *                          Maximum number of digits is 8,
  *                          end with '\0'. (i.e. Max 9 byte)
  *
+ * @param [out] simstat: State after PIN enter.
+ *                       As below value stored.
+ * - @ref LTE_PINSTAT_READY
+ * - @ref LTE_PINSTAT_SIM_PIN
+ * - @ref LTE_PINSTAT_SIM_PUK
+ * - @ref LTE_PINSTAT_PH_SIM_PIN
+ * - @ref LTE_PINSTAT_PH_FSIM_PIN
+ * - @ref LTE_PINSTAT_PH_FSIM_PUK
+ * - @ref LTE_PINSTAT_SIM_PIN2
+ * - @ref LTE_PINSTAT_SIM_PUK2
+ * - @ref LTE_PINSTAT_PH_NET_PIN
+ * - @ref LTE_PINSTAT_PH_NET_PUK
+ * - @ref LTE_PINSTAT_PH_NETSUB_PIN
+ * - @ref LTE_PINSTAT_PH_NETSUB_PUK
+ * - @ref LTE_PINSTAT_PH_SP_PIN
+ * - @ref LTE_PINSTAT_PH_SP_PUK
+ * - @ref LTE_PINSTAT_PH_CORP_PIN
+ * - @ref LTE_PINSTAT_PH_CORP_PUK
+ *
+ * @param [out] attemptsleft: Number of attempts left.
+ *                            Set only if failed.
+ *                            If simstat is other than PIN, PUK, PIN2, PUK2,
+ *                            set the number of PIN.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_enter_pin_sync(int8_t *pincode, int8_t *new_pincode,
+                           uint8_t *simstat, uint8_t *attemptsleft);
+
+/**
+ * Enter Personal Identification Number.
+ *
+ * @param [in] pincode: Current PIN code. Minimum number of digits is 4.
+ *                      Maximum number of digits is 8, end with '\0'.
+ *                      (i.e. Max 9 byte)
+ *
+ * @param [in] new_pincode: If not used, set NULL.
+ *                          If the PIN is SIM PUK or SIM PUK2,
+ *                          the new_pincode is required.
+ *                          Minimum number of digits is 4.
+ *                          Maximum number of digits is 8,
+ *                          end with '\0'. (i.e. Max 9 byte)
+ *
  * @param [in] callback: Callback function to notify that
  *                       PIN enter is completed.
  *
@@ -2223,6 +2572,17 @@ int32_t lte_change_pin(int8_t target_pin, int8_t *pincode,
 
 int32_t lte_enter_pin(int8_t *pincode, int8_t *new_pincode,
                       enter_pin_cb_t callback);
+
+/**
+ * Get local time.
+ *
+ * @param [out] localtime: Local time. See @ref lte_localtime_t.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_localtime_sync(lte_localtime_t *localtime);
 
 /**
  * Get local time.
@@ -2239,6 +2599,21 @@ int32_t lte_get_localtime(get_localtime_cb_t callback);
 /**
  * Get connected network operator information.
  *
+ * @param [out] oper: A character string indicating network operator.
+ *                    It is terminated with '\0' If it is not connected,
+ *                    the first character is '\0'.
+ *                    The maximum number of network operator areas 
+ *                    must be allocated. See @ref LTE_OPERATOR_LEN.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_operator_sync(int8_t *oper);
+
+/**
+ * Get connected network operator information.
+ *
  * @param [in] callback: Callback function to notify when 
  *                       getting network operator information is completed.
  *
@@ -2247,6 +2622,17 @@ int32_t lte_get_localtime(get_localtime_cb_t callback);
  */
 
 int32_t lte_get_operator(get_operator_cb_t callback);
+
+/**
+ * Get eDRX settings.
+ *
+ * @param [out] settings: eDRX settings. See @ref lte_edrx_setting_t.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_edrx_sync(lte_edrx_setting_t *settings);
 
 /**
  * Get eDRX settings.
@@ -2263,7 +2649,18 @@ int32_t lte_get_edrx(get_edrx_cb_t callback);
 /**
  * Set eDRX settings.
  *
- * @param [in] settings: eDRX settings
+ * @param [in] settings: eDRX settings.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_set_edrx_sync(lte_edrx_setting_t *settings);
+
+/**
+ * Set eDRX settings.
+ *
+ * @param [in] settings: eDRX settings.
  *
  * @param [in] callback: Callback function to notify that 
  *                       eDRX settings are completed.
@@ -2274,6 +2671,17 @@ int32_t lte_get_edrx(get_edrx_cb_t callback);
 
 int32_t lte_set_edrx(lte_edrx_setting_t *settings,
                      set_edrx_cb_t callback);
+
+/**
+ * Get PSM settings.
+ *
+ * @param [out] settings: PSM settings. See @ref lte_psm_setting_t.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_psm_sync(lte_psm_setting_t *settings);
 
 /**
  * Get PSM settings.
@@ -2290,7 +2698,18 @@ int32_t lte_get_psm(get_psm_cb_t callback);
 /**
  * Set PSM settings.
  *
- * @param [in] settings: PSM settings
+ * @param [in] settings: PSM settings.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_set_psm_sync(lte_psm_setting_t *settings);
+
+/**
+ * Set PSM settings.
+ *
+ * @param [in] settings: PSM settings.
  *
  * @param [in] callback: Callback function to notify that 
  *                       PSM settings are completed.
@@ -2305,6 +2724,17 @@ int32_t lte_set_psm(lte_psm_setting_t *settings,
 /**
  * Get CE settings.
  *
+ * @param [out] settings: CE settings. See @ref lte_ce_setting_t.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_ce_sync(lte_ce_setting_t *settings);
+
+/**
+ * Get CE settings.
+ *
  * @param [in] callback: Callback function to notify when 
  *                       getting CE settings are completed.
  *
@@ -2313,6 +2743,17 @@ int32_t lte_set_psm(lte_psm_setting_t *settings,
  */
 
 int32_t lte_get_ce(get_ce_cb_t callback);
+
+/**
+ * Set CE settings.
+ *
+ * @param [in] settings: CE settings
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_set_ce_sync(lte_ce_setting_t *settings);
 
 /**
  * Set CE settings.
@@ -2440,6 +2881,26 @@ int32_t lte_get_errinfo(lte_errinfo_t *info);
  *                       - @ref LTE_SIMINFO_GETOPT_GID1
  *                       - @ref LTE_SIMINFO_GETOPT_GID2
  *
+ * @param [out] siminfo: SIM information. See @ref lte_siminfo_t.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_siminfo_sync(uint32_t option, lte_siminfo_t *siminfo);
+
+/**
+ * Get SIM information such as Mobile Country Code/Mobile Network Code.
+ *
+ * @param [in] option:   Indicates which parameter to get.
+ *                       Bit setting definition is as below.
+ *                       - @ref LTE_SIMINFO_GETOPT_MCCMNC
+ *                       - @ref LTE_SIMINFO_GETOPT_SPN
+ *                       - @ref LTE_SIMINFO_GETOPT_ICCID
+ *                       - @ref LTE_SIMINFO_GETOPT_IMSI
+ *                       - @ref LTE_SIMINFO_GETOPT_GID1
+ *                       - @ref LTE_SIMINFO_GETOPT_GID2
+ *
  * @param [in] callback: Callback function to notify that
  *                       get of SIM information is completed.
  *
@@ -2451,6 +2912,8 @@ int32_t lte_get_siminfo(uint32_t option, get_siminfo_cb_t callback);
 
 /**
  * Get eDRX dynamic parameter.
+ *
+ * @deprecated Use @ref lte_get_current_edrx instead.
  *
  * This API can be issued after connect to the LTE network
  * with lte_activate_pdn().
@@ -2465,7 +2928,43 @@ int32_t lte_get_siminfo(uint32_t option, get_siminfo_cb_t callback);
 int32_t lte_get_dynamic_edrx_param(get_dynamic_edrx_param_cb_t callback);
 
 /**
+ * Get current eDRX settings.
+ *
+ * This API can be issued after connect to the LTE network
+ * with lte_activate_pdn().
+ *
+ * Get the settings negotiated between the modem and the network.
+ *
+ * @param [out] settings: Current eDRX settings.
+ *                        See @ref lte_edrx_setting_t.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_current_edrx_sync(lte_edrx_setting_t *settings);
+
+/**
+ * Get current eDRX settings.
+ *
+ * This API can be issued after connect to the LTE network
+ * with lte_activate_pdn().
+ *
+ * Get the settings negotiated between the modem and the network.
+ *
+ * @param [in] callback: Callback function to notify when
+ *                       getting current eDRX settings is completed.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_current_edrx(get_current_edrx_cb_t callback);
+
+/**
  * Get PSM dynamic parameter.
+ *
+ * @deprecated Use @ref lte_get_current_psm instead.
  *
  * This API can be issued after connect to the LTE network
  * with lte_activate_pdn().
@@ -2478,6 +2977,51 @@ int32_t lte_get_dynamic_edrx_param(get_dynamic_edrx_param_cb_t callback);
  */
 
 int32_t lte_get_dynamic_psm_param(get_dynamic_psm_param_cb_t callback);
+
+/**
+ * Get current PSM settings.
+ *
+ * This API can be issued after connect to the LTE network
+ * with lte_activate_pdn().
+ *
+ * Get the settings negotiated between the modem and the network.
+ *
+ * @param [OUT] settings: Current PSM settings.
+ *                        See @ref lte_psm_setting_t.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_current_psm_sync(lte_psm_setting_t *settings);
+
+/**
+ * Get current PSM settings.
+ *
+ * This API can be issued after connect to the LTE network
+ * with lte_activate_pdn().
+ *
+ * Get the settings negotiated between the modem and the network.
+ *
+ * @param [in] callback: Callback function to notify when
+ *                       getting current PSM settings is completed.
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_current_psm(get_current_psm_cb_t callback);
+
+/**
+ * Get communication quality information.
+ *
+ * @param [out] quality: Quality information. See @ref lte_quality_t
+ *
+ * @return On success, 0 is returned. On failure,
+ * negative value is returned according to <errno.h>.
+ */
+
+int32_t lte_get_quality_sync(lte_quality_t *quality);
 
 /**
  * Get communication quality information.
