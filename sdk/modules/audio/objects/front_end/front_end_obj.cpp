@@ -455,11 +455,8 @@ void MicFrontEndObject::init(MsgPacket *msg)
   /* Hold parameters */
 
   m_channel_num       = cmd.init_param.channel_number;
-  m_pcm_bit_width     =
-    ((cmd.init_param.bit_length == AS_BITLENGTH_16)
-      ? AudPcm16Bit : (cmd.init_param.bit_length == AS_BITLENGTH_24)
-                        ? AudPcm24Bit : AudPcm32Bit);
-  m_cap_bytes         = ((m_pcm_bit_width == AudPcm16Bit) ? 2 : 4);
+  m_pcm_bit_width     = cmd.init_param.bit_length;
+  m_cap_bytes         = ((m_pcm_bit_width == AS_BITLENGTH_16) ? 2 : 4);
   m_samples_per_frame = cmd.init_param.samples_per_frame;
   m_pcm_data_path     = static_cast<AsMicFrontendDataPath>(cmd.init_param.data_path);
   m_pcm_data_dest     = cmd.init_param.dest;
@@ -1506,6 +1503,7 @@ bool MicFrontEndObject::execPreProc(MemMgrLite::MemHandle inmh, uint32_t sample)
   exec.input.size       = m_channel_num * m_cap_bytes * sample;
   exec.input.is_end     = false;
   exec.input.is_valid   = true;
+  exec.input.bit_length = m_pcm_bit_width;
 
   /* If preprocess is not active, don't alloc output area. */
 
