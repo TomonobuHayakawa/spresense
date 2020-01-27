@@ -1,7 +1,7 @@
 ############################################################################
-# lte_awsiot/Makefile
+# externals/awsiot/LibIncludes.mk
 #
-#   Copyright 2019 Sony Corporation
+#   Copyright 2019 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -33,33 +33,19 @@
 #
 ############################################################################
 
--include $(TOPDIR)/Make.defs
--include $(SDKDIR)/Make.defs
-
-# lte_awsiot built-in application info
-
-CONFIG_EXAMPLES_LTE_AWSIOT_PRIORITY ?= SCHED_PRIORITY_DEFAULT
-CONFIG_EXAMPLES_LTE_AWSIOT_STACKSIZE ?= 2048
-CONFIG_EXAMPLES_LTE_AWSIOT_STACKSIZE_IN_USING_MBEDTLS ?= 5120
-
-APPNAME = lte_awsiot
-PRIORITY = $(CONFIG_EXAMPLES_LTE_AWSIOT_PRIORITY)
-ifeq ($(CONFIG_EXTERNALS_MBEDTLS),y)
-STACKSIZE = $(CONFIG_EXAMPLES_LTE_AWSIOT_STACKSIZE_IN_USING_MBEDTLS)
-else
-STACKSIZE = $(CONFIG_EXAMPLES_LTE_AWSIOT_STACKSIZE)
+ifeq ($(CONFIG_EXTERNALS_AWSIOT),y)
+AWSCOREDIR += $(EXTERNAL_DIR)$(DELIM)awsiot$(DELIM)aws-iot-device-sdk-embedded-C
+CFLAGS     += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(EXTERNAL_DIR)$(DELIM)awsiot"}
+CFLAGS     += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)include"}
+CFLAGS     += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)external_libs$(DELIM)jsmn"}
+CFLAGS     += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)platform$(DELIM)linux$(DELIM)common"}
+CFLAGS     += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)platform$(DELIM)linux$(DELIM)mbedtls"}
+CFLAGS     += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)platform$(DELIM)linux$(DELIM)pthread"}
+CXXFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(EXTERNAL_DIR)$(DELIM)awsiot"}
+CXXFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)include"}
+CXXFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)external_libs$(DELIM)jsmn"}
+CXXFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)platform$(DELIM)linux$(DELIM)common"}
+CXXFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)platform$(DELIM)linux$(DELIM)mbedtls"}
+CXXFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(AWSCOREDIR)$(DELIM)platform$(DELIM)linux$(DELIM)pthread"}
 endif
 
-# lte_awsiot Example
-
-ASRCS =
-CSRCS += awsiot_lte_connection.c
-
-# build AWS-IoT device SDK
-
-MAINSRC = subscribe_publish_sample.c
-
-CONFIG_EXAMPLES_LTE_AWSIOT_PROGNAME ?= lte_awsiot$(EXEEXT)
-PROGNAME = $(CONFIG_EXAMPLES_LTE_AWSIOT_PROGNAME)
-
-include $(APPDIR)/Application.mk

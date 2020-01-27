@@ -1,7 +1,7 @@
 ############################################################################
-# lte_awsiot/Makefile
+# externals/awsiot/LibTarget.mk
 #
-#   Copyright 2019 Sony Corporation
+#   Copyright 2019 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -33,33 +33,15 @@
 #
 ############################################################################
 
--include $(TOPDIR)/Make.defs
--include $(SDKDIR)/Make.defs
-
-# lte_awsiot built-in application info
-
-CONFIG_EXAMPLES_LTE_AWSIOT_PRIORITY ?= SCHED_PRIORITY_DEFAULT
-CONFIG_EXAMPLES_LTE_AWSIOT_STACKSIZE ?= 2048
-CONFIG_EXAMPLES_LTE_AWSIOT_STACKSIZE_IN_USING_MBEDTLS ?= 5120
-
-APPNAME = lte_awsiot
-PRIORITY = $(CONFIG_EXAMPLES_LTE_AWSIOT_PRIORITY)
-ifeq ($(CONFIG_EXTERNALS_MBEDTLS),y)
-STACKSIZE = $(CONFIG_EXAMPLES_LTE_AWSIOT_STACKSIZE_IN_USING_MBEDTLS)
-else
-STACKSIZE = $(CONFIG_EXAMPLES_LTE_AWSIOT_STACKSIZE)
+ifeq ($(CONFIG_EXTERNALS_AWSIOT),y)
+EXTLIBS += lib$(DELIM)libawsiot$(LIBEXT)
+AWSIOTDIRS += $(EXTERNAL_DIR)$(DELIM)awsiot
 endif
+SDKCLEANDIRS += $(AWSIOTDIRS)
 
-# lte_awsiot Example
+$(AWSIOTDIRS)$(DELIM)libawsiot$(LIBEXT): context
+	$(Q) $(MAKE) -C $(dir $@) TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" $(notdir $@)
 
-ASRCS =
-CSRCS += awsiot_lte_connection.c
+lib$(DELIM)libawsiot$(LIBEXT): $(AWSIOTDIRS)$(DELIM)libawsiot$(LIBEXT)
+	$(Q) install $< $@
 
-# build AWS-IoT device SDK
-
-MAINSRC = subscribe_publish_sample.c
-
-CONFIG_EXAMPLES_LTE_AWSIOT_PROGNAME ?= lte_awsiot$(EXEEXT)
-PROGNAME = $(CONFIG_EXAMPLES_LTE_AWSIOT_PROGNAME)
-
-include $(APPDIR)/Application.mk
