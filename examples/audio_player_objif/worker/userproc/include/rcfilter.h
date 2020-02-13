@@ -1,5 +1,5 @@
 /****************************************************************************
- * fixed_fence.h
+ * audio_recorder/worker/userproc/include/rcfilter.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -13,9 +13,10 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name Sony nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+ *    the names of its contributors may be used to endorse or promote
+ *    products derived from this software without specific prior written
+ *    permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -32,16 +33,29 @@
  *
  ****************************************************************************/
 
-#ifndef FIXED_FENCE_H_INCLUDED
-#define FIXED_FENCE_H_INCLUDED
+#ifndef __RCFILTER_H__
+#define __RCFILTER_H__
 
-#include "memutils/memory_manager/MemMgrTypes.h"
+#include <string.h>
 
-namespace MemMgrLite {
 
-extern PoolAddr const FixedAreaFences[] = {
-}; /* end of FixedAreaFences */
+class RCfilter
+{
+public:
+  RCfilter()
+    : m_coef(0)
+  {}
+  ~RCfilter();
 
-}  /* end of namespace MemMgrLite */
+  bool init(void);
+  uint32_t exec(int16_t *in, uint32_t insize, int16_t *out, uint32_t outsize);
+  uint32_t flush(int16_t *out, uint32_t outsize);
+  bool set(uint32_t coef);
 
-#endif /* FIXED_FENCE_H_INCLUDED */
+private:
+
+  int16_t m_coef;
+};
+
+#endif /* __RCFILTER_H__ */
+

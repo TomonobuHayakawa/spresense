@@ -1,5 +1,5 @@
 ############################################################################
-# transport_mode/Makefile
+# audio_recorder/worker/Makefile
 #
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
@@ -35,41 +35,72 @@
 
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
--include $(SDKDIR)/Make.defs
-include $(APPDIR)/Make.defs
-
-# Sensing application info
-
-CONFIG_EXAMPLES_TRAM_PRIORITY ?= SCHED_PRIORITY_DEFAULT
-CONFIG_EXAMPLES_TRAM_STACKSIZE ?= 2048
-
-APPNAME   = transport_mode
-PRIORITY  = $(CONFIG_EXAMPLES_TRAM_PRIORITY)
-STACKSIZE = $(CONFIG_EXAMPLES_TRAM_STACKSIZE)
-
-# Sensor Example
-
-MAINSRC = transport_mode_main.cxx
-CXXSRCS = sensor_control.cxx
-CXXSRCS += physical_sensor.cxx
-CXXSRCS += accel_sensor.cxx magnetometer_sensor.cxx pressure_sensor.cxx temperature_sensor.cxx
-
-# Sensing Example paths
-
-SENSINGDIR = $(SDKDIR)$(DELIM)modules$(DELIM)sensing
-
-# Sensing Example flags
+include $(SDKDIR)/Make.defs
 
 ifeq ($(WINTOOL),y)
-CXXFLAGS += -I "${shell cygpath -w $(SENSINGDIR)}"
+LIB_DIR = "${shell cygpath -w lib}"
 else
-CXXFLAGS += -I $(SENSINGDIR)
+LIB_DIR = "lib"
 endif
 
-CXXFLAGS += -D_POSIX
-CXXFLAGS += -DUSE_MEMMGR_FENCE
+LDLIBPATH += -L $(LIB_DIR)
+LDLIBPATH += -L "$(SDKDIR)/lib"
 
-CONFIG_EXAMPLES_SENSOR_TRAM_PROGNAME ?= transport_mode$(EXEEXT)
-PROGNAME = $(CONFIG_EXAMPLES_SENSOR_TRAM_PROGNAME)
+LDLIBS += -lasmpw -lc
 
-include $(APPDIR)/Application.mk
+WORKER_ELF = POSTPROC
+
+VPATH = $(SDKDIR)/modules/audio/components/customproc/dsp_framework
+VPATH += userproc/src
+
+CXXSRCS = customproc_dsp_ctrl.cpp main.cpp
+CXXSRCS += rcfilter.cpp userproc.cpp
+
+CXXELFFLAGS += -Os
+ifeq ($(WINTOOL),y)
+CXXELFFLAGS += -I"$(shell cygpath -w userproc$(DELIM)include)"
+CXXELFFLAGS += -I"$(shell cygpath -w $(APPDIR))"
+else
+CXXELFFLAGS += -Iuserproc/include
+CXXELFFLAGS += -I$(APPDIR)
+endif
+
+CXXOBJS = $(CXXSRCS:.cpp=$(OBJEXT))
+
+# Build
+
+all: lib $(WORKER_ELF)
+
+# Build ASMP worker library
+
+libasmpw.a:
+	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+
+lib: libasmpw.a
+
+# Complile
+
+$(CXXOBJS): %$(OBJEXT):%.cpp
+	@echo "CXX: $<"
+	$(Q) $(CXX) -c $(CXXELFFLAGS) $< -o $@
+
+# Build workers
+
+$(WORKER_ELF): $(CXXOBJS)
+	@echo "LD: $@"
+	$(Q) $(LD) $(LDRAWELFFLAGS) $(LDLIBPATH) -o $@ $(ARCHCRT0OBJ) $^ $(LDLIBS)
+	$(Q) $(STRIP) -d $(WORKER_ELF)
+
+.depend:
+	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) depend
+	@touch $@
+
+depend: .depend
+
+lib_clean:
+	$(Q) $(MAKE) -C lib TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
+
+clean: lib_clean
+	$(call DELFILE, $(WORKER_ELF))
+	$(call CLEAN)
+

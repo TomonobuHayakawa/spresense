@@ -1,5 +1,5 @@
 /****************************************************************************
- * transport_mode/sensor_control.h
+ * audio_recorder/worker/userproc/include/userproc.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,53 +33,39 @@
  *
  ****************************************************************************/
 
-#ifndef __TRAM_SENSOR_CONTROL_H
-#define __TRAM_SENSOR_CONTROL_H
+#ifndef __USERPROC_H__
+#define __USERPROC_H__
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
+#include <string.h>
 
-/* Event type. */
+#include <audio/dsp_framework/customproc_dsp_userproc_if.h>
+#include "userproc_command.h"
+#include "rcfilter.h"
 
-#define TRAM_LOGSEN_EV     0x00
-#define TRAM_PHYSEN_EV     0x10
-#define TRAM_POWER_EV      0x20
-#define TRAM_APP_EV        0x30
+class UserProc : public CustomprocDspUserProcIf
+{
+public:
 
-#define TRAM_APP_FINISH_PHYSICAL_SENSOR (TRAM_APP_EV | 0x01)
+  UserProc() :
+    m_enable(true)
+  {}
 
-#define TRAM_LOGSEN_EV_SCU_CHANGE (TRAM_LOGSEN_EV | 0x01)
+  virtual void init(CustomprocCommand::CmdBase *cmd) { init(static_cast<InitParam *>(cmd)); }
+  virtual void exec(CustomprocCommand::CmdBase *cmd) { exec(static_cast<ExecParam *>(cmd)); }
+  virtual void flush(CustomprocCommand::CmdBase *cmd) { flush(static_cast<FlushParam *>(cmd)); }
+  virtual void set(CustomprocCommand::CmdBase *cmd) { set(static_cast<SetParam *>(cmd)); }
 
-#define TRAM_PHYSEN_EV_ACCEL_MF   (TRAM_PHYSEN_EV | 0x01)
+private:
 
-#define TRAM_POWER_EV_ACCEL_ON    (TRAM_POWER_EV | 0x0)
-#define TRAM_POWER_EV_ACCEL_OFF   (TRAM_POWER_EV | 0x1)
-#define TRAM_POWER_EV_MAG_ON      (TRAM_POWER_EV | 0x2)
-#define TRAM_POWER_EV_MAG_OFF     (TRAM_POWER_EV | 0x3)
-#define TRAM_POWER_EV_PRESS_ON    (TRAM_POWER_EV | 0x4)
-#define TRAM_POWER_EV_PRESS_OFF   (TRAM_POWER_EV | 0x5)
-#define TRAM_POWER_EV_TEMP_ON     (TRAM_POWER_EV | 0x6)
-#define TRAM_POWER_EV_TEMP_OFF    (TRAM_POWER_EV | 0x7)
+  bool m_enable;
+  RCfilter m_filter_ins;
 
-#define TRAM_APP_EV_PHYSEN_DESTROY (TRAM_APP_EV | 0x01)
+  void init(InitParam *param);
+  void exec(ExecParam *param);
+  void flush(FlushParam *param);
+  void set(SetParam *param);
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+};
 
-int TramOpenSensors(uint8_t cmd_pool_id, mqd_t msg_id);
-int TramCloseSensors(void);
-int TramStartSensors(void);
-int TramStopSensors(void);
-int TramSendMathFuncEvent(void);
-int TramChangeScuSettings(void);
-int TramDestroyPhysicalSensors(void);
-int TramPowerControl(int power_ev);
-
-#ifdef CONFIG_EXAMPLES_SENSOR_TRAM_DETAILED_INFO
-FAR float *TramGetLikelihood(void);
-#endif
-
-#endif /* __TRAM_SENSOR_CONTROL_H */
+#endif /* __USERPROC_H__ */
 

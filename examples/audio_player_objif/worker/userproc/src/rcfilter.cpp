@@ -1,5 +1,5 @@
 /****************************************************************************
- * bsp/src/cxd56_farapistub.h
+ * audio_recorder/worker/userproc/src/rcfilter.cpp
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -33,9 +33,69 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_CXD56XX_CXD56_FARAPISTUB_H
-#define __ARCH_ARM_SRC_CXD56XX_CXD56_FARAPISTUB_H
+#include "rcfilter.h"
 
-#define FARAPISTUB_VERSION 19900
+/*--------------------------------------------------------------------*/
+/*                                                                    */
+/*--------------------------------------------------------------------*/
 
-#endif
+/*--------------------------------------------------------------------*/
+bool RCfilter::init(void)
+{
+  return true;
+}
+
+/*--------------------------------------------------------------------*/
+uint32_t RCfilter::exec(int16_t *in, uint32_t insize, int16_t *out, uint32_t outsize)
+{
+  /* Exec RC filter. */
+
+  int16_t *ls_i = in;
+  int16_t *rs_i = ls_i + 1;
+  int16_t *ls_o = out;
+  int16_t *rs_o = ls_o + 1;
+
+  static int16_t ls_l = 0;
+  static int16_t rs_l = 0;
+
+  if (!ls_l && !rs_l)
+    {
+      ls_l = *ls_i;
+      rs_l = *rs_i;
+    }
+
+  uint32_t cnt = 0;
+
+  for (cnt = 0; cnt < insize; cnt += 4)
+    {
+      *ls_o = (ls_l * m_coef / 100) + (*ls_i * (100 - m_coef) / 100);
+      *rs_o = (rs_l * m_coef / 100) + (*rs_i * (100 - m_coef) / 100);
+
+      ls_l = *ls_o;
+      rs_l = *rs_o;
+
+      ls_i += 2;
+      rs_i += 2;
+      ls_o += 2;
+      rs_o += 2;
+    }
+
+  return cnt;
+}
+
+/*--------------------------------------------------------------------*/
+uint32_t RCfilter::flush(int16_t *out, uint32_t outsize)
+{
+  return 0;
+}
+
+/*--------------------------------------------------------------------*/
+bool RCfilter::set(uint32_t coef)
+{
+  /* Set RC filter coef. */
+
+  m_coef = static_cast<int16_t>(coef);
+
+  return true;
+}
+

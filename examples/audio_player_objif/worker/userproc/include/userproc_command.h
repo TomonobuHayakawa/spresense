@@ -1,5 +1,5 @@
 /****************************************************************************
- * pool_layout.h
+ * audio_recorder/worker/userproc/include/userproc_command.h
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -13,9 +13,10 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name Sony nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * 3. Neither the name of Sony Semiconductor Solutions Corporation nor
+ *    the names of its contributors may be used to endorse or promote
+ *    products derived from this software without specific prior written
+ *    permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -32,27 +33,43 @@
  *
  ****************************************************************************/
 
-#ifndef POOL_LAYOUT_H_INCLUDED
-#define POOL_LAYOUT_H_INCLUDED
+#ifndef __USERPROC_COMMAND_H__
+#define __USERPROC_COMMAND_H__
 
-#include "memutils/memory_manager/MemMgrTypes.h"
+#include <stdint.h>
+#include <audio/dsp_framework/customproc_command_base.h>
 
-namespace MemMgrLite {
+struct InitParam : public CustomprocCommand::CmdBase
+{
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
 
-MemPool* static_pools[NUM_MEM_POOLS];
+struct ExecParam : public CustomprocCommand::CmdBase
+{
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
 
-extern const PoolAttr MemoryPoolLayouts[NUM_MEM_LAYOUTS][NUM_MEM_POOLS] = {
- {/* Layout:0 */
-  /* pool_ID          type       seg fence  addr        size         */
-  { SENSOR_DSP_CMD_BUF_POOL, BasicType,   8, false, 0x000e0000, 0x00000380 },  /* SENSOR_WORK_AREA */
-  { ACCEL_DATA_BUF_POOL, BasicType,   8, false, 0x000e0380, 0x00007800 },  /* SENSOR_WORK_AREA */
-  { MAG_DATA_BUF_POOL, BasicType,   8, false, 0x000e7b80, 0x00007800 },  /* SENSOR_WORK_AREA */
-  { PRESS_DATA_BUF_POOL, BasicType,   8, false, 0x000ef380, 0x00000500 },  /* SENSOR_WORK_AREA */
-  { TEMP_DATA_BUF_POOL, BasicType,   8, false, 0x000ef880, 0x00000500 },  /* SENSOR_WORK_AREA */
-  { LIKELIHOOD_BUF_POOL, BasicType,   1, false, 0x000efd80, 0x00000034 },  /* SENSOR_WORK_AREA */
- },
-}; /* end of MemoryPoolLayouts */
+struct FlushParam : public CustomprocCommand::CmdBase
+{
+  uint32_t reserve0;
+  uint32_t reserve1;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
 
-}  /* end of namespace MemMgrLite */
+struct SetParam : public CustomprocCommand::CmdBase
+{
+  uint32_t enable;
+  uint32_t coef;
+  uint32_t reserve2;
+  uint32_t reserve3;
+};
 
-#endif /* POOL_LAYOUT_H_INCLUDED */
+#endif /* __USERPROC_COMMAND_H__ */
+
