@@ -1,7 +1,7 @@
 ############################################################################
-# externals/cmsis/nn/Makefile
+# externals/libjpeg/Library.mk
 #
-#   Copyright 2018 Sony Semiconductor Solutions Corporation
+#   Copyright 2020 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,21 +31,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-###########################################################################
+############################################################################
 
--include $(TOPDIR)/Make.defs
--include $(SDKDIR)/Make.defs
-
-BIN = libcmsis_nn$(LIBEXT)
-
-CMSIS_ROOT = ../CMSIS_5/CMSIS
-
-SUBDIRS := $(dir $(wildcard $(CMSIS_ROOT)/NN/Source/*/))
-
-VPATH   := $(SUBDIRS)
-DEPPATH := $(foreach dir,$(SUBDIRS), --dep-path $(dir))
-
-CSRCS := $(notdir $(foreach dir,$(SUBDIRS), $(wildcard $(dir)/*.c)))
-ASRCS := $(notdir $(foreach dir,$(SUBDIRS), $(wildcard $(dir)/*.S)))
-
-include $(APPDIR)/Application.mk
+ifeq ($(CONFIG_EXTERNALS_LIBJPEG),y)
+  EXTRA_LIBPATHS += -L "$(EXTLIBDIR)$(DELIM)libjpeg"
+  EXTRA_LIBS     += -ljpeg
+endif
