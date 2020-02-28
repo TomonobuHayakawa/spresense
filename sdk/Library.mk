@@ -1,5 +1,5 @@
 ############################################################################
-# modules/sensing/step_counter/LibTargets.mk
+# Library.mk
 #
 #   Copyright 2018 Sony Semiconductor Solutions Corporation
 #
@@ -33,14 +33,6 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_SENSING_STEPCOUNTER),y)
-SDKLIBS += lib$(DELIM)libstepcounter$(LIBEXT)
-SDKMODDIRS += modules$(DELIM)sensing$(DELIM)step_counter
-endif
-SDKCLEANDIRS += modules$(DELIM)sensing$(DELIM)step_counter
+MODULEDIR := $(TOPDIR)$(DELIM)..$(DELIM)sdk$(DELIM)modules
 
-modules$(DELIM)sensing$(DELIM)step_counter$(DELIM)libstepcounter$(LIBEXT): context
-	$(Q) $(MAKE) -C modules$(DELIM)sensing$(DELIM)step_counter TOPDIR="$(TOPDIR)" SDKDIR="$(SDKDIR)" libstepcounter$(LIBEXT)
-
-lib$(DELIM)libstepcounter$(LIBEXT): modules$(DELIM)sensing$(DELIM)step_counter$(DELIM)libstepcounter$(LIBEXT)
-	$(Q) install $< $@
+include $(MODULEDIR)$(DELIM)Library.mk

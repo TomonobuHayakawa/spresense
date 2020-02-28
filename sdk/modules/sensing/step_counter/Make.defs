@@ -1,7 +1,7 @@
 ############################################################################
-# modules/sensing/step_counter/Makefile
+# modules/sensing/step_counter/Make.defs
 #
-#   Copyright 2018 Sony Semiconductor Solutions Corporation
+#   Copyright 2020 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -33,11 +33,6 @@
 #
 ############################################################################
 
-include $(SDKDIR)/modules/Make.defs
-
-CXXSRCS = step_counter.cpp
-
-SENSINGDIR = $(SDKDIR)$(DELIM)modules$(DELIM)sensing
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(SENSINGDIR)$(DELIM)include"}
-
-include $(SDKDIR)/modules/Module.mk
+ifeq ($(CONFIG_SENSING_STEPCOUNTER),y)
+CONFIGURED_APPS += sensing/step_counter
+endif

@@ -1,7 +1,7 @@
 ############################################################################
-# modules/sensing/LibTargets.mk
+# modules/Library.mk
 #
-#   Copyright 2018 Sony Semiconductor Solutions Corporation
+#   Copyright 2020 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -32,6 +32,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
-# Find and include sensing library rules
 
-include $(wildcard modules/sensing/*/LibTargets.mk)
+ifeq ($(CONFIG_GPSUTILS_CXD56NMEA_LIB),y)
+EXTRA_LIBPATHS += -L "$(MODULEDIR)$(DELIM)sensing$(DELIM)gnss$(DELIM)cxd56nmea"
+EXTRA_LIBS     += -lcxd56nmea
+endif
