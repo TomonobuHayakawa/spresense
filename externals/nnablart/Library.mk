@@ -1,7 +1,7 @@
 ############################################################################
-# modules/dnnrt/src-mp/Make.defs
+# externals/nnablart/Library.mk
 #
-#   Copyright 2019 Sony Semiconductor Solutions Corporation
+#   Copyright 2020 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -33,18 +33,7 @@
 #
 ############################################################################
 
-# Sanity check
-
-ifneq ($(CONFIG_ASMP),y)
-$(error DNNRT multi core options requires ASMP module.)
+ifeq ($(CONFIG_EXTERNALS_NNABLART),y)
+  EXTRA_LIBPATHS += -L "$(EXTLIBDIR)$(DELIM)nnablart"
+  EXTRA_LIBS     += -lnnablart
 endif
-
-CSRCS += runtime_client.c
-CSRCS += mp_manager.c
-
-VPATH += src-mp/runtime
-ROOTDEPPATH = --dep-path src-mp/runtime
-
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(RUNTIMEDIR)/include}
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(RUNTIMEDIR)/src/functions}
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(RUNTIMEDIR)/src/runtime}
