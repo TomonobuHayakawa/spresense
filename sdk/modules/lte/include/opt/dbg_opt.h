@@ -69,7 +69,7 @@ static inline const char* dbgif_syslog_prefix(int level)
         prefix = "[WRN]";
         break;
       case LOG_NOTICE:
-        prefix = "[NMR]";
+        prefix = "[NTC]";
         break;
       case LOG_INFO:
         prefix = "[INF]";
@@ -88,6 +88,32 @@ static inline void dbgif_syslog(int level, FAR const IPTR char *fmt, ...)
 {
   va_list ap;
 
+  switch (level)
+    {
+#ifdef CONFIG_LTE_DEBUG_ERROR
+      case LOG_ERR:
+        break;
+#endif
+#ifdef CONFIG_LTE_DEBUG_WARN
+      case LOG_WARNING:
+        break;
+#endif
+#ifdef CONFIG_LTE_DEBUG_NOTICE
+      case LOG_NOTICE:
+        break;
+#endif
+#ifdef CONFIG_LTE_DEBUG_INFO
+      case LOG_INFO:
+        break;
+#endif
+#ifdef CONFIG_LTE_DEBUG_DEBUG
+      case LOG_DEBUG:
+        break;
+#endif
+      default:
+        return;
+        break;
+    }
   va_start(ap, fmt);
   vsyslog(level, fmt, ap);
   va_end(ap);
