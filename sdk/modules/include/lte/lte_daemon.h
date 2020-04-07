@@ -1,7 +1,7 @@
 /****************************************************************************
- * modules/lte/net/stubsock/include/stubsock_mem.h
+ * modules/include/lte/lte_daemon.h
  *
- *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *   Copyright 2020 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,57 +33,24 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_LTE_NET_STUBSOCK_INCLUDE_STUBSOCK_MEM_H
-#define __MODULES_LTE_NET_STUBSOCK_INCLUDE_STUBSOCK_MEM_H
+#ifndef __MODULES_INCLUDE_LTE_LTE_DAEMON_H
+#define __MODULES_INCLUDE_LTE_LTE_DAEMON_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-#include <sdk/config.h>
-
-#ifdef CONFIG_NET
-
-#include <stdint.h>
+#include "lte/lte_api.h"
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Public function prototypes
  ****************************************************************************/
 
-#define STUBSOCK_MEM_INIT     stubsock_mem_initialize
-#define STUBSOCK_MEM_FIN      stubsock_mem_finalize
-#define STUBSOCK_MEM_ALOC     stubsock_mem_alloc
-#define STUBSOCK_MEM_FREE     stubsock_mem_free
+ /* daemon API */
 
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
+int32_t lte_daemon_init(lte_apn_setting_t *apn);
+int32_t lte_daemon_power_on(void);
+int32_t lte_daemon_set_cb(restart_report_cb_t restart_callback);
+int32_t lte_daemon_fin(void);
 
-/****************************************************************************
- * Name: stubsock_mem_initialize()
- ****************************************************************************/
-
-void stubsock_mem_initialize(void);
-
-/****************************************************************************
- * Name: stubsock_mem_finalize()
- ****************************************************************************/
-
-void stubsock_mem_finalize(void);
-
-/****************************************************************************
- * Name: stubsock_mem_alloc()
- ****************************************************************************/
-
-FAR void *stubsock_mem_alloc(uint32_t reqsize);
-
-/****************************************************************************
- * Name: stubsock_mem_free()
- ****************************************************************************/
-
-void stubsock_mem_free(FAR void *mem);
-
-#endif
-
-#endif /* __MODULES_LTE_NET_STUBSOCK_INCLUDE_STUBSOCK_H */
+#endif /* __MODULES_INCLUDE_LTE_LTE_DAEMON_H */

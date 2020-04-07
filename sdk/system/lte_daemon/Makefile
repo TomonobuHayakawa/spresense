@@ -1,7 +1,7 @@
 ############################################################################
-# modules/lte/net/stubsock/Make.defs
+# system/lte_daemon/Makefile
 #
-#   Copyright 2018 Sony Semiconductor Solutions Corporation
+#   Copyright 2020 Sony Semiconductor Solutions Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -33,27 +33,19 @@
 #
 ############################################################################
 
-CSRCS += stubsock_sockif.c
-CSRCS += stubsock_mem.c
-CSRCS += stubsock_conn.c
-CSRCS += stubsock_conv.c
+include $(TOPDIR)/Make.defs
+include $(SDKDIR)/Make.defs
 
-CSRCS += stubsock_accept.c
-CSRCS += stubsock_bind.c
-CSRCS += stubsock_close.c
-CSRCS += stubsock_connect.c
-CSRCS += stubsock_getsockname.c
-CSRCS += stubsock_getsockopt.c
-CSRCS += stubsock_listen.c
-CSRCS += stubsock_poll.c
-CSRCS += stubsock_recvfrom.c
-CSRCS += stubsock_send.c
-CSRCS += stubsock_sendto.c
-CSRCS += stubsock_setsockopt.c
-CSRCS += stubsock_socket.c
+LTEALTCOMAPIINCDIR = $(SDKDIR)$(DELIM)modules$(DELIM)include$(DELIM)lte
 
-# Add the src directory to the build
+CFLAGS += -I$(LTEALTCOMAPIINCDIR)$(DELIM)altcom
+CFLAGS += -I$(LTEALTCOMAPIINCDIR)$(DELIM)altcom$(DELIM)net
 
-DEPPATH += --dep-path net$(DELIM)stubsock
-VPATH += :net$(DELIM)stubsock
+MAINSRC = lte_daemon.c
 
+PROGNAME  = lte_daemon
+PRIORITY  = SCHED_PRIORITY_DEFAULT
+STACKSIZE = 2048
+MODULE    = $(CONFIG_LTE_DAEMON)
+
+include $(APPDIR)/Application.mk

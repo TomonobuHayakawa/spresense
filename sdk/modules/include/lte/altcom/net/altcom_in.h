@@ -1,7 +1,7 @@
 /****************************************************************************
- * modules/lte/net/stubsock/stubsock_listen.c
+ * modules/include/lte/altcom/net/altcom_in.h
  *
- *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *   Copyright 2018, 2020 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,60 +33,71 @@
  *
  ****************************************************************************/
 
+#ifndef __MODULES_INCLUDE_LTE_ALTCOM_NET_ALTCOM_IN_H
+#define __MODULES_INCLUDE_LTE_ALTCOM_NET_ALTCOM_IN_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-#include <sdk/config.h>
-
-#if defined(CONFIG_NET) && defined(CONFIG_NET_DEV_SPEC_SOCK)
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <errno.h>
-#include <debug.h>
-
-#include <nuttx/net/net.h>
-
-#include "socket/socket.h"
-#include "devspecsock/devspecsock.h"
-#include "stubsock.h"
+#include <stdint.h>
 #include "altcom_socket.h"
-#include "altcom_errno.h"
-#include "dbg_if.h"
+#include "altcom_inet.h"
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
  ****************************************************************************/
+
+#define ALTCOM_INADDR_ANY            ((altcom_in_addr_t)0x00000000)
+#define ALTCOM_INADDR_NONE           ((altcom_in_addr_t)0xffffffff)
+#define ALTCOM_IN6ADDR_ANY_INIT      {{{0,0,0,0}}}
 
 /****************************************************************************
- * Name: stubsock_listen
+ * Public Types
  ****************************************************************************/
 
-int stubsock_listen(FAR struct socket *psock, int backlog)
+struct altcom_sockaddr_in
 {
-  FAR struct devspecsock_conn_s *ds_conn =
-    (FAR struct devspecsock_conn_s*)psock->s_conn;
-  FAR struct stubsock_conn_s    *conn = ds_conn->devspec_conn;
-  int                            sockfd;
-  int                            ret;
+  uint8_t                sin_len;
+  altcom_sa_family_t     sin_family;
+  altcom_in_port_t       sin_port;
+  struct altcom_in_addr  sin_addr;
+#define ALTCOM_SIN_ZERO_LEN 8
+  char                   sin_zero[ALTCOM_SIN_ZERO_LEN];
+};
 
-  DBGIF_ASSERT(conn, "conn == NULL\n");
+struct altcom_sockaddr_in6
+{
+  uint8_t                sin6_len;
+  altcom_sa_family_t     sin6_family;
+  altcom_in_port_t       sin6_port;
+  uint32_t               sin6_flowinfo;
+  struct altcom_in6_addr sin6_addr;
+  uint32_t               sin6_scope_id;
+};
 
-  sockfd = conn->stubsockid;
+struct altcom_ip_mreq
+{
+  struct altcom_in_addr imr_multiaddr;
+  struct altcom_in_addr imr_interface;
+};
 
-  ret = altcom_listen(sockfd, backlog);
-  if (ret < 0)
-    {
-      ret = altcom_errno();
-      ret = -ret;
-    }
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
 
-  return ret;
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
+
+
+#undef EXTERN
+#ifdef __cplusplus
 }
+#endif
 
-#endif /* CONFIG_NET && CONFIG_NET_DEV_SPEC_SOCK */
+#endif /* __MODULES_INCLUDE_LTE_ALTCOM_NET_ALTCOM_IN_H */

@@ -53,6 +53,8 @@
 #include "altcombs.h"
 #include "altcom_callbacks.h"
 
+#include "lte/altcom/altcom_api.h"
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -235,6 +237,33 @@ static void poweron_job(FAR void *arg)
 int32_t lte_power_on(void)
 {
   int32_t ret;
+
+  ret = altcom_power_on();
+  if (0 > ret)
+    {
+      DBGIF_LOG1_ERROR("lte_power_on() error. %d\n", ret);
+    }
+  return ret;
+}
+
+/****************************************************************************
+ * Name: altcom_power_on
+ *
+ * Description:
+ *   Power on modem.
+ *
+ * Input Parameters:
+ *   viod
+ *
+ * Returned Value:
+ *   On success, 0 is returned.
+ *   On failure, negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t altcom_power_on(void)
+{
+  int32_t ret;
   int32_t state = altcom_get_status();
 
   /* Check lte status */
@@ -290,6 +319,34 @@ int32_t lte_power_on(void)
  ****************************************************************************/
 
 int32_t lte_power_off(void)
+{
+  int32_t ret;
+
+  ret = altcom_power_off();
+  if (0 > ret)
+    {
+      DBGIF_LOG1_ERROR("lte_power_off() error. %d", ret);
+    }
+
+  return ret;
+}
+
+/****************************************************************************
+ * Name: altcom_power_off
+ *
+ * Description:
+ *   Power off modem.
+ *
+ * Input Parameters:
+ *   viod
+ *
+ * Returned Value:
+ *   On success, 0 is returned.
+ *   On failure, negative value is returned.
+ *
+ ****************************************************************************/
+
+int32_t altcom_power_off(void)
 {
   int32_t ret;
   int32_t state = altcom_get_status();

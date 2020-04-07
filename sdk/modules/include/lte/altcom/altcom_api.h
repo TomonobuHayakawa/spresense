@@ -1,7 +1,7 @@
 /****************************************************************************
- * modules/lte/net/stubsock/stubsock_send.c
+ * modules/include/lte/altcom/altcom_api.h
  *
- *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *   Copyright 2020 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,83 +33,28 @@
  *
  ****************************************************************************/
 
+#ifndef __MODULES_INCLUDE_LTE_ALTCOM_ALTCOM_API_H
+#define __MODULES_INCLUDE_LTE_ALTCOM_ALTCOM_API_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-#include <sdk/config.h>
-
-#if defined(CONFIG_NET) && defined(CONFIG_NET_DEV_SPEC_SOCK)
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <errno.h>
-#include <debug.h>
-
-#include <nuttx/net/net.h>
-
-#include "socket/socket.h"
-#include "devspecsock/devspecsock.h"
-#include "stubsock.h"
-#include "altcom_socket.h"
-#include "altcom_errno.h"
-#include "dbg_if.h"
+#include "lte/lte_api.h"
 
 /****************************************************************************
- * Public Functions
+ * Public function prototypes
  ****************************************************************************/
 
-/****************************************************************************
- * Name: stubsock_send
- ****************************************************************************/
+int32_t altcom_initialize(void);
+int32_t altcom_finalize(void);
+int32_t altcom_set_report_restart(restart_report_cb_t restart_callback);
+int32_t altcom_power_on(void);
+int32_t altcom_power_off(void);
+int32_t altcom_activate_pdn_sync(lte_apn_setting_t *apn, lte_pdn_t *pdn);
+int32_t altcom_deactivate_pdn_sync(uint8_t session_id);
+int32_t altcom_radio_on_sync(void);
+int32_t altcom_radio_off_sync(void);
 
-ssize_t stubsock_send(FAR struct socket *psock, FAR const void *buf,
-                      size_t len, int flags)
-{
-  FAR struct devspecsock_conn_s *ds_conn =
-    (FAR struct devspecsock_conn_s*)psock->s_conn;
-  FAR struct stubsock_conn_s    *conn = ds_conn->devspec_conn;
-  int                            sockfd;
-  int                            ret;
-  int                            val = 0;
-#ifdef CONFIG_NET_SOCKOPTS
-  struct timeval                 tv_val;
-#endif
 
-  DBGIF_ASSERT(conn, "conn == NULL\n");
-
-  sockfd = conn->stubsockid;
-
-  if (_SS_ISNONBLOCK(psock->s_flags))
-    {
-      val |= ALTCOM_O_NONBLOCK;
-    }
-
-  /* Whether it is blocking or not,
-   * change the behavior of sokcet with fcntl */
-
-  altcom_fcntl(sockfd, ALTCOM_SETFL, val);
-
-#ifdef CONFIG_NET_SOCKOPTS
-  tv_val.tv_sec = psock->s_sndtimeo / DSEC_PER_SEC;
-  tv_val.tv_usec = (psock->s_sndtimeo % DSEC_PER_SEC) * USEC_PER_DSEC;
-
-  altcom_setsockopt(sockfd, ALTCOM_SOL_SOCKET, ALTCOM_SO_SNDTIMEO, &tv_val,
-                    sizeof(tv_val));
-#endif
-
-  ret = altcom_send(sockfd, buf, len, stubsock_convflags_remote(flags));
-  if (ret < 0)
-    {
-      ret = altcom_errno();
-      ret = -ret;
-    }
-
-  return ret;
-}
-
-#endif /* CONFIG_NET && CONFIG_NET_DEV_SPEC_SOCK */
+#endif /* __MODULES_INCLUDE_LTE_ALTCOM_ALTCOM_API_H */
