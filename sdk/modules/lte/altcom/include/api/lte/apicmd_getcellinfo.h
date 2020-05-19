@@ -1,7 +1,7 @@
 /****************************************************************************
- * modules/lte/altcom/include/api/lte/apicmd_repcellinfo.h
+ * modules/lte/altcom/include/api/lte/apicmd_getcellinfo.h
  *
- *   Copyright 2018 Sony Semiconductor Solutions Corporation
+ *   Copyright 2020 Sony Semiconductor Solutions Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,21 +33,15 @@
  *
  ****************************************************************************/
 
-#ifndef __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_REPCELLINFO_H
-#define __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_REPCELLINFO_H
+#ifndef __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETCELLINFO_H
+#define __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETCELLINFO_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include "apicmd.h"
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define APICMD_SET_REPCELLINFO_INTERVAL_MIN  (1)
-#define APICMD_SET_REPCELLINFO_INTERVAL_MAX  (4233600)
+#include "apicmd_cellinfo.h"
 
 /****************************************************************************
  * Public Types
@@ -55,15 +49,11 @@
 
 /* This structure discribes the data structure of the API command */
 
-begin_packed_struct struct apicmd_cmddat_setrepcellinfo_s
-{
-  uint8_t enability;
-  uint32_t interval;
-} end_packed_struct;
-
-begin_packed_struct struct apicmd_cmddat_setrepcellinfo_res_s
+begin_packed_struct struct apicmd_cmddat_getcellinfores_s
 {
   uint8_t result;
+  struct apicmd_cmddat_cellinfo_s cellinfo;
 } end_packed_struct;
 
-#endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_REPCELLINFO_H */
+
+#endif /* __MODULES_LTE_ALTCOM_INCLUDE_API_LTE_APICMD_GETCELLINFO_H */
