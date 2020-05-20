@@ -2114,8 +2114,16 @@ static int setsockopt_request(int fd, struct daemon_s *priv, FAR void *hdrbuf)
 
   if (req->valuelen > 0)
     {
-      rlen = read(fd, &value, req->valuelen);
-      if (0 > rlen|| rlen < req->valuelen)
+      value = malloc(req->valuelen);
+      if (!value)
+        {
+          ret = -ENOBUFS;
+          daemon_error_printf("buffer allocate failed.\n");
+          goto send_resp;
+        }
+
+      rlen = read(fd, value, req->valuelen);
+      if (0 > rlen || rlen < req->valuelen)
         {
           ret = -EFAULT;
           daemon_error_printf("read address failed.\n");
@@ -2149,6 +2157,12 @@ send_resp:
   memset(&resp, 0, sizeof(resp));
   resp.result = ret;
   daemon_debug_printf("%s resp.result = %d\n", __func__, ret);
+
+  if (value)
+    {
+      free(value);
+      value = NULL;
+    }
 
   ret = _send_ack_common(fd, req->head.xid, &resp);
   if (0 > ret)
