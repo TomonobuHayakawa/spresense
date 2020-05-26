@@ -424,8 +424,11 @@ static FAR struct usock_s *daemon_socket_new(FAR struct daemon_s *priv)
 static void daemon_socket_delete(FAR struct daemon_s *priv,
                                   FAR struct usock_s *usock)
 {
-  usock->usockid = -1;
-  usock->state = CLOSED;
+  if (usock != NULL)
+    {
+      usock->usockid = -1;
+      usock->state = CLOSED;
+    }
 }
 
 /****************************************************************************
@@ -1263,7 +1266,7 @@ send_resp:
 
   if (0 > ret)
     {
-      if (usock->usockid != -1)
+      if ((usock != NULL) && (usock->usockid != -1))
         {
           altcom_close(usock->usockid);
         }
@@ -1429,7 +1432,7 @@ send_resp:
   memset(&resp, 0, sizeof(resp));
   resp.head.flags = 0;
 
-  if (-EINPROGRESS == ret)
+  if ((usock != NULL) && (ret == -EINPROGRESS))
     {
       usock->state = CONNECTING;
       usock->xid = req->head.xid;
@@ -1563,6 +1566,8 @@ static int sendto_request(int fd, struct daemon_s *priv, FAR void *hdrbuf)
 
   ret = altcom_sendto(usock->usockid, sendbuf, req->buflen, flags,
                       pto, addr_len);
+  usock->flags &= ~USRSOCK_EVENT_SENDTO_READY;
+  setup_event(priv);
   if (0 > ret)
     {
       ret = altcom_errno();
@@ -1571,8 +1576,6 @@ static int sendto_request(int fd, struct daemon_s *priv, FAR void *hdrbuf)
       goto send_resp;
     }
   daemon_debug_printf("altcom_sendto() ret = %d\n", ret);
-  usock->flags &= ~USRSOCK_EVENT_SENDTO_READY;
-  setup_event(priv);
 
 send_resp:
   /* Send ACK response. */
@@ -1676,6 +1679,8 @@ static int recvfrom_request(int fd, struct daemon_s *priv, FAR void *hdrbuf)
                         req->max_buflen, flags,
                         (FAR struct altcom_sockaddr *)&storage,
                         &altcom_fromlen);
+  usock->flags &= ~USRSOCK_EVENT_RECVFROM_AVAIL;
+  setup_event(priv);
   if (0 > ret)
     {
       ret = altcom_errno();
@@ -1684,9 +1689,6 @@ static int recvfrom_request(int fd, struct daemon_s *priv, FAR void *hdrbuf)
       goto send_resp;
     }
   daemon_debug_printf("altcom_recvform() ret = %d\n", ret);
-  usock->flags &= ~USRSOCK_EVENT_RECVFROM_AVAIL;
-
-  setup_event(priv);
 
   convstorage_local(&storage, (FAR struct sockaddr*)&tmpaddr);
   memcpy(&from, &tmpaddr, req->max_addrlen);
@@ -1950,6 +1952,15 @@ static int accept_request(int fd, struct daemon_s *priv, FAR void *hdrbuf)
     }
   daemon_debug_printf("accept_request usockid = %d\n", usock->usockid);
 
+  new_usock = daemon_socket_new(priv);
+  if (!new_usock)
+    {
+      ret = -ENFILE;
+      daemon_error_printf("allocate usock table failed = %d\n", ret);
+      goto send_resp;
+    }
+  daemon_debug_printf("accept socket index = %d\n", new_usock->index);
+
   /* Check if this socket is connected. */
   if (CLOSED == usock->state)
     {
@@ -1973,6 +1984,8 @@ static int accept_request(int fd, struct daemon_s *priv, FAR void *hdrbuf)
   newsockfd = altcom_accept(usock->usockid,
                             (FAR struct altcom_sockaddr*)&storage,
                             &addrlen);
+  new_usock->flags &= ~USRSOCK_EVENT_RECVFROM_AVAIL;
+  setup_event(priv);
   if (0 > newsockfd)
     {
       ret = altcom_errno();
@@ -1983,15 +1996,6 @@ static int accept_request(int fd, struct daemon_s *priv, FAR void *hdrbuf)
   daemon_debug_printf("altcom_accept(): newsockfd = %d\n", newsockfd);
 
   convstorage_local(&storage, (FAR struct sockaddr*)&tmpaddr);
-
-  new_usock = daemon_socket_new(priv);
-  if (!new_usock)
-    {
-      ret = -ENFILE;
-      daemon_error_printf("allocate usock table failed = %d\n", ret);
-      goto send_resp;
-    }
-  daemon_debug_printf("accept socket index = %d\n", new_usock->index);
 
   new_usock->usockid = newsockfd;
   new_usock->state = CONNECTED;
@@ -2015,11 +2019,9 @@ static int accept_request(int fd, struct daemon_s *priv, FAR void *hdrbuf)
       ret = altcom_errno();
       ret = -ret;
       daemon_error_printf("altcom_fcntl() errno = %d\n", ret);
+      goto send_resp;
     }
   daemon_debug_printf("altcom_fcntl() ret = %d\n", ret);
-  new_usock->flags &= ~USRSOCK_EVENT_RECVFROM_AVAIL;
-
-  setup_event(priv);
 
 send_resp:
   /* Send response. */
@@ -2033,7 +2035,7 @@ send_resp:
     {
       resp.valuelen = 0;
       resp.valuelen_nontrunc = 0;
-      if (new_usock->usockid != -1)
+      if ((new_usock != NULL) && (new_usock->usockid != -1))
         {
           altcom_close(new_usock->usockid);
         }
