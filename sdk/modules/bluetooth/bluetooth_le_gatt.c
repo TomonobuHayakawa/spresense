@@ -480,7 +480,10 @@ int ble_add_characteristic(struct ble_gatt_service_s *service, struct ble_gatt_c
  *
  ****************************************************************************/
 
-int ble_characteristic_notify(struct ble_gatt_char_s *charc, uint8_t *data, int len)
+int ble_characteristic_notify(uint16_t               conn_handle,
+                              struct ble_gatt_char_s *charc,
+                              uint8_t                *data,
+                              int                    len)
 {
   int ret = BT_SUCCESS;
   struct ble_hal_gatts_ops_s *ble_hal_gatts_ops = &(g_ble_gatt_state.ble_hal_gatt_ops->gatts);
@@ -506,7 +509,7 @@ int ble_characteristic_notify(struct ble_gatt_char_s *charc, uint8_t *data, int 
 
       value->length = len;
 
-      ret = ble_hal_gatts_ops->notify(charc, g_ble_gatt_state.ble_state->ble_connect_handle);
+      ret = ble_hal_gatts_ops->notify(charc, conn_handle);
     }
   else
     {
@@ -526,7 +529,8 @@ int ble_characteristic_notify(struct ble_gatt_char_s *charc, uint8_t *data, int 
  *
  ****************************************************************************/
 
-int ble_characteristic_read(struct ble_gatt_char_s *charc)
+int ble_characteristic_read(uint16_t               conn_handle,
+                            struct ble_gatt_char_s *charc)
 {
   int ret = BT_SUCCESS;
   struct ble_hal_gattc_ops_s *ble_hal_gattc_ops = &(g_ble_gatt_state.ble_hal_gatt_ops->gattc);
@@ -539,7 +543,7 @@ int ble_characteristic_read(struct ble_gatt_char_s *charc)
 
   if (ble_hal_gattc_ops && ble_hal_gattc_ops->read)
     {
-      ret = ble_hal_gattc_ops->read(charc, g_ble_gatt_state.ble_state->ble_connect_handle);
+      ret = ble_hal_gattc_ops->read(charc, conn_handle);
     }
   else
     {
@@ -559,7 +563,10 @@ int ble_characteristic_read(struct ble_gatt_char_s *charc)
  *
  ****************************************************************************/
 
-int ble_characteristic_write(struct ble_gatt_char_s *charc, uint8_t *data, int len)
+int ble_characteristic_write(uint16_t               conn_handle,
+                             struct ble_gatt_char_s *charc,
+                             uint8_t                *data,
+                             int                    len)
 {
   int ret = BT_SUCCESS;
   struct ble_hal_gattc_ops_s *ble_hal_gattc_ops = &(g_ble_gatt_state.ble_hal_gatt_ops->gattc);
@@ -572,7 +579,7 @@ int ble_characteristic_write(struct ble_gatt_char_s *charc, uint8_t *data, int l
 
   if (ble_hal_gattc_ops && ble_hal_gattc_ops->write)
     {
-      ret = ble_hal_gattc_ops->write(charc, g_ble_gatt_state.ble_state->ble_connect_handle);
+      ret = ble_hal_gattc_ops->write(charc, conn_handle);
     }
   else
     {
